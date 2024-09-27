@@ -259,7 +259,7 @@ void NPC::Update(Player& player) {
                 if (!hobo){
                     SetDestination(1800, 3000);  // Set a new destination within the range
                 }else{
-                    SetDestination(2400, 2600); // hobo stays near center
+                    SetDestination(2400, 2500); // hobo stays near center
                 }
                 
             }
@@ -387,12 +387,12 @@ void NPC::ClickNPC(Vector2 mousePosition, Camera2D& camera, Player& player){
                             break;
 
                         case 5:
-                            speech = "The dead were rising\n\nfrom their graves!";
+                            speech = "..."; //pause for dramatic effect. 
                             
                             break;
 
                         case 6:
-                            speech = "..."; //pause for dramatic effect. 
+                            speech = "The dead were rising\n\nfrom their graves!";
                             break;
 
                         case 7:

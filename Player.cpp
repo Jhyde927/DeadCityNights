@@ -57,6 +57,7 @@ Player::Player() {
 
 void Player::take_damage(int damage) {
     if (!enter_car){ //dont take damage if inside car
+        
         if (rand() % 2 == 0){
             PlaySound(SoundManager::getInstance().GetSound("phit1"));
 
@@ -80,9 +81,6 @@ void Player::take_damage(int damage) {
 
 }
 
-void HandleInput(){
-    
-}
 
 void Player::UpdateMovement(const GameResources& resources,  GameState& gameState, Vector2& mousePosition, Camera2D& camera) {
     isMoving = false;

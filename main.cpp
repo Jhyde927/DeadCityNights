@@ -59,6 +59,7 @@ bool drunk = false;
 bool glitch = false;
 //bool enter_car = false;
 bool move_car = false;
+bool showHealthbar = false;
 bool reverse_road = false;
 bool has_car_key = false;
 bool npcWalk = false;
@@ -77,7 +78,7 @@ int remainingZombiesToSpawn = 0;    // Tracks remaining zombies to spawn
 float spawnTimer = 0.0f;            // Timer for spawning
 float nextSpawnDelay = 0.0f;        // Time delay between spawns
 
-float blackoutTime = 1.0f;  // Time to stay blacked out
+float blackoutTime = 2.0f;  // Time to stay blacked out
 float blackoutTimer = 0.0f; // Timer to keep track of blackout period
 
 Color customBackgroundColor = {32, 42, 63, 255};  //Same Color as street background image. 
@@ -620,7 +621,7 @@ void UpdateInventoryPosition(const Camera2D& camera, GameState& gameState) {
     if (gameState == APARTMENT){
         inventoryPositionY = camera.offset.y + 228;
     }else{
-        inventoryPositionY = camera.offset.y + 128;  // Adjust the Y position (e.g., 300 pixels below the center)
+        inventoryPositionY = camera.offset.y + 228;  // Adjust the Y position (e.g., 300 pixels below the center)
     }
     
 }
@@ -697,7 +698,7 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
         }
     }
      
-    DrawText("Inventory", inventoryPositionX - 64, inventoryPositionY-22, 20, WHITE);
+    //DrawText("Inventory", inventoryPositionX - 64, inventoryPositionY-22, 20, WHITE);
 }
 
 
@@ -721,10 +722,12 @@ void CheckBulletNPCCollisions(std::vector<NPC>& npcs) {
 
 
 void DrawHUD(const Player& player) {
+    float ammoY = 875.0;
+    float ammoX = 140.0;
     if (player.currentWeapon == REVOLVER){
-        DrawText(TextFormat("Ammo: %d", player.revolverBulletCount), screenWidth/2 + 200, 850, 20, WHITE); //screen space coordiantes
+        DrawText(TextFormat("Ammo: %d", player.revolverBulletCount), screenWidth/2 + ammoX, ammoY, 20, WHITE); //screen space coordiantes
     }else if (player.currentWeapon == SHOTGUN){
-        DrawText(TextFormat("Ammo: %d", player.shotgunBulletCount), screenWidth/2 + 200, 850, 20, WHITE); //screen space coordiantes 
+        DrawText(TextFormat("Ammo: %d", player.shotgunBulletCount), screenWidth/2 + ammoX, ammoY, 20, WHITE); //screen space coordiantes 
     }
     
 }
@@ -864,11 +867,10 @@ void DrawHealthBar(Vector2 position, int maxHealth, int currentHealth, int barWi
     
 
     // Draw border
-    DrawText("HEALTH", position.x, position.y - 820, 20, barColor);
-    DrawRectangleLines(position.x, position.y-800, barWidth, barHeight, borderColor);
-
+    //DrawText("HEALTH", position.x, position.y+30, 20, barColor);
+    DrawRectangleLines(position.x, position.y+50, barWidth, barHeight, borderColor);
     // Draw health bar (adjust width based on health percentage)
-    DrawRectangle(position.x, position.y-800, (int)(barWidth * healthPercent), barHeight, barColor);
+    DrawRectangle(position.x, position.y+50, (int)(barWidth * healthPercent), barHeight, barColor);
 }
 
 void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
@@ -1103,8 +1105,12 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
     
-    if (player.hasGun && (IsKeyDown(KEY_F) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT))) DrawHUD(player); 
+    //if (player.hasGun && (IsKeyDown(KEY_F) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT))) DrawHUD(player); //only show ammo when aiming
+
+    if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player); //always show ammo when outside of car in the cemetery
+
     //DrawText("Cemetery", screenWidth/2 - 100, 60, 50, WHITE);
+
     //draw healthbar below EndMode2D() so it's position is based on camera offset. 
     if (gameState == CEMETERY && !player.enter_car){
         Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
@@ -1571,8 +1577,13 @@ void RenderOutside(const GameResources& resources, Camera2D& camera,Player& play
     }
 
     EndMode2D();  // End 2D mode 
+
+    if (player.currentHealth < 100) showHealthbar = true; // dont show healthbar until youve taken damage, when on street
     Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
-    DrawHealthBar(barPos, player.maxHealth, player.currentHealth, 128, 16);
+    if (showHealthbar) DrawHealthBar(barPos, player.maxHealth, player.currentHealth, 128, 16);
+
+    
+    
 
     if (show_dbox){
         
@@ -1610,7 +1621,7 @@ void spawnNPCs(GameResources& resources){
     //spawn businessMan
     int b_men = 2;
     for (int i = 0; i < b_men; i++){
-        Vector2 b_pos = { static_cast<float>(2000 + i * 100), 700};
+        Vector2 b_pos = { static_cast<float>(2300 + i * 100), 700};
         NPC business_npc = CreateNPC(resources.businessSheet, b_pos, speed,IDLE, true, false);
         business_npc.SetDestination(1000, 4000);
         npcs.push_back(business_npc);
@@ -1640,7 +1651,7 @@ void spawnNPCs(GameResources& resources){
     //spawn policemen
    int police = 1;
     for (int i = 0; i < police; i++){
-        Vector2 w_pos = {static_cast<float>(2070 + i * 100), 700};
+        Vector2 w_pos = {static_cast<float>(2100 + i * 100), 700};
         NPC police_npc = CreateNPC(resources.policeSheet, w_pos, speed,IDLE, true, false);
         police_npc.SetDestination(1000, 4000);
         police_npc.police = true;
@@ -1652,7 +1663,7 @@ void spawnNPCs(GameResources& resources){
     int dealer = 1;
 
     for (int i = 0; i < dealer; i++){
-        Vector2 d_pos = {static_cast<float>(2000 + i * 100), 700};
+        Vector2 d_pos = {static_cast<float>(2200 + i * 100), 700};
         NPC dealer_npc = CreateNPC(resources.dealerSheet, d_pos, speed, IDLE, true, false);
         dealer_npc.SetDestination(1000, 4000);
         dealer_npc.dealer = true;
@@ -1935,12 +1946,13 @@ int main() {
 
         // Smoothly interpolate the current zoom towards the target zoom
         camera.zoom = Lerp(camera.zoom, targetZoom, 0.1f);
-
+        float maxZoom = 2.5;
+        float minZoom = 1.0;
         // Apply boundary checks for the zoom level
-        if (camera.zoom > 3.0f) camera.zoom = 3.0f;
-        if (camera.zoom < 1.0f) camera.zoom = 1.0f;
-        if (targetZoom > 3.0f) targetZoom = 3.0f;
-        if (targetZoom < 1.0f) targetZoom = 1.0f;
+        if (camera.zoom > maxZoom) camera.zoom = maxZoom;
+        if (camera.zoom < minZoom) camera.zoom = minZoom;
+        if (targetZoom > maxZoom) targetZoom = maxZoom;
+        if (targetZoom < minZoom) targetZoom = minZoom;
 
         BeginDrawing(); //NEEDED
         // All the games draw calls need to be inside the main beginDrawing?

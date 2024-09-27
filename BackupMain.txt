@@ -1,0 +1,159 @@
+#include <iostream>
+#include <raylib.h>
+#include <raymath.h>
+
+
+using namespace std;
+
+int main() {
+    const int screenWidth = 1024;
+    const int screenHeight = 1024;
+    const float walkSpeed = 50.0f;
+    const float runSpeed = 100.0f;  // Faster speed for running
+    InitWindow(screenWidth, screenHeight, "PlatformerTest");
+    InitAudioDevice();
+    Vector2 manPosition = {screenWidth / 2, (screenHeight / 2)};
+    Texture2D Man = LoadTexture("assets/Man.png");
+    Texture2D manSheet = LoadTexture("assets/WalkSheet.png");
+    Texture2D RunSheet = LoadTexture("assets/RunSheet.png");
+    Texture2D foreground = LoadTexture("assets/Foreground.png");  //3096
+    Texture2D midground = LoadTexture("assets/Midground.png");    // 3096
+    Texture2D background = LoadTexture("assets/Background.png");
+    Music music = LoadMusicStream("assets/moonbase_normal.ogg");
+    manPosition = Vector2{manPosition.x + 1410, manPosition.y + 188}; //ofset man position to starting location. 
+    const int frameWidth = 64;
+    const int frameHeight = 64;
+    const int walkNumFrames = manSheet.width / frameWidth;
+    const int runNumFrames = RunSheet.width / frameWidth;
+
+    Color customBackgroundColor = {32, 42, 63, 255};  // RGBA(32, 42, 63, 255)
+    int currentFrame = 0;
+    float frameCounter = 0.0f;
+    float frameSpeed = 8.0f;  // frames per second
+    bool isMoving = false;
+    bool facingRight = true;  // Start facing right by default
+    
+    // Set up the camera
+    Camera2D camera = {0};
+    camera.offset = (Vector2){ screenWidth / 2.0f, screenHeight / 2.0f + 188};
+    camera.rotation = 0.0f;
+    camera.zoom = 1.0f;
+    float targetZoom = camera.zoom;
+    camera.target = manPosition;
+
+    SetTargetFPS(60);
+    //PlayMusicStream(music);
+
+    while (!WindowShouldClose()) {
+        UpdateMusicStream(music);
+
+       
+        // Handle zoom input
+        
+        if (GetMouseWheelMove() > 0) {
+            targetZoom += .2f;
+        
+        } else if (GetMouseWheelMove() < 0) {
+            targetZoom -= .2f;
+        
+        }
+        camera.zoom = Lerp(camera.zoom, targetZoom, .1);
+        // Apply boundary checks for the zoom level
+        if (camera.zoom > 2.0f) camera.zoom = 2.0f;
+        if (camera.zoom < 1.0f) camera.zoom = 1.0f;
+        if (targetZoom > 2.0f) targetZoom = 2.0f;
+        if (targetZoom < 1.0f) targetZoom = 1.0f;
+
+        isMoving = false;
+        bool isRunning = IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT);  // Check if shift is held down
+        float currentSpeed = isRunning ? runSpeed : walkSpeed;
+
+        if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
+            manPosition.x += currentSpeed * GetFrameTime();
+            isMoving = true;
+            facingRight = true;
+        }
+
+        if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
+            manPosition.x -= currentSpeed * GetFrameTime();
+            isMoving = true;
+            facingRight = false;
+        }
+
+        // Update the camera to follow the player
+        camera.target = manPosition;
+
+        // Calculate parallax effect offsets
+        float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
+        float parallaxBackground = camera.target.x * 0.2f;  // Background moves even slower
+
+        // Calculate centering for the foreground relative to the midground
+        float foregroundXOffset = 1024;
+
+        // Play animation
+        if (isMoving) {
+            frameCounter += GetFrameTime() * frameSpeed;
+            if (frameCounter >= 1) {
+                currentFrame++;
+                frameCounter = 0;
+
+                int numFrames = isRunning ? runNumFrames : walkNumFrames; //if isRunning: numframes = runNumFrames else walkNumFrames
+                if (currentFrame >= numFrames) {
+                    currentFrame = 0;  // loop back to first frame
+                }
+            }
+        } else {
+            currentFrame = 0;
+        }
+
+        Rectangle sourceRec = {currentFrame * frameWidth, 0, frameWidth, frameHeight};
+        if (!facingRight) {
+            sourceRec.width = -frameWidth;
+        }
+
+        BeginDrawing();
+        ClearBackground(customBackgroundColor);
+
+        BeginMode2D(camera);
+
+        // Draw the background (sky)
+        DrawTexturePro(background, {0, 0, static_cast<float>(background.width), static_cast<float>(background.height)},
+                      {parallaxBackground, 0, static_cast<float>(background.width), static_cast<float>(background.height)}, {0, 0}, 0.0f, WHITE);
+
+        // Draw the midground (silhouettes)
+        DrawTexturePro(midground, {0, 0, static_cast<float>(midground.width), static_cast<float>(midground.height)},
+                      {parallaxMidground, 0, static_cast<float>(midground.width), static_cast<float>(midground.height)}, {0, 0}, 0.0f, WHITE);
+
+        // Draw the foreground (main scene), centered relative to the midground
+        DrawTexturePro(foreground, {0, 0, static_cast<float>(foreground.width), static_cast<float>(foreground.height)},
+                      {foregroundXOffset, 0, static_cast<float>(foreground.width), static_cast<float>(foreground.height)}, {0, 0}, 0.0f, WHITE);
+
+        // Draw the correct animation based on whether the player is running or walking
+        if (isMoving) {
+            if (isRunning) {
+                DrawTextureRec(RunSheet, sourceRec, manPosition, WHITE); //run
+            } else {
+                DrawTextureRec(manSheet, sourceRec, manPosition, WHITE); // walk
+            }
+        } else {
+            Rectangle idleSourceRec = {0, 0, Man.width, Man.height}; // idle
+            DrawTextureRec(Man, idleSourceRec, manPosition, WHITE);
+        }
+
+        EndMode2D();
+        EndDrawing();
+    }
+
+    //close window
+    UnloadMusicStream(music);
+    CloseAudioDevice();
+    UnloadTexture(Man);
+    UnloadTexture(manSheet);
+    UnloadTexture(RunSheet);  // Unload the running texture
+    UnloadTexture(foreground);
+    UnloadTexture(midground);
+    UnloadTexture(background);
+    CloseWindow();
+    return 0;
+}
+

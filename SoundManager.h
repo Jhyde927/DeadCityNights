@@ -1,0 +1,105 @@
+#ifndef SOUNDMANAGER_H
+#define SOUNDMANAGER_H
+
+#include <map>
+#include <string>
+#include <raylib.h>
+
+class SoundManager {
+public:
+    static SoundManager& getInstance() {
+        static SoundManager instance;
+        return instance;
+    }
+
+    // Load a sound and store it in the manager
+    void LoadSound(const std::string& name, const std::string& filePath) {
+        if (sounds.find(name) == sounds.end()) {
+            Sound sound = ::LoadSound(filePath.c_str());  // Load the sound
+            sounds[name] = sound;  // Store in the map
+        }
+    }
+
+    // Load music and store it in the manager
+    void LoadMusic(const std::string& name, const std::string& filePath) {
+        if (musicTracks.find(name) == musicTracks.end()) {
+            Music music = ::LoadMusicStream(filePath.c_str());  // Load the music stream
+            musicTracks[name] = music;  // Store in the map
+        }
+    }
+
+    // Retrieve a sound by name
+    Sound& GetSound(const std::string& name) {
+        return sounds[name];
+    }
+
+    // Retrieve music by name
+    Music& GetMusic(const std::string& name) {
+        return musicTracks[name];
+    }
+
+
+
+    // Play music with looping enabled
+    void PlayMusic(const std::string& name) {
+        if (musicTracks.find(name) != musicTracks.end()) {
+            PlayMusicStream(musicTracks[name]);
+            musicTracks[name].looping = true;  // Set looping
+        }
+    }
+
+    // Stop all music
+    void StopMusic(const std::string& name) {
+        if (musicTracks.find(name) != musicTracks.end()) {
+            StopMusicStream(musicTracks[name]);
+        }
+    }
+
+    // Update music stream (call every frame to keep it playing)
+    void UpdateMusic(const std::string& name) {
+        if (musicTracks.find(name) != musicTracks.end()) {
+            UpdateMusicStream(musicTracks[name]);
+        }
+    }
+
+    void SetSoundVolume(const std::string& name, float volume) {
+        if (sounds.find(name) != sounds.end()) {
+            ::SetSoundVolume(sounds[name], volume);  // Set volume of the sound
+        }
+    }
+
+    void SetMusicVolume(const std::string& name, float volume) {
+        if (musicTracks.find(name) != musicTracks.end()) {
+            ::SetMusicVolume(musicTracks[name], volume);  // Set volume of the music stream
+        }
+    }
+
+    void UnloadAllSounds() {
+        for (auto& pair : sounds) {
+            if (pair.second.stream.buffer != nullptr) {  // Ensure the sound buffer is not null
+                UnloadSound(pair.second);
+            }
+        }
+        sounds.clear();
+        
+        for (auto& pair : musicTracks) {
+            UnloadMusicStream(pair.second);  // Unload all music streams
+        }
+        musicTracks.clear();
+    }
+
+private:
+    std::map<std::string, Sound> sounds; // vector of sounds?
+    std::map<std::string, Music> musicTracks;  // Map for storing music streams
+
+    // Make constructor private to enforce Singleton pattern
+    SoundManager() = default;
+    ~SoundManager() {
+        UnloadAllSounds();
+    }
+
+    SoundManager(const SoundManager&) = delete;
+    SoundManager& operator=(const SoundManager&) = delete;
+};
+
+#endif // SOUNDMANAGER_H

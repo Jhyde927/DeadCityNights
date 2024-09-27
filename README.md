@@ -1,6 +1,6 @@
 # CityNights
 
-**CityNights** is a pixel-art, narrative-driven game developed in C++ using Raylib. In the game, the player explores a city, interacts with NPCs, and fights zombies in different environments such as the street, apartment, cemetery, and gas station.
+**CityNights** is a pixel-art, narrative-driven game developed in C++ using Raylib. In the game, the player explores a city, interacts with NPCs, and fights zombies.
 
 ## Features
 - **Multiple Locations**: City streets, apartments, a cemetery, and more.

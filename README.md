@@ -1,26 +1,19 @@
-# Raylib C++ Starter Template
+# CityNights
 
-Raylib C++ Starter Template for Visual Studio Code on Windows.
+**CityNights** is a pixel-art, narrative-driven game developed in C++ using Raylib. In the game, the player explores a city, interacts with NPCs, and fights zombies in different environments such as the street, apartment, cemetery, and gas station.
 
-This demo project contains a bouncing ball raylib example program.
+## Features
+- **Multiple Locations**: City streets, apartments, a cemetery, and more.
+- **Combat**: Fight zombies and other creatures.
+- **Inventory System**: Collect items like car keys and a gun.
+- **NPC Dialog**: Randomized phrases from NPCs you encounter on the street.
+- **Day/Night Cycle**: Sleep to advance the in-game day.
 
-It works with raylib version 4.5.
-Tested on both Windows 10 and Windows 11.
+## Installation
 
-# Video Tutorial
+To build and run the project, follow these steps:
 
-<p align="center">
-  <img src="preview.jpg" alt="" width="800">
-</p>
-
-<p align="center">
-🎥 <a href="https://www.youtube.com/watch?v=PaAcVk5jUd8">Video Tutorial on YouTube</a>
-</p>
-
-<br>
-<br>
-<p align="center">
-| 📺 <a href="https://www.youtube.com/channel/UC3ivOTE5EgpmF2DHLBmWIWg">My YouTube Channel</a>
-| 🌍 <a href="http://www.educ8s.tv">My Website</a> | <br>
-</p>
-
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/CityNights.git
+   cd CityNights

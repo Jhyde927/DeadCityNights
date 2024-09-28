@@ -7,4 +7,4 @@
 - **Combat**: Fight zombies and other creatures.
 - **Inventory System**: Collect items like car keys and a gun.
 - **NPC Dialog**: Randomized phrases from NPCs you encounter on the street.
-- **Day/Night Cycle**: Sleep to advance the in-game day.
+

@@ -57,6 +57,7 @@ public:
     void SetAnimationState(AnimationState newState);
     void SetDestination(float minX, float maxX);
     bool CheckHit(Vector2 previousPosition, Vector2 bulletPosition, Vector2 bulletSize);
+    void HandleNPCInteraction();
 
     void TakeDamage(int damage);
 };

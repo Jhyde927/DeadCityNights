@@ -42,7 +42,8 @@ bool show_carUI = false;
 bool leave_apartment = false;
 bool leave_cemetery = false;
 bool buttonCemetery = false;
-bool drawShovel = true;
+bool firstHobo = true;
+bool drawShovel = false;
 bool drawShotgun = true;
 bool buttonWork = false;
 bool buttonTavern = false;
@@ -65,7 +66,7 @@ bool reverse_road = false;
 bool has_car_key = false;
 bool npcWalk = false;
 bool openDrawer = false;
-bool raiseZombies = true;
+bool raiseZombies = false;
 bool zombieWave2 = false;
 bool zombieWave3 = false;
 bool show_dbox = false;
@@ -354,7 +355,8 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
         if (player.enter_car && buttonCemetery){//button press street
            //move_car = true;
             transitionState = FADE_OUT;
-            raiseZombies = true; //reset zombie waves. So returning player will trigger them again. 
+            //dont reset yet
+            raiseZombies = false; //reset zombie waves. So returning player will trigger them again. 
             zombieWave2 = false;
             zombieWave3 = false;
 
@@ -449,7 +451,8 @@ void UpdateZombieSpawning(GameResources& resources, Player& player){
             remainingZombiesToSpawn--;
         }
     }else{
-        glitch = false; //glitch only runs if zombies are actively spawning. 
+        glitch = false; //glitch only runs if zombies are actively spawning.
+
     }
 
 }
@@ -933,12 +936,12 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         player.facingRight = mousePosition.x > player.position.x; //this code does not seem to run
     }
     
-
-    if (!player.enter_car && player.position.x < 1900 && !zombieWave3){ // walk to far left and zombies spawn again
+    //dont spawn unless raise zombies is true. raise zombies is set to true by talking to the hobo. 
+    if (!player.enter_car && player.position.x < 1900 && !zombieWave3 && !firstHobo){ // walk to far left and zombies spawn again
         zombieWave3 = true;
         StartZombieSpawn(10);
     }
-    if (!player.enter_car && player.position.x > 3000 && !zombieWave2){ //walk too far right and zombies spawn again
+    if (!player.enter_car && player.position.x > 3000 && !zombieWave2 && !firstHobo){ //walk too far right and zombies spawn again
         zombieWave2 = true;
         StartZombieSpawn(10);
     }
@@ -1159,7 +1162,7 @@ void RenderRoad(const GameResources& resources, PlayerCar& player_car,Player& pl
         transitionState = FADE_OUT;
         move_car = true;
 
-    if (rand() % 2 == 0 && !playOwl){
+    if (!firstHobo && !playOwl){ // only play owl sound if zombies are going to spawn
         playOwl = true;
         PlaySound(SoundManager::getInstance().GetSound("Owl"));
     }
@@ -1350,7 +1353,13 @@ void renderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
         hobo.Render();
         hobo.ClickNPC(mousePosition, camera, player);
 
-        if (hobo.interacting){
+        if (hobo.interacting){ 
+            if (firstHobo){ // only raise zombie and draw shovel if it's the fist visit to the hobo
+                firstHobo = false;
+                raiseZombies = true; // zombies don't spawn until you talk to hobo. 
+                drawShovel = true; //shovel isn't in cemetery until you talk to hobo.
+            }
+
             dboxPosition = hobo.position;
             dealer = false; // dealer gets left on somewhere
             show_dbox = true;   //dialogBox
@@ -1391,9 +1400,9 @@ void renderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
         }
 
         //press up or W to pickup shotgun if close enough
-        if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP) && distance < 20){
+        if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
 
-            if (!player.hasShotgun){
+            if (!player.hasShotgun && distance < 20){
                 AddItemToInventory("shotgun", inventory, INVENTORY_SIZE);
                 player.hasShotgun = true;
                 showInventory = true;
@@ -1695,11 +1704,11 @@ void spawnNPCs(GameResources& resources){
 
     //spawn hobo update and draw only in vacant lot
     
-    Vector2 h_pos = {2900, 700};
+    Vector2 h_pos = {2600, 700};
     NPC hobo_npc = CreateNPC(resources.hoboSheet, h_pos, speed, IDLE, true, false);
-    hobo_npc.SetDestination(2800, 3200);
+    hobo_npc.SetDestination(2600, 2800);
     hobo_npc.hobo = true;
-    hobos.push_back(hobo_npc);//hobo is in it's own vector of hobos
+    hobos.push_back(hobo_npc);//hobo is in it's own vector of hobos. incase we need another hobo
     
 
     //spawn policemen
@@ -1791,19 +1800,15 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadSound("phit2", "assets/sounds/PlayerHit2.ogg");
 
     //Volume edits
-    SoundManager::getInstance().SetSoundVolume("CarStart", .5);
+    SoundManager::getInstance().SetSoundVolume("CarStart", 0.5);
     SoundManager::getInstance().SetSoundVolume("BoneCrack", 0.3f);
     SoundManager::getInstance().SetMusicVolume("CarRun", 0.25f);
     SoundManager::getInstance().SetMusicVolume("Schumann", 0.25f);
+    SoundManager::getInstance().SetSoundVolume("Owl", 0.5)
 }
 
 
-
-
-
-
 int main() {
-    //God speed  
     InitWindow(screenWidth, screenHeight, "Adventure Game");
     //PUT NOTHING ABOVE THIS ^^ CAN CAUSE SEG FAULT
     InitAudioDevice();

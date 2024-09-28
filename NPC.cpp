@@ -68,6 +68,75 @@ std::string GetRandomPhrase() {
     return phrases[randomIndex];
 }
 
+void NPC::HandleNPCInteraction(){
+        destination = position;//Stop NPC
+        interacting = true;
+        idleTime = 5;
+        if (dealer) idleTime = 10;
+        
+        SetAnimationState(IDLE);
+        if (police && !talked){
+            talked = true;
+            speech = (rand() % 2 == 0) ? "Freeze!" : "Halt!";
+            talkTimer = 1;
+            idleTime = 1;
+            agro = true;
+        }
+        if (hobo && !talked){
+            talked = true;
+            clickCount += 1;
+            idleTime = 3; //stops NPC while talking
+            talkTimer = 3; // ensures this only runs once
+            switch (clickCount){
+                case 1:
+                    speech = "GaaHh, what do you want?";
+                    break;
+                case 2:
+                    speech = "wait, you're not like the others";
+                    break;
+                case 3:
+                    speech = "maybe you'll believe me";
+                    break;
+
+                case 4:
+                    speech = "I was in the graveyard last night.\n\nI saw something...";
+                    break;
+
+                case 5:
+                    speech = "..."; //pause for dramatic effect. 
+                    
+                    break;
+
+                case 6:
+                    speech = "The DEAD were RISING\n\nfrom their GRAVES!";
+                    break;
+
+                case 7:
+                    speech = "I dropped my SHOVEL and\n\ngot the hell out of there";
+                    break;
+
+                case 8:
+                    speech = "I'd stay away from there\n\nif I was you";
+                    break;
+
+                case 9:
+                    speech = "...";
+                    break;
+
+
+            }
+                
+            
+            
+        }
+        if (!talked && !hobo && !police){
+            talked = true;
+            speech = GetRandomPhrase(); // NPC greets player
+            talkTimer = 30; //limit talking. 30 second cooldown
+        }
+        
+    }
+
 
 
 // Function to set a new random destination within a specified range
@@ -79,7 +148,15 @@ void NPC::SetDestination(float minX, float maxX) {
 
 void NPC::Update(Player& player) {
     if (!isActive) return;  // Skip update if the NPC is not active
-    
+    float distance_to_player = abs(player.position.x - position.x);
+    if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
+        if (distance_to_player < 20){
+            HandleNPCInteraction();
+        }
+    }
+
+
+
     // Check if the zombie is still rising
     if (riseTimer > 0) {
         riseTimer -= GetFrameTime();
@@ -353,71 +430,7 @@ void NPC::ClickNPC(Vector2 mousePosition, Camera2D& camera, Player& player){
         if (CheckCollisionPointRec(mouseWorldPos, npcHitbox)){
             float distance = abs(mouseWorldPos.x - player.position.x);
             if (distance < 75){ // NPC must be close to interact
-                destination = position;//Stop NPC
-                interacting = true;
-                idleTime = 5;
-                if (dealer) idleTime = 10;
-                
-                SetAnimationState(IDLE);
-                if (police && !talked){
-                    talked = true;
-                    speech = (rand() % 2 == 0) ? "Freeze!" : "Halt!";
-                    talkTimer = 1;
-                    idleTime = 1;
-                    agro = true;
-                }
-                if (hobo && !talked){
-                    talked = true;
-                    clickCount += 1;
-                    idleTime = 3; //stops NPC while talking
-                    talkTimer = 3; // ensures this only runs once
-                    switch (clickCount){
-                        case 1:
-                            speech = "Gahh, what\n\ndo you want?";
-                            break;
-                        case 2:
-                            speech = "you're not like the others";
-                            break;
-                        case 3:
-                            speech = "maybe you'll believe me";
-                            break;
-
-                        case 4:
-                            speech = "I was in the graveyard\n\nlast night. I saw something";
-                            break;
-
-                        case 5:
-                            speech = "..."; //pause for dramatic effect. 
-                            
-                            break;
-
-                        case 6:
-                            speech = "The dead were rising\n\nfrom their graves!";
-                            break;
-
-                        case 7:
-                            speech = "I dropped my shovel\n\nand got the hell out of there";
-                            break;
-
-                        case 8:
-                            speech = "I'd stay away from there\n\nif I was you";
-                            break;
-
-                        case 9:
-                            speech = "...";
-                            break;
-
-
-                    }
-                        
-                  
-                    
-                }
-                if (!talked && !hobo && !police){
-                    talked = true;
-                    speech = GetRandomPhrase(); // NPC greets player
-                    talkTimer = 30; //limit talking. 30 second cooldown
-                }
+                HandleNPCInteraction();
                 
             }
 

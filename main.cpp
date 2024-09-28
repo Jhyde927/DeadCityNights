@@ -37,6 +37,7 @@ bool runOnce = true;
 bool streetSounds = false;
 bool over_apartment = false;
 bool over_car = false;
+bool over_shotgun = false;
 bool show_carUI = false;
 bool leave_apartment = false;
 bool leave_cemetery = false;
@@ -1055,7 +1056,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
 
     Vector2 shovelPos = {1900, 700};
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
-
+    float distance = abs(shovelPos.x - player.position.x);
     if (drawShovel){ //shovel pickup
         DrawTexture(resources.shovelWorld, shovelPos.x, shovelPos.y, WHITE);
         Rectangle shovelBounds = { //shovel button
@@ -1066,13 +1067,32 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         };
 
     
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){ //pickup shovel
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)&& distance < 20){ //pickup shovel
             if (CheckCollisionPointRec(mouseWorldPos, shovelBounds)){
                 //add shovel in inventory
+                if (!player.hasShovel){
+                    drawShovel = false;
+                    AddItemToInventory("shovel", inventory, INVENTORY_SIZE);
+                    showInventory = true;
+                    player.hasShovel = true;
+                
+                }
+            
+            }
+
+
+        }
+        //Press up key or W to pickup shovel when close enough
+        if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP) && distance < 20){
+            if (!player.hasShovel){
+                drawShovel = false;
                 AddItemToInventory("shovel", inventory, INVENTORY_SIZE);
                 showInventory = true;
-                drawShovel = false;
+                player.hasShovel = true;
+            
             }
+                
+
         }
 
     }
@@ -1276,6 +1296,8 @@ void renderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
         over_exit = false;
     }
 
+
+
     over_lot = false;
     if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
         if (over_exit){
@@ -1347,15 +1369,15 @@ void renderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
 
     if (drawShotgun){
         DrawTexture(resources.shotgunPickup, 3181, 700, WHITE);
-        Rectangle shotgunBounds = {
-            shotgunPos.x,      // X position
-            shotgunPos.y,      // Y position
-            static_cast<float>(64),  // Width of the texture
-            static_cast<float>(64)  // Height of the texture
+        Rectangle shotgunBounds = { //Shotgun Button
+            shotgunPos.x,
+            shotgunPos.y,     
+            static_cast<float>(64),  
+            static_cast<float>(64)  
         };
 
         if (CheckCollisionPointRec(mouseWorldPos, shotgunBounds)){
-            
+            //click on shotgun to pickup if close 
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && distance < 20){
                 if (!player.hasShotgun){
                     AddItemToInventory("shotgun", inventory, INVENTORY_SIZE);
@@ -1368,12 +1390,22 @@ void renderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
             }
         }
 
+        //press up or W to pickup shotgun if close enough
+        if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP) && distance < 20){
+
+            if (!player.hasShotgun){
+                AddItemToInventory("shotgun", inventory, INVENTORY_SIZE);
+                player.hasShotgun = true;
+                showInventory = true;
+                drawShotgun = false;
+                //play sound effect
+                PlaySound(SoundManager::getInstance().GetSound("shotgunReload"));
+            }
+
+            }
+        
+
     }
-
-
-
-
-
 
     
     EndMode2D();  // End 2D mode 
@@ -1426,21 +1458,38 @@ void RenderOutside(const GameResources& resources, Camera2D& camera,Player& play
 
     }
 
+    show_dbox = false; // reset to false if it falls through
     if (player.position.x > pc_min && player.position.x < pc_max){
         over_car = true;
+        phrase = "PRESS UP TO ENTER";
+        show_dbox = true;
+        dboxPosition = player.position;
+        
         
     }else{
         over_car = false;
     }
 
+    
     if (player.position.x > lot_min && player.position.x < lot_max){
         over_lot = true;
+        phrase = "PRESS UP TO ENTER";
+        dboxPosition = player.position;
+        
+        show_dbox = true;
+
     }else{
         over_lot = false;
+        
     }
     
     if (player.position.x > ap_min  && player.position.x < ap_max){
         over_apartment = true;
+        phrase = "PRESS UP TO ENTER";
+        dboxPosition = player.position;
+        dboxPosition.y = player.position.y + 10;
+        show_dbox = true;
+        
     }else{
         over_apartment = false;
     }
@@ -1489,7 +1538,7 @@ void RenderOutside(const GameResources& resources, Camera2D& camera,Player& play
         player_car.position = Vector2{1710, 668};
     }
     
-    show_dbox = false;  //turn off dbox if no one is interacting
+    //show_dbox = false;  //turn off dbox if no one is interacting
     for (NPC& npc : npcs){
         npc.Update(player);
         npc.Render();
@@ -1514,6 +1563,7 @@ void RenderOutside(const GameResources& resources, Camera2D& camera,Player& play
             
 
         }else{
+            dealer = false;
             // show_dbox = false;
         }
     
@@ -1585,9 +1635,13 @@ void RenderOutside(const GameResources& resources, Camera2D& camera,Player& play
     
     
 
-    if (show_dbox){
+    if (show_dbox && !player.enter_car){
+        if (over_lot || over_apartment || over_car){
+            DrawDialogBox(camera, 0, 0, 20);
+        }else{
+            DrawDialogBox(camera, 128, 64, 20);
+        }
         
-        DrawDialogBox(camera, 128, 64, 20);
     }
 
     //DrawText("Paper Street", screenWidth/2 - 128, 60, 50, WHITE);

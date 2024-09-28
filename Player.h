@@ -35,6 +35,7 @@ public:
     bool canShoot;
     bool hasGun;
     bool hasShotgun;
+    bool hasShovel;
 
     bool enter_car;
     int bulletCount;

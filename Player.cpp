@@ -35,6 +35,7 @@ Player::Player() {
     canShoot = true;
     hasGun = false;
     hasShotgun = false;
+    hasShovel = false;
     enter_car = false;
     can_take_damage = true;
 

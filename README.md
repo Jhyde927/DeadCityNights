@@ -14,7 +14,7 @@
 ![Screenshot of the game](ScreenShot0.png)
 
 ## Installation
-The release is a very early alpha version. Unzip and run game.exe
+The release is a very early alpha version. Unzip and run game.exe. It is for windows only for now. 
 
 ## Controls
 Arrow keys left and right or A and D to move. Press up to interact with environment.Press up or click on NPCs to talk to them. Right click or F to aim. Left click or space while aiming to shoot. Guns only work in the cemetery.

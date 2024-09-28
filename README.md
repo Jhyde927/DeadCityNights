@@ -9,3 +9,5 @@
 - **NPC Dialog**: Randomized phrases from NPCs you encounter on the street.
 
 ![Screenshot of the game](ScreenShot0.png)
+![Screenshot of the game](ScreenShot1.png)
+

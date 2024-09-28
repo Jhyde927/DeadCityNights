@@ -8,3 +8,4 @@
 - **Inventory System**: Collect items like car keys and a gun.
 - **NPC Dialog**: Randomized phrases from NPCs you encounter on the street.
 
+![Screenshot of the game](ScreenShot0.png)

@@ -336,7 +336,7 @@ void NPC::Update(Player& player) {
                 if (!hobo){
                     SetDestination(1800, 3000);  // Set a new destination within the range
                 }else{
-                    SetDestination(2400, 2500); // hobo stays near center
+                    SetDestination(2600, 2800); // hobo stays near center
                 }
                 
             }

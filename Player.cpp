@@ -48,7 +48,7 @@ Player::Player() {
     bulletCount = 6;
     revolverBulletCount = 6;
     shotgunBulletCount = 2;  // For Shotgun
-    shotgunReloadTime = 2.0f;  // Reload time for Shotgun
+    shotgunReloadTime = 0.7f;  // Reload time for Shotgun
     currentWeapon = REVOLVER;  // Start with Revolver
 
 
@@ -57,6 +57,7 @@ Player::Player() {
 
 
 void Player::take_damage(int damage) {
+    
     if (!enter_car){ //dont take damage if inside car
         
         if (rand() % 2 == 0){
@@ -83,10 +84,83 @@ void Player::take_damage(int damage) {
 }
 
 
+float GetRightBoundary(GameState gameState){
+    if (gameState == OUTSIDE){
+        return 4000.0f;
+    }else if (gameState == CEMETERY){
+        return 4000;
+    }else if (gameState == LOT){
+        return 3214;
+    }
+}
+
+float GetLeftBoundary(GameState gameState){
+    if (gameState == OUTSIDE){
+        return 1064;
+    }else if (gameState == CEMETERY){
+        return 1700;
+    }else if (gameState == LOT){
+        return 2218;
+    }
+}
+
+void Player::HandleInput(float speed){
+        double currentTime = GetTime();
+        float deltaTime = GetFrameTime();
+        // Double tap to run (for A, D, LEFT, RIGHT)
+        if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A)) {
+            if (currentTime - LastTapTimeLeft < tapInterval) {
+                isRunning = true;  // Double-tap detected, start running
+            }
+            LastTapTimeLeft = currentTime;  // Update last tap time
+        }
+
+        if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D)) {
+            if (currentTime - LastTapTimeRight < tapInterval) {
+                isRunning = true;  // Double-tap detected, start running
+            }
+            LastTapTimeRight = currentTime;  // Update last tap time
+        }
+        
+        // Movement logic
+        if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
+            position.x += speed * deltaTime;
+            isMoving = true;
+            facingRight = true;
+        }
+        if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
+            position.x -= speed * deltaTime;
+            isMoving = true;
+            facingRight = false;
+        }
+
+
+
+        
+        // Check for shift key to run
+        if ((IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) && !isAiming) {
+            isRunning = true;
+        } else if (!IsKeyDown(KEY_LEFT) && !IsKeyDown(KEY_RIGHT) && !IsKeyDown(KEY_A) && !IsKeyDown(KEY_D) && !isAiming) {
+            isRunning = false;  // Stop running if no movement keys are pressed
+        }
+
+
+
+
+        if (isAiming && !isReloading) {
+            if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
+                facingRight = true;
+            }
+            if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
+                facingRight = false;
+            }
+        }
+}
+
 void Player::UpdateMovement(const GameResources& resources,  GameState& gameState, Vector2& mousePosition, Camera2D& camera) {
     isMoving = false;
     //Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
-
+    float deltaTime = GetFrameTime();
     if (IsKeyPressed(KEY_ONE)) {
         currentWeapon = REVOLVER;
     } else if (IsKeyPressed(KEY_TWO)) {
@@ -123,7 +197,7 @@ void Player::UpdateMovement(const GameResources& resources,  GameState& gameStat
     ///////////RELOAD//LOGIC///////////////
     if (reloadTimer > 0){
         
-        reloadTimer -= GetFrameTime();
+        reloadTimer -= deltaTime;
         isReloading = true;
         canShoot = false;
         isAiming = false;
@@ -133,23 +207,17 @@ void Player::UpdateMovement(const GameResources& resources,  GameState& gameStat
     }
 
     if (shotgunReloadTime > 0){
-        shotgunReloadTime -= GetFrameTime();
+        shotgunReloadTime -= deltaTime;
         isReloading = true;
         canShoot = false;
+        isAiming = false;
     }else{
         //isReloading = false;
         canShoot = true;
     }
 
     
-    //isRunning = (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT));
-
-
-    
     isAiming = (hasGun || hasShotgun) && (IsKeyDown(KEY_F) || IsKeyDown(KEY_LEFT_CONTROL) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) && !isShooting && !isReloading;
-   
-
-
 
     if (currentWeapon == REVOLVER){
 
@@ -206,24 +274,24 @@ void Player::UpdateMovement(const GameResources& resources,  GameState& gameStat
 
     //keep player in bounds
     if (gameState == OUTSIDE){
-        if (position.x < 1064){
-            position.x = 1065;
-        }else if (position.x > 4000){
-            position.x = 3999;
+        if (position.x < GetLeftBoundary(OUTSIDE)){ //left outside
+            position.x = GetLeftBoundary(OUTSIDE) + 1;
+        }else if (position.x > GetRightBoundary(OUTSIDE)){//right outside boundary
+            position.x = GetRightBoundary(OUTSIDE) -1;
         }
 
     }
     else if (gameState == CEMETERY){
-        if (position.x < 1700){
-            position.x = 1701;
-        }else if (position.x > 4000){
-            position.x = 3999;
+        if (position.x < GetLeftBoundary(CEMETERY)){
+            position.x = GetLeftBoundary(CEMETERY) + 1;
+        }else if (position.x > GetRightBoundary(CEMETERY)){
+            position.x = GetRightBoundary(CEMETERY)-1;
         }
     }else if (gameState == LOT){
-        if (position.x < 2218){
-            position.x = 2219;
-        }else if (position.x > 3214){
-            position.x = 3213;
+        if (position.x < GetLeftBoundary(LOT)){
+            position.x = GetLeftBoundary(LOT)+1;
+        }else if (position.x > GetRightBoundary(LOT)){
+            position.x = GetRightBoundary(LOT)-1;
         }
     }
 
@@ -231,54 +299,7 @@ void Player::UpdateMovement(const GameResources& resources,  GameState& gameStat
  
     if (!isAiming && !isShooting && !isReloading) {
         //KEYBOARD MOVEMENT CODE
-
-        double currentTime = GetTime();
-
-        // Double tap to run
-        if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A)) {
-            if (currentTime - LastTapTimeLeft < tapInterval) {
-                isRunning = true;  // Double-tap detected, start running
-            }
-            LastTapTimeLeft = currentTime;  // Update last tap time
-        }
-
-        
-        if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D)) {
-            if (currentTime - LastTapTimeRight < tapInterval) {
-                isRunning = true;  
-            }
-            LastTapTimeRight = currentTime;  
-        }
-        
-        if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
-            position.x += speed * GetFrameTime();
-            isMoving = true;
-            facingRight = true;
-        }
-        if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
-            position.x -= speed * GetFrameTime();
-            isMoving = true;
-            facingRight = false;
-        }
-
-
-            // Check for shift key to run
-        if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT) && !isAiming) {
-            isRunning = true;
-        } else if (!IsKeyDown(KEY_LEFT) && !IsKeyDown(KEY_RIGHT) && !isAiming) {
-            isRunning = false;  // Stop running if no movement keys are pressed
-        }
-
-
-
-
-    } else if (isAiming && !isReloading) {
-        if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
-            facingRight = true;
-        }
-        if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
-            facingRight = false;
-        }
+        HandleInput(speed);
     
     }
 
@@ -299,6 +320,7 @@ void Player::UpdateMovement(const GameResources& resources,  GameState& gameStat
             }
         }
     }else if (isReloading){
+        frameSpeed = 1; //insure framespeed isn't 1.5 because of running
         frameCounter += GetFrameTime() * frameSpeed;
         int numFrames = (resources.reloadSheet.width/ 64);
         if (frameCounter >= 0.1) {
@@ -310,7 +332,9 @@ void Player::UpdateMovement(const GameResources& resources,  GameState& gameStat
                 currentFrame = 0;
                 isShooting = false;
                 isAiming = true;
-                isReloading = false;
+                isReloading = false; //reload animation is done reset isreloading what if reload time is still going?
+                reloadTimer = 0; //reloadTimer doesn't match the actual reload speed, so set it to 0 here. 
+                shotgunReloadTime = 0; // setting timer to 0 here seemed to fix the reload anim playing twice.  
                 canShoot = true;
             }
         }

@@ -51,6 +51,7 @@ struct GameResources {
     Texture2D shovelWorld;
     Texture2D shotgunPickup;
     Texture2D shotgunIcon;
+    Texture2D pills;
     Font defaultFont;
 };
 

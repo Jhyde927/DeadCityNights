@@ -46,6 +46,9 @@ bool firstHobo = true;
 bool drawShovel = false;
 bool drawShotgun = true;
 bool buttonWork = false;
+bool hasPills = false;
+bool digSpot = false;
+
 bool buttonTavern = false;
 bool gotoWork = false;
 bool hasWorked = false;
@@ -84,12 +87,12 @@ float blackoutTime = 2.0f;  // Time to stay blacked out
 float blackoutTimer = 0.0f; // Timer to keep track of blackout period
 
 Color customBackgroundColor = {32, 42, 63, 255};  //Same Color as street background image. 
-
+Color shovelTint = WHITE;
 int money = 100;
 int displayMoney = 100;
 bool showInventory = false;
-const int INVENTORY_SIZE = 6;  // Define the size of the inventory
-std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", ""};
+const int INVENTORY_SIZE = 8;  // Define the size of the inventory
+std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", ""};
 
 std::string phrase = "Hello";
 
@@ -180,6 +183,7 @@ void LoadGameResources(GameResources& resources) {
     resources.shovelWorld = LoadTexture("assets/shovelWorld.png");
     resources.shotgunPickup = LoadTexture("assets/ShotGunPickup.png");
     resources.shotgunIcon = LoadTexture("assets/shotgunIcon.png");
+    resources.pills = LoadTexture("assets/pills.png");
 }
 
 void UnloadGameResources(GameResources& resources){
@@ -223,6 +227,7 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.shovelWorld);
     UnloadTexture(resources.shotgunPickup);
     UnloadTexture(resources.shotgunIcon);
+    UnloadTexture(resources.pills);
    
 }
 
@@ -250,6 +255,8 @@ void EraseInventoryItem(std::string inventory[], int index, int inventorySize) {
 }
 
 
+
+
 void MonitorMouseClicks(Player& player, GameCalendar& calendar){
 
     //Debug mousePosition
@@ -270,6 +277,7 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
                 hasSlept = true;
                 drunk = false;  //Effects ware off when you sleep
                 applyShader = false;
+                over_apartment = false;
                 glitch = false;
                 transitionState = FADE_OUT; //fades out to street for now.
                 player.currentHealth = player.maxHealth; //recover hitpoints after sleeping. 
@@ -634,7 +642,9 @@ void UpdateInventoryPosition(const Camera2D& camera, GameState& gameState) {
 
 void RenderInventory(const GameResources& resources, std::string inventory[], int inventorySize, Player& player, Vector2& mousePosition) {
     int slotWidth = resources.inventorySlot.width;
-
+    shovelTint = WHITE;
+    Color gunTint = WHITE;
+    Color shotgunTint = WHITE;
     // Use integer values to snap to the nearest pixel, based on the camera-relative inventory position
     int startX = static_cast<int>(inventoryPositionX) - (slotWidth * inventorySize / 2);
     int startY = static_cast<int>(inventoryPositionY);
@@ -646,7 +656,9 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
 
         // Draw the inventory slot texture
         DrawTexture(resources.inventorySlot, x, y, WHITE);
-        
+        Color customTint = {255, 100, 100, 255}; // light red
+        if (player.currentWeapon == SHOTGUN) shotgunTint = customTint;
+        if (player.currentWeapon == REVOLVER) gunTint = customTint;
        // Draw the item name if there's an item in the slot
         if (!inventory[i].empty()) {
 
@@ -655,14 +667,34 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
                 
             }
             if (inventory[i] == "Gun"){
-                DrawTexture(resources.Revolver, x, y, WHITE);
+                DrawTexture(resources.Revolver, x, y, gunTint);
             }
             if (inventory[i] == "shotgun"){
-                DrawTexture(resources.shotgunIcon, x, y, WHITE);
+                DrawTexture(resources.shotgunIcon, x, y, shotgunTint);
             }
-            if (inventory[i] == "shovel"){
-                DrawTexture(resources.shovel, x, y, WHITE);
+            if (inventory[i] == "pills"){ // click on pills to take them 
+                DrawTexture(resources.pills, x, y, WHITE);
+                Rectangle pillBounds = { //shovel button
+                    x,      
+                    y,      
+                    static_cast<float>(64),  
+                    static_cast<float>(64)  
+                };
 
+                if (CheckCollisionPointRec(mousePosition, pillBounds)){
+                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+                        if (player.currentHealth < player.maxHealth && hasPills){
+                            inventory[i] = std::string("");  // erase pills from the string
+                            player.currentHealth = player.maxHealth;
+                            hasPills = false;
+
+                        }
+                    }
+                }
+
+            }
+
+            if (inventory[i] == "shovel"){
                 Rectangle shovelBounds = { //shovel button
                     x,      
                     y,      
@@ -670,14 +702,26 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
                     static_cast<float>(64)  
                 };
 
-                if (CheckCollisionPointRec(mousePosition, shovelBounds)){
+                if (CheckCollisionPointRec(mousePosition, shovelBounds)){ //dig
+                    
                     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
                      
-                        if (player.position.x > 1890 && player.position.x < 1910){
-                            std::cout << "DIGUP pills";
+                        if (player.position.x > 1860 && player.position.x < 1880 && !hasPills){ //over dig spot
+                            hasPills = true; //if you dont have pill you can allways get more here. 
+                            AddItemToInventory("pills", inventory, INVENTORY_SIZE);
+                            showInventory = true;
+                            PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
+                            shovelTint = RED;
+                        }
+
+                        if (digSpot && gameState == LOT){
+                            std::cout << "digging";
+                            PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
+                            shovelTint = RED;
                         }
                     }
                 }
+                DrawTexture(resources.shovel, x, y, shovelTint); //draw shovel after button to tint the color on press
 
             }
 
@@ -1057,7 +1101,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
 
     //render shovel. Click the shovel to pick it up. 
 
-    Vector2 shovelPos = {1900, 700};
+    Vector2 shovelPos = {1870, 700}; // render within 1900. where zombies trigger
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
     float distance = abs(shovelPos.x - player.position.x);
     if (drawShovel){ //shovel pickup
@@ -1293,12 +1337,18 @@ void RenderApartment(const GameResources& resources, Player player, Vector2 mous
 
 void renderLot(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition, Shader& drunkShader, Shader& glowShader, Shader& glitchShader){
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
+    int digPos = 2600;
     if (player.position.x < 2782 && player.position.x > 2742){
         over_exit = true;
     }else{
         over_exit = false;
     }
 
+    if (player.position.x > digPos - 10 && player.position.x < digPos + 10){
+        digSpot = true;
+    }else{
+        digSpot = false;
+    }
 
 
     over_lot = false;
@@ -1394,7 +1444,7 @@ void renderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
                     showInventory = true;
                     drawShotgun = false;
                     //play sound effect
-                    PlaySound(SoundManager::getInstance().GetSound("shotgunReload"));
+                    PlaySound(SoundManager::getInstance().GetSound("ShotgunReload"));
                 }
             }
         }
@@ -1408,7 +1458,7 @@ void renderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
                 showInventory = true;
                 drawShotgun = false;
                 //play sound effect
-                PlaySound(SoundManager::getInstance().GetSound("shotgunReload"));
+                PlaySound(SoundManager::getInstance().GetSound("ShotgunReload"));
             }
 
             }
@@ -1704,9 +1754,9 @@ void spawnNPCs(GameResources& resources){
 
     //spawn hobo update and draw only in vacant lot
     
-    Vector2 h_pos = {2600, 700};
+    Vector2 h_pos = {2800, 700};
     NPC hobo_npc = CreateNPC(resources.hoboSheet, h_pos, speed, IDLE, true, false);
-    hobo_npc.SetDestination(2600, 2800);
+    hobo_npc.SetDestination(2700, 2800);
     hobo_npc.hobo = true;
     hobos.push_back(hobo_npc);//hobo is in it's own vector of hobos. incase we need another hobo
     
@@ -1778,6 +1828,7 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadSound("CloseDrawer", "assets/sounds/CloseDrawer.ogg");
     soundManager.LoadSound("Keys", "assets/sounds/Keys.ogg");
     soundManager.LoadSound("Owl", "assets/sounds/Owl.ogg");
+    soundManager.LoadSound("ShovelDig", "assets/sounds/ShovelDig.ogg");
 
     soundManager.LoadSound("ShotGun", "assets/sounds/ShotGun.ogg");
     soundManager.LoadSound("ShotgunReload", "assets/sounds/ShotgunReload.ogg");
@@ -1804,7 +1855,7 @@ void InitSounds(SoundManager& soundManager){
     SoundManager::getInstance().SetSoundVolume("BoneCrack", 0.3f);
     SoundManager::getInstance().SetMusicVolume("CarRun", 0.25f);
     SoundManager::getInstance().SetMusicVolume("Schumann", 0.25f);
-    SoundManager::getInstance().SetSoundVolume("Owl", 0.5)
+    SoundManager::getInstance().SetSoundVolume("Owl", 0.5);
 }
 
 
@@ -1944,6 +1995,14 @@ int main() {
 
             }
 
+        }
+
+        if (IsKeyPressed(KEY_H)){
+            if (!player.hasShovel){
+                player.hasShovel = true;
+                AddItemToInventory("shovel", inventory, INVENTORY_SIZE);
+                PlaySound(SoundManager::getInstance().GetSound("shovelDig"));
+            }
         }
 
         if (IsKeyPressed(KEY_G)){

@@ -218,6 +218,7 @@ ifeq ($(PLATFORM),PLATFORM_DESKTOP)
     ifeq ($(PLATFORM_OS),LINUX)
         ifeq ($(RAYLIB_LIBTYPE),STATIC)
             CFLAGS += -D_DEFAULT_SOURCE
+            
         endif
         ifeq ($(RAYLIB_LIBTYPE),SHARED)
             # Explicitly enable runtime link to libraylib.so

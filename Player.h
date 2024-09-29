@@ -66,7 +66,7 @@ public:
         //void update();  // General update method
         void UpdateMovement(const GameResources& resources, GameState& gameState, Vector2& mousePosition, Camera2D& camera);  // Move the update movement here
         void DrawPlayer(const GameResources& resources, GameState& gameState, Camera2D& camera);  // Draw player method
-        void HandleInput();
+        void HandleInput(float speed);
 
 
         

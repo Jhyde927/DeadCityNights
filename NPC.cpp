@@ -10,7 +10,7 @@
 #include <vector>
 #include <string>
 #include <cstdlib>  // For rand and srand
-#include <ctime>    // For seeding rand
+
 
 float detectionRange = 200.0f;  // Set detection range for zombies
 float talkTimer = 0.0f;
@@ -82,6 +82,7 @@ void NPC::HandleNPCInteraction(){
             idleTime = 1;
             agro = true;
         }
+
         if (hobo && !talked){
             talked = true;
             clickCount += 1;
@@ -137,6 +138,65 @@ void NPC::HandleNPCInteraction(){
         
     }
 
+void NPC::HandleZombie(Player& player, float& distanceToPlayer, bool& hasTarget){
+    if (isZombie && distanceToPlayer < detectionRange && riseTimer <= 0) {
+        hasTarget = true; //if hasTarget dont go idle
+        destination = player.position;  // Move towards the player
+        
+    }
+
+    
+    if (isZombie && distanceToPlayer > 15 && riseTimer <= 0){ //player leaves attack area
+        attacking = false;
+    }
+   
+    if (isZombie && distanceToPlayer < 15.0f && riseTimer <= 0 && !isDying) { //zombie attack
+        attacking = true;
+        if (player.hitTimer <= 0){
+            player.take_damage(10);
+            PlaySound(SoundManager::getInstance().GetSound("BoneCrack")); 
+        }
+        
+        SetAnimationState(ATTACKING);  // Switch to attacking animation
+
+    }
+
+}
+
+void NPC::HandlePolice(Player& player, float& distanceToPlayer, bool& hasTarget){
+    if (police && distanceToPlayer < detectionRange && agro){ //police chase player
+        hasTarget = true;
+        destination = player.position;
+        speed = 75;
+        frameSpeed = 14; //speed up animation for attacking and chasing. 
+        
+
+    }else if (police && distanceToPlayer >= detectionRange){ //police loose player
+        agro = false;
+        speed = 50;
+        hasTarget = false;
+        destination = position;
+        idleTime = 1;
+        frameSpeed = 8.0; //reset animation speed
+    }
+
+
+    if (police && distanceToPlayer < 20.0f && hasTarget && agro && !isDying){ // police attack player
+        idleTime = 0.1f; //transition to idle before attacking so it doesn't flicker. 
+        
+        attacking = true;
+        if (player.can_take_damage && currentFrame == 5){ //only hit on frame 5. 
+            player.take_damage(10);
+            
+            PlaySound(SoundManager::getInstance().GetSound("BoneCrack"));
+        }
+
+        SetAnimationState(ATTACKING);
+    }else if (police && distanceToPlayer >= 20.0f && hasTarget){ //player leaves attack area
+        
+        attacking = false;
+    }
+}
 
 
 // Function to set a new random destination within a specified range
@@ -150,12 +210,10 @@ void NPC::Update(Player& player) {
     if (!isActive) return;  // Skip update if the NPC is not active
     float distance_to_player = abs(player.position.x - position.x);
     if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
-        if (distance_to_player < 20){
+        if (distance_to_player < 20 && !police){
             HandleNPCInteraction();
         }
     }
-
-
 
     // Check if the zombie is still rising
     if (riseTimer > 0) {
@@ -219,11 +277,15 @@ void NPC::Update(Player& player) {
                 break;
 
             case ATTACKING:
+                numFrames = 7; // 7 frames for attacking
+                break;
+
+            case RISING:    // 7 frame for rising
+             
                 numFrames = 7;
                 break;
 
-            case RISING:
-             
+            case DEATH2:
                 numFrames = 7;
                 break;
 
@@ -251,62 +313,9 @@ void NPC::Update(Player& player) {
     attacking = false;
 
     
+    HandlePolice(player, distance_to_player, hasTarget);
+    HandleZombie(player, distance_to_player, hasTarget);
 
-    if (isZombie && distanceToPlayer < detectionRange && riseTimer <= 0) {
-        hasTarget = true; //if hasTarget dont go idle
-        destination = player.position;  // Move towards the player
-        
-    }
-
-    if (police && distanceToPlayer < detectionRange && agro){ //police chase player
-        hasTarget = true;
-        destination = player.position;
-        speed = 75;
-        frameSpeed = 14; //speed up animation for attacking and chasing. 
-        
-
-    }else if (police && distanceToPlayer >= detectionRange){ //police loose player
-        agro = false;
-        speed = 50;
-        hasTarget = false;
-        destination = position;
-        idleTime = 1;
-        frameSpeed = 8.0; //reset animation speed
-    }
-
-
-    if (police && distanceToPlayer < 20.0f && hasTarget && agro && !isDying){ // police attack player
-        idleTime = 0.1f; //transition to idle before attacking so it doesn't flicker. 
-        
-        attacking = true;
-        if (player.can_take_damage && currentFrame == 5){ //only hit on frame 5. 
-            player.take_damage(10);
-            
-            PlaySound(SoundManager::getInstance().GetSound("BoneCrack"));
-        }
-
-        SetAnimationState(ATTACKING);
-    }else if (police && distanceToPlayer >= 20.0f && hasTarget){ //player leaves attack area
-        
-        attacking = false;
-    }
-
-
-
-    if (isZombie && distanceToPlayer > 15 && riseTimer <= 0){ //player leaves attack area
-        attacking = false;
-    }
-   
-    if (isZombie && distanceToPlayer < 15.0f && riseTimer <= 0 && !isDying) { //zombie attack
-        attacking = true;
-        if (player.hitTimer <= 0){
-            player.take_damage(10);
-            PlaySound(SoundManager::getInstance().GetSound("BoneCrack")); 
-        }
-        
-        SetAnimationState(ATTACKING);  // Switch to attacking animation
-
-    }
 
 
     //NPCs choose a random position called destination. they move toward destination until they arrive then repeat. 
@@ -375,6 +384,11 @@ void NPC::Render() {
 
         case RISING:
             row = 5; //sixth row for rising
+            break;
+
+        case DEATH2:
+            row = 6; // seventh row for dying2
+            break;
             
 
     }
@@ -508,12 +522,17 @@ void NPC::TakeDamage(int damage) {
     }
 
 
-    if (health <= 0 && !isDying) {
+    if (health <= 0 && !isDying && isZombie) {
         PlaySound(SoundManager::getInstance().GetSound("zombieDeath"));
         riseTimer = 0; //if killed while still rising set the risetimer back to 0 as to not play rise animation
         isDying = true;           // Start dying process
-        SetAnimationState(DEATH);  // Set to death animation
-        deathTimer = 0.85f;        // Set death animation duration
+        if (rand() % 2 == 0){
+            SetAnimationState(DEATH);  // Set to death animation
+        }else{
+            SetAnimationState(DEATH2); //randomize deaths
+        }
+
+        deathTimer = 0.85f;        // Set death animation duration // needs to be exact
         destination = position; //zombie is at it's destination on death as to not play walk animation
     }
 }

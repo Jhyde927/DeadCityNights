@@ -217,18 +217,18 @@ void Player::UpdateMovement(const GameResources& resources,  GameState& gameStat
     }
 
     
-    isAiming = (hasGun || hasShotgun) && (IsKeyDown(KEY_F) || IsKeyDown(KEY_LEFT_CONTROL) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) && !isShooting && !isReloading;
+    isAiming = (hasGun || hasShotgun) && (IsKeyDown(KEY_F) || IsKeyDown(KEY_LEFT_CONTROL) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) && !isShooting && !isReloading && gameState == CEMETERY;
 
-    if (currentWeapon == REVOLVER){
+    if (currentWeapon == REVOLVER && gameState == CEMETERY){
 
-        if ((IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && revolverBulletCount <= 0 && gameState == CEMETERY){
+        if ((IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && revolverBulletCount <= 0){
             //SoundManager::getInstance().GetSound("dryFire");
             PlaySound(SoundManager::getInstance().GetSound("dryFire"));
 
         }
 
     
-        if (hasGun && revolverBulletCount > 0 && isAiming && (IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && canShoot && gameState == CEMETERY) {
+        if (hasGun && revolverBulletCount > 0 && isAiming && (IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT))) {
             isShooting = true;
             canShoot = false;
             currentFrame = 0;
@@ -240,15 +240,15 @@ void Player::UpdateMovement(const GameResources& resources,  GameState& gameStat
             FireBullet(*this, false);
             
         }
-    }else if (currentWeapon == SHOTGUN){
-        if ((IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && shotgunBulletCount <= 0 && gameState == CEMETERY){
+    }else if (currentWeapon == SHOTGUN && gameState == CEMETERY){
+        if ((IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && shotgunBulletCount <= 0){
             //SoundManager::getInstance().GetSound("dryFire");
             PlaySound(SoundManager::getInstance().GetSound("dryFire"));
 
         }
 
 
-        if (hasShotgun && shotgunBulletCount > 0 && isAiming && (IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && canShoot && gameState == CEMETERY) {
+        if (hasShotgun && shotgunBulletCount > 0 && isAiming && (IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && canShoot) {
             isShooting = true;
             canShoot = false;
             currentFrame = 0;
@@ -294,8 +294,6 @@ void Player::UpdateMovement(const GameResources& resources,  GameState& gameStat
             position.x = GetRightBoundary(LOT)-1;
         }
     }
-
-
  
     if (!isAiming && !isShooting && !isReloading) {
         //KEYBOARD MOVEMENT CODE
@@ -374,7 +372,6 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
     
     // Prioritize drawing states: Shooting > Aiming > Moving > Idle
     if (currentWeapon == REVOLVER){
-
     
         if (hasGun && isShooting && gameState == CEMETERY) { //need a way to allow guns outside cemetery at a certain point in the game. 
             currentSheet = resources.shootSheet;
@@ -383,17 +380,17 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
         }else if (hasGun && isReloading && gameState == CEMETERY){
         
             currentSheet = resources.reloadSheet;
-            sourceRec = { currentFrame * frameWidth, 0, frameWidth, frameWidth };
+            sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
         }else if (hasGun && isAiming && !isReloading && gameState == CEMETERY) {
             // Aiming but not shooting: use the first frame of the shootSheet
             currentSheet = resources.shootSheet;
-            sourceRec = { 0, 0, frameWidth, frameWidth };  // First frame for aiming
+            sourceRec = { 0, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };  // First frame for aiming
 
         } else if (isMoving) {
             // Walking or running animation
             currentSheet = isRunning ? resources.runSheet : resources.walkSheet;  // Use runSheet if running, else walkSheet
-            sourceRec = { currentFrame * frameWidth, 0, frameWidth, frameWidth };
+            sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
         } else {
             // Idle pose
             currentSheet = resources.manTexture;  // Idle pose
@@ -404,23 +401,24 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
 
     /////////////////shotgun//////////////
     }else if (currentWeapon == SHOTGUN){
+        
          if (hasShotgun && isShooting && gameState == CEMETERY) {
             currentSheet = resources.ShotGunSheet;
-            sourceRec = { currentFrame * frameWidth, 0, frameWidth, frameWidth };
+            sourceRec = {static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
         } else if (hasShotgun && isReloading && gameState == CEMETERY){
             currentSheet = resources.ShotgunReload;
-            sourceRec = { currentFrame * frameWidth, 0, frameWidth, frameWidth };
+            sourceRec = {static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
         }else if (hasShotgun && isAiming && !isReloading && gameState == CEMETERY) {
             // Aiming but not shooting: use the first frame of the shootSheet
             currentSheet = resources.ShotGunSheet;
-            sourceRec = { 0, 0, frameWidth, frameWidth };  // First frame for aiming
+            sourceRec = { 0, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth)};  // First frame for aiming
 
         } else if (isMoving) {
             // Walking or running animation
             currentSheet = isRunning ? resources.runSheet : resources.walkSheet;  // Use runSheet if running, else walkSheet
-            sourceRec = { currentFrame * frameWidth, 0, frameWidth, frameWidth };
+            sourceRec = {static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
         } else {
             // Idle pose
             currentSheet = resources.manTexture;  // Idle pose

@@ -48,7 +48,7 @@ bool drawShotgun = true;
 bool buttonWork = false;
 bool hasPills = false;
 bool digSpot = false;
-
+bool start = true;
 bool buttonTavern = false;
 bool gotoWork = false;
 bool hasWorked = false;
@@ -72,7 +72,7 @@ bool openDrawer = false;
 bool raiseZombies = false;
 bool zombieWave2 = false;
 bool zombieWave3 = false;
-bool show_dbox = false;
+bool show_dbox = true;
 float dboxTime = 10.0;
 float inventoryPositionX = 0.0f;
 float inventoryPositionY = 0.0f;
@@ -94,7 +94,7 @@ bool showInventory = false;
 const int INVENTORY_SIZE = 8;  // Define the size of the inventory
 std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", ""};
 
-std::string phrase = "Hello";
+std::string phrase = "A and D or Arrows\n\nto move left and right"; //initial tutorial phrase
 
 const int screenWidth = 1024;
 const int screenHeight = 1024;
@@ -248,13 +248,11 @@ void AddItemToInventory(const std::string& item, std::string inventory[], int in
     }
 }
 
-void EraseInventoryItem(std::string inventory[], int index, int inventorySize) {
+void EraseInventoryItem(std::string inventory[], int index, int inventorySize) { //unused?
     if (index >= 0 && index < inventorySize) {
         inventory[index] = "";  // Erase the item by setting it to an empty string
     }
 }
-
-
 
 
 void MonitorMouseClicks(Player& player, GameCalendar& calendar){
@@ -265,13 +263,16 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
     //     std::cout << "MousePos: ";
     //     PrintVector2(mousePosition);
     // }
+    
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
         if (gameState == APARTMENT){
 
             Vector2 mousePosition = GetMousePosition();  // Get the mouse position
             Vector2 computerPos = {screenWidth/2 - 10, 512+75};
-            if (buttonSleep && !hasSlept){
-                calendar.AdvanceDay(); ////Go to sleep
+
+
+            if (buttonSleep && !hasSlept){ ////Go to sleep
+                calendar.AdvanceDay(); 
                 buttonSleep = false;
                 hasWorked = false;
                 hasSlept = true;
@@ -289,7 +290,8 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
                 } 
             }
             
-            // key Rectangle 
+            //Draw a rectangle over interactive objects and check for mouse collision with said rectangle. 
+            // Car key Rectangle 
             Rectangle textureBounds = {
                 carKeysPos.x,      // X position
                 carKeysPos.y,      // Y position
@@ -346,34 +348,30 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
 
 
 
-    }else if (gameState == OUTSIDE){
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-            if (player.enter_car && buttonCemetery){ //press buttons cemetery
-                move_car = true;
-                show_carUI = false;
-            }else if (player.enter_car && buttonWork){//button press work
-                //do something
-                gotoWork = true;
-                move_car = true;
-                hasWorked = true;
+        }else if (gameState == OUTSIDE){
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+                if (player.enter_car && buttonCemetery){ //press buttons cemetery
+                    move_car = true;
+                    show_carUI = false;
+                }else if (player.enter_car && buttonWork){//button press work
+                    //do something
+                    gotoWork = true;
+                    move_car = true;
+                    hasWorked = true;
+                }
             }
-        }
 
-    }else if (gameState == CEMETERY){
-        if (player.enter_car && buttonCemetery){//button press street
-           //move_car = true;
-            transitionState = FADE_OUT;
-            //dont reset yet
-            raiseZombies = false; //reset zombie waves. So returning player will trigger them again. 
-            zombieWave2 = false;
-            zombieWave3 = false;
+        }else if (gameState == CEMETERY){
+            if (player.enter_car && buttonCemetery){//button press street
+            //move_car = true;
+                transitionState = FADE_OUT;
+                //dont reset yet
+                raiseZombies = false; //reset zombie waves. So returning player will trigger them again. 
+                zombieWave2 = false;
+                zombieWave3 = false;
 
-        }else if (player.enter_car && buttonWork){ //button press work
-            gameState = WORK;
-            transitionState = FADE_OUT;
-        }
-    }
-
+            }
+        }   
 
     }
 
@@ -429,7 +427,7 @@ void UpdateZombieSpawning(GameResources& resources, Player& player){
     if (remainingZombiesToSpawn > 0){
         spawnTimer += GetFrameTime();
 
-        if (spawnTimer >= nextSpawnDelay){ // 
+        if (spawnTimer >= nextSpawnDelay){ // spawn zombies at randomm position around the player
             Vector2 z_pos = GetRandomSpawnPositionX(player.position, 50.0f, 200.0f);  // Min/max distance from player
             int zombie_speed = 25;
             NPC zombie_npc = CreateNPC(resources.zombieSheet, z_pos, zombie_speed, RISING, true, true);
@@ -466,9 +464,8 @@ void UpdateZombieSpawning(GameResources& resources, Player& player){
 }
 
 
-
 void spawnZombies(GameResources& resources,int zombie_count){
-    //spawn zombie
+    //spawn zombies in balk
     int zombie_speed = 25;
     
     for (int i = 0; i < zombie_count; i++){
@@ -706,7 +703,7 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
                     
                     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
                      
-                        if (player.position.x > 1860 && player.position.x < 1880 && !hasPills){ //over dig spot
+                        if (player.position.x > 1860 && player.position.x < 1880 && !hasPills && gameState == CEMETERY){ //over dig spot
                             hasPills = true; //if you dont have pill you can allways get more here. 
                             AddItemToInventory("pills", inventory, INVENTORY_SIZE);
                             showInventory = true;
@@ -715,9 +712,14 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
                         }
 
                         if (digSpot && gameState == LOT){
-                            std::cout << "digging";
                             PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
                             shovelTint = RED;
+                            if (!player.hasShotgun){
+                                AddItemToInventory("shotgun", inventory, INVENTORY_SIZE);
+                                player.hasShotgun = true;
+                                PlaySound(SoundManager::getInstance().GetSound("ShotgunReload"));
+                            }
+                            
                         }
                     }
                 }
@@ -738,6 +740,7 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
                     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
                         inventory[i] = std::string("");  // erase drugs from the string
                         applyShader = true;
+                        can_sell_drugs = true;
                     }
                 }
             }
@@ -924,7 +927,6 @@ void DrawHealthBar(Vector2 position, int maxHealth, int currentHealth, int barWi
 void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
     //int boxWidth = 256;
     //int boxHeight = 64;
-
     int offset = -64;
     int screen_offsetX = 16;
     int screen_offsetY = -55;
@@ -943,9 +945,9 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
     DrawRectangle(screen_pos.x, screen_pos.y + offset, boxWidth, boxHeight, customBackgroundColor);
     DrawText(phrase.c_str(), screen_pos.x+ screen_offsetX, screen_pos.y + screen_offsetY, textSize, tint);
     
-    if (money >= 100 && dealer && GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY"))
+    if (money >= 100 && dealer && GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY")) //button pressed
         {
-            if (can_sell_drugs){
+            if (can_sell_drugs){ //can sell drugs gets reset once you take the drug
                 can_sell_drugs = false; // Dealer only has 1 drug for now. 
                 addMoney(-100);
                 AddItemToInventory("Drugs", inventory, INVENTORY_SIZE);
@@ -954,8 +956,6 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
                         npc.interacting = false;
                         npc.idleTime = 1;
                     }
-                
-
             }
         }
 }
@@ -1285,7 +1285,6 @@ void RenderApartment(const GameResources& resources, Player player, Vector2 mous
     
      //Vector2 drawerPos = {screenWidth/2 + 160, 730};
 
-
    if (applyShader){
         
         BeginShaderMode(glowShader);
@@ -1325,13 +1324,16 @@ void RenderApartment(const GameResources& resources, Player player, Vector2 mous
     if (openDrawer){
         DrawTexture(resources.OpenDrawer, drawerPos.x, drawerPos.y, WHITE);
     }
-    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)){
+
+    //UP DOWN OR ESCAPE TO EXIT APARTMENT
+    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S) || IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W) || IsKeyPressed(KEY_ESCAPE)){
         transitionState = FADE_OUT;
         showInventory = false;
         PlaySound(SoundManager::getInstance().GetSound("mainDoor"));
         
     }
-    DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+
+    DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); //draw cursor last
     
 }
 
@@ -1397,7 +1399,7 @@ void renderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
     DrawTexturePro(resources.vacantLot, {0, 0, static_cast<float>(resources.vacantLot.width), static_cast<float>(resources.vacantLot.height)},
                     {705, 0, static_cast<float>(resources.vacantLot.width), static_cast<float>(resources.vacantLot.height)}, {0, 0}, 0.0f, WHITE);
 
-    show_dbox = false;  //turn off dbox if no one is interacting
+    show_dbox = false; //turn off dbox if no one is interacting
     for (NPC& hobo : hobos){
         hobo.Update(player);
         hobo.Render();
@@ -1422,49 +1424,6 @@ void renderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
     }
     
     player.DrawPlayer(resources, gameState, camera);
-    //drawshotgun pickup
-    Vector2 shotgunPos = {3181, 700};
-    int distance = abs(shotgunPos.x - player.position.x);
-
-    if (drawShotgun){
-        DrawTexture(resources.shotgunPickup, 3181, 700, WHITE);
-        Rectangle shotgunBounds = { //Shotgun Button
-            shotgunPos.x,
-            shotgunPos.y,     
-            static_cast<float>(64),  
-            static_cast<float>(64)  
-        };
-
-        if (CheckCollisionPointRec(mouseWorldPos, shotgunBounds)){
-            //click on shotgun to pickup if close 
-            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && distance < 20){
-                if (!player.hasShotgun){
-                    AddItemToInventory("shotgun", inventory, INVENTORY_SIZE);
-                    player.hasShotgun = true;
-                    showInventory = true;
-                    drawShotgun = false;
-                    //play sound effect
-                    PlaySound(SoundManager::getInstance().GetSound("ShotgunReload"));
-                }
-            }
-        }
-
-        //press up or W to pickup shotgun if close enough
-        if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
-
-            if (!player.hasShotgun && distance < 20){
-                AddItemToInventory("shotgun", inventory, INVENTORY_SIZE);
-                player.hasShotgun = true;
-                showInventory = true;
-                drawShotgun = false;
-                //play sound effect
-                PlaySound(SoundManager::getInstance().GetSound("ShotgunReload"));
-            }
-
-            }
-        
-
-    }
 
     
     EndMode2D();  // End 2D mode 
@@ -1517,7 +1476,7 @@ void RenderOutside(const GameResources& resources, Camera2D& camera,Player& play
 
     }
 
-    show_dbox = false; // reset to false if it falls through
+    if (!start) show_dbox = false; // reset to false if it falls through
     if (player.position.x > pc_min && player.position.x < pc_max){
         over_car = true;
         phrase = "PRESS UP TO ENTER";
@@ -1695,8 +1654,9 @@ void RenderOutside(const GameResources& resources, Camera2D& camera,Player& play
     
 
     if (show_dbox && !player.enter_car){
-        if (over_lot || over_apartment || over_car){
+        if (over_lot || over_apartment || over_car || start){
             DrawDialogBox(camera, 0, 0, 20);
+            
         }else{
             DrawDialogBox(camera, 128, 64, 20);
         }
@@ -1943,7 +1903,7 @@ int main() {
     inventoryPositionX = player.position.x; //init inventory position
     inventoryPositionY = player.position.y;  
     SetTargetFPS(60);
- 
+    dboxPosition = player.position;
     // Main game loop
     while (!WindowShouldClose()) {
         Vector2 mousePosition = GetMousePosition();
@@ -2003,6 +1963,10 @@ int main() {
                 AddItemToInventory("shovel", inventory, INVENTORY_SIZE);
                 PlaySound(SoundManager::getInstance().GetSound("shovelDig"));
             }
+        }
+
+        if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_D) || IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)){
+            start = false; //turn off dbox if any movement
         }
 
         if (IsKeyPressed(KEY_G)){

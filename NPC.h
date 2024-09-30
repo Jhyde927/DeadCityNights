@@ -14,7 +14,8 @@ enum AnimationState {
     RUN, 
     DEATH,
     ATTACKING,
-    RISING
+    RISING,
+    DEATH2
 };
 
 class NPC {
@@ -58,6 +59,8 @@ public:
     void SetDestination(float minX, float maxX);
     bool CheckHit(Vector2 previousPosition, Vector2 bulletPosition, Vector2 bulletSize);
     void HandleNPCInteraction();
+    void HandlePolice(Player& player, float& distanceToPlayer, bool& hasTarget);
+    void HandleZombie(Player& player, float& distanceToPlayer, bool& hasTarget);
 
     void TakeDamage(int damage);
 };

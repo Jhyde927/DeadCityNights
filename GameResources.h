@@ -32,6 +32,7 @@ struct GameResources {
     Texture2D breakLight;
     Texture2D truck;
     Texture2D businessSheet;
+    Texture2D woman2Sheet;
     Texture2D womanSheet;
     Texture2D zombieSheet;
     Texture2D dealerSheet;
@@ -52,6 +53,10 @@ struct GameResources {
     Texture2D shotgunPickup;
     Texture2D shotgunIcon;
     Texture2D pills;
+    Texture2D FortuneTellerSheet;
+    Texture2D cemeteryKey;
+    Texture2D GraveyardGate;
+    Texture2D GraveyardForeground;
     Font defaultFont;
 };
 

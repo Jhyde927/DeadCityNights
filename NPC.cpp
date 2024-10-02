@@ -38,10 +38,22 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     agro = false;
     attacking = false;
     hobo = false;
+    teller = false;
     clickCount = 0;
 
     
     
+}
+
+std::string GetTellerPhrase() {
+    std::vector<std::string> tellerPhrases = {
+        "Fortune\n\nTeller",
+        "$100", 
+        "Know your\n\nfuture",
+    };
+
+    int randomIndex = rand() % tellerPhrases.size();
+    return tellerPhrases[randomIndex];
 }
 
 // Function to get a random phrase
@@ -56,6 +68,7 @@ std::string GetRandomPhrase() {
         "Nice\nweather",
         "What's up?"
     };
+
 
     // Seed the random number generator (only needs to be called once, typically in main)
     
@@ -75,6 +88,13 @@ void NPC::HandleNPCInteraction(){
         if (dealer) idleTime = 10;
         
         SetAnimationState(IDLE);
+
+        if (!talked && teller){
+            talked = true;
+            speech = GetTellerPhrase();
+            talkTimer = 30;
+        }
+
         if (police && !talked){
             talked = true;
             speech = (rand() % 2 == 0) ? "Freeze!" : "Halt!";
@@ -124,13 +144,10 @@ void NPC::HandleNPCInteraction(){
                     speech = "...";
                     break;
 
-
-            }
-                
-            
-            
+            }        
         }
-        if (!talked && !hobo && !police){
+
+        if (!talked && !hobo && !police && !teller){
             talked = true;
             speech = GetRandomPhrase(); // NPC greets player
             talkTimer = 30; //limit talking. 30 second cooldown

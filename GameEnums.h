@@ -9,7 +9,8 @@ enum GameState {
     ROAD,
     CEMETERY,
     WORK, 
-    LOT
+    LOT, 
+    GRAVEYARD,
 };
 
 enum TransitionState {

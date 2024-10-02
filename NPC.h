@@ -48,6 +48,7 @@ public:
     bool agro;
     bool attacking;
     bool hobo;
+    bool teller;
     int clickCount;
 
 

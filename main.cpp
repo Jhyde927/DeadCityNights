@@ -37,11 +37,13 @@ bool runOnce = true;
 bool streetSounds = false;
 bool over_apartment = false;
 bool over_car = false;
+bool over_gate = false;
 bool over_shotgun = false;
 bool show_carUI = false;
 bool leave_apartment = false;
 bool leave_cemetery = false;
 bool buttonCemetery = false;
+bool hasCemeteryKey = false;
 bool firstHobo = true;
 bool drawShovel = false;
 bool drawShotgun = true;
@@ -184,6 +186,11 @@ void LoadGameResources(GameResources& resources) {
     resources.shotgunPickup = LoadTexture("assets/ShotGunPickup.png");
     resources.shotgunIcon = LoadTexture("assets/shotgunIcon.png");
     resources.pills = LoadTexture("assets/pills.png");
+    resources.FortuneTellerSheet = LoadTexture("assets/FortuneTellerSheet.png");
+    resources.woman2Sheet = LoadTexture("assets/woman2Sheet.png");
+    resources.cemeteryKey = LoadTexture("assets/CemeteryKey.png");
+    resources.GraveyardGate = LoadTexture("assets/GraveyardGate.png");
+    resources.GraveyardForeground = LoadTexture("assets/GraveyardForeground.png");
 }
 
 void UnloadGameResources(GameResources& resources){
@@ -228,6 +235,11 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.shotgunPickup);
     UnloadTexture(resources.shotgunIcon);
     UnloadTexture(resources.pills);
+    UnloadTexture(resources.FortuneTellerSheet);
+    UnloadTexture(resources.woman2Sheet);
+    UnloadTexture(resources.cemeteryKey);
+    UnloadTexture(resources.GraveyardGate);
+    UnloadTexture(resources.GraveyardForeground);
    
 }
 
@@ -565,11 +577,17 @@ void HandleTransition(Player& player, PlayerCar& player_car, GameCalendar& calen
                     move_car = false;
 
                     //if not dead go to road
-                    if (!player.isDead){
+                    if (!player.isDead && player.enter_car){
                         gameState = ROAD;
                         player_car.position.x = 100;
                     //if you die in the cemetery, go to apartment
-                    }else{
+                    
+                    }else if (!player.enter_car && over_gate){
+                        gameState = GRAVEYARD;
+
+                    }
+                    
+                    else if (!player.isDead){
                         gameState = APARTMENT;
                         player.position.x = apartmentX;
                         player.isDead = false;
@@ -635,6 +653,9 @@ void UpdateInventoryPosition(const Camera2D& camera, GameState& gameState) {
     
 }
 
+void shovelLogic(Vector2& mousePosition){
+    
+}
 
 
 void RenderInventory(const GameResources& resources, std::string inventory[], int inventorySize, Player& player, Vector2& mousePosition) {
@@ -669,6 +690,11 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
             if (inventory[i] == "shotgun"){
                 DrawTexture(resources.shotgunIcon, x, y, shotgunTint);
             }
+
+            if (inventory[i] == "cemeteryKey"){
+                DrawTexture(resources.cemeteryKey, x, y, WHITE);
+            }
+
             if (inventory[i] == "pills"){ // click on pills to take them 
                 DrawTexture(resources.pills, x, y, WHITE);
                 Rectangle pillBounds = { //shovel button
@@ -719,7 +745,15 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
                                 player.hasShotgun = true;
                                 PlaySound(SoundManager::getInstance().GetSound("ShotgunReload"));
                             }
-                            
+ 
+                        }
+                        //far right side of cemetery is an item. 
+                        if (player.position.x > 3986 && player.position.x < 4016 && gameState == CEMETERY && !hasCemeteryKey){
+                            PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
+                            shovelTint = RED;
+                            hasCemeteryKey = true;
+                            AddItemToInventory("cemeteryKey", inventory, INVENTORY_SIZE);
+
                         }
                     }
                 }
@@ -744,12 +778,11 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
                     }
                 }
             }
-
-            //DrawText(inventory[i].c_str(), x + 10, y + 10, 20, WHITE);  // Display item name inside the slot
+        
         }
     }
      
-    //DrawText("Inventory", inventoryPositionX - 64, inventoryPositionY-22, 20, WHITE);
+    
 }
 
 
@@ -802,14 +835,12 @@ void MoveTraffic(GameResources resources){
 }
 
 void DrawApartmentUI(GameCalendar&, Vector2& mousePosition, Camera2D& camera){
-    Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
-
     Vector2 ui_pos = {screenWidth/2-68, 512};
     DrawRectangle(ui_pos.x, ui_pos.y, 128, 64, customBackgroundColor);
     Color tint = WHITE;
     Rectangle textureBounds = {
         ui_pos.x,      // X position
-        ui_pos.y,      // Y position
+        ui_pos.y,      
         static_cast<float>(128),  // Width of the texture
         static_cast<float>(16)  // Height of the texture
     };
@@ -964,6 +995,7 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
 void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_car, Camera2D& camera,Vector2 mousePosition, Shader& drunkShader, Shader& glowShader, Shader& glitchShader){
     int carMax = 2800;
     int carMin = 2765;
+    int doorPos = 3079;
     
     playOwl = false; //reset owl
     // Maybe zombiewaves can be reset to false when exiting cemetery. 
@@ -977,7 +1009,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         }
     }else if (player.isAiming && !IsKeyDown(KEY_F)) {// If the player is not aiming with keyboard, allow mouse control to set the facing direction
         // Set facing direction based on mouse position
-        player.facingRight = mousePosition.x > player.position.x; //this code does not seem to run
+        player.facingRight = mousePosition.x > player.position.x; //facing right is true if mousepos.x > playerPos.x
     }
     
     //dont spawn unless raise zombies is true. raise zombies is set to true by talking to the hobo. 
@@ -1004,6 +1036,15 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         
         StartZombieSpawn(5);
     }
+
+    if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
+        if (player.position.x > 3069 && player.position.x < 3089 && hasCemeteryKey){
+            std::cout << "OPEN SESAME";
+            over_gate = true;
+            transitionState = FADE_OUT;
+            //TODO implement cemetery interior
+        }
+    }
         
     
 
@@ -1017,19 +1058,6 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
    }else{
         over_car = false; 
    }
-    // if (IsKeyPressed(KEY_SPACE)){//drive the car back to outside
-    //     if (player.enter_car){
-    //         transitionState = FADE_OUT;
-            
-    //         raiseZombies = true; //reset zombie waves. So returning player will trigger them again. 
-    //         zombieWave2 = false;
-    //         zombieWave3 = false;
-    //         player.position = pstart_by_car;
-    //         leave_cemetery = true;
-    //         move_car = true;
-            
-    //     }
-    // }
 
     BeginMode2D(camera);
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
@@ -1178,7 +1206,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
 
     //DrawText("Cemetery", screenWidth/2 - 100, 60, 50, WHITE);
 
-    //draw healthbar below EndMode2D() so it's position is based on camera offset. 
+    //draw healthbar 
     if (gameState == CEMETERY && !player.enter_car){
         Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
         DrawHealthBar(barPos, player.maxHealth, player.currentHealth, 128, 16);
@@ -1279,6 +1307,103 @@ void RenderRoad(const GameResources& resources, PlayerCar& player_car,Player& pl
    
 }
 
+void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vector2 mousePosition,Shader& drunkShader,Shader& glowShader,Shader& glitchShader){
+    if (player.isAiming && IsKeyDown(KEY_F)) {
+        // Handle keyboard-only aiming (e.g., using arrow keys or player movement keys)
+        if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
+            player.facingRight = true;
+        }
+        if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
+            player.facingRight = false;
+        }
+    }else if (player.isAiming && !IsKeyDown(KEY_F)) {// If the player is not aiming with keyboard, allow mouse control to set the facing direction
+        // Set facing direction based on mouse position
+        player.facingRight = mousePosition.x > player.position.x; //facing right is true if mousepos.x > playerPos.x
+    }
+
+
+    BeginMode2D(camera);
+    camera.target = player.position;
+    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
+    if (!IsKeyDown(KEY_F)){
+        if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
+    }
+
+    float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
+    float parallaxTrees = camera.target.x * 0.8;
+    float parallaxBackground = camera.target.x * 0.9f;  // Background moves even slower 
+    
+    if (applyShader){
+        
+        BeginShaderMode(glowShader);
+        
+    }
+
+    if (drunk){
+        BeginShaderMode(drunkShader);
+    }
+    
+    if (glitch){
+        BeginShaderMode(glitchShader);
+    }
+
+    // Draw the background layers
+    DrawTexturePro(resources.cemeteryBackground, {0, 0, static_cast<float>(resources.cemeteryBackground.width), static_cast<float>(resources.cemeteryBackground.height)},
+                    {parallaxBackground-1024, 0, static_cast<float>(resources.cemeteryBackground.width), static_cast<float>(resources.cemeteryBackground.height)}, {0, 0}, 0.0f, WHITE);
+
+    DrawTexturePro(resources.cemeteryTrees, {0, 0, static_cast<float>(resources.cemeteryTrees.width), static_cast<float>(resources.cemeteryTrees.height)},
+                    {parallaxTrees-1024, 0, static_cast<float>(resources.cemeteryTrees.width), static_cast<float>(resources.cemeteryTrees.height)}, {0, 0}, 0.0f, WHITE);
+
+
+    // Draw cemetery gate AKA midground
+    DrawTexturePro(resources.GraveyardGate, {0, 0, static_cast<float>(resources.GraveyardGate.width), static_cast<float>(resources.GraveyardGate.height)},
+                    {parallaxMidground, -64, static_cast<float>(resources.GraveyardGate.width), static_cast<float>(resources.GraveyardGate.height)}, {0, 0}, 0.0f, WHITE);
+
+
+
+    //EndShaderMode();
+
+    EndShaderMode(); ////////////////////////////SHADER OFF
+    if (player.enter_car == false){// if enter car is false, dont render player or update position camera should stay focused on player pos. 
+        player.DrawPlayer(resources, gameState, camera);
+
+    }
+    DrawBullets(); //draw bullets in cemetery after everything else. 
+
+    //foreforeground. infront of player
+    DrawTexturePro(resources.GraveyardForeground, {0, 0, static_cast<float>(resources.GraveyardGate.width), static_cast<float>(resources.GraveyardGate.height)},
+                {1024, 70, static_cast<float>(resources.GraveyardGate.width), static_cast<float>(resources.GraveyardGate.height)}, {0, 0}, 0.0f, WHITE);
+
+    EndMode2D();
+
+    DrawMoney(); //draw money after EndMode2d()
+    if (showInventory){
+        RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+    }
+
+    if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
+        DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+    }else{
+        DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+    }
+    
+    //if (player.hasGun && (IsKeyDown(KEY_F) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT))) DrawHUD(player); //only show ammo when aiming
+
+    if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player); //always show ammo when outside of car in the cemetery
+
+    //DrawText("Cemetery", screenWidth/2 - 100, 60, 50, WHITE);
+
+    //draw healthbar 
+    if (gameState == GRAVEYARD){
+        Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
+        DrawHealthBar(barPos, player.maxHealth, player.currentHealth, 128, 16);
+
+    }
+}
+
+
+
+
 void RenderApartment(const GameResources& resources, Player player, Vector2 mousePosition, GameCalendar& calendar, Camera2D camera, Shader& drunkShader, Shader& glowShader, Shader& glitchShader){
     player.position.x -= 20; //ensure over_apartment = false
     int screen_center = (screenWidth - resources.apartment.width)/2;
@@ -1337,8 +1462,8 @@ void RenderApartment(const GameResources& resources, Player player, Vector2 mous
     
 }
 
-void renderLot(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition, Shader& drunkShader, Shader& glowShader, Shader& glitchShader){
-    Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
+void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition, Shader& drunkShader, Shader& glowShader, Shader& glitchShader){
+    //Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
     int digPos = 2600;
     if (player.position.x < 2782 && player.position.x > 2742){
         over_exit = true;
@@ -1476,7 +1601,7 @@ void RenderOutside(const GameResources& resources, Camera2D& camera,Player& play
 
     }
 
-    if (!start) show_dbox = false; // reset to false if it falls through
+    if (!start) show_dbox = false; // reset to false so it can fall through unless start where we first show tutorial text
     if (player.position.x > pc_min && player.position.x < pc_max){
         over_car = true;
         phrase = "PRESS UP TO ENTER";
@@ -1556,7 +1681,7 @@ void RenderOutside(const GameResources& resources, Camera2D& camera,Player& play
         player_car.position = Vector2{1710, 668};
     }
     
-    //show_dbox = false;  //turn off dbox if no one is interacting
+    
     for (NPC& npc : npcs){
         npc.Update(player);
         npc.Render();
@@ -1564,8 +1689,7 @@ void RenderOutside(const GameResources& resources, Camera2D& camera,Player& play
     
 
         if (npc.interacting){ //Take the first one you find. 
-            dboxPosition = npc.position;
-            
+            dboxPosition = npc.position;    
             show_dbox = true;   //dialogBox
             if (npc.dealer){
                 phrase = "I gOt wHat YoU NEEd\n\nDrugs: $100";
@@ -1575,11 +1699,7 @@ void RenderOutside(const GameResources& resources, Camera2D& camera,Player& play
             }else{
                 phrase = npc.speech; //randomized speech
                 dealer = false;
-                
-                
             }
-            
-
         }else{
             dealer = false;
             // show_dbox = false;
@@ -1703,7 +1823,7 @@ void spawnNPCs(GameResources& resources){
 
 
     //spawn woman
-    int women = 2;
+    int women = 1;
     for (int i = 0; i < women; i++){
         Vector2 w_pos = {static_cast<float>(2050 + i * 100), 700};
         NPC woman_npc = CreateNPC(resources.womanSheet, w_pos, speed,IDLE, true, false);
@@ -1711,6 +1831,24 @@ void spawnNPCs(GameResources& resources){
         npcs.push_back(woman_npc);
 
     }
+
+    //spawn woman2
+    int women2 = 2;
+    for (int i = 0; i < women2; i++){
+        Vector2 w_pos = {static_cast<float>(2220 + i * 100), 700};
+        NPC woman2_npc = CreateNPC(resources.woman2Sheet, w_pos, speed, IDLE, true, false);
+        woman2_npc.SetDestination(1000, 4000);
+        npcs.push_back(woman2_npc);
+    }
+
+    //fortune teller idea is on hold
+
+    // Vector2 tellerPos = {2700, 700};
+    // NPC FortuneTeller = CreateNPC(resources.FortuneTellerSheet, tellerPos, speed, IDLE, true, false);
+    // FortuneTeller.SetDestination(1000, 4000);
+    // FortuneTeller.teller = true;
+    // npcs.push_back(FortuneTeller);
+    
 
     //spawn hobo update and draw only in vacant lot
     
@@ -1763,6 +1901,26 @@ void glowEffect(Shader& glowShader){
         // Set the glowThreshold uniform in the shader
         int glowThresholdLocation = GetShaderLocation(glowShader, "glowThreshold");
         SetShaderValue(glowShader, glowThresholdLocation, &glowThreshold, SHADER_UNIFORM_FLOAT);
+
+}
+
+void handleCamera(Camera2D& camera, float& targetZoom){
+        // Handle zoom input
+        if (GetMouseWheelMove() > 0) {
+            targetZoom += 0.2f;
+        } else if (GetMouseWheelMove() < 0) {
+            targetZoom -= 0.2f;
+        }
+
+        // Smoothly interpolate the current zoom towards the target zoom
+        camera.zoom = Lerp(camera.zoom, targetZoom, 0.1f);
+        float maxZoom = 2.5;
+        float minZoom = 1.0;
+        // Apply boundary checks for the zoom level
+        if (camera.zoom > maxZoom) camera.zoom = maxZoom;
+        if (camera.zoom < minZoom) camera.zoom = minZoom;
+        if (targetZoom > maxZoom) targetZoom = maxZoom;
+        if (targetZoom < minZoom) targetZoom = minZoom;
 
 }
 
@@ -1920,7 +2078,9 @@ int main() {
         
         float deltaTime = GetFrameTime();
         totalTime += deltaTime;  //glitch timer
-
+        if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_D) || IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)){ //tutorial text
+            start = false; //turn off dbox if any movement
+        }
         //glitchshader
         SetShaderValue(glitchShader, timeLoc, &totalTime, SHADER_UNIFORM_FLOAT);
 
@@ -1939,18 +2099,12 @@ int main() {
    
         }
 
-        if (IsKeyPressed(KEY_L)){
-            if (!glitch){
-                glitch = true;
-            }else{
-                glitch = false;
-            }
-        }
-
         if (IsKeyPressed(KEY_K)){
             if (!has_car_key){
-                AddItemToInventory("carKeys", inventory, 4);
+                AddItemToInventory("carKeys", inventory, INVENTORY_SIZE);
+                AddItemToInventory("cemeteryKey", inventory, INVENTORY_SIZE);
                 has_car_key = true;
+                hasCemeteryKey = true;
                 PlaySound(SoundManager::getInstance().GetSound("Keys"));
 
             }
@@ -1965,9 +2119,7 @@ int main() {
             }
         }
 
-        if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_D) || IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)){
-            start = false; //turn off dbox if any movement
-        }
+
 
         if (IsKeyPressed(KEY_G)){
             if (!player.hasGun){
@@ -2019,22 +2171,7 @@ int main() {
                 transitionState = FADE_OUT;
             }    
         }
-        // Handle zoom input
-        if (GetMouseWheelMove() > 0) {
-            targetZoom += 0.2f;
-        } else if (GetMouseWheelMove() < 0) {
-            targetZoom -= 0.2f;
-        }
-
-        // Smoothly interpolate the current zoom towards the target zoom
-        camera.zoom = Lerp(camera.zoom, targetZoom, 0.1f);
-        float maxZoom = 2.5;
-        float minZoom = 1.0;
-        // Apply boundary checks for the zoom level
-        if (camera.zoom > maxZoom) camera.zoom = maxZoom;
-        if (camera.zoom < minZoom) camera.zoom = minZoom;
-        if (targetZoom > maxZoom) targetZoom = maxZoom;
-        if (targetZoom < minZoom) targetZoom = minZoom;
+        handleCamera(camera, targetZoom);
 
         BeginDrawing(); //NEEDED
         // All the games draw calls need to be inside the main beginDrawing?
@@ -2042,7 +2179,7 @@ int main() {
         if (gameState == OUTSIDE){
                
             RenderOutside(resources, camera, player, player_car,npcs,mousePosition, glowShader2, glowShader, glitchShader); //glowshader2 = drunkshader
-            DisplayDate(calendar);
+            DisplayDate(calendar);//why not display date once globally? there are reasons 
 
         }else if (gameState == APARTMENT){
             RenderApartment(resources, player, mousePosition, calendar, camera, glowShader2, glowShader, glitchShader);
@@ -2058,9 +2195,13 @@ int main() {
             ClearBackground(BLACK);
 
         }else if (gameState == LOT){ // vacant lot
-            renderLot(resources, player, camera, mousePosition, glowShader2, glowShader, glitchShader);
+            RenderLot(resources, player, camera, mousePosition, glowShader2, glowShader, glitchShader);
             DisplayDate(calendar);
+        }else if (gameState == GRAVEYARD){
+            RenderGraveyard(resources, player, camera, mousePosition, glowShader2, glowShader, glitchShader);
         }
+    
+
         
         HandleTransition(player, player_car, calendar);
         EndDrawing();

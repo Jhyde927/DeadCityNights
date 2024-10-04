@@ -57,6 +57,7 @@ struct GameResources {
     Texture2D cemeteryKey;
     Texture2D GraveyardGate;
     Texture2D GraveyardForeground;
+    Texture2D GreaveyardMidground;
     Font defaultFont;
 };
 

@@ -91,6 +91,12 @@ float GetRightBoundary(GameState gameState){
         return 4000;
     }else if (gameState == LOT){
         return 3214;
+    }else if (gameState == GRAVEYARD){
+        return 4665;
+    }else if (gameState == APARTMENT){
+        return 4000;
+    }else if (gameState == WORK){
+        return 4000;
     }
 }
 
@@ -101,6 +107,12 @@ float GetLeftBoundary(GameState gameState){
         return 1700;
     }else if (gameState == LOT){
         return 2218;
+    }else if (gameState == GRAVEYARD){
+        return 1435;
+    }else if (gameState == APARTMENT){
+        return 1064;
+    }else if (gameState == WORK){
+        return 1064;
     }
 }
 
@@ -133,10 +145,7 @@ void Player::HandleInput(float speed){
             isMoving = true;
             facingRight = false;
         }
-
-
-
-        
+  
         // Check for shift key to run
         if ((IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) && !isAiming) {
             isRunning = true;
@@ -144,9 +153,7 @@ void Player::HandleInput(float speed){
             isRunning = false;  // Stop running if no movement keys are pressed
         }
 
-
-
-
+        //This is needed for some reason I dont remember
         if (isAiming && !isReloading) {
             if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
                 facingRight = true;
@@ -266,34 +273,40 @@ void Player::UpdateMovement(const GameResources& resources,  GameState& gameStat
         }
     }       
 
-
-
-
     float speed = isRunning ? runSpeed : walkSpeed;
     frameSpeed = isRunning ? runFrameSpeed : walkFrameSpeed;
 
     //keep player in bounds
-    if (gameState == OUTSIDE){
-        if (position.x < GetLeftBoundary(OUTSIDE)){ //left outside
-            position.x = GetLeftBoundary(OUTSIDE) + 1;
-        }else if (position.x > GetRightBoundary(OUTSIDE)){//right outside boundary
-            position.x = GetRightBoundary(OUTSIDE) -1;
-        }
 
+    if (position.x < GetLeftBoundary(gameState)){
+        position.x = GetLeftBoundary(gameState) + 1;
+    }else if (position.x > GetRightBoundary(gameState)){
+        position.x = GetRightBoundary(gameState)-1;
     }
-    else if (gameState == CEMETERY){
-        if (position.x < GetLeftBoundary(CEMETERY)){
-            position.x = GetLeftBoundary(CEMETERY) + 1;
-        }else if (position.x > GetRightBoundary(CEMETERY)){
-            position.x = GetRightBoundary(CEMETERY)-1;
-        }
-    }else if (gameState == LOT){
-        if (position.x < GetLeftBoundary(LOT)){
-            position.x = GetLeftBoundary(LOT)+1;
-        }else if (position.x > GetRightBoundary(LOT)){
-            position.x = GetRightBoundary(LOT)-1;
-        }
-    }
+
+    // if (gameState == OUTSIDE){
+    //     if (position.x < GetLeftBoundary(OUTSIDE)){ //left outside
+    //         position.x = GetLeftBoundary(OUTSIDE) + 1;
+    //     }else if (position.x > GetRightBoundary(OUTSIDE)){//right outside boundary
+    //         position.x = GetRightBoundary(OUTSIDE) -1;
+    //     }
+
+    // }
+    // else if (gameState == CEMETERY){
+    //     if (position.x < GetLeftBoundary(CEMETERY)){
+    //         position.x = GetLeftBoundary(CEMETERY) + 1;
+    //     }else if (position.x > GetRightBoundary(CEMETERY)){
+    //         position.x = GetRightBoundary(CEMETERY)-1;
+    //     }
+    // }else if (gameState == LOT){
+    //     if (position.x < GetLeftBoundary(LOT)){
+    //         position.x = GetLeftBoundary(LOT)+1;
+    //     }else if (position.x > GetRightBoundary(LOT)){
+    //         position.x = GetRightBoundary(LOT)-1;
+    //     }
+    // }else if (gameState == GRAVEYARD){
+        
+    // }
  
     if (!isAiming && !isShooting && !isReloading) {
         //KEYBOARD MOVEMENT CODE
@@ -306,7 +319,7 @@ void Player::UpdateMovement(const GameResources& resources,  GameState& gameStat
         frameCounter += GetFrameTime() * frameSpeed;
         int numFrames = (resources.shootSheet.width / 64);
 
-        if (frameCounter >= 0.1) {
+        if (frameCounter >= 0.1) { //update frames
             currentFrame++;
             frameCounter = 0;
 

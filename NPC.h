@@ -50,6 +50,7 @@ public:
     bool hobo;
     bool teller;
     int clickCount;
+    int interactions;
 
 
     NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState initialAnimation, bool isActive, bool isZombie);
@@ -59,7 +60,7 @@ public:
     void SetAnimationState(AnimationState newState);
     void SetDestination(float minX, float maxX);
     bool CheckHit(Vector2 previousPosition, Vector2 bulletPosition, Vector2 bulletSize);
-    void HandleNPCInteraction();
+    void HandleNPCInteraction(Player& player);
     void HandlePolice(Player& player, float& distanceToPlayer, bool& hasTarget);
     void HandleZombie(Player& player, float& distanceToPlayer, bool& hasTarget);
 

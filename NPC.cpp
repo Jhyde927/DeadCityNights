@@ -40,6 +40,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     hobo = false;
     teller = false;
     clickCount = 0;
+    interactions = 0;
 
     
     
@@ -81,7 +82,7 @@ std::string GetRandomPhrase() {
     return phrases[randomIndex];
 }
 
-void NPC::HandleNPCInteraction(){
+void NPC::HandleNPCInteraction(Player& player){
         destination = position;//Stop NPC
         interacting = true;
         idleTime = 5;
@@ -105,46 +106,88 @@ void NPC::HandleNPCInteraction(){
 
         if (hobo && !talked){
             talked = true;
-            clickCount += 1;
+            
             idleTime = 3; //stops NPC while talking
             talkTimer = 3; // ensures this only runs once
-            switch (clickCount){
-                case 1:
-                    speech = "GaaHh, what do you want?";
-                    break;
-                case 2:
-                    speech = "wait, you're not like the others";
-                    break;
-                case 3:
-                    speech = "maybe you'll believe me";
-                    break;
+            if (interactions == 0){
+                clickCount += 1;
+                switch (clickCount){
+                    case 1:
+                        speech = "GaaHh, what do you want?";
+                        break;
+                    case 2:
+                        speech = "wait, you're not like the others";
+                        break;
+                    case 3:
+                        speech = "maybe you'll believe me";
+                        break;
 
-                case 4:
-                    speech = "I was in the graveyard last night.\n\nI saw something...";
-                    break;
+                    case 4:
+                        speech = "I was in the graveyard last night.\n\nI saw something...";
+                        break;
 
-                case 5:
-                    speech = "..."; //pause for dramatic effect. 
+                    case 5:
+                        speech = "..."; //pause for dramatic effect. 
+                        
+                        break;
+
+                    case 6:
+                        speech = "The DEAD were RISING\n\nfrom their GRAVES!";
+                        break;
+
+                    case 7:
+                        speech = "I dropped my SHOVEL and\n\ngot the hell out of there";
+                        break;
+
+                    case 8:
+                        speech = "I'd stay away from there\n\nif I was you";
+                        break;
+
+                    case 9:
+                        speech = "...";
+                        interactions = 1;
+                        clickCount = 0;
+                        break;
+
+                } 
+            }else if (interactions == 1 && player.hasShovel){
+                clickCount += 1;
+                switch(clickCount){
                     
-                    break;
+                    case 1:
+                        speech = "I see you've found my shovel";
+                        break;
+                    case 2:
+                        speech = "You saw them too...\n\nthe Walking Dead";
+                        break;
+                    case 3:
+                        speech = "They are massing \n\nin the cemetery before...";
+                        break;
+                    case 4: 
+                        speech = "I've tried to warn the police\n\nthey just laughed at me";
+                        break;
+                    case 5:
+                        speech = "You've got to stop them\n\n before they invade the city";
+                        break;
+                    case 6:
+                        speech = "Here is the KEY to the cemetery";
+                        
+                        break;
 
-                case 6:
-                    speech = "The DEAD were RISING\n\nfrom their GRAVES!";
-                    break;
+                    case 7:
+                        speech = "Find the source of the zombies";
+                        break;
 
-                case 7:
-                    speech = "I dropped my SHOVEL and\n\ngot the hell out of there";
-                    break;
+                    case 8:
+                        speech = "There is an old shotgun buried over there\n\nYour gonna need it";
+                        break;
 
-                case 8:
-                    speech = "I'd stay away from there\n\nif I was you";
-                    break;
+                    case 9:
+                        speech = "WE ARE DOOMED!";
+                        break;
 
-                case 9:
-                    speech = "...";
-                    break;
-
-            }        
+                }
+            }      
         }
 
         if (!talked && !hobo && !police && !teller){
@@ -228,7 +271,7 @@ void NPC::Update(Player& player) {
     float distance_to_player = abs(player.position.x - position.x);
     if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
         if (distance_to_player < 20 && !police){
-            HandleNPCInteraction();
+            HandleNPCInteraction(player);
         }
     }
 
@@ -461,7 +504,7 @@ void NPC::ClickNPC(Vector2 mousePosition, Camera2D& camera, Player& player){
         if (CheckCollisionPointRec(mouseWorldPos, npcHitbox)){
             float distance = abs(mouseWorldPos.x - player.position.x);
             if (distance < 75){ // NPC must be close to interact
-                HandleNPCInteraction();
+                HandleNPCInteraction(player);
                 
             }
 

@@ -191,6 +191,7 @@ void LoadGameResources(GameResources& resources) {
     resources.cemeteryKey = LoadTexture("assets/CemeteryKey.png");
     resources.GraveyardGate = LoadTexture("assets/GraveyardGate.png");
     resources.GraveyardForeground = LoadTexture("assets/GraveyardForeground.png");
+    resources.GreaveyardMidground= LoadTexture("assets/GraveyardMidground.png");
 }
 
 void UnloadGameResources(GameResources& resources){
@@ -240,6 +241,8 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.cemeteryKey);
     UnloadTexture(resources.GraveyardGate);
     UnloadTexture(resources.GraveyardForeground);
+    UnloadTexture(resources.GreaveyardMidground);
+
    
 }
 
@@ -584,6 +587,7 @@ void HandleTransition(Player& player, PlayerCar& player_car, GameCalendar& calen
                     
                     }else if (!player.enter_car && over_gate){
                         gameState = GRAVEYARD;
+                        raiseZombies = true; // queue up more zombies
 
                     }
                     
@@ -607,6 +611,9 @@ void HandleTransition(Player& player, PlayerCar& player_car, GameCalendar& calen
                 }else if (gameState == LOT){
                     gameState = OUTSIDE;
                     player.position.x = vacantLotX;
+                }else if (gameState == GRAVEYARD){
+                    gameState = CEMETERY;
+                    
                 }
 
                 
@@ -748,13 +755,13 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
  
                         }
                         //far right side of cemetery is an item. 
-                        if (player.position.x > 3986 && player.position.x < 4016 && gameState == CEMETERY && !hasCemeteryKey){
-                            PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
-                            shovelTint = RED;
-                            hasCemeteryKey = true;
-                            AddItemToInventory("cemeteryKey", inventory, INVENTORY_SIZE);
+                        // if (player.position.x > 3986 && player.position.x < 4016 && gameState == CEMETERY && !hasCemeteryKey){
+                        //     PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
+                        //     shovelTint = RED;
+                        //     hasCemeteryKey = true;
+                        //     AddItemToInventory("cemeteryKey", inventory, INVENTORY_SIZE);
 
-                        }
+                        // }
                     }
                 }
                 DrawTexture(resources.shovel, x, y, shovelTint); //draw shovel after button to tint the color on press
@@ -1017,10 +1024,10 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         zombieWave3 = true;
         StartZombieSpawn(10);
     }
-    if (!player.enter_car && player.position.x > 3000 && !zombieWave2 && !firstHobo){ //walk too far right and zombies spawn again
-        zombieWave2 = true;
-        StartZombieSpawn(10);
-    }
+    // if (!player.enter_car && player.position.x > 3000 && !zombieWave2 && !firstHobo){ //walk too far right and zombies spawn again
+    //     zombieWave2 = true;
+    //     StartZombieSpawn(10);
+    // }
 
     if (move_car){
         player_car.carSpeed = 100;
@@ -1321,6 +1328,10 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
         player.facingRight = mousePosition.x > player.position.x; //facing right is true if mousepos.x > playerPos.x
     }
 
+    if (player.position.x > 3437 and raiseZombies){
+        raiseZombies = false;
+        StartZombieSpawn(20);
+    }
 
     BeginMode2D(camera);
     camera.target = player.position;
@@ -1328,7 +1339,7 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
     if (!IsKeyDown(KEY_F)){
         if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
     }
-
+    float parallaxforeground = camera.target.x * 0.4;
     float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
     float parallaxTrees = camera.target.x * 0.8;
     float parallaxBackground = camera.target.x * 0.9f;  // Background moves even slower 
@@ -1359,7 +1370,8 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
     DrawTexturePro(resources.GraveyardGate, {0, 0, static_cast<float>(resources.GraveyardGate.width), static_cast<float>(resources.GraveyardGate.height)},
                     {parallaxMidground, -64, static_cast<float>(resources.GraveyardGate.width), static_cast<float>(resources.GraveyardGate.height)}, {0, 0}, 0.0f, WHITE);
 
-
+    DrawTexturePro(resources.GreaveyardMidground, {0, 0, static_cast<float>(resources.GraveyardGate.width), static_cast<float>(resources.GraveyardGate.height)},
+                    {parallaxforeground, +136, static_cast<float>(resources.GraveyardGate.width), static_cast<float>(resources.GraveyardGate.height)}, {0, 0}, 0.0f, WHITE);
 
     //EndShaderMode();
 
@@ -1368,6 +1380,11 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
         player.DrawPlayer(resources, gameState, camera);
 
     }
+    for (NPC& zombie : zombies){
+        zombie.Update(player);
+        zombie.Render();
+    }
+
     DrawBullets(); //draw bullets in cemetery after everything else. 
 
     //foreforeground. infront of player
@@ -1386,6 +1403,24 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
     }else{
         DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
+
+    if (!start) show_dbox = false; //set to false to hide dbox when not over spot unless start where we first show tutorial text
+    if (player.position.x > 3067 && player.position.x < 3087){
+
+        phrase = "PRESS UP TO EXIT";
+        show_dbox = true;
+        dboxPosition = player.position;
+        if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
+            transitionState = FADE_OUT;
+            //fadeout to cemetery. Handled in handleTransition function
+        }
+        
+    }
+    if (show_dbox){
+        DrawDialogBox(camera, 0, 0, 20);
+
+    }
+
     
     //if (player.hasGun && (IsKeyDown(KEY_F) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT))) DrawHUD(player); //only show ammo when aiming
 
@@ -1494,7 +1529,7 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
     if (!streetSounds){ 
         streetSounds = true; //Why do we need this bool? incase we need to turn it off?
         SoundManager::getInstance().PlayMusic("StreetSounds");
-        //SoundManager::getInstance().PlayMusic("Schumann");
+        
     }
 
     if (applyShader){
@@ -1535,6 +1570,13 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
                 firstHobo = false;
                 raiseZombies = true; // zombies don't spawn until you talk to hobo. 
                 drawShovel = true; //shovel isn't in cemetery until you talk to hobo.
+            }
+
+            if (hobo.interactions == 1 && hobo.clickCount == 6 && !hasCemeteryKey){
+                //give cemetery key
+                AddItemToInventory("cemeteryKey", inventory, INVENTORY_SIZE);
+                hasCemeteryKey = true;
+                PlaySound(SoundManager::getInstance().GetSound("Keys"));
             }
 
             dboxPosition = hobo.position;
@@ -1933,7 +1975,9 @@ void InitSounds(SoundManager& soundManager){
     SoundManager::getInstance().LoadMusic("CarRun", "assets/sounds/CarRun.ogg"); // load CarRun.ogg into music tracks with the name CarRun
     //music tracks automatically loop.The car running sound needs to loop, so we call it music.
     SoundManager::getInstance().LoadMusic("StreetSounds", "assets/sounds/StreetSounds.ogg"); 
-    SoundManager::getInstance().LoadMusic("Schumann", "assets/sounds/Schumann.ogg");
+    SoundManager::getInstance().LoadMusic("Jangwa", "assets/sounds/Jangwa.ogg");
+
+
     soundManager.LoadSound("gunShot", "assets/sounds/gunShot.ogg");   //misc sounds
     soundManager.LoadSound("BoneCrack", "assets/sounds/BoneCrack.ogg");
     soundManager.LoadSound("reload", "assets/sounds/revolvercock.ogg");
@@ -2057,7 +2101,7 @@ int main() {
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
     float targetZoom = camera.zoom;  // Initialize targetZoom to the initial zoom value
-
+    PlayMusicStream(SoundManager::getInstance().GetMusic("Jangwa"));
     inventoryPositionX = player.position.x; //init inventory position
     inventoryPositionY = player.position.y;  
     SetTargetFPS(60);
@@ -2068,7 +2112,7 @@ int main() {
         if (!player.enter_car) player.UpdateMovement(resources, gameState, mousePosition, camera);  // Update player position and animation
         UpdateInventoryPosition(camera, gameState);
         SoundManager::getInstance().UpdateMusic("CarRun");
-        SoundManager::getInstance().UpdateMusic("Schumann");
+        SoundManager::getInstance().UpdateMusic("Jangwa");
         
         UpdateBullets();
         CheckBulletNPCCollisions(zombies); 

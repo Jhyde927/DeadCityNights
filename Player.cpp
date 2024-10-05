@@ -92,7 +92,7 @@ float GetRightBoundary(GameState gameState){
     }else if (gameState == LOT){
         return 3214;
     }else if (gameState == GRAVEYARD){
-        return 4665;
+        return 4563;
     }else if (gameState == APARTMENT){
         return 4000;
     }else if (gameState == WORK){
@@ -108,7 +108,7 @@ float GetLeftBoundary(GameState gameState){
     }else if (gameState == LOT){
         return 2218;
     }else if (gameState == GRAVEYARD){
-        return 1435;
+        return 1500;
     }else if (gameState == APARTMENT){
         return 1064;
     }else if (gameState == WORK){

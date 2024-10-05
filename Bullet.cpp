@@ -58,7 +58,7 @@ void UpdateBullets() {
             bullets[i].lifeTime -= GetFrameTime();  // Reduce bullet's lifetime
 
             // Deactivate the bullet if it goes off-screen or its lifetime runs out
-            if (bullets[i].position.x < 0 || bullets[i].position.x > 4096 || bullets[i].lifeTime <= 0) {
+            if (bullets[i].position.x < 0 || bullets[i].position.x > 8000 || bullets[i].lifeTime <= 0) {
                 bullets[i].isActive = false;
             }
         }

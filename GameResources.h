@@ -58,6 +58,8 @@ struct GameResources {
     Texture2D GraveyardGate;
     Texture2D GraveyardForeground;
     Texture2D GreaveyardMidground;
+    Texture2D deadZombie;
+    Texture2D Badge;
     Font defaultFont;
 };
 

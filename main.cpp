@@ -44,7 +44,9 @@ bool leave_apartment = false;
 bool leave_cemetery = false;
 bool buttonCemetery = false;
 bool hasCemeteryKey = false;
+bool hasBadge = false;
 bool firstHobo = true;
+bool firstBlood = false;
 bool drawShovel = false;
 bool drawShotgun = true;
 bool buttonWork = false;
@@ -53,6 +55,7 @@ bool digSpot = false;
 bool start = true;
 bool buttonTavern = false;
 bool gotoWork = false;
+bool debug = false;
 bool hasWorked = false;
 bool buttonSleep = false;
 bool hasSlept = false;
@@ -81,6 +84,8 @@ float inventoryPositionY = 0.0f;
 float inventoryTargetX = 0.0f;
 float inventoryTargetY = 0.0f;
 
+float badgeTimer = 0.0f;
+
 int remainingZombiesToSpawn = 0;    // Tracks remaining zombies to spawn
 float spawnTimer = 0.0f;            // Timer for spawning
 float nextSpawnDelay = 0.0f;        // Time delay between spawns
@@ -93,8 +98,8 @@ Color shovelTint = WHITE;
 int money = 100;
 int displayMoney = 100;
 bool showInventory = false;
-const int INVENTORY_SIZE = 8;  // Define the size of the inventory
-std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", ""};
+const int INVENTORY_SIZE = 10;  // Define the size of the inventory
+std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", "", "", ""};
 
 std::string phrase = "A and D or Arrows\n\nto move left and right"; //initial tutorial phrase
 
@@ -108,7 +113,7 @@ Vector2 drawerPos = {screenWidth/2 + 129, 730};
 Vector2 cemetery_start{2746, 700};
 Vector2 car_pos = {3000, 710};
 Vector2 truck_pos = {512, 710};
-
+Vector2 dz_pos = {0, 0};
 Vector2 pc_start_pos = Vector2{1710, 668};
 Vector2 pstart_by_car = Vector2{1738, 700};
 Vector2 dboxPosition;
@@ -138,6 +143,7 @@ struct PlayerCar {
     bool facingLeft = true;
 
 };
+
 
 
 // Function to initialize and load resources
@@ -192,6 +198,8 @@ void LoadGameResources(GameResources& resources) {
     resources.GraveyardGate = LoadTexture("assets/GraveyardGate.png");
     resources.GraveyardForeground = LoadTexture("assets/GraveyardForeground.png");
     resources.GreaveyardMidground= LoadTexture("assets/GraveyardMidground.png");
+    resources.deadZombie = LoadTexture("assets/DeadZombie.png");
+    resources.Badge = LoadTexture("assets/Badge.png");
 }
 
 void UnloadGameResources(GameResources& resources){
@@ -242,6 +250,7 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.GraveyardGate);
     UnloadTexture(resources.GraveyardForeground);
     UnloadTexture(resources.GreaveyardMidground);
+    UnloadTexture(resources.deadZombie);
 
    
 }
@@ -660,8 +669,41 @@ void UpdateInventoryPosition(const Camera2D& camera, GameState& gameState) {
     
 }
 
-void shovelLogic(Vector2& mousePosition){
-    
+void drawDeadZombie(GameResources& resources,Player& player, Vector2 bodyPosition,Vector2& mouseWorldPos){
+    DrawTexture(resources.deadZombie, bodyPosition.x, bodyPosition.y, WHITE);
+    Rectangle bodyBounds = {
+        bodyPosition.x,      // X position
+        bodyPosition.y,      // Y position
+        static_cast<float>(64),  // Width of the texture
+        static_cast<float>(64)  // Height of the texture
+    };
+    int distance = abs(player.position.x - bodyPosition.x);
+    if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){ //if key up next to body
+        if (distance < 30 && !hasBadge){
+            AddItemToInventory("Badge", inventory, INVENTORY_SIZE);
+            hasBadge = true;
+            showInventory = true;
+            show_dbox = true;
+            phrase = "ID badge of an employee\n\nA company named NecroTech";
+            badgeTimer = 7.0;
+            dboxPosition = player.position;
+        }
+    }
+    if (CheckCollisionPointRec(mouseWorldPos, bodyBounds)){ //if click on body
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)){
+            if (distance < 30 && !hasBadge){
+                AddItemToInventory("Badge", inventory, INVENTORY_SIZE);
+                hasBadge = true;
+                showInventory = true;
+                show_dbox = true;
+                phrase = "ID badge of an employee\n\nA company named NecroTech";
+                badgeTimer = 7.0;
+                dboxPosition = player.position;
+            }
+        }
+        
+    }
+
 }
 
 
@@ -690,6 +732,9 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
             if (inventory[i] == "carKeys"){
                 DrawTexture(resources.CarKeys, x, y, WHITE);
                 
+            }
+            if (inventory[i] == "Badge"){
+                DrawTexture(resources.Badge, x, y, WHITE);
             }
             if (inventory[i] == "Gun"){
                 DrawTexture(resources.Revolver, x, y, gunTint);
@@ -1024,10 +1069,10 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         zombieWave3 = true;
         StartZombieSpawn(10);
     }
-    // if (!player.enter_car && player.position.x > 3000 && !zombieWave2 && !firstHobo){ //walk too far right and zombies spawn again
-    //     zombieWave2 = true;
-    //     StartZombieSpawn(10);
-    // }
+    if (!player.enter_car && player.position.x > 3500 && !zombieWave2 && !firstHobo){ //walk too far right and zombies spawn again
+        zombieWave2 = true;
+        StartZombieSpawn(10);
+    }
 
     if (move_car){
         player_car.carSpeed = 100;
@@ -1044,14 +1089,16 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         StartZombieSpawn(5);
     }
 
-    if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
-        if (player.position.x > 3069 && player.position.x < 3089 && hasCemeteryKey){
-            std::cout << "OPEN SESAME";
+    show_dbox = false;
+    
+    if (player.position.x > 3069 && player.position.x < 3089 && hasCemeteryKey){
+            phrase = "UP TO ENTER";
             over_gate = true;
-            transitionState = FADE_OUT;
-            //TODO implement cemetery interior
+            show_dbox = true;
+            dboxPosition = player.position;
+
         }
-    }
+    
         
     
 
@@ -1133,12 +1180,18 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
 
     }
 
+    
+
 
     //render shovel. Click the shovel to pick it up. 
 
     Vector2 shovelPos = {1870, 700}; // render within 1900. where zombies trigger
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
-    float distance = abs(shovelPos.x - player.position.x);
+    if (firstBlood && !hasBadge){
+        drawDeadZombie(resources,player, dz_pos, mouseWorldPos);
+    }
+
+    float distance_to_shovel = abs(shovelPos.x - player.position.x);
     if (drawShovel){ //shovel pickup
         DrawTexture(resources.shovelWorld, shovelPos.x, shovelPos.y, WHITE);
         Rectangle shovelBounds = { //shovel button
@@ -1149,7 +1202,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         };
 
     
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)&& distance < 20){ //pickup shovel
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)&& distance_to_shovel < 20){ //pickup shovel 
             if (CheckCollisionPointRec(mouseWorldPos, shovelBounds)){
                 //add shovel in inventory
                 if (!player.hasShovel){
@@ -1165,24 +1218,27 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
 
         }
         //Press up key or W to pickup shovel when close enough
-        if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP) && distance < 20){
-            if (!player.hasShovel){
+        if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
+            if (!player.hasShovel && distance_to_shovel < 20){
                 drawShovel = false;
                 AddItemToInventory("shovel", inventory, INVENTORY_SIZE);
                 showInventory = true;
                 player.hasShovel = true;
             
             }
-                
-
         }
-
     }
 
 
     for (NPC& zombie : zombies){ //update and draw zombies in cemetery
         zombie.Update(player);
         zombie.Render();
+
+        if (zombie.isDying && !firstBlood){ //first zombie killed drops a dead body
+            firstBlood = true;
+            dz_pos = zombie.position;
+            
+        }
     }
 
     if (show_carUI && !move_car && player.enter_car){ //destination menu
@@ -1206,8 +1262,19 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
     }else{
         DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
+
+    if (badgeTimer > 0){ //show badge explanation
+        show_dbox = true;
+        DrawDialogBox(camera, 0, 0, 20);
+        badgeTimer -= GetFrameTime();
+    }
+
+    if (over_gate && hasCemeteryKey && show_dbox){
+        DrawDialogBox(camera, 0, 0, 20);
+
+    }
     
-    //if (player.hasGun && (IsKeyDown(KEY_F) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT))) DrawHUD(player); //only show ammo when aiming
+    
 
     if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player); //always show ammo when outside of car in the cemetery
 
@@ -1368,7 +1435,7 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
 
     // Draw cemetery gate AKA midground
     DrawTexturePro(resources.GraveyardGate, {0, 0, static_cast<float>(resources.GraveyardGate.width), static_cast<float>(resources.GraveyardGate.height)},
-                    {parallaxMidground, -64, static_cast<float>(resources.GraveyardGate.width), static_cast<float>(resources.GraveyardGate.height)}, {0, 0}, 0.0f, WHITE);
+                    {parallaxMidground-512, -64, static_cast<float>(resources.GraveyardGate.width), static_cast<float>(resources.GraveyardGate.height)}, {0, 0}, 0.0f, WHITE);
 
     DrawTexturePro(resources.GreaveyardMidground, {0, 0, static_cast<float>(resources.GraveyardGate.width), static_cast<float>(resources.GraveyardGate.height)},
                     {parallaxforeground, +136, static_cast<float>(resources.GraveyardGate.width), static_cast<float>(resources.GraveyardGate.height)}, {0, 0}, 0.0f, WHITE);
@@ -1623,16 +1690,18 @@ void RenderOutside(const GameResources& resources, Camera2D& camera,Player& play
     int lot_max = vacantLotX + 20;
 
     int dist = abs(player.position.x - ap_max);
-    if (dist > 1000){
+
+    if (dist > 1000){ //get far enough away from the apartment and you can sleep again. 
         hasSlept = false;
     }
 
 
-    SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide
+    SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide or in vacant lot
+
     if (!streetSounds){ 
         streetSounds = true; //Why do we need this bool? incase we need to turn it off?
         SoundManager::getInstance().PlayMusic("StreetSounds");
-        //SoundManager::getInstance().PlayMusic("Schumann");
+        
     }
 
 
@@ -1932,7 +2001,7 @@ void DisplayDate(GameCalendar& calendar){
 void glowEffect(Shader& glowShader){
         float time = GetTime();  // Get the total elapsed time
 
-        // Use a sine wave to oscillate glowThreshold between 0.1 and 0.3 over 1 second
+        // Use a sine wave to oscillate glowThreshold between 0.2 and 0.6 over 1 second
         float minThreshold = 0.2f;
         float maxThreshold = 0.6f;
         float oscillationSpeed = 0.9f;  // 1 second duration
@@ -1963,6 +2032,58 @@ void handleCamera(Camera2D& camera, float& targetZoom){
         if (camera.zoom < minZoom) camera.zoom = minZoom;
         if (targetZoom > maxZoom) targetZoom = maxZoom;
         if (targetZoom < minZoom) targetZoom = minZoom;
+
+}
+
+void debugKeys(Player& player){
+        if (IsKeyPressed(KEY_SPACE)){
+            std::cout << "Player Position: ";
+            PrintVector2(player.position);
+            if (!drunk){
+                //applyShader = true;
+                drunk = true;
+            }else{
+                //applyShader = false;
+                drunk = false;
+            }
+   
+        }
+
+        if (IsKeyPressed(KEY_K)){
+            if (!has_car_key){
+                AddItemToInventory("carKeys", inventory, INVENTORY_SIZE);
+                AddItemToInventory("cemeteryKey", inventory, INVENTORY_SIZE);
+                has_car_key = true;
+                hasCemeteryKey = true;
+                PlaySound(SoundManager::getInstance().GetSound("Keys"));
+
+            }
+
+        }
+
+        if (IsKeyPressed(KEY_H)){
+            if (!player.hasShovel){
+                player.hasShovel = true;
+                AddItemToInventory("shovel", inventory, INVENTORY_SIZE);
+                PlaySound(SoundManager::getInstance().GetSound("shovelDig"));
+            }
+        }
+
+
+
+        if (IsKeyPressed(KEY_G)){
+            if (!player.hasGun){
+                AddItemToInventory("Gun", inventory, INVENTORY_SIZE);
+                player.hasGun = true;
+                PlaySound(SoundManager::getInstance().GetSound("reload"));
+
+            }
+            if (!player.hasShotgun){
+                AddItemToInventory("shotgun", inventory, INVENTORY_SIZE);
+                player.hasShotgun = true;
+            }
+
+        }
 
 }
 
@@ -2040,9 +2161,7 @@ int main() {
 
   ///////////////////SHADERS????????????????????????????????????????????????  
     // Shader shader = LoadShader("shaders/shaderGlitch.vs", "shaders/shaderGlitch.fs"); //CRT SHADER. Consider a load shader function
-    
-    // ///ripple shader
-    // Shader rippleShader = LoadShader(0, "shaders/ripple.fs");
+
 
     Shader glowShader = LoadShader(0, "shaders/glow.fs");
  
@@ -2061,10 +2180,7 @@ int main() {
 
     //Drunk aka glowshader2
     Shader glowShader2 = LoadShader(0, "shaders/glow2.fs");
-    // Shader wave_distortion = LoadShader(0, "wave_distortion.fs");
-    // Shader blurShader = LoadShader(0, "shaders/blur.fs");
-    // Shader crt_effect = LoadShader(0, "shaders/crt_effect.fs");
-    // // Get the location of the 'time' uniform variable in the shader
+
 
     int timeLoc = GetShaderLocation(glitchShader, "time"); //used for glitch
     float totalTime = 0.0f; // Variable to keep track of time
@@ -2078,16 +2194,9 @@ int main() {
     SetShaderValue(glowShader2, glowThresholdLoc, &glowThreshold, SHADER_UNIFORM_FLOAT);   
     SetShaderValue(glowShader2, glowIntensityLoc, &glowIntensity, SHADER_UNIFORM_FLOAT);
     SetShaderValue(glowShader2, resolutionLoc, resolution, SHADER_UNIFORM_VEC2);
-    
 
-
-    // Set the glow color (e.g., a bright blue)
-    //float glowColor[3] = { 0.0f, 0.5f, 1.0f };  // RGB values between 0.0 and 1.0
-    //SetShaderValue(glowShader2, glowColorLoc, glowColor, SHADER_UNIFORM_VEC3);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////shaders
-
-
 
     // Initialize player
     Player player;
@@ -2101,16 +2210,26 @@ int main() {
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
     float targetZoom = camera.zoom;  // Initialize targetZoom to the initial zoom value
-    PlayMusicStream(SoundManager::getInstance().GetMusic("Jangwa"));
+   
     inventoryPositionX = player.position.x; //init inventory position
     inventoryPositionY = player.position.y;  
     SetTargetFPS(60);
     dboxPosition = player.position;
+
+    //PlayMusicStream(SoundManager::getInstance().GetMusic("Jangwa"));
+
+    //debug raise zombies on first visit. Comment out before building exe
+    // firstHobo = false;
+    // raiseZombies = true;
+    // drawShovel = true;
+
+
     // Main game loop
     while (!WindowShouldClose()) {
         Vector2 mousePosition = GetMousePosition();
         if (!player.enter_car) player.UpdateMovement(resources, gameState, mousePosition, camera);  // Update player position and animation
         UpdateInventoryPosition(camera, gameState);
+
         SoundManager::getInstance().UpdateMusic("CarRun");
         SoundManager::getInstance().UpdateMusic("Jangwa");
         
@@ -2130,54 +2249,11 @@ int main() {
 
 
         ////DEBUG/////////////////DEBUG///////////
-        if (IsKeyPressed(KEY_SPACE)){
-            std::cout << "Player Position: ";
-            PrintVector2(player.position);
-            if (!drunk){
-                //applyShader = true;
-                drunk = true;
-            }else{
-                //applyShader = false;
-                drunk = false;
-            }
-   
-        }
-
-        if (IsKeyPressed(KEY_K)){
-            if (!has_car_key){
-                AddItemToInventory("carKeys", inventory, INVENTORY_SIZE);
-                AddItemToInventory("cemeteryKey", inventory, INVENTORY_SIZE);
-                has_car_key = true;
-                hasCemeteryKey = true;
-                PlaySound(SoundManager::getInstance().GetSound("Keys"));
-
-            }
+        if (debug){
+            debugKeys(player);
 
         }
-
-        if (IsKeyPressed(KEY_H)){
-            if (!player.hasShovel){
-                player.hasShovel = true;
-                AddItemToInventory("shovel", inventory, INVENTORY_SIZE);
-                PlaySound(SoundManager::getInstance().GetSound("shovelDig"));
-            }
-        }
-
-
-
-        if (IsKeyPressed(KEY_G)){
-            if (!player.hasGun){
-                AddItemToInventory("Gun", inventory, INVENTORY_SIZE);
-                player.hasGun = true;
-                PlaySound(SoundManager::getInstance().GetSound("reload"));
-
-            }
-            if (!player.hasShotgun){
-                AddItemToInventory("shotgun", inventory, INVENTORY_SIZE);
-                player.hasShotgun = true;
-            }
-
-        }
+        
         //////////////////////////////////////////////
 
         //I for inventory
@@ -2200,6 +2276,7 @@ int main() {
                 //player.position.x = 512; //move player, to move inventory to the middle of the screen. 
                 
             }
+            //enter car for both outside and cemetery
             if (over_car && !player.enter_car && has_car_key){
                 //player inside idling car
                 SoundManager::getInstance().PlayMusic("CarRun");
@@ -2211,10 +2288,16 @@ int main() {
 
 
             }
-            if (over_lot){
+            if (over_lot && gameState == OUTSIDE){
                 transitionState = FADE_OUT;
-            }    
+            }
+            if (over_gate && gameState == CEMETERY){
+                transitionState = FADE_OUT;
+                
+            }
+
         }
+
         handleCamera(camera, targetZoom);
 
         BeginDrawing(); //NEEDED

@@ -184,9 +184,33 @@ void NPC::HandleNPCInteraction(Player& player){
 
                     case 9:
                         speech = "WE ARE DOOMED!";
+                        interactions = 2;
+                        clickCount = 0;
                         break;
 
                 }
+            }else if (interactions == 2 && player.hasBadge){
+                clickCount += 1;
+                switch(clickCount){
+                    case 1:
+                        speech = "Where did you find this ID card?";
+                        break;
+
+                    case 2:
+                        speech = "NecroTech? That's my old employer";
+                        break;
+
+                    case 3:
+                        speech = "I got fired when I wouldn't go along with their\n\nWorld domination plans";
+                        break;
+                    
+                    case 4:
+                        speech = "I should have known they were behind this";
+                        break;
+
+                }
+
+
             }      
         }
 
@@ -307,6 +331,7 @@ void NPC::Update(Player& player) {
         deathTimer -= GetFrameTime();
         if (deathTimer <= 0.0f) {
             isActive = false;  // Set NPC as inactive after death animation
+            isDying = false; //set dying back to false for reasons
             return;
         }
     }

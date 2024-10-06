@@ -44,7 +44,7 @@ bool leave_apartment = false;
 bool leave_cemetery = false;
 bool buttonCemetery = false;
 bool hasCemeteryKey = false;
-bool hasBadge = false;
+
 bool firstHobo = true;
 bool firstBlood = false;
 bool drawShovel = false;
@@ -55,7 +55,7 @@ bool digSpot = false;
 bool start = true;
 bool buttonTavern = false;
 bool gotoWork = false;
-bool debug = false;
+bool debug = true;
 bool hasWorked = false;
 bool buttonSleep = false;
 bool hasSlept = false;
@@ -670,6 +670,7 @@ void UpdateInventoryPosition(const Camera2D& camera, GameState& gameState) {
 }
 
 void drawDeadZombie(GameResources& resources,Player& player, Vector2 bodyPosition,Vector2& mouseWorldPos){
+    //The first zombie that is killed in the graveyard drops a dead body you can click on and get the ID badge. 
     DrawTexture(resources.deadZombie, bodyPosition.x, bodyPosition.y, WHITE);
     Rectangle bodyBounds = {
         bodyPosition.x,      // X position
@@ -679,24 +680,24 @@ void drawDeadZombie(GameResources& resources,Player& player, Vector2 bodyPositio
     };
     int distance = abs(player.position.x - bodyPosition.x);
     if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){ //if key up next to body
-        if (distance < 30 && !hasBadge){
+        if (distance < 30 && !player.hasBadge){
             AddItemToInventory("Badge", inventory, INVENTORY_SIZE);
-            hasBadge = true;
+            player.hasBadge = true;
             showInventory = true;
             show_dbox = true;
-            phrase = "ID badge of an employee\n\nA company named NecroTech";
+            phrase = "ID card of an employee\n\nA company named NecroTech";
             badgeTimer = 7.0;
             dboxPosition = player.position;
         }
     }
     if (CheckCollisionPointRec(mouseWorldPos, bodyBounds)){ //if click on body
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)){
-            if (distance < 30 && !hasBadge){
+            if (distance < 30 && !player.hasBadge){
                 AddItemToInventory("Badge", inventory, INVENTORY_SIZE);
-                hasBadge = true;
+                player.hasBadge = true;
                 showInventory = true;
                 show_dbox = true;
-                phrase = "ID badge of an employee\n\nA company named NecroTech";
+                phrase = "ID card of an employee\n\nA company named NecroTech";
                 badgeTimer = 7.0;
                 dboxPosition = player.position;
             }
@@ -1187,10 +1188,6 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
 
     Vector2 shovelPos = {1870, 700}; // render within 1900. where zombies trigger
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
-    if (firstBlood && !hasBadge){
-        drawDeadZombie(resources,player, dz_pos, mouseWorldPos);
-    }
-
     float distance_to_shovel = abs(shovelPos.x - player.position.x);
     if (drawShovel){ //shovel pickup
         DrawTexture(resources.shovelWorld, shovelPos.x, shovelPos.y, WHITE);
@@ -1234,11 +1231,6 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         zombie.Update(player);
         zombie.Render();
 
-        if (zombie.isDying && !firstBlood){ //first zombie killed drops a dead body
-            firstBlood = true;
-            dz_pos = zombie.position;
-            
-        }
     }
 
     if (show_carUI && !move_car && player.enter_car){ //destination menu
@@ -1263,11 +1255,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
-    if (badgeTimer > 0){ //show badge explanation
-        show_dbox = true;
-        DrawDialogBox(camera, 0, 0, 20);
-        badgeTimer -= GetFrameTime();
-    }
+
 
     if (over_gate && hasCemeteryKey && show_dbox){
         DrawDialogBox(camera, 0, 0, 20);
@@ -1400,11 +1388,14 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
         StartZombieSpawn(20);
     }
 
+    Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
+
+
     BeginMode2D(camera);
     camera.target = player.position;
-    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
+    //Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
     if (!IsKeyDown(KEY_F)){
-        if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
+        if (player.isAiming) player.facingRight = mouseWorldPos.x > player.position.x;//Hack to make aiming work both ways
     }
     float parallaxforeground = camera.target.x * 0.4;
     float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
@@ -1450,6 +1441,12 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
     for (NPC& zombie : zombies){
         zombie.Update(player);
         zombie.Render();
+
+        if (zombie.isDying && !firstBlood && gameState == GRAVEYARD){ //first zombie that is dying in the graveyard
+            firstBlood = true;
+            dz_pos = zombie.position;
+            
+        }
     }
 
     DrawBullets(); //draw bullets in cemetery after everything else. 
@@ -1458,9 +1455,20 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
     DrawTexturePro(resources.GraveyardForeground, {0, 0, static_cast<float>(resources.GraveyardGate.width), static_cast<float>(resources.GraveyardGate.height)},
                 {1024, 70, static_cast<float>(resources.GraveyardGate.width), static_cast<float>(resources.GraveyardGate.height)}, {0, 0}, 0.0f, WHITE);
 
+    if (firstBlood && !player.hasBadge){
+        drawDeadZombie(resources,player, dz_pos, mouseWorldPos);
+    }
+
     EndMode2D();
 
     DrawMoney(); //draw money after EndMode2d()
+
+    if (badgeTimer > 0){ //show badge explanation
+        show_dbox = true;
+        DrawDialogBox(camera, 0, 0, 20);
+        badgeTimer -= GetFrameTime();
+    }
+
     if (showInventory){
         RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
     }

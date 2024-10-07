@@ -48,6 +48,7 @@ public:
     bool agro;
     bool attacking;
     bool hobo;
+    bool ghost;
     bool teller;
     int clickCount;
     int interactions;
@@ -63,7 +64,7 @@ public:
     void HandleNPCInteraction(Player& player);
     void HandlePolice(Player& player, float& distanceToPlayer, bool& hasTarget);
     void HandleZombie(Player& player, float& distanceToPlayer, bool& hasTarget);
-
+    void HandleGhost(Player& player, float& distanceToPlayer, bool& hasTarget);
     void TakeDamage(int damage);
 };
 

@@ -14,6 +14,7 @@
 
 float detectionRange = 200.0f;  // Set detection range for zombies
 float talkTimer = 0.0f;
+float ghostAlpha = 1.0f;
 
 // Constructor with additional parameters for isActive and isZombie
 NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState initialAnimation, bool active, bool zombie)
@@ -38,6 +39,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     agro = false;
     attacking = false;
     hobo = false;
+    ghost = false;
     teller = false;
     clickCount = 0;
     interactions = 0;
@@ -222,6 +224,15 @@ void NPC::HandleNPCInteraction(Player& player){
         
     }
 
+void NPC::HandleGhost(Player& player, float& distanceToPlayer, bool& hasTarget){
+    if (ghost && distanceToPlayer < detectionRange){
+        hasTarget = true;
+        destination = player.position;
+    }
+
+
+}
+
 void NPC::HandleZombie(Player& player, float& distanceToPlayer, bool& hasTarget){
     if (isZombie && distanceToPlayer < detectionRange && riseTimer <= 0) {
         hasTarget = true; //if hasTarget dont go idle
@@ -292,9 +303,10 @@ void NPC::SetDestination(float minX, float maxX) {
 
 void NPC::Update(Player& player) {
     if (!isActive) return;  // Skip update if the NPC is not active
+    if (!isZombie) riseTimer = 0;
     float distance_to_player = abs(player.position.x - position.x);
     if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
-        if (distance_to_player < 20 && !police){
+        if (distance_to_player < 20 && !police && !isZombie){
             HandleNPCInteraction(player);
         }
     }
@@ -323,7 +335,15 @@ void NPC::Update(Player& player) {
     // Update hit timer if the NPC has been hit
     if (hitTimer > 0) {
         hitTimer -= GetFrameTime();
+        ghostAlpha = hitTimer / .3; //ghost becomes fully transparent on hit. tics down with hit timer .3 seconds. 
+        ghostAlpha = Clamp(ghostAlpha, 0.0f, 1.0f); 
         
+    }else{
+        ghostAlpha += 0.1;
+        
+        if (ghostAlpha >= 1.0f){
+            ghostAlpha = 1.0f;
+        }
     }
 
     // Handle death logic
@@ -331,7 +351,7 @@ void NPC::Update(Player& player) {
         deathTimer -= GetFrameTime();
         if (deathTimer <= 0.0f) {
             isActive = false;  // Set NPC as inactive after death animation
-            isDying = false; //set dying back to false for reasons
+            isDying = false; //set dying back to false once dead. 
             return;
         }
     }
@@ -348,8 +368,8 @@ void NPC::Update(Player& player) {
         int numFrames = 0;
         switch (currentAnimation) {
             case IDLE:
-                
-                numFrames = 1;  // Only one frame for idle
+                numFrames = 1;
+                if (ghost) numFrames = 7; //ghost idle is 7 frames
                 break;
             case WALK:
                 numFrames = 7;  // 7 frames for walking
@@ -400,7 +420,7 @@ void NPC::Update(Player& player) {
     
     HandlePolice(player, distance_to_player, hasTarget);
     HandleZombie(player, distance_to_player, hasTarget);
-
+    HandleGhost(player, distance_to_player, hasTarget);
 
 
     //NPCs choose a random position called destination. they move toward destination until they arrive then repeat. 
@@ -427,10 +447,14 @@ void NPC::Update(Player& player) {
 
             // Only set a new random destination if not chasing the player
             if (!isZombie || distanceToPlayer >= detectionRange) {
-                if (!hobo){
-                    SetDestination(1800, 3000);  // Set a new destination within the range
-                }else{
-                    SetDestination(2600, 2800); // hobo stays near center
+                if (hobo){
+                    
+                    SetDestination(2400, 2600); // hobo stays near center
+                }else if (ghost){
+                    SetDestination(3300, 3400); //ghost stays on far left of cemetery
+                }
+                else{
+                    SetDestination(1800, 3000);  //Pedestrians Outside 
                 }
                 
             }
@@ -493,6 +517,7 @@ void NPC::Render() {
     // Draw the texture at the NPC's position
     // Tint the NPC red if recently hit
     Color tint = (hitTimer > 0) ? RED : WHITE;
+    if (ghost) tint = ColorAlpha(WHITE, ghostAlpha);
     DrawTextureRec(texture, sourceRec, position, tint);
 }
 
@@ -528,7 +553,7 @@ void NPC::ClickNPC(Vector2 mousePosition, Camera2D& camera, Player& player){
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){ // it seems dumb to get input inside the NPC class, but here we are.  
         if (CheckCollisionPointRec(mouseWorldPos, npcHitbox)){
             float distance = abs(mouseWorldPos.x - player.position.x);
-            if (distance < 75){ // NPC must be close to interact
+            if (distance < 75 && !isZombie){ // NPC must be close to interact
                 HandleNPCInteraction(player);
                 
             }
@@ -587,23 +612,25 @@ void NPC::TakeDamage(int damage) {
     health -= damage;
     hitTimer = 0.3f; // Tint the sprite red for 0.3 seconds
     int soundIndex = rand() % 4;
-    switch (soundIndex){
-        case 0:
-            //SoundManager::getInstance().GetSound("zhit1");  // Access the sound directly
-            PlaySound(SoundManager::getInstance().GetSound("zhit1"));
-            break;
-        case 1:
-            PlaySound(SoundManager::getInstance().GetSound("zhit2"));
-            break;
+    if (isZombie){
+        switch (soundIndex){
+            case 0:
+                //SoundManager::getInstance().GetSound("zhit1");  // Access the sound directly
+                PlaySound(SoundManager::getInstance().GetSound("zhit1"));
+                break;
+            case 1:
+                PlaySound(SoundManager::getInstance().GetSound("zhit2"));
+                break;
 
-        case 2:
-            PlaySound(SoundManager::getInstance().GetSound("zhit3"));
-            break;
-        
-        case 3:
-            PlaySound(SoundManager::getInstance().GetSound("zhit4"));
-            break;
+            case 2:
+                PlaySound(SoundManager::getInstance().GetSound("zhit3"));
+                break;
+            
+            case 3:
+                PlaySound(SoundManager::getInstance().GetSound("zhit4"));
+                break;
 
+        }
     }
 
 
@@ -620,4 +647,11 @@ void NPC::TakeDamage(int damage) {
         deathTimer = 0.85f;        // Set death animation duration // needs to be exact
         destination = position; //zombie is at it's destination on death as to not play walk animation
     }
+
+    if (health <= 0 && ghost && !isDying){
+        isDying = true;
+        deathTimer = 0.3;
+        destination = position;
+    }
+
 }

@@ -121,6 +121,7 @@ Color ApartmentBgColor {41, 48, 63, 255};
 std::vector<NPC> npcs;
 std::vector<NPC> zombies;
 std::vector<NPC>hobos;
+std::vector<NPC>ghosts;
 
 GameState gameState = OUTSIDE;
 
@@ -200,6 +201,8 @@ void LoadGameResources(GameResources& resources) {
     resources.GreaveyardMidground= LoadTexture("assets/GraveyardMidground.png");
     resources.deadZombie = LoadTexture("assets/DeadZombie.png");
     resources.Badge = LoadTexture("assets/Badge.png");
+    resources.ComputerScreen = LoadTexture("assets/ComputerScreen.png");
+    resources.ghostSheet = LoadTexture("assets/ghostSheet.png");
 }
 
 void UnloadGameResources(GameResources& resources){
@@ -251,6 +254,9 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.GraveyardForeground);
     UnloadTexture(resources.GreaveyardMidground);
     UnloadTexture(resources.deadZombie);
+    UnloadTexture(resources.Badge);
+    UnloadTexture(resources.ComputerScreen);
+    UnloadTexture(resources.ghostSheet);
 
    
 }
@@ -457,6 +463,7 @@ void UpdateZombieSpawning(GameResources& resources, Player& player){
             NPC zombie_npc = CreateNPC(resources.zombieSheet, z_pos, zombie_speed, RISING, true, true);
             zombie_npc.SetDestination(1000, 4000);
             zombies.push_back(zombie_npc);
+            
 
             int soundIndex = rand() % 3; //zombie moans while rising.
             switch (soundIndex){  
@@ -845,7 +852,7 @@ void CheckBulletNPCCollisions(std::vector<NPC>& npcs) {
 
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (bullets[i].isActive) {  // Only check active bullets
-            for (NPC& npc : npcs) {
+            for (NPC& npc : npcs) { //zombies is passed as npcs
                 if (npc.isActive && npc.CheckHit(bullets[i].previousPosition, bullets[i].position, bulletSize)) {
                     // Collision detected
                     bullets[i].isActive = false;  // Deactivate the bullet
@@ -887,13 +894,15 @@ void MoveTraffic(GameResources resources){
     
 }
 
-void DrawApartmentUI(GameCalendar&, Vector2& mousePosition, Camera2D& camera){
-    Vector2 ui_pos = {screenWidth/2-68, 512};
-    DrawRectangle(ui_pos.x, ui_pos.y, 128, 64, customBackgroundColor);
+void DrawApartmentUI(GameResources& resources, GameCalendar&, Vector2& mousePosition, Camera2D& camera){
+    Vector2 ui_pos = {screenWidth/2-100, 440};
+    //DrawRectangle(ui_pos.x, ui_pos.y, 128, 64, customBackgroundColor);
+    DrawTexture(resources.ComputerScreen, ui_pos.x, ui_pos.y, WHITE);
     Color tint = WHITE;
+    Vector2 TextPos = {ui_pos.x + 85, ui_pos.y + 60};
     Rectangle textureBounds = {
-        ui_pos.x,      // X position
-        ui_pos.y,      
+        TextPos.x,      // X position
+        TextPos.y,      
         static_cast<float>(128),  // Width of the texture
         static_cast<float>(16)  // Height of the texture
     };
@@ -907,8 +916,8 @@ void DrawApartmentUI(GameCalendar&, Vector2& mousePosition, Camera2D& camera){
     }
 
     if (hasSlept) tint = BLACK;
-    DrawText("     Sleep", ui_pos.x, ui_pos.y, 20, tint);
-    DrawText("     Email", ui_pos.x, ui_pos.y+21, 20, WHITE);
+    DrawText("     Sleep", TextPos.x, TextPos.y, 20, tint);
+    DrawText("    Internet", TextPos.x, TextPos.y + 21, 20, WHITE);
 }
 
 
@@ -1226,6 +1235,10 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         }
     }
 
+    for (NPC& ghost: ghosts){
+        ghost.Update(player);
+        ghost.Render();
+    }
 
     for (NPC& zombie : zombies){ //update and draw zombies in cemetery
         zombie.Update(player);
@@ -1514,7 +1527,7 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
 
 
 
-void RenderApartment(const GameResources& resources, Player player, Vector2 mousePosition, GameCalendar& calendar, Camera2D camera, Shader& drunkShader, Shader& glowShader, Shader& glitchShader){
+void RenderApartment(GameResources& resources, Player player, Vector2 mousePosition, GameCalendar& calendar, Camera2D camera, Shader& drunkShader, Shader& glowShader, Shader& glitchShader){
     player.position.x -= 20; //ensure over_apartment = false
     int screen_center = (screenWidth - resources.apartment.width)/2;
     
@@ -1541,7 +1554,7 @@ void RenderApartment(const GameResources& resources, Player player, Vector2 mous
 
     DrawMoney(); //draw money after EndMode2d()
     if (showAPUI){
-        DrawApartmentUI(calendar, mousePosition, camera);
+        DrawApartmentUI(resources, calendar, mousePosition, camera);
     }
     
     
@@ -1800,7 +1813,8 @@ void RenderOutside(const GameResources& resources, Camera2D& camera,Player& play
         player_car.position = Vector2{1710, 668};
     }
     
-    
+
+
     for (NPC& npc : npcs){
         npc.Update(player);
         npc.Render();
@@ -1960,6 +1974,15 @@ void spawnNPCs(GameResources& resources){
         npcs.push_back(woman2_npc);
     }
 
+    //spawnGhost
+    Vector2 g_pos = {3100, 700};
+    NPC ghost_npc = CreateNPC(resources.ghostSheet, g_pos, speed, IDLE, true, false);
+    ghost_npc.SetDestination(1000, 4000);
+    ghost_npc.ghost = true;
+    ghost_npc.maxHealth = 500;
+    ghost_npc.health = 500;
+    ghosts.push_back(ghost_npc);
+
     //fortune teller idea is on hold
 
     // Vector2 tellerPos = {2700, 700};
@@ -1971,9 +1994,9 @@ void spawnNPCs(GameResources& resources){
 
     //spawn hobo update and draw only in vacant lot
     
-    Vector2 h_pos = {2800, 700};
+    Vector2 h_pos = {2400, 700};
     NPC hobo_npc = CreateNPC(resources.hoboSheet, h_pos, speed, IDLE, true, false);
-    hobo_npc.SetDestination(2700, 2800);
+    hobo_npc.SetDestination(2400, 2600);
     hobo_npc.hobo = true;
     hobos.push_back(hobo_npc);//hobo is in it's own vector of hobos. incase we need another hobo
     
@@ -2243,6 +2266,7 @@ int main() {
         
         UpdateBullets();
         CheckBulletNPCCollisions(zombies); 
+        CheckBulletNPCCollisions(ghosts);
         MonitorMouseClicks(player, calendar);
         UpdateZombieSpawning(resources, player);
         glowEffect(glowShader);

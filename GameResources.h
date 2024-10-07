@@ -60,6 +60,8 @@ struct GameResources {
     Texture2D GreaveyardMidground;
     Texture2D deadZombie;
     Texture2D Badge;
+    Texture2D ComputerScreen;
+    Texture2D ghostSheet;
     Font defaultFont;
 };
 

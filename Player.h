@@ -38,8 +38,10 @@ public:
     bool hasShovel;
     bool hasBadge;
 
+
     bool enter_car;
     int bulletCount;
+    int shells;
     bool can_take_damage;
 
     // New health-related variables

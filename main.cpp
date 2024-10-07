@@ -95,6 +95,7 @@ float blackoutTimer = 0.0f; // Timer to keep track of blackout period
 
 Color customBackgroundColor = {32, 42, 63, 255};  //Same Color as street background image. 
 Color shovelTint = WHITE;
+
 int money = 100;
 int displayMoney = 100;
 bool showInventory = false;
@@ -607,11 +608,12 @@ void HandleTransition(Player& player, PlayerCar& player_car, GameCalendar& calen
 
                     }
                     
-                    else if (!player.isDead){
+                    else if (player.isDead){
                         gameState = APARTMENT;
                         player.position.x = apartmentX;
                         player.isDead = false;
                         player.currentHealth = player.maxHealth; //wait untill fade out to reset health
+                        calendar.AdvanceDay();
                         
                     }
              
@@ -646,7 +648,7 @@ void HandleTransition(Player& player, PlayerCar& player_car, GameCalendar& calen
         
         player.isDead = true;
         transitionState = FADE_OUT;
-        calendar.AdvanceDay();
+        
         
     
     }
@@ -853,7 +855,7 @@ void CheckBulletNPCCollisions(std::vector<NPC>& npcs) {
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (bullets[i].isActive) {  // Only check active bullets
             for (NPC& npc : npcs) { //zombies is passed as npcs
-                if (npc.isActive && npc.CheckHit(bullets[i].previousPosition, bullets[i].position, bulletSize)) {
+                if (npc.isActive && npc.CheckHit(bullets[i].previousPosition, bullets[i].position, bulletSize)) { //
                     // Collision detected
                     bullets[i].isActive = false;  // Deactivate the bullet
                     npc.TakeDamage(25);  // Apply 25 damage to the NPC
@@ -871,7 +873,8 @@ void DrawHUD(const Player& player) {
     if (player.currentWeapon == REVOLVER){
         DrawText(TextFormat("Ammo: %d", player.revolverBulletCount), screenWidth/2 + ammoX, ammoY, 20, WHITE); //screen space coordiantes
     }else if (player.currentWeapon == SHOTGUN){
-        DrawText(TextFormat("Ammo: %d", player.shotgunBulletCount), screenWidth/2 + ammoX, ammoY, 20, WHITE); //screen space coordiantes 
+        DrawText(TextFormat("Ammo: %d", player.shotgunBulletCount), screenWidth/2 + ammoX, ammoY, 20, WHITE); //screen space coordiantes
+        DrawText(TextFormat("SHELLS: %d", player.shells), screenWidth/2 + ammoX, ammoY+20, 20, WHITE); //screen space coordiantes
     }
     
 }
@@ -1100,7 +1103,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
     }
 
     show_dbox = false;
-    
+    over_gate = false;
     if (player.position.x > 3069 && player.position.x < 3089 && hasCemeteryKey){
             phrase = "UP TO ENTER";
             over_gate = true;
@@ -1234,10 +1237,18 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
             }
         }
     }
+    show_dbox = false;
 
     for (NPC& ghost: ghosts){
         ghost.Update(player);
         ghost.Render();
+        ghost.ClickNPC(mousePosition, camera, player);
+
+        if (ghost.interacting){
+            show_dbox = true;
+            dboxPosition = ghost.position;
+            phrase = ghost.speech;
+        }
     }
 
     for (NPC& zombie : zombies){ //update and draw zombies in cemetery
@@ -1268,9 +1279,11 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
+    if (show_dbox){
+        DrawDialogBox(camera, 0, 0, 20);
+    }
 
-
-    if (over_gate && hasCemeteryKey && show_dbox){
+    if (over_gate && hasCemeteryKey){
         DrawDialogBox(camera, 0, 0, 20);
 
     }
@@ -1974,10 +1987,10 @@ void spawnNPCs(GameResources& resources){
         npcs.push_back(woman2_npc);
     }
 
-    //spawnGhost
-    Vector2 g_pos = {3100, 700};
+    //create ghost
+    Vector2 g_pos = {3900, 700};
     NPC ghost_npc = CreateNPC(resources.ghostSheet, g_pos, speed, IDLE, true, false);
-    ghost_npc.SetDestination(1000, 4000);
+    ghost_npc.SetDestination(3500, 4000);
     ghost_npc.ghost = true;
     ghost_npc.maxHealth = 500;
     ghost_npc.health = 500;
@@ -2079,6 +2092,8 @@ void debugKeys(Player& player){
             }
    
         }
+
+
 
         if (IsKeyPressed(KEY_K)){
             if (!has_car_key){
@@ -2247,7 +2262,7 @@ int main() {
     SetTargetFPS(60);
     dboxPosition = player.position;
 
-    //PlayMusicStream(SoundManager::getInstance().GetMusic("Jangwa"));
+    PlayMusicStream(SoundManager::getInstance().GetMusic("Jangwa"));
 
     //debug raise zombies on first visit. Comment out before building exe
     // firstHobo = false;
@@ -2279,6 +2294,9 @@ int main() {
         //glitchshader
         SetShaderValue(glitchShader, timeLoc, &totalTime, SHADER_UNIFORM_FLOAT);
 
+        if (IsKeyPressed(KEY_M)){ //MUTE MUSIC
+            SoundManager::getInstance().StopMusic("Jangwa"); //turn off music
+        }
 
         ////DEBUG/////////////////DEBUG///////////
         if (debug){

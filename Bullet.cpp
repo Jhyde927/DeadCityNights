@@ -52,7 +52,7 @@ void FireBullet(Player& player, bool spread) {
 void UpdateBullets() {
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (bullets[i].isActive) {
-            bullets[i].previousPosition = bullets[i].position;
+            bullets[i].previousPosition = bullets[i].position; // Better hit detection by also checking positions between prev and current bullet pos
             // Update bullet position based on direction and speed
             bullets[i].position.x += bullets[i].direction.x * bullets[i].speed * GetFrameTime();
             bullets[i].lifeTime -= GetFrameTime();  // Reduce bullet's lifetime

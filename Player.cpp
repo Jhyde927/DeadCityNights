@@ -40,6 +40,8 @@ Player::Player() {
     enter_car = false;
     can_take_damage = true;
 
+    shells = 25;
+
     LastTapTimeLeft = 0;
     LastTapTimeRight = 0;
     tapInterval = 0.3;
@@ -61,18 +63,20 @@ void Player::take_damage(int damage) {
     
     if (!enter_car){ //dont take damage if inside car
         
-        if (rand() % 2 == 0){
-            PlaySound(SoundManager::getInstance().GetSound("phit1"));
 
-        }else{
-            PlaySound(SoundManager::getInstance().GetSound("phit2"));
-        }
 
         
-        if (can_take_damage){
+        if (can_take_damage && !isDead){
             hitTimer = 0.9f; // tint the sprite red for .3 seconds
             can_take_damage = false;
             currentHealth -= damage;
+
+            if (rand() % 2 == 0){
+                PlaySound(SoundManager::getInstance().GetSound("phit1"));
+
+            }else{
+                PlaySound(SoundManager::getInstance().GetSound("phit2"));
+            }
         }
         
         if (currentHealth <= 0) {
@@ -188,11 +192,21 @@ void Player::UpdateMovement(const GameResources& resources,  GameState& gameStat
             }
          
 
-        }else if (currentWeapon == SHOTGUN && shotgunBulletCount < 2){
-            if (!isReloading){
+        }else if (currentWeapon == SHOTGUN && shotgunBulletCount == 0){
+            if (!isReloading && shotgunBulletCount + shells >= 1){
+                if (shells == 1){
+                    shells -= 1;
+                    shotgunBulletCount = 1;
+                }else{
+                    shells -= 2;
+                    shotgunBulletCount = 2;
+
+                }
+
                 isReloading = true;
                 shotgunReloadTime = 0.7f;
-                shotgunBulletCount = 2;
+ 
+                //shotgunBulletCount = 2;
                 bulletCount = MAX_BULLETS;//shotgun uses same bullets array
                 PlaySound(SoundManager::getInstance().GetSound("ShotgunReload"));
 
@@ -262,6 +276,7 @@ void Player::UpdateMovement(const GameResources& resources,  GameState& gameStat
             currentFrame = 0;
             frameCounter = 0.0f;
             shotgunBulletCount--;
+        
             //SoundManager::getInstance().GetSound("shotgunBlast");
             //PlaySound(SoundManager::getInstance().GetSound("shotgunBlast"));
             PlaySound(SoundManager::getInstance().GetSound("ShotGun"));

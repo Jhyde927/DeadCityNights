@@ -62,10 +62,7 @@ Player::Player() {
 void Player::take_damage(int damage) {
     
     if (!enter_car){ //dont take damage if inside car
-        
 
-
-        
         if (can_take_damage && !isDead){
             hitTimer = 0.9f; // tint the sprite red for .3 seconds
             can_take_damage = false;

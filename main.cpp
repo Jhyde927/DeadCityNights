@@ -513,151 +513,324 @@ void spawnZombies(GameResources& resources,int zombie_count){
 
 
 
-void HandleTransition(Player& player, PlayerCar& player_car, GameCalendar& calendar) {
+
+
+
+void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<NPC>& npcs) {
+    if (move_car && !gotoWork) {  // Car is moving, go to road
+        gameState = ROAD;
+        player_car.facingLeft = true;  // Leaving outside = face left
+        if (!reverse_road) {
+            player_car.position.x = 900;
+        }
+    } else if (move_car && gotoWork) {  // Move car and go to work
+        gameState = WORK;
+        // Additional logic if needed
+    } else if (player.isDead) {  // Died outside, go to apartment
+        gameState = APARTMENT;
+        player.position.x = apartmentX;
+        player.currentHealth = player.maxHealth;
+        for (NPC& npc : npcs) {
+            if (npc.police) {
+                npc.agro = false;  // Turn off police aggression
+                npc.attacking = false;
+            }
+        }
+    } else if (over_apartment) {  // Over apartment, go to apartment
+        gameState = APARTMENT;
+    } else if (over_lot) {
+        gameState = LOT;
+    }
+}
+
+void HandleApartmentTransition(Player& player) {
+    gameState = OUTSIDE;  // Go back outside
+}
+
+void HandleRoadTransition(Player& player, PlayerCar& player_car) {
+    if (!reverse_road) {
+        gameState = CEMETERY;
+        player_car.position.x = 3000;
+    } else {
+        gameState = OUTSIDE;
+        player_car.position.x = pc_start_pos.x;
+        player.position.x = 1738;
+        reverse_road = false;
+        leave_cemetery = false;
+        move_car = false;  // Prevent double fade-outs
+    }
+}
+
+void HandleCemeteryTransition(Player& player, PlayerCar& player_car, GameCalendar& calendar) {
+    reverse_road = true;
+    player_car.facingLeft = false;
+    move_car = false;
+
+    if (!player.isDead && player.enter_car) {
+        gameState = ROAD;
+        player_car.position.x = 100;
+    } else if (!player.enter_car && over_gate) {
+        gameState = GRAVEYARD;
+        raiseZombies = true;  // Queue up more zombies
+    } else if (player.isDead) {
+        gameState = APARTMENT;
+        player.position.x = apartmentX;
+        player.isDead = false;
+        player.currentHealth = player.maxHealth;
+        calendar.AdvanceDay();
+    }
+}
+
+void HandleWorkTransition(Player& player) {
+    gotoWork = false;
+    move_car = false;
+    hasWorked = true;
+    gameState = OUTSIDE;
+    player.position.x = pstart_by_car.x;
+    addMoney(100);
+}
+
+void HandleLotTransition(Player& player) {
+    gameState = OUTSIDE;
+    player.position.x = vacantLotX;
+}
+
+void PerformStateTransition(Player& player, PlayerCar& player_car, GameCalendar& calendar, std::vector<NPC>& npcs) {
+    switch (gameState) {
+        case OUTSIDE:
+            HandleOutsideTransition(player, player_car, npcs);
+            break;
+        case APARTMENT:
+            HandleApartmentTransition(player);
+            break;
+        case ROAD:
+            HandleRoadTransition(player, player_car);
+            break;
+        case CEMETERY:
+            HandleCemeteryTransition(player, player_car, calendar);
+            break;
+        case WORK:
+            HandleWorkTransition(player);
+            break;
+        case LOT:
+            HandleLotTransition(player);
+            break;
+        case GRAVEYARD:
+            gameState = CEMETERY;
+            break;
+        default:
+            // Handle any other states if necessary
+            break;
+    }
+}
+
+void DrawFadeMask() {
+    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, fadeAlpha));
+}
+
+void HandleFadeIn() {
+    fadeAlpha -= fadeSpeed;  // Fade in gradually
+    if (fadeAlpha <= 0.0f) {
+        fadeAlpha = 0.0f;
+        transitionState = NONE;  // Fade-in complete
+    }
+}
+
+void HandleFadeOut(Player& player, PlayerCar& player_car, GameCalendar& calendar, std::vector<NPC>& npcs) {
+    fadeAlpha += fadeSpeed;  // Fade out gradually
+    if (fadeAlpha >= 1.0f) {
+        fadeAlpha = 1.0f;
+
+        // Start blackout timer when fully faded out
+        blackoutTimer += GetFrameTime();
+        if (blackoutTimer >= blackoutTime) {
+            blackoutTimer = 0.0f;  // Reset blackout timer
+
+            // Transition to the next state
+            PerformStateTransition(player, player_car, calendar, npcs);
+
+            if (!gotoWork) {  // Don't fade in when at work; fade in later
+                transitionState = FADE_IN;  // Start fading back in
+            }
+        }
+    }
+}
+
+// Assuming necessary includes and global variables are already defined
+
+void HandleTransition(Player& player, PlayerCar& player_car, GameCalendar& calendar, std::vector<NPC>& npcs) {
     if (firstTransition) {
         fadeAlpha = 0.0f;  // Ensure it starts at 0 for the first fade
         firstTransition = false;  // Reset flag after first transition
     }
 
-
     if (transitionState == FADE_IN) {
-        fadeAlpha -= fadeSpeed;  // Fade in gradually
-        if (fadeAlpha <= 0.0f) {
-            fadeAlpha = 0.0f;
-            transitionState = NONE;  // Fade-in complete
-        }
-    } else if (transitionState == FADE_OUT) { //TRANSITION TO FADEOUT TO TRANSITION TO NEW SCENE, transition logic done here. 
-        fadeAlpha += fadeSpeed;  // Fade out gradually
-        if (fadeAlpha >= 1.0f) {
-            fadeAlpha = 1.0f;
-
-            // Start blackout timer when fully faded out // wait while blacked out for things to happen.
-            blackoutTimer += GetFrameTime();
-            if (blackoutTimer >= blackoutTime) {
-                blackoutTimer = 0.0f;  // Reset blackout timer
-
-                // Transition to the next state
-                if (gameState == OUTSIDE) {
-                    if (move_car && !gotoWork) { //car is moving, go to road
-                        gameState = ROAD;
-                        player_car.facingLeft = true; //leaving outside = face left
-                        if (!reverse_road){
-                            player_car.position.x = 900;
-                        }
-                        
-                    } else if (move_car && gotoWork){ //movecar and gotowork = go to work
-                    
-                        gameState = WORK;
-                        //do nothing
-                        
-                    } 
-                    else if (gameState == OUTSIDE && player.isDead){ //Die outside to police, got to apartment
-                        gameState = APARTMENT;
-                        player.position.x = apartmentX;
-                        player.currentHealth = player.maxHealth;
-                        for (NPC& npc : npcs){
-                            if (npc.police){
-                                npc.agro = false; //turn off police agro if killed by police.
-                                npc.attacking = false;
-                                 
-                            }
-                        }
-                    }else if (over_apartment) { //over apartment, go to apartment
-                        gameState = APARTMENT;
-
-                    }else if (over_lot){
-                        gameState = LOT;
-                    }
-
-                } else if (gameState == APARTMENT) {
-                    gameState = OUTSIDE; //go back oustide
-
-
-                } else if (gameState == ROAD) {
-                    //not reverseRoad go to cemetery
-
-                    if (!reverse_road){
-                        gameState = CEMETERY;
-                        player_car.position.x = 3000;
-                    }else{
-                        //if reverseRoad go back to outside
-                        gameState = OUTSIDE;
-                        player_car.position.x = pc_start_pos.x;
-                        player.position.x = 1738;
-                        reverse_road = false;
-                        leave_cemetery = false;
-                    }
-
-
-
-
-                } else if (gameState == CEMETERY) {
-                    reverse_road = true;
-                    player_car.facingLeft = false;
-                    move_car = false;
-
-                    //if not dead go to road
-                    if (!player.isDead && player.enter_car){
-                        gameState = ROAD;
-                        player_car.position.x = 100;
-                    //if you die in the cemetery, go to apartment
-                    
-                    }else if (!player.enter_car && over_gate){
-                        gameState = GRAVEYARD;
-                        raiseZombies = true; // queue up more zombies
-
-                    }
-                    
-                    else if (player.isDead){
-                        gameState = APARTMENT;
-                        player.position.x = apartmentX;
-                        player.isDead = false;
-                        player.currentHealth = player.maxHealth; //wait untill fade out to reset health
-                        calendar.AdvanceDay();
-                        
-                    }
-             
-                }else if (gameState == WORK){
-                    //dont fade in or out. Let it fall through with gameState equaling outside
-                    gotoWork = false;
-                    move_car = false;
-                    hasWorked = true;
-                    gameState = OUTSIDE;
-                    player.position.x = pstart_by_car.x;
-                    addMoney(100);
-                    
-                }else if (gameState == LOT){
-                    gameState = OUTSIDE;
-                    player.position.x = vacantLotX;
-                }else if (gameState == GRAVEYARD){
-                    gameState = CEMETERY;
-                    
-                }
-
-                
-                if (!gotoWork){//dont fade in when at work. Fade in later
-                    transitionState = FADE_IN;  // Start fading back in
-                }
-                
-            }
-        }
+        HandleFadeIn();
+    } else if (transitionState == FADE_OUT) {
+        HandleFadeOut(player, player_car, calendar, npcs);
     }
 
-    //Reset player position and health on death
-    if (player.currentHealth <= 0) {
-        
+    // Reset player position and health on death
+    if (player.currentHealth <= 0 && !player.isDead) {
         player.isDead = true;
         transitionState = FADE_OUT;
-        
-        
-    
     }
 
     // Draw the fade mask
     if (transitionState != NONE) {
-        DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, fadeAlpha));
+        DrawFadeMask();
     }
 }
+
+
+
+
+// void HandleTransition(Player& player, PlayerCar& player_car, GameCalendar& calendar) {
+//     if (firstTransition) {
+//         fadeAlpha = 0.0f;  // Ensure it starts at 0 for the first fade
+//         firstTransition = false;  // Reset flag after first transition
+//     }
+
+
+//     if (transitionState == FADE_IN) {
+//         fadeAlpha -= fadeSpeed;  // Fade in gradually
+//         if (fadeAlpha <= 0.0f) {
+//             fadeAlpha = 0.0f;
+//             transitionState = NONE;  // Fade-in complete
+//         }
+//     } else if (transitionState == FADE_OUT) { //TRANSITION TO FADEOUT TO TRANSITION TO NEW SCENE, transition logic done here. 
+//         fadeAlpha += fadeSpeed;  // Fade out gradually
+//         if (fadeAlpha >= 1.0f) {
+//             fadeAlpha = 1.0f;
+
+//             // Start blackout timer when fully faded out // wait while blacked out for things to happen.
+//             blackoutTimer += GetFrameTime();
+//             if (blackoutTimer >= blackoutTime) {
+//                 blackoutTimer = 0.0f;  // Reset blackout timer
+
+//                 // Transition to the next state
+//                 if (gameState == OUTSIDE) {
+//                     if (move_car && !gotoWork) { //car is moving, go to road
+//                         gameState = ROAD;
+//                         player_car.facingLeft = true; //leaving outside = face left
+//                         if (!reverse_road){
+//                             player_car.position.x = 900;
+//                         }
+                        
+//                     } else if (move_car && gotoWork){ //movecar and gotowork = go to work
+                    
+//                         gameState = WORK;
+//                         //do nothing
+                        
+//                     } 
+//                     else if (gameState == OUTSIDE && player.isDead){ //Die outside to police, got to apartment
+//                         gameState = APARTMENT;
+//                         player.position.x = apartmentX;
+//                         player.currentHealth = player.maxHealth;
+//                         for (NPC& npc : npcs){
+//                             if (npc.police){
+//                                 npc.agro = false; //turn off police agro if killed by police.
+//                                 npc.attacking = false;
+                                 
+//                             }
+//                         }
+//                     }else if (over_apartment) { //over apartment, go to apartment
+//                         gameState = APARTMENT;
+
+//                     }else if (over_lot){
+//                         gameState = LOT;
+//                     }
+
+//                 } else if (gameState == APARTMENT) {
+//                     gameState = OUTSIDE; //go back oustide
+
+
+//                 } else if (gameState == ROAD) {
+//                     //not reverseRoad go to cemetery
+
+//                     if (!reverse_road){
+//                         gameState = CEMETERY;
+//                         player_car.position.x = 3000;
+//                     }else{
+//                         //if reverseRoad go back to outside
+//                         gameState = OUTSIDE;
+//                         player_car.position.x = pc_start_pos.x;
+//                         player.position.x = 1738;
+//                         reverse_road = false;
+//                         leave_cemetery = false;
+//                         move_car = false; //fixed? was a bug where when leaving outside returning to cemetery it would fade out twice. 
+//                     }
+
+
+
+
+//                 } else if (gameState == CEMETERY) {
+//                     reverse_road = true;
+//                     player_car.facingLeft = false;
+//                     move_car = false;
+
+//                     //if not dead go to road
+//                     if (!player.isDead && player.enter_car){
+//                         gameState = ROAD;
+//                         player_car.position.x = 100;
+//                     //if you die in the cemetery, go to apartment
+                    
+//                     }else if (!player.enter_car && over_gate){
+//                         gameState = GRAVEYARD;
+//                         raiseZombies = true; // queue up more zombies
+
+//                     }
+                    
+//                     else if (player.isDead){
+//                         gameState = APARTMENT;
+//                         player.position.x = apartmentX;
+//                         player.isDead = false;
+//                         player.currentHealth = player.maxHealth; //wait untill fade out to reset health
+//                         calendar.AdvanceDay();
+                        
+//                     }
+             
+//                 }else if (gameState == WORK){
+//                     //dont fade in or out. Let it fall through with gameState equaling outside
+//                     gotoWork = false;
+//                     move_car = false;
+//                     hasWorked = true;
+//                     gameState = OUTSIDE;
+//                     player.position.x = pstart_by_car.x;
+//                     addMoney(100);
+                    
+//                 }else if (gameState == LOT){
+//                     gameState = OUTSIDE;
+//                     player.position.x = vacantLotX;
+//                 }else if (gameState == GRAVEYARD){
+//                     gameState = CEMETERY;
+                    
+//                 }
+
+                
+//                 if (!gotoWork){//dont fade in when at work. Fade in later
+//                     transitionState = FADE_IN;  // Start fading back in
+//                 }
+                
+//             }
+//         }
+//     }
+
+//     //Reset player position and health on death
+//     if (player.currentHealth <= 0) {
+        
+//         player.isDead = true;
+//         transitionState = FADE_OUT;
+        
+        
+    
+//     }
+
+//     // Draw the fade mask
+//     if (transitionState != NONE) {
+//         DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, fadeAlpha));
+//     }
+// }
 
 
 Vector2 Lerp(Vector2 start, Vector2 end, float t) {
@@ -1161,7 +1334,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
 
     // Draw the background layers
     DrawTexturePro(resources.cemeteryBackground, {0, 0, static_cast<float>(resources.cemeteryBackground.width), static_cast<float>(resources.cemeteryBackground.height)},
-                    {parallaxBackground, 0, static_cast<float>(resources.cemeteryBackground.width), static_cast<float>(resources.cemeteryBackground.height)}, {0, 0}, 0.0f, WHITE);
+                    {parallaxBackground-1024, 0, static_cast<float>(resources.cemeteryBackground.width), static_cast<float>(resources.cemeteryBackground.height)}, {0, 0}, 0.0f, WHITE);
 
     DrawTexturePro(resources.cemeteryTrees, {0, 0, static_cast<float>(resources.cemeteryTrees.width), static_cast<float>(resources.cemeteryTrees.height)},
                     {parallaxTrees-1024, 0, static_cast<float>(resources.cemeteryTrees.width), static_cast<float>(resources.cemeteryTrees.height)}, {0, 0}, 0.0f, WHITE);
@@ -2380,7 +2553,7 @@ int main() {
     
 
         
-        HandleTransition(player, player_car, calendar);
+        HandleTransition(player, player_car, calendar, npcs);
         EndDrawing();
 
         EndShaderMode();

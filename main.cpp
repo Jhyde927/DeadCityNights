@@ -100,7 +100,8 @@ int money = 100;
 int displayMoney = 100;
 bool showInventory = false;
 const int INVENTORY_SIZE = 10;  // Define the size of the inventory
-std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", "", "", ""};
+std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", "", "", ""}; //Inventory is a fixed array for no particular reason. 
+//possibly make it a vector and inventory size could grow over time. Or a backpack item 
 
 std::string phrase = "A and D or Arrows\n\nto move left and right"; //initial tutorial phrase
 
@@ -512,10 +513,6 @@ void spawnZombies(GameResources& resources,int zombie_count){
 }
 
 
-
-
-
-
 void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<NPC>& npcs) {
     if (move_car && !gotoWork) {  // Car is moving, go to road
         gameState = ROAD;
@@ -557,7 +554,7 @@ void HandleRoadTransition(Player& player, PlayerCar& player_car) {
         player.position.x = 1738;
         reverse_road = false;
         leave_cemetery = false;
-        move_car = false;  // Prevent double fade-outs
+        move_car = false;  // Prevent double fade-outs maybe
     }
 }
 
@@ -571,9 +568,9 @@ void HandleCemeteryTransition(Player& player, PlayerCar& player_car, GameCalenda
         player_car.position.x = 100;
     } else if (!player.enter_car && over_gate) {
         gameState = GRAVEYARD;
-        raiseZombies = true;  // Queue up more zombies
+        raiseZombies = true;  // Queue up more zombies 
     } else if (player.isDead) {
-        gameState = APARTMENT;
+        gameState = APARTMENT;//wake up back at your apartment with full health. 
         player.position.x = apartmentX;
         player.isDead = false;
         player.currentHealth = player.maxHealth;
@@ -685,152 +682,7 @@ void HandleTransition(Player& player, PlayerCar& player_car, GameCalendar& calen
 
 
 
-// void HandleTransition(Player& player, PlayerCar& player_car, GameCalendar& calendar) {
-//     if (firstTransition) {
-//         fadeAlpha = 0.0f;  // Ensure it starts at 0 for the first fade
-//         firstTransition = false;  // Reset flag after first transition
-//     }
 
-
-//     if (transitionState == FADE_IN) {
-//         fadeAlpha -= fadeSpeed;  // Fade in gradually
-//         if (fadeAlpha <= 0.0f) {
-//             fadeAlpha = 0.0f;
-//             transitionState = NONE;  // Fade-in complete
-//         }
-//     } else if (transitionState == FADE_OUT) { //TRANSITION TO FADEOUT TO TRANSITION TO NEW SCENE, transition logic done here. 
-//         fadeAlpha += fadeSpeed;  // Fade out gradually
-//         if (fadeAlpha >= 1.0f) {
-//             fadeAlpha = 1.0f;
-
-//             // Start blackout timer when fully faded out // wait while blacked out for things to happen.
-//             blackoutTimer += GetFrameTime();
-//             if (blackoutTimer >= blackoutTime) {
-//                 blackoutTimer = 0.0f;  // Reset blackout timer
-
-//                 // Transition to the next state
-//                 if (gameState == OUTSIDE) {
-//                     if (move_car && !gotoWork) { //car is moving, go to road
-//                         gameState = ROAD;
-//                         player_car.facingLeft = true; //leaving outside = face left
-//                         if (!reverse_road){
-//                             player_car.position.x = 900;
-//                         }
-                        
-//                     } else if (move_car && gotoWork){ //movecar and gotowork = go to work
-                    
-//                         gameState = WORK;
-//                         //do nothing
-                        
-//                     } 
-//                     else if (gameState == OUTSIDE && player.isDead){ //Die outside to police, got to apartment
-//                         gameState = APARTMENT;
-//                         player.position.x = apartmentX;
-//                         player.currentHealth = player.maxHealth;
-//                         for (NPC& npc : npcs){
-//                             if (npc.police){
-//                                 npc.agro = false; //turn off police agro if killed by police.
-//                                 npc.attacking = false;
-                                 
-//                             }
-//                         }
-//                     }else if (over_apartment) { //over apartment, go to apartment
-//                         gameState = APARTMENT;
-
-//                     }else if (over_lot){
-//                         gameState = LOT;
-//                     }
-
-//                 } else if (gameState == APARTMENT) {
-//                     gameState = OUTSIDE; //go back oustide
-
-
-//                 } else if (gameState == ROAD) {
-//                     //not reverseRoad go to cemetery
-
-//                     if (!reverse_road){
-//                         gameState = CEMETERY;
-//                         player_car.position.x = 3000;
-//                     }else{
-//                         //if reverseRoad go back to outside
-//                         gameState = OUTSIDE;
-//                         player_car.position.x = pc_start_pos.x;
-//                         player.position.x = 1738;
-//                         reverse_road = false;
-//                         leave_cemetery = false;
-//                         move_car = false; //fixed? was a bug where when leaving outside returning to cemetery it would fade out twice. 
-//                     }
-
-
-
-
-//                 } else if (gameState == CEMETERY) {
-//                     reverse_road = true;
-//                     player_car.facingLeft = false;
-//                     move_car = false;
-
-//                     //if not dead go to road
-//                     if (!player.isDead && player.enter_car){
-//                         gameState = ROAD;
-//                         player_car.position.x = 100;
-//                     //if you die in the cemetery, go to apartment
-                    
-//                     }else if (!player.enter_car && over_gate){
-//                         gameState = GRAVEYARD;
-//                         raiseZombies = true; // queue up more zombies
-
-//                     }
-                    
-//                     else if (player.isDead){
-//                         gameState = APARTMENT;
-//                         player.position.x = apartmentX;
-//                         player.isDead = false;
-//                         player.currentHealth = player.maxHealth; //wait untill fade out to reset health
-//                         calendar.AdvanceDay();
-                        
-//                     }
-             
-//                 }else if (gameState == WORK){
-//                     //dont fade in or out. Let it fall through with gameState equaling outside
-//                     gotoWork = false;
-//                     move_car = false;
-//                     hasWorked = true;
-//                     gameState = OUTSIDE;
-//                     player.position.x = pstart_by_car.x;
-//                     addMoney(100);
-                    
-//                 }else if (gameState == LOT){
-//                     gameState = OUTSIDE;
-//                     player.position.x = vacantLotX;
-//                 }else if (gameState == GRAVEYARD){
-//                     gameState = CEMETERY;
-                    
-//                 }
-
-                
-//                 if (!gotoWork){//dont fade in when at work. Fade in later
-//                     transitionState = FADE_IN;  // Start fading back in
-//                 }
-                
-//             }
-//         }
-//     }
-
-//     //Reset player position and health on death
-//     if (player.currentHealth <= 0) {
-        
-//         player.isDead = true;
-//         transitionState = FADE_OUT;
-        
-        
-    
-//     }
-
-//     // Draw the fade mask
-//     if (transitionState != NONE) {
-//         DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, fadeAlpha));
-//     }
-// }
 
 
 Vector2 Lerp(Vector2 start, Vector2 end, float t) {
@@ -2316,6 +2168,7 @@ void InitSounds(SoundManager& soundManager){
     //music tracks automatically loop.The car running sound needs to loop, so we call it music.
     SoundManager::getInstance().LoadMusic("StreetSounds", "assets/sounds/StreetSounds.ogg"); 
     SoundManager::getInstance().LoadMusic("Jangwa", "assets/sounds/Jangwa.ogg");
+    SoundManager::getInstance().LoadMusic("Neon", "assets/sounds/Neon.ogg");
 
 
     soundManager.LoadSound("gunShot", "assets/sounds/gunShot.ogg");   //misc sounds
@@ -2435,7 +2288,8 @@ int main() {
     SetTargetFPS(60);
     dboxPosition = player.position;
 
-    PlayMusicStream(SoundManager::getInstance().GetMusic("Jangwa"));
+    //PlayMusicStream(SoundManager::getInstance().GetMusic("Jangwa"));
+    PlayMusicStream(SoundManager::getInstance().GetMusic("Neon"));
 
     //debug raise zombies on first visit. Comment out before building exe
     // firstHobo = false;
@@ -2448,7 +2302,7 @@ int main() {
         Vector2 mousePosition = GetMousePosition();
         if (!player.enter_car) player.UpdateMovement(resources, gameState, mousePosition, camera);  // Update player position and animation
         UpdateInventoryPosition(camera, gameState);
-
+        SoundManager::getInstance().UpdateMusic("Neon");
         SoundManager::getInstance().UpdateMusic("CarRun");
         SoundManager::getInstance().UpdateMusic("Jangwa");
         

@@ -2321,8 +2321,15 @@ int main() {
         //glitchshader
         SetShaderValue(glitchShader, timeLoc, &totalTime, SHADER_UNIFORM_FLOAT);
 
+
+
         if (IsKeyPressed(KEY_M)){ //MUTE MUSIC
-            SoundManager::getInstance().StopMusic("Jangwa"); //turn off music
+            if (SoundManager::getInstance().IsMusicPlaying("Neon")){
+                SoundManager::getInstance().PauseMusic("Neon");
+
+            }else{
+                SoundManager::getInstance().ResumeMusic("Neon");
+            }
         }
 
         ////DEBUG/////////////////DEBUG///////////

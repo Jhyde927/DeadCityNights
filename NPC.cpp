@@ -12,7 +12,7 @@
 #include <cstdlib>  // For rand and srand
 
 
-float detectionRange = 200.0f;  // Set detection range for zombies
+float detectionRange = 300.0f;  // Set detection range for zombies
 float talkTimer = 0.0f;
 float ghostAlpha = 1.0f;
 
@@ -236,8 +236,12 @@ void NPC::HandleNPCInteraction(Player& player){
 
 void NPC::HandleGhost(Player& player, float& distanceToPlayer, bool& hasTarget){
     if (ghost && distanceToPlayer < detectionRange){
-        hasTarget = true;
-        destination = player.position;
+        if (ghost && agro){
+            hasTarget = true;
+            destination = player.position;
+
+        }
+
     }
 
     if (ghost && distanceToPlayer > 25){
@@ -636,6 +640,8 @@ void NPC::TakeDamage(int damage) {
     health -= damage;
     hitTimer = 0.3f; // Tint the sprite red for 0.3 seconds
     int soundIndex = rand() % 4; //returns 0, 1, 2 or 3
+    if (ghost) agro = true;
+
     if (isZombie){
         switch (soundIndex){ //zombie hits
             case 0:

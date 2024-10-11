@@ -74,6 +74,27 @@ public:
         }
     }
 
+    // **New method to check if music is playing**
+    bool IsMusicPlaying(const std::string& name) {
+        if (musicTracks.find(name) != musicTracks.end()) {
+            return ::IsMusicStreamPlaying(musicTracks[name]);
+        }
+        return false;  // Music track not found or not playing
+    }
+
+    // **Optional: Pause and resume music methods**
+    void PauseMusic(const std::string& name) {
+        if (musicTracks.find(name) != musicTracks.end()) {
+            ::PauseMusicStream(musicTracks[name]);
+        }
+    }
+
+    void ResumeMusic(const std::string& name) {
+        if (musicTracks.find(name) != musicTracks.end()) {
+            ::ResumeMusicStream(musicTracks[name]);
+        }
+    }
+
     void UnloadAllSounds() {
         for (auto& pair : sounds) {
             if (pair.second.stream.buffer != nullptr) {  // Ensure the sound buffer is not null

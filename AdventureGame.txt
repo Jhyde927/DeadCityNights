@@ -1,0 +1,167 @@
+Adventure Game in C++
+
+Apartment, gas station, cemetery, liquor store, library, arcade,
+
+Need to implement UI of some kind. An inventory.
+
+Inventory stutter when moving. Solved draw inventory outside of beginMode2d(camera) endMode2d()
+
+NPCs. Edit the man animation to look different. Make a different struct called NPC. The color of the NPC should be blue grey to blend in with the background and make the player character stand out
+from the crowd, literally. Maybe we don't need a struct nah we do.
+
+I've decided it's going to be a class saved in a separate file. NPC.h as a header file. and NPC.cpp as the code that runs the animation and updates and renders the NPC.
+It will use one big sprite sheet. The sheet will be laid out like a grid. each row of the grid will be a different animation. then we can iterate the grid and grid[0][0] would be idle
+then grid[1][0] would be walk and so on.
+
+Laptop computer instead of typewriter. Clicking it brings up an interface. Check your emails.
+
+antiques shop interior
+gas station interior
+cemetery interior
+
+Homeless sprite
+business man sprite x
+woman sprite x
+
+
+zombie NPC x
+revolver x
+aim animation x
+shoot animation x
+sound x
+
+Shotgun x 
+interiors art
+homeless NPC
+
+drug dealer NPC
+
+owl hoot sound on road
+reload animation x
+footsteps <- just came to me,  works perfect x
+
+UI above player car. destinations. Cemetery, work, ect. x
+UI showing money x
+UI calendar showing day month year x
+
+NPCs Interaction. Standing next to a NPC and clicking on them will make them stop moving and a dialog box appears above their head. Randomized speech will be displayed. Certain NPCs can sell you drugs. 
+
+Police? Police will beat you up if you click on them more than once. First they say "move along". Then they beat you up and you wake up back at the apartment the next day. 
+
+work:
+	the car moves forward out of the screen, fade to black. Fade back in car is back at it's spot and you are 100 dollars richer. 
+
+Tavern:
+	Take the road to the tavern. Meet story characters of some kind. Buy a drink and we will apply a drunk shader. What's the story? People at the tavern tell rumors of a ghost at the Cemetery. 
+
+Draw a 1980s style phone next to the laptop
+
+Game turns to a zombie apocalypse on the year 2000. Guns are allowed on the street. Zombies chase NPCs and turn them into more zombies.
+
+What is the game about in the mean time. A fetch quest for a special NPC. Hidden drug dealer interaction. The dealer NPC will sell you drugs for 500 dollars. DMT. Apply a water shader to the entire screen. Make it wavy plus a warped CRT effect. 
+
+River City Nights. Rad City Blues. Zombie City Blues. Zed City Blues. Zed City Nights. City Nights 
+
+if player gets more than 1000 pixels away from the apartment in any direction, the player can then sleep again. Or if they travel the road they can sleep. You can't just go sleep to work to sleep to work. You would need to walk around or travel to reset it. This will not be explained to the player. x
+
+interactable NPCs. Just try to make them stop when clicked on. Need a hit box. they already have a hitbox. Make sure you can't click on zombies and talk to them. if interactingtexture(hitbox, mousepos)
+
+test if you can click on zombies
+
+Added shaders. Drunk shader, Glow shader, and glitch shader. Glow shader runs when you take drugs and lasts until you sleep. Glitch shader runs when zombies are spawning for dramatic effect. Drunk shader will run when you drink. Drunk shader overrides glow shader. 
+
+Need to add liquor store. Replace antiques store. You can buy whiskey. Maybe just a buy menu, no interior. 
+
+Police man x
+
+Need something new to work on. Another NPC? Another layer to the parallax?, Liquor store interior. Empty lot. x
+
+another NPC:
+	Another female. woman2 
+	Homeless man. x
+
+added empty lot. along with hobo NPC. Hobo will have some useful information for the player. Will warn the player of the coming zombie appacolypse. gives the player the shovel? shotgun? 
+
+The Shovel:
+	Can be used at certain locations to dig. Will have to telegraph dig spots. Hobo lends you a shovel that you use to dig up the shotgun. Need another item. Health pot. mana? pain killers. 
+
+	were do you get pain killers? dealer?
+
+	make the shotgun an item just like the shovel. it's in the vacant lot. draw it first. 
+
+	The hobo mentions he dropped his shovel in the cemetery. You can access the cemetery without a gun. Should we delay spawning 
+	zombies until you have talked to the hobo? and don't draw the shovel until then also. 
+
+telegraph vacant lot location with a street light and a dialog box that pops up when over lot. 
+Dialog boxes now pop up when player is over car, apartment, and vacant lot. 
+
+You can now interact with NPCs by pressing up while next to them. Most of the game can be played with just the keyboard. just not the apartment. 
+
+interactive tutorial to start the game. "Arrow keys or A, D to move" "Up or W to enter area"
+
+what do you dig up in the vacant lot? The shotgun? pills? shot gun would make sense. You would need to get the shovel with just the pistol. It's a bit more challenging but very doable. Once you have the shotgun all the zombies are gone. We need another reason to go back to the cemetery. Dig up the key to the cemetery in the vacant lot with the shovel got from the cemetery.
+
+we are running out of space in the inventory all ready. Need to space things out more. Maybe the hobo isn't there at the beginning of the game. Maybe an old lady looking for her lost cat, fluffy. The cat is in the tree. You need to talk to the cat and convince him to come down from the tree. Maybe you need to find some food at the gas station to get him down. Cat nip can be bought at the gas station. which requires you to go to work to get the money. which requires you to sleep to advance the day. Only once the day has been advanced say 2 days then the hobo shows up in his spot.
+
+There is a portal in the graveyard that is summoning zombies. It needs to be closed some how. 
+
+Fortune teller NPC. will give vague phrases about the future, based on a over complicated way of calculating which phrase. 
+if the fortune teller says one thing, then the next thing is twice as likely to happen ect ect..get chatGPT to handle the details. 
+
+
+"A shovel lost is a path revealed; seek it where the forgotten dwell." by ChatGPT
+
+Old lady NPC
+
+inside the cemetery is more graves. We show a layer of graves in front of the player. It slightly obscures the view. 
+
+Dig up the cemetery key and use it on the door. Need dialog box above door in cemetery. "Locked\nNeeds key
+
+use the same background for inner cemetery. Just put another layer in front. like the vacant lot its the cemetery from the opposite direction. So show the inside of the fence looking out. So just trees. what's inside cemetery interior? More zombies. ghosts. Skeletons. animated skele walk
+
+taking drugs reveals secret path to new area. -chatGPT o1 preview
+
+"NecroTech." company name found on id badge on a dead zombie. 
+
+dead zombie body stays and is clickable. click or up key the dead zombie for id badge
+
+Need a reason to back to apartment. Use computer to look up NecroTech? 
+
+Fixed hobo glitch by setting riseTimer to 0 for non zombies. It was playing rise animation for NPCs when there was no such animation.
+
+One you have the ID card, you can search "NecroTech" on the "internet" on your laptop in the apartment. This gives you an address, and adds another destination to the destinations menu on the car. It's NecroTech HQ. There are army guys with guns protecting the place. Break in and kill the CEO to win the game. 
+
+Add a ghost to the cemetery
+
+Add skip dialog 
+
+move background (stars) on cemetery to the left 1024
+
+make limited ammo for shotgun. global shells x
+
+use ambient modular synth from you tube as the soundtrack. Bleak minimal just like the rest of the game. 
+
+Ghost won't attack unless provoked. 
+
+If you don't attack the ghost he gives a mission to find something for him. 
+
+shotgun shells icon. digspot with shotgun shells. 
+
+fortune teller is fucked. remove and start over. 
+
+Drugs allow you to see hidden door somewhere outside. Draw this hidden door. 
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+

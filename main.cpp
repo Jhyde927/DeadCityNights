@@ -55,7 +55,7 @@ bool digSpot = false;
 bool start = true;
 bool buttonTavern = false;
 bool gotoWork = false;
-bool debug = true;
+bool debug = false; ///////////////////////////////////////DEBUG ON/OFF
 bool hasWorked = false;
 bool buttonSleep = false;
 bool hasSlept = false;
@@ -1792,6 +1792,7 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
                 //give cemetery key
                 AddItemToInventory("cemeteryKey", inventory, INVENTORY_SIZE);
                 hasCemeteryKey = true;
+                showInventory = true;
                 PlaySound(SoundManager::getInstance().GetSound("Keys"));
             }
 

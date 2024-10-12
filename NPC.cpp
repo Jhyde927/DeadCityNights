@@ -353,8 +353,8 @@ void NPC::Update(Player& player) {
     // Update hit timer if the NPC has been hit
     if (hitTimer > 0) {
         hitTimer -= GetFrameTime();
-        ghostAlpha = hitTimer / .3; //ghost becomes fully transparent on hit. tics down with hit timer .3 seconds.
-        ghostAlpha = Clamp(ghostAlpha, 0.0f, 1.0f); 
+        if (ghost) ghostAlpha = hitTimer / .3; //ghost becomes fully transparent on hit. tics down with hit timer .3 seconds.
+        if (ghost) ghostAlpha = Clamp(ghostAlpha, 0.0f, 1.0f); 
         
     }else{
         ghostAlpha += 0.1;

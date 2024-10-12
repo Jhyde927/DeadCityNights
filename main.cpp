@@ -44,7 +44,7 @@ bool leave_apartment = false;
 bool leave_cemetery = false;
 bool buttonCemetery = false;
 bool hasCemeteryKey = false;
-
+bool canGiveFortune = true;
 bool firstHobo = true;
 bool firstBlood = false;
 bool drawShovel = false;
@@ -62,12 +62,14 @@ bool hasSlept = false;
 bool showAPUI = false;
 bool playOwl = false;
 bool can_talk = true;
+bool buyFortune = false;
+bool teller = false;
 bool dealer = false;
 bool can_sell_drugs = true;
 bool applyShader = false;
 bool drunk = false;
 bool glitch = false;
-//bool enter_car = false;
+bool openMagicDoor = false;
 bool move_car = false;
 bool showHealthbar = false;
 bool reverse_road = false;
@@ -83,9 +85,10 @@ float inventoryPositionX = 0.0f;
 float inventoryPositionY = 0.0f;
 float inventoryTargetX = 0.0f;
 float inventoryTargetY = 0.0f;
-
+float DoorframeTimer = 0.0f;
+float DoorframeTime = 0.1f;
 float badgeTimer = 0.0f;
-
+float fortuneTimer = 0.0f;
 int remainingZombiesToSpawn = 0;    // Tracks remaining zombies to spawn
 float spawnTimer = 0.0f;            // Timer for spawning
 float nextSpawnDelay = 0.0f;        // Time delay between spawns
@@ -147,6 +150,12 @@ struct PlayerCar {
 
 };
 
+struct MagicDoor {
+    Vector2 position;
+    int currentFrame = 0;
+
+};
+
 
 
 // Function to initialize and load resources
@@ -205,6 +214,7 @@ void LoadGameResources(GameResources& resources) {
     resources.Badge = LoadTexture("assets/Badge.png");
     resources.ComputerScreen = LoadTexture("assets/ComputerScreen.png");
     resources.ghostSheet = LoadTexture("assets/ghostSheet.png");
+    resources.magicDoorSheet = LoadTexture("assets/MagicDoorSheet.png");
 }
 
 void UnloadGameResources(GameResources& resources){
@@ -259,6 +269,7 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.Badge);
     UnloadTexture(resources.ComputerScreen);
     UnloadTexture(resources.ghostSheet);
+    UnloadTexture(resources.magicDoorSheet);
 
    
 }
@@ -268,6 +279,11 @@ void InitializePlayerCar(PlayerCar& player_car){
     player_car.position = {1710, 700-32};
     player_car.carSpeed = 100;
     player_car.currentFrame = 0;
+}
+
+void InitializeMagicDoor(MagicDoor& magicDoor){
+    magicDoor.position = {2100, 700};
+    magicDoor.currentFrame = 0;
 }
 
 // Function to add an item to the first available slot in the inventory
@@ -280,10 +296,16 @@ void AddItemToInventory(const std::string& item, std::string inventory[], int in
     }
 }
 
-void EraseInventoryItem(std::string inventory[], int index, int inventorySize) { //unused?
-    if (index >= 0 && index < inventorySize) {
-        inventory[index] = "";  // Erase the item by setting it to an empty string
-    }
+std::string GetTellerPhrase() {
+    std::vector<std::string> tellerPhrases = {
+        "Beware of a stranger's advice\n\n trust your own instincts.",
+        "Your courage will lead you\n\n to unexpected rewards.",
+        "You will discover a hidden talent\n\n that changes your path.",
+
+    };
+
+    int randomIndex = rand() % tellerPhrases.size();
+    return tellerPhrases[randomIndex];
 }
 
 
@@ -895,9 +917,9 @@ void CheckBulletNPCCollisions(std::vector<NPC>& npcs) {
 void DrawHUD(const Player& player) {
     float ammoY = 875.0;
     float ammoX = 140.0;
-    if (player.currentWeapon == REVOLVER){
+    if (player.currentWeapon == REVOLVER && player.hasGun){
         DrawText(TextFormat("Ammo: %d", player.revolverBulletCount), screenWidth/2 + ammoX, ammoY, 20, WHITE); //screen space coordiantes
-    }else if (player.currentWeapon == SHOTGUN){
+    }else if (player.currentWeapon == SHOTGUN && player.hasShotgun){
         DrawText(TextFormat("Ammo: %d", player.shotgunBulletCount), screenWidth/2 + ammoX, ammoY, 20, WHITE); //screen space coordiantes
         DrawText(TextFormat("SHELLS: %d", player.shells), screenWidth/2 + ammoX, ammoY+20, 20, WHITE); //screen space coordiantes
     }
@@ -1021,6 +1043,36 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, G
 
 }
 
+void DrawMagicDoor(GameResources& resources,Player& player, MagicDoor& magicDoor){
+        int doorFrame = 64;
+        Rectangle sourceDoorRec = {magicDoor.currentFrame * doorFrame, 0, doorFrame, doorFrame};
+        DrawTextureRec(resources.magicDoorSheet, sourceDoorRec, magicDoor.position, WHITE);
+        if (player.position.x > 2090 && player.position.x < 2110){
+            if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
+                openMagicDoor = true;
+            }
+        }
+        if (openMagicDoor){
+            float deltaTime = GetFrameTime();
+
+            // Update animation timer
+            DoorframeTimer += deltaTime;
+
+            // Check if it's time to move to the next frame
+            if (DoorframeTimer >= DoorframeTime)
+            {
+                DoorframeTimer -= DoorframeTime;           // Reset the timer
+                magicDoor.currentFrame++;                    // Move to the next frame
+
+                if (magicDoor.currentFrame > 6)              // Loop back to the first frame if necessary
+                {
+                    magicDoor.currentFrame = 6; //stop at last frame when door is open. 
+                }
+            }
+        }
+
+}
+
 void DrawHealthBar(Vector2 position, int maxHealth, int currentHealth, int barWidth, int barHeight) {
     // Calculate health percentage
     float healthPercent = (float)currentHealth / maxHealth;
@@ -1051,6 +1103,12 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
     int offset = -64;
     int screen_offsetX = 16;
     int screen_offsetY = -55;
+
+    if (fortuneTimer > 0){
+
+;        fortuneTimer -= GetFrameTime();
+    }
+    Vector2 screen_pos = GetWorldToScreen2D(dboxPosition, camera); // position to draw text and rectangle at. position is set to npc position
     Color tint = WHITE;
     if (dealer){
         boxWidth = 256;
@@ -1060,9 +1118,22 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
         screen_offsetY = -128;
 
     }
+    if (teller){
+        boxWidth = 256;
+        boxHeight = 128;
+        offset = -135;
+        screen_offsetX = 16;
+        screen_offsetY = -128;
 
 
-    Vector2 screen_pos = GetWorldToScreen2D(dboxPosition, camera); // position to draw text and rectangle at. position is set to npc position
+         
+    }
+
+    if (teller && buyFortune && fortuneTimer <= 0){
+        phrase = "Namaste";
+    }
+
+    
     DrawRectangle(screen_pos.x, screen_pos.y + offset, boxWidth, boxHeight, customBackgroundColor);
     DrawText(phrase.c_str(), screen_pos.x+ screen_offsetX, screen_pos.y + screen_offsetY, textSize, tint);
     
@@ -1079,6 +1150,25 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
                     }
             }
         }
+
+    if (teller && !buyFortune && money >= 100 &&  GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY")){
+
+        if (canGiveFortune){
+            canGiveFortune = false;
+            buyFortune = true;
+            fortuneTimer = 5;
+            addMoney(-100);
+            phrase = GetTellerPhrase();
+            //BUG after buying a fotune the futurne teller's phrase is always the last phrase that was shown. This bug can't be fixed I've tried. 
+        }
+
+
+    }
+
+
+
+
+
 }
 
 
@@ -1736,7 +1826,7 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
 }
 
 // Example function to render the outside scene with dynamic camera
-void RenderOutside(const GameResources& resources, Camera2D& camera,Player& player, PlayerCar& player_car,std::vector<NPC>& npcs,Vector2 mousePosition, Shader& drunkShader, Shader& glowShader, Shader& glitchShader) {
+void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, PlayerCar& player_car,MagicDoor& magicDoor, std::vector<NPC>& npcs,Vector2 mousePosition, Shader& drunkShader, Shader& glowShader, Shader& glitchShader) {
     // Update the camera target to follow the player
     int ap_min = 2246;//over apartment
     int ap_max = 2266;
@@ -1772,6 +1862,7 @@ void RenderOutside(const GameResources& resources, Camera2D& camera,Player& play
     }
 
     if (!start) show_dbox = false; // reset to false so it can fall through unless start where we first show tutorial text
+
     if (player.position.x > pc_min && player.position.x < pc_max){
         over_car = true;
         phrase = "PRESS UP TO ENTER";
@@ -1852,7 +1943,7 @@ void RenderOutside(const GameResources& resources, Camera2D& camera,Player& play
     }
     
 
-
+    teller = false;
     for (NPC& npc : npcs){
         npc.Update(player);
         npc.Render();
@@ -1867,12 +1958,22 @@ void RenderOutside(const GameResources& resources, Camera2D& camera,Player& play
                 dealer = true;
                 showInventory = true;
 
-            }else{
+            }else if (npc.teller){
+                if (!buyFortune){
+                    phrase = "Fortune: $100";
+                    teller = true;
+                }else if (!buyFortune){
+                    phrase = npc.speech;
+                }
+                
+
+            } else{
                 phrase = npc.speech; //randomized speech
                 dealer = false;
             }
         }else{
             dealer = false;
+        
             // show_dbox = false;
         }
     
@@ -1882,7 +1983,6 @@ void RenderOutside(const GameResources& resources, Camera2D& camera,Player& play
     BeginBlendMode(BLEND_ADDITIVE);
     DrawTexture(resources.lightCone, 1884, 610, WHITE);
     DrawTexture(resources.lightCone, 3188, 610, WHITE);
-    
     EndBlendMode();
     
     DrawBullets();
@@ -1891,6 +1991,17 @@ void RenderOutside(const GameResources& resources, Camera2D& camera,Player& play
     int CarFrameWidth = 128;
     Rectangle sourceRecCar = {player_car.currentFrame * CarFrameWidth, 0, CarFrameWidth, CarFrameWidth};
     DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE); //draw player_car
+
+    //Draw MagicDoor
+    if (applyShader){
+        DrawMagicDoor(resources, player, magicDoor);
+
+        
+    }
+
+
+
+
     if (player.enter_car){
         //render headlight/breaklight
         
@@ -1935,6 +2046,7 @@ void RenderOutside(const GameResources& resources, Camera2D& camera,Player& play
         DrawCarUI(player_car, mousePosition, camera, gameState);
     }
 
+
     EndMode2D();  // End 2D mode 
 
     if (player.currentHealth < 100) showHealthbar = true; // dont show healthbar until youve taken damage, when on street
@@ -1942,14 +2054,15 @@ void RenderOutside(const GameResources& resources, Camera2D& camera,Player& play
     if (showHealthbar) DrawHealthBar(barPos, player.maxHealth, player.currentHealth, 128, 16);
 
     
-    
+
 
     if (show_dbox && !player.enter_car){
+
         if (over_lot || over_apartment || over_car || start){
             DrawDialogBox(camera, 0, 0, 20);
             
         }else{
-            DrawDialogBox(camera, 128, 64, 20);
+            DrawDialogBox(camera, 0, 0, 20);
         }
         
     }
@@ -2028,6 +2141,7 @@ void spawnNPCs(GameResources& resources){
     // FortuneTeller.SetDestination(1000, 4000);
     // FortuneTeller.teller = true;
     // npcs.push_back(FortuneTeller);
+    // FortuneTeller.speech = "Fortune: $100";
     
 
     //spawn hobo update and draw only in vacant lot
@@ -2273,8 +2387,9 @@ int main() {
     // Initialize player
     Player player;
     PlayerCar player_car;
-
+    MagicDoor magicDoor;
     InitializePlayerCar(player_car);
+    InitializeMagicDoor(magicDoor);
   
     // Initialize the camer
     Camera2D camera = { 0 };
@@ -2389,7 +2504,7 @@ int main() {
 
         if (gameState == OUTSIDE){
                
-            RenderOutside(resources, camera, player, player_car,npcs,mousePosition, glowShader2, glowShader, glitchShader); //glowshader2 = drunkshader
+            RenderOutside(resources, camera, player, player_car, magicDoor, npcs,mousePosition, glowShader2, glowShader, glitchShader); //glowshader2 = drunkshader
             DisplayDate(calendar);//why not display date once globally? there are reasons 
 
         }else if (gameState == APARTMENT){

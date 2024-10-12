@@ -62,6 +62,7 @@ struct GameResources {
     Texture2D Badge;
     Texture2D ComputerScreen;
     Texture2D ghostSheet;
+    Texture2D magicDoorSheet;
     Font defaultFont;
 };
 

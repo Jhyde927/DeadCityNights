@@ -48,16 +48,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     
 }
 
-std::string GetTellerPhrase() {
-    std::vector<std::string> tellerPhrases = {
-        "Fortune\n\nTeller",
-        "$100", 
-        "Know your\n\nfuture",
-    };
 
-    int randomIndex = rand() % tellerPhrases.size();
-    return tellerPhrases[randomIndex];
-}
 
 // Function to get a random phrase
 std::string GetRandomPhrase() {
@@ -69,17 +60,12 @@ std::string GetRandomPhrase() {
         "Good day!",
         "Leave me\n alone!",
         "Nice\nweather",
-        "What's up?"
-    };
-
-
-    // Seed the random number generator (only needs to be called once, typically in main)
-    
+        "What's up?",
+        
+    }; 
 
     // Get a random index
     int randomIndex = rand() % phrases.size();
-
-    // Return a random phrase
 
     return phrases[randomIndex];
 }
@@ -89,12 +75,13 @@ void NPC::HandleNPCInteraction(Player& player){
         interacting = true;
         idleTime = 5;
         if (dealer) idleTime = 10;
-        
+        if (teller) idleTime = 10;
+
         SetAnimationState(IDLE);
 
         if (!talked && teller){
             talked = true;
-            speech = GetTellerPhrase();
+            speech = "Fortune: $100";
             talkTimer = 30;
         }
 
@@ -249,7 +236,8 @@ void NPC::HandleGhost(Player& player, float& distanceToPlayer, bool& hasTarget){
         frameSpeed = 8;
     }
 
-    if (ghost && distanceToPlayer <= 25 && !isDying){
+    if (ghost && distanceToPlayer <= 25 && !isDying && agro){
+        
         attacking = true;
 
         if (player.hitTimer <= 0){

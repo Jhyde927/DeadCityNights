@@ -13,7 +13,7 @@
 
 
 float detectionRange = 300.0f;  // Set detection range for zombies
-float talkTimer = 0.0f;
+
 float ghostAlpha = 1.0f;
 
 // Constructor with additional parameters for isActive and isZombie
@@ -43,6 +43,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     teller = false;
     clickCount = 0;
     interactions = 0;
+    talkTimer = 0.0f;
 
     
     

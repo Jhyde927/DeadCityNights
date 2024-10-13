@@ -43,6 +43,7 @@ bool show_carUI = false;
 bool leave_apartment = false;
 bool leave_cemetery = false;
 bool buttonCemetery = false;
+bool buttonInternet = false;
 bool hasCemeteryKey = false;
 bool canGiveFortune = true;
 bool firstHobo = true;
@@ -55,7 +56,7 @@ bool digSpot = false;
 bool start = true;
 bool buttonTavern = false;
 bool gotoWork = false;
-bool debug = false; ///////////////////////////////////////DEBUG ON/OFF
+bool debug = true; ///////////////////////////////////////DEBUG KEYS ON/OFF
 bool hasWorked = false;
 bool buttonSleep = false;
 bool hasSlept = false;
@@ -282,7 +283,7 @@ void InitializePlayerCar(PlayerCar& player_car){
 }
 
 void InitializeMagicDoor(MagicDoor& magicDoor){
-    magicDoor.position = {2100, 700};
+    magicDoor.position = {3978, 700};
     magicDoor.currentFrame = 0;
 }
 
@@ -300,7 +301,10 @@ std::string GetTellerPhrase() {
     std::vector<std::string> tellerPhrases = {
         "Beware of a stranger's advice\n\n trust your own instincts.",
         "Your courage will lead you\n\n to unexpected rewards.",
-        "You will discover a hidden talent\n\n that changes your path.",
+        "Fortune smiles upon you\n\nin your next endeavor.",
+        "A difficult choice \n\nwill test your resolve.",
+        "Beware of the shadows\n\n not all is as it seems.",
+        "Fortune favors the bold\n\n take the leap.",
 
     };
 
@@ -322,7 +326,7 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
         if (gameState == APARTMENT){
 
             Vector2 mousePosition = GetMousePosition();  // Get the mouse position
-            Vector2 computerPos = {screenWidth/2 - 10, 512+75};
+            Vector2 computerPos = {screenWidth/2 - 10, 587};
 
 
             if (buttonSleep && !hasSlept){ ////Go to sleep
@@ -330,6 +334,8 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
                 buttonSleep = false;
                 hasWorked = false;
                 hasSlept = true;
+                buyFortune = false;
+                canGiveFortune = true; //fortune teller is reset 
                 drunk = false;  //Effects ware off when you sleep
                 applyShader = false;
                 over_apartment = false;
@@ -957,6 +963,14 @@ void DrawApartmentUI(GameResources& resources, GameCalendar&, Vector2& mousePosi
         static_cast<float>(16)  // Height of the texture
     };
 
+    Rectangle internetBounds = {
+        TextPos.x,
+        TextPos.y+20,
+        static_cast<float>(128),
+        static_cast<float>(16)
+
+    };
+
     if (CheckCollisionPointRec(mousePosition, textureBounds)){
         tint = RED;
         
@@ -964,6 +978,16 @@ void DrawApartmentUI(GameResources& resources, GameCalendar&, Vector2& mousePosi
     }else{
         buttonSleep = false;
     }
+
+    if (CheckCollisionPointRec(mousePosition, internetBounds)){
+        tint = RED;
+        buttonInternet = true;
+
+    }else{
+        buttonInternet = false;
+    }
+
+
 
     if (hasSlept) tint = BLACK;
     DrawText("     Sleep", TextPos.x, TextPos.y, 20, tint);
@@ -1047,7 +1071,7 @@ void DrawMagicDoor(GameResources& resources,Player& player, MagicDoor& magicDoor
         int doorFrame = 64;
         Rectangle sourceDoorRec = {magicDoor.currentFrame * doorFrame, 0, doorFrame, doorFrame};
         DrawTextureRec(resources.magicDoorSheet, sourceDoorRec, magicDoor.position, WHITE);
-        if (player.position.x > 2090 && player.position.x < 2110){
+        if (player.position.x > magicDoor.position.x -10 && player.position.x < magicDoor.position.x +10){ //over magic door
             if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
                 openMagicDoor = true;
             }
@@ -1119,14 +1143,12 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
 
     }
     if (teller){
-        boxWidth = 256;
+        boxWidth = 300;
         boxHeight = 128;
         offset = -135;
         screen_offsetX = 16;
         screen_offsetY = -128;
-
-
-         
+       
     }
 
     if (teller && buyFortune && fortuneTimer <= 0){
@@ -1157,17 +1179,18 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
             canGiveFortune = false;
             buyFortune = true;
             fortuneTimer = 5;
+            
             addMoney(-100);
             phrase = GetTellerPhrase();
-            //BUG after buying a fotune the futurne teller's phrase is always the last phrase that was shown. This bug can't be fixed I've tried. 
+            for (NPC& npc: npcs)
+                if (npc.teller){
+                    npc.idleTime = 10;
+                    npc.talkTimer = 30;
+                } 
         }
 
 
     }
-
-
-
-
 
 }
 
@@ -1862,8 +1885,12 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 
     }
 
-    if (!start) show_dbox = false; // reset to false so it can fall through unless start where we first show tutorial text
 
+
+    if (!start) show_dbox = false; // reset to false so it can fall through unless start where we first show tutorial text
+    over_apartment = false;
+    over_lot = false;
+    over_car = false;
     if (player.position.x > pc_min && player.position.x < pc_max){
         over_car = true;
         phrase = "PRESS UP TO ENTER";
@@ -1871,8 +1898,6 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
         dboxPosition = player.position;
         
         
-    }else{
-        over_car = false;
     }
 
     
@@ -1883,9 +1908,6 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
         
         show_dbox = true;
 
-    }else{
-        over_lot = false;
-        
     }
     
     if (player.position.x > ap_min  && player.position.x < ap_max){
@@ -1895,8 +1917,6 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
         dboxPosition.y = player.position.y + 10;
         show_dbox = true;
         
-    }else{
-        over_apartment = false;
     }
 
     camera.target = player.position;
@@ -1963,8 +1983,12 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
                 if (!buyFortune){
                     phrase = "Fortune: $100";
                     teller = true;
-                }else if (!buyFortune){
-                    phrase = npc.speech;
+                }else if (buyFortune){
+                    if (fortuneTimer <= 0){
+                        phrase = npc.speech;
+                    }
+                    
+                    teller = true;
                 }
                 
 
@@ -1999,8 +2023,6 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 
         
     }
-
-
 
 
     if (player.enter_car){
@@ -2137,19 +2159,19 @@ void spawnNPCs(GameResources& resources){
 
     //fortune teller idea is on hold
 
-    // Vector2 tellerPos = {2700, 700};
-    // NPC FortuneTeller = CreateNPC(resources.FortuneTellerSheet, tellerPos, speed, IDLE, true, false);
-    // FortuneTeller.SetDestination(1000, 4000);
-    // FortuneTeller.teller = true;
-    // npcs.push_back(FortuneTeller);
-    // FortuneTeller.speech = "Fortune: $100";
+    Vector2 tellerPos = {2700, 700};
+    NPC FortuneTeller = CreateNPC(resources.FortuneTellerSheet, tellerPos, speed, IDLE, true, false);
+    FortuneTeller.SetDestination(1000, 4000);
+    FortuneTeller.teller = true;
+    npcs.push_back(FortuneTeller);
+    FortuneTeller.speech = "Fortune: $100";
     
 
     //spawn hobo update and draw only in vacant lot
     
-    Vector2 h_pos = {2400, 700};
+    Vector2 h_pos = {2600, 700};
     NPC hobo_npc = CreateNPC(resources.hoboSheet, h_pos, speed, IDLE, true, false);
-    hobo_npc.SetDestination(2400, 2600);
+    hobo_npc.SetDestination(2500, 2600);
     hobo_npc.hobo = true;
     hobos.push_back(hobo_npc);//hobo is in it's own vector of hobos. incase we need another hobo
     
@@ -2223,17 +2245,13 @@ void debugKeys(Player& player){
         if (IsKeyPressed(KEY_SPACE)){
             std::cout << "Player Position: ";
             PrintVector2(player.position);
-            if (!drunk){
-                //applyShader = true;
-                drunk = true;
-            }else{
-                //applyShader = false;
-                drunk = false;
+            // if (!drunk){
+            //     //applyShader = true;
+            //     drunk = true;
+            // }else{
+            //     //applyShader = false;
+            //     drunk = false;
             }
-   
-        }
-
-
 
         if (IsKeyPressed(KEY_K)){
             if (!has_car_key){

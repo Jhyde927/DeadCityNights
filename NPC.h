@@ -52,6 +52,7 @@ public:
     bool teller;
     int clickCount;
     int interactions;
+    float talkTimer;
 
 
     NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState initialAnimation, bool isActive, bool isZombie);

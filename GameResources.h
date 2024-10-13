@@ -63,6 +63,10 @@ struct GameResources {
     Texture2D ComputerScreen;
     Texture2D ghostSheet;
     Texture2D magicDoorSheet;
+    Texture2D AstralBackground;
+    Texture2D AstralMidground;
+    Texture2D AstralClouds;
+    Texture2D AstralForeground;
     Font defaultFont;
 };
 

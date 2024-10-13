@@ -88,8 +88,32 @@ void NPC::HandleNPCInteraction(Player& player){
 
         if (!talked && ghost){
             talked = true;
-            speech = "BOOOO!";
-            talkTimer = 30;
+            idleTime = 4;
+            talkTimer = 4;
+            if (interactions == 0){
+                clickCount += 1;
+                switch (clickCount){
+                    case 1:
+                        speech = "BOOOOO";
+                        break;
+
+                    case 2:
+                        speech = "My essence lingers bound by time\n\nunlock the door with altered mind.";
+                        break;
+
+                    case 3:
+                        speech = "In shadows deep where spirits roam\n\na relic waits to lead me home.";
+                        break;
+
+                    case 4:
+                        speech = "BOOOO!";
+                        clickCount = 0;
+                        break;
+                }
+            }
+
+
+
         }
 
         if (police && !talked){

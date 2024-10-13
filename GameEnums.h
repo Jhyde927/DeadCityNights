@@ -11,6 +11,7 @@ enum GameState {
     WORK, 
     LOT, 
     GRAVEYARD,
+    ASTRAL,
 };
 
 enum TransitionState {

@@ -216,6 +216,10 @@ void LoadGameResources(GameResources& resources) {
     resources.ComputerScreen = LoadTexture("assets/ComputerScreen.png");
     resources.ghostSheet = LoadTexture("assets/ghostSheet.png");
     resources.magicDoorSheet = LoadTexture("assets/MagicDoorSheet.png");
+    resources.AstralBackground = LoadTexture("assets/AstralBackground.png");
+    resources.AstralMidground = LoadTexture("assets/AstralMidGround.png");
+    resources.AstralClouds = LoadTexture("assets/AstralClouds.png");
+    resources.AstralForeground = LoadTexture("assets/AstralForeground.png");
 }
 
 void UnloadGameResources(GameResources& resources){
@@ -271,7 +275,10 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.ComputerScreen);
     UnloadTexture(resources.ghostSheet);
     UnloadTexture(resources.magicDoorSheet);
-
+    UnloadTexture(resources.AstralBackground);
+    UnloadTexture(resources.AstralMidground);
+    UnloadTexture(resources.AstralClouds);
+    UnloadTexture(resources.AstralForeground);
    
 }
 
@@ -563,8 +570,12 @@ void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<
         }
     } else if (over_apartment) {  // Over apartment, go to apartment
         gameState = APARTMENT;
-    } else if (over_lot) {
+    } else if (over_lot) { // over_lot go to Vacant Lot
         gameState = LOT;
+    }else if (openMagicDoor){
+        gameState = ASTRAL;
+        
+        player.position.x = 3000;
     }
 }
 
@@ -606,6 +617,19 @@ void HandleCemeteryTransition(Player& player, PlayerCar& player_car, GameCalenda
     }
 }
 
+void HandleGraveyardTransition(Player& player, GameCalendar& calendar){
+    if (player.isDead){
+        gameState = APARTMENT;//wake up back at your apartment with full health.
+        player.position.x = apartmentX;
+        player.isDead = false;
+        player.currentHealth = player.maxHealth;
+        calendar.AdvanceDay();
+
+    }else{ //presumably over gate and fading out
+        gameState = CEMETERY;
+    }
+}
+
 void HandleWorkTransition(Player& player) {
     gotoWork = false;
     move_car = false;
@@ -621,6 +645,7 @@ void HandleLotTransition(Player& player) {
 }
 
 void PerformStateTransition(Player& player, PlayerCar& player_car, GameCalendar& calendar, std::vector<NPC>& npcs) {
+    //if we are fading out switch to the next area depending on the situation. 
     switch (gameState) {
         case OUTSIDE:
             HandleOutsideTransition(player, player_car, npcs);
@@ -641,7 +666,7 @@ void PerformStateTransition(Player& player, PlayerCar& player_car, GameCalendar&
             HandleLotTransition(player);
             break;
         case GRAVEYARD:
-            gameState = CEMETERY;
+            HandleGraveyardTransition(player, calendar);
             break;
         default:
             // Handle any other states if necessary
@@ -936,7 +961,7 @@ void DrawHUD(const Player& player) {
 void MoveTraffic(GameResources resources){
     //TODO: rename function to MoveTraffic and add more vehicles. 
     int car_start = 4500;
-    
+
 
     car_pos.x -= 150 * GetFrameTime();
     truck_pos.x += 150 * GetFrameTime();
@@ -955,6 +980,7 @@ void DrawApartmentUI(GameResources& resources, GameCalendar&, Vector2& mousePosi
     //DrawRectangle(ui_pos.x, ui_pos.y, 128, 64, customBackgroundColor);
     DrawTexture(resources.ComputerScreen, ui_pos.x, ui_pos.y, WHITE);
     Color tint = WHITE;
+    Color Itint = WHITE;
     Vector2 TextPos = {ui_pos.x + 85, ui_pos.y + 60};
     Rectangle textureBounds = {
         TextPos.x,      // X position
@@ -980,7 +1006,7 @@ void DrawApartmentUI(GameResources& resources, GameCalendar&, Vector2& mousePosi
     }
 
     if (CheckCollisionPointRec(mousePosition, internetBounds)){
-        tint = RED;
+        Itint = RED;
         buttonInternet = true;
 
     }else{
@@ -991,7 +1017,7 @@ void DrawApartmentUI(GameResources& resources, GameCalendar&, Vector2& mousePosi
 
     if (hasSlept) tint = BLACK;
     DrawText("     Sleep", TextPos.x, TextPos.y, 20, tint);
-    DrawText("    Internet", TextPos.x, TextPos.y + 21, 20, WHITE);
+    DrawText("    Internet", TextPos.x, TextPos.y + 21, 20, Itint);
 }
 
 
@@ -1074,6 +1100,7 @@ void DrawMagicDoor(GameResources& resources,Player& player, MagicDoor& magicDoor
         if (player.position.x > magicDoor.position.x -10 && player.position.x < magicDoor.position.x +10){ //over magic door
             if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
                 openMagicDoor = true;
+                transitionState = FADE_OUT;
             }
         }
         if (openMagicDoor){
@@ -1192,6 +1219,83 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
 
     }
 
+}
+
+void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition, Shader& drunkShader, Shader& glowShader, Shader& glitchShader){
+    if (player.isAiming && IsKeyDown(KEY_F)) {
+        // Handle keyboard-only aiming (e.g., using arrow keys or player movement keys)
+        if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
+            player.facingRight = true;
+        }
+        if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
+            player.facingRight = false;
+        }
+    }else if (player.isAiming && !IsKeyDown(KEY_F)) {// If the player is not aiming with keyboard, allow mouse control to set the facing direction
+        // Set facing direction based on mouse position
+        player.facingRight = mousePosition.x > player.position.x; //facing right is true if mousepos.x > playerPos.x
+    }
+
+    float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
+    float parallaxClouds = camera.target.x * .8;
+    float parallaxBackground = camera.target.x * 0.9f;  // Background moves even slower 
+    
+    BeginMode2D(camera);
+    camera.target = player.position;
+    ClearBackground(customBackgroundColor);
+    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
+    if (!IsKeyDown(KEY_F)){
+        if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
+    } 
+
+    if (applyShader){
+        
+        BeginShaderMode(glowShader);
+        
+    }
+
+    if (drunk){
+        BeginShaderMode(drunkShader);
+    }
+    
+    if (glitch){
+        BeginShaderMode(glitchShader);
+    }
+
+    // Draw the background layers
+    DrawTexturePro(resources.AstralBackground, {0, 0, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)},
+                    {parallaxBackground-1024, 0, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)}, {0, 0}, 0.0f, WHITE);
+
+    DrawTexturePro(resources.AstralClouds, {0, 0, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)},
+                    {parallaxClouds -1024, 0, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)}, {0, 0}, 0.0f, WHITE);
+
+    DrawTexturePro(resources.AstralMidground, {0, 0, static_cast<float>(resources.AstralMidground.width), static_cast<float>(resources.AstralMidground.height)},
+                    {parallaxMidground -1024, 0, static_cast<float>(resources.AstralMidground.width), static_cast<float>(resources.AstralMidground.height)}, {0, 0}, 0.0f, WHITE);
+
+    EndShaderMode(); ////////////////////////////SHADER OFF
+
+    player.DrawPlayer(resources, gameState, camera);
+
+    DrawTexturePro(resources.AstralForeground, {0, 0, static_cast<float>(resources.AstralMidground.width), static_cast<float>(resources.AstralMidground.height)},
+                    {0, 0, static_cast<float>(resources.AstralMidground.width), static_cast<float>(resources.AstralMidground.height)}, {0, 0}, 0.0f, WHITE);
+
+    DrawBullets(); //draw bullets in cemetery after everything else. 
+
+    EndMode2D();
+    DrawMoney(); //draw money after EndMode2d()
+    if (showInventory){
+        RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+    }
+    if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
+        DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+    }else{
+        DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+    }
+
+    if (show_dbox){
+        DrawDialogBox(camera, 0, 0, 20);
+    }
+
+    
 }
 
 
@@ -1375,19 +1479,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
             }
         }
     }
-    show_dbox = false;
 
-    for (NPC& ghost: ghosts){
-        ghost.Update(player);
-        ghost.Render();
-        ghost.ClickNPC(mousePosition, camera, player);
-
-        if (ghost.interacting){
-            show_dbox = true;
-            dboxPosition = ghost.position;
-            phrase = ghost.speech;
-        }
-    }
 
     for (NPC& zombie : zombies){ //update and draw zombies in cemetery
         zombie.Update(player);
@@ -1613,6 +1705,21 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
         }
     }
 
+
+    if (!start) show_dbox = false; //set to false to hide dbox when not over spot unless start where we first show tutorial text
+
+    for (NPC& ghost: ghosts){
+        ghost.Update(player);
+        ghost.Render();
+        ghost.ClickNPC(mousePosition, camera, player);
+
+        if (ghost.interacting){
+            show_dbox = true;
+            dboxPosition = ghost.position;
+            phrase = ghost.speech;
+        }
+    }
+
     DrawBullets(); //draw bullets in cemetery after everything else. 
 
     //foreforeground. infront of player
@@ -1643,7 +1750,7 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
         DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
-    if (!start) show_dbox = false; //set to false to hide dbox when not over spot unless start where we first show tutorial text
+    
     if (player.position.x > 3067 && player.position.x < 3087){
 
         phrase = "PRESS UP TO EXIT";
@@ -1660,19 +1767,16 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
 
     }
 
-    
-    //if (player.hasGun && (IsKeyDown(KEY_F) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT))) DrawHUD(player); //only show ammo when aiming
 
     if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player); //always show ammo when outside of car in the cemetery
 
-    //DrawText("Cemetery", screenWidth/2 - 100, 60, 50, WHITE);
 
     //draw healthbar 
-    if (gameState == GRAVEYARD){
-        Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
-        DrawHealthBar(barPos, player.maxHealth, player.currentHealth, 128, 16);
 
-    }
+    Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
+    DrawHealthBar(barPos, player.maxHealth, player.currentHealth, 128, 16);
+
+    
 }
 
 
@@ -2148,10 +2252,10 @@ void spawnNPCs(GameResources& resources){
         npcs.push_back(woman2_npc);
     }
 
-    //create ghost
-    Vector2 g_pos = {3900, 700};
+    //create ghost // call update on ghost where ever needed like graveyard or cemetery
+    Vector2 g_pos = {2000, 700};
     NPC ghost_npc = CreateNPC(resources.ghostSheet, g_pos, speed, IDLE, true, false);
-    ghost_npc.SetDestination(3500, 4000);
+    ghost_npc.SetDestination(2000, 4000);
     ghost_npc.ghost = true;
     ghost_npc.maxHealth = 500;
     ghost_npc.health = 500;
@@ -2544,6 +2648,8 @@ int main() {
             DisplayDate(calendar);
         }else if (gameState == GRAVEYARD){
             RenderGraveyard(resources, player, camera, mousePosition, glowShader2, glowShader, glitchShader);
+        }else if (gameState == ASTRAL){
+            RenderAstral(resources, player, camera, mousePosition, glowShader2, glowShader, glitchShader);
         }
     
 

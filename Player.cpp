@@ -99,6 +99,8 @@ float GetRightBoundary(GameState gameState){
         return 4000;
     }else if (gameState == WORK){
         return 4000;
+    }else if (gameState == ASTRAL){
+        return 3550;
     }
 }
 
@@ -114,6 +116,9 @@ float GetLeftBoundary(GameState gameState){
     }else if (gameState == APARTMENT){
         return 1064;
     }else if (gameState == WORK){
+        return 1064;
+
+    }else if (gameState == ASTRAL){
         return 1064;
     }
 }

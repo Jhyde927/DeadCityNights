@@ -136,14 +136,14 @@ void NPC::HandleNPCInteraction(Player& player){
                         speech = "GaaHh, what do you want?";
                         break;
                     case 2:
-                        speech = "wait, you're not like the others";
+                        speech = "wait\n\nyou're not like the others";
                         break;
                     case 3:
                         speech = "maybe you'll believe me";
                         break;
 
                     case 4:
-                        speech = "I was in the graveyard last night.\n\nI saw something...";
+                        speech = "I was in the graveyard last night\n\nI saw something...";
                         break;
 
                     case 5:

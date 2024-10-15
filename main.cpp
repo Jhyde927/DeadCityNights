@@ -87,6 +87,7 @@ float inventoryPositionY = 0.0f;
 float inventoryTargetX = 0.0f;
 float inventoryTargetY = 0.0f;
 float DoorframeTimer = 0.0f;
+float astralThreshold = 0.5f;
 float DoorframeTime = 0.1f;
 float badgeTimer = 0.0f;
 float fortuneTimer = 0.0f;
@@ -157,6 +158,17 @@ struct MagicDoor {
 
 };
 
+struct Earth {
+    Vector2 position = {3500, 400};
+    int frameWidth;
+    int frameHeight;
+    int currentFrame;
+    int totalFrames;
+    float frameTime; // Time between frames in seconds
+    float frameTimer;
+};
+
+
 
 
 // Function to initialize and load resources
@@ -220,6 +232,7 @@ void LoadGameResources(GameResources& resources) {
     resources.AstralMidground = LoadTexture("assets/AstralMidGround.png");
     resources.AstralClouds = LoadTexture("assets/AstralClouds.png");
     resources.AstralForeground = LoadTexture("assets/AstralForeground.png");
+    resources.EarthSheet = LoadTexture("assets/EarthSpin-Sheet.png");
 }
 
 void UnloadGameResources(GameResources& resources){
@@ -279,6 +292,7 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.AstralMidground);
     UnloadTexture(resources.AstralClouds);
     UnloadTexture(resources.AstralForeground);
+    UnloadTexture(resources.EarthSheet);
    
 }
 
@@ -292,6 +306,16 @@ void InitializePlayerCar(PlayerCar& player_car){
 void InitializeMagicDoor(MagicDoor& magicDoor){
     magicDoor.position = {3978, 700};
     magicDoor.currentFrame = 0;
+}
+
+void InitEarth(Earth& earth){
+    earth.position = {2600, 300};
+    earth.frameWidth = 48;
+    earth.frameHeight = 48;
+    earth.currentFrame = 0;
+    earth.totalFrames = 94;
+    earth.frameTimer = 0.0;
+    earth.frameTime = .1;
 }
 
 // Function to add an item to the first available slot in the inventory
@@ -576,6 +600,7 @@ void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<
         gameState = ASTRAL;
         
         player.position.x = 3000;
+        
     }
 }
 
@@ -617,7 +642,7 @@ void HandleCemeteryTransition(Player& player, PlayerCar& player_car, GameCalenda
     }
 }
 
-void HandleGraveyardTransition(Player& player, GameCalendar& calendar){
+void HandleGraveyardTransition(Player& player, GameCalendar& calendar, std::vector<NPC>& ghosts){
     if (player.isDead){
         gameState = APARTMENT;//wake up back at your apartment with full health.
         player.position.x = apartmentX;
@@ -627,6 +652,11 @@ void HandleGraveyardTransition(Player& player, GameCalendar& calendar){
 
     }else{ //presumably over gate and fading out
         gameState = CEMETERY;
+        for (NPC& ghost : ghosts)
+            if (ghost.agro){
+                ghost.agro = false; //ghost looses agro when you leave graveyard. 
+            }
+        
     }
 }
 
@@ -666,17 +696,21 @@ void PerformStateTransition(Player& player, PlayerCar& player_car, GameCalendar&
             HandleLotTransition(player);
             break;
         case GRAVEYARD:
-            HandleGraveyardTransition(player, calendar);
+            HandleGraveyardTransition(player, calendar, ghosts);
             break;
-        default:
-            // Handle any other states if necessary
+
+        case ASTRAL:
+            gameState = OUTSIDE;
             break;
+  
     }
 }
 
 void DrawFadeMask() {
     DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, fadeAlpha));
 }
+
+
 
 void HandleFadeIn() {
     fadeAlpha -= fadeSpeed;  // Fade in gradually
@@ -706,7 +740,7 @@ void HandleFadeOut(Player& player, PlayerCar& player_car, GameCalendar& calendar
     }
 }
 
-// Assuming necessary includes and global variables are already defined
+
 
 void HandleTransition(Player& player, PlayerCar& player_car, GameCalendar& calendar, std::vector<NPC>& npcs) {
     if (firstTransition) {
@@ -733,7 +767,35 @@ void HandleTransition(Player& player, PlayerCar& player_car, GameCalendar& calen
 }
 
 
+void Dig(Player& player){
+   if (player.position.x > 1860 && player.position.x < 1880 && !hasPills && gameState == CEMETERY){ //over dig spot
+        hasPills = true; //if you dont have pill you can allways get more here. 
+        AddItemToInventory("pills", inventory, INVENTORY_SIZE);
+        showInventory = true;
+        PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
+        shovelTint = RED;
+    }
 
+    if (digSpot && gameState == LOT){
+        PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
+        shovelTint = RED;
+        if (!player.hasShotgun){
+            AddItemToInventory("shotgun", inventory, INVENTORY_SIZE);
+            player.hasShotgun = true;
+            PlaySound(SoundManager::getInstance().GetSound("ShotgunReload"));
+        }
+
+    }
+
+    //far right side of cemetery is an item. 
+                // if (player.position.x > 3986 && player.position.x < 4016 && gameState == CEMETERY && !hasCemeteryKey){
+                //     PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
+                //     shovelTint = RED;
+                //     hasCemeteryKey = true;
+                //     AddItemToInventory("cemeteryKey", inventory, INVENTORY_SIZE);
+
+                // }
+}
 
 
 
@@ -773,7 +835,7 @@ void drawDeadZombie(GameResources& resources,Player& player, Vector2 bodyPositio
             showInventory = true;
             show_dbox = true;
             phrase = "ID card of an employee\n\nA company named NecroTech";
-            badgeTimer = 7.0;
+            badgeTimer = 7.0; //show text for 7 seconds
             dboxPosition = player.position;
         }
     }
@@ -801,6 +863,7 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
     Color gunTint = WHITE;
     Color shotgunTint = WHITE;
     // Use integer values to snap to the nearest pixel, based on the camera-relative inventory position
+    //casting to int was to prevent stutter. not needed no mo.
     int startX = static_cast<int>(inventoryPositionX) - (slotWidth * inventorySize / 2);
     int startY = static_cast<int>(inventoryPositionY);
 
@@ -814,7 +877,7 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
         Color customTint = {255, 100, 100, 255}; // light red
         if (player.currentWeapon == SHOTGUN) shotgunTint = customTint;
         if (player.currentWeapon == REVOLVER) gunTint = customTint;
-       // Draw the item name if there's an item in the slot
+       // Draw the icon at x, y
         if (!inventory[i].empty()) {
 
             if (inventory[i] == "carKeys"){
@@ -837,7 +900,7 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
 
             if (inventory[i] == "pills"){ // click on pills to take them 
                 DrawTexture(resources.pills, x, y, WHITE);
-                Rectangle pillBounds = { //shovel button
+                Rectangle pillBounds = { //pill button
                     x,      
                     y,      
                     static_cast<float>(64),  
@@ -868,33 +931,8 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
                 if (CheckCollisionPointRec(mousePosition, shovelBounds)){ //dig
                     
                     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+                        Dig(player);
                      
-                        if (player.position.x > 1860 && player.position.x < 1880 && !hasPills && gameState == CEMETERY){ //over dig spot
-                            hasPills = true; //if you dont have pill you can allways get more here. 
-                            AddItemToInventory("pills", inventory, INVENTORY_SIZE);
-                            showInventory = true;
-                            PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
-                            shovelTint = RED;
-                        }
-
-                        if (digSpot && gameState == LOT){
-                            PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
-                            shovelTint = RED;
-                            if (!player.hasShotgun){
-                                AddItemToInventory("shotgun", inventory, INVENTORY_SIZE);
-                                player.hasShotgun = true;
-                                PlaySound(SoundManager::getInstance().GetSound("ShotgunReload"));
-                            }
- 
-                        }
-                        //far right side of cemetery is an item. 
-                        // if (player.position.x > 3986 && player.position.x < 4016 && gameState == CEMETERY && !hasCemeteryKey){
-                        //     PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
-                        //     shovelTint = RED;
-                        //     hasCemeteryKey = true;
-                        //     AddItemToInventory("cemeteryKey", inventory, INVENTORY_SIZE);
-
-                        // }
                     }
                 }
                 DrawTexture(resources.shovel, x, y, shovelTint); //draw shovel after button to tint the color on press
@@ -959,10 +997,8 @@ void DrawHUD(const Player& player) {
 
 
 void MoveTraffic(GameResources resources){
-    //TODO: rename function to MoveTraffic and add more vehicles. 
+    
     int car_start = 4500;
-
-
     car_pos.x -= 150 * GetFrameTime();
     truck_pos.x += 150 * GetFrameTime();
 
@@ -977,7 +1013,6 @@ void MoveTraffic(GameResources resources){
 
 void DrawApartmentUI(GameResources& resources, GameCalendar&, Vector2& mousePosition, Camera2D& camera){
     Vector2 ui_pos = {screenWidth/2-100, 440};
-    //DrawRectangle(ui_pos.x, ui_pos.y, 128, 64, customBackgroundColor);
     DrawTexture(resources.ComputerScreen, ui_pos.x, ui_pos.y, WHITE);
     Color tint = WHITE;
     Color Itint = WHITE;
@@ -1077,12 +1112,11 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, G
     if (gameState == OUTSIDE){
         DrawText("   Tavern", ui_pos.x, ui_pos.y-17, 16, tavern_tint);
         DrawText("   Cemetery", ui_pos.x, ui_pos.y, 16, cemetery_tint);
-        if (!hasWorked){
-            DrawText("   Work", ui_pos.x, ui_pos.y+17, 16, work_tint);
-        }else{
-            DrawText("    Work", ui_pos.x, ui_pos.y+17, 16, BLACK);
-            
-        }
+
+        work_tint = hasWorked ? BLACK : work_tint;
+        DrawText("    Work", ui_pos.x, ui_pos.y+17, 16, work_tint);
+
+
         
 
     }else if (gameState == CEMETERY){
@@ -1123,6 +1157,69 @@ void DrawMagicDoor(GameResources& resources,Player& player, MagicDoor& magicDoor
         }
 
 }
+
+void DrawEarth(GameResources& resources, Earth& earth, Camera2D& camera){
+    // Calculate delta time
+    float deltaTime = GetFrameTime();
+    //printf("Camera Target X: %f\n", camera.target.x);
+    // Update animation timer
+    earth.frameTimer += deltaTime;
+
+    // Check if it's time to move to the next frame
+    if (earth.frameTimer >= earth.frameTime)
+    {
+        earth.frameTimer -= earth.frameTime;
+        earth.currentFrame++;
+
+        if (earth.currentFrame >= earth.totalFrames)
+        {
+            earth.currentFrame = 0; // Loop back to the first frame
+        }
+    }
+
+    // Calculate current frame's row and column
+    int frameRow = earth.currentFrame / 10; // Each row has up to 10 frames
+    int frameCol = earth.currentFrame % 10;
+
+    // Adjust for the last row, which has only 4 frames
+    if (frameRow == 9 && frameCol >= 4)
+    {
+        // Reset to the first frame since there are only 4 frames in the last row
+        earth.currentFrame = 0;
+        frameRow = 0;
+        frameCol = 0;
+    }
+
+    
+    //Vector2 earthDrawPos = {earth.position.x - parallaxEarth, earth.position.y};
+    
+    // Define the source rectangle
+    Rectangle sourceRect = {
+        static_cast<float>(frameCol * earth.frameWidth),
+        static_cast<float>(frameRow * earth.frameHeight),
+        static_cast<float>(earth.frameWidth),
+        static_cast<float>(earth.frameHeight)
+    };
+
+    // Calculate parallax offset for the earth
+    float parallaxFactor = 0.99f; // Adjust this value between 0.0f and 1.0f
+
+    float parallaxOffset = (camera.target.x - earth.position.x) * parallaxFactor;
+
+    Vector2 earthDrawPosition = {
+        earth.position.x + parallaxOffset,
+        earth.position.y 
+    };
+
+    
+    
+    // Draw the current frame of the earth with the adjusted position
+    DrawTextureRec(resources.EarthSheet, sourceRect, earthDrawPosition, WHITE); 
+
+
+
+}
+
 
 void DrawHealthBar(Vector2 position, int maxHealth, int currentHealth, int barWidth, int barHeight) {
     // Calculate health percentage
@@ -1221,7 +1318,7 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
 
 }
 
-void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition, Shader& drunkShader, Shader& glowShader, Shader& glitchShader){
+void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoor& magicDoor, Shader& drunkShader, Shader& glowShader, Shader& glitchShader){
     if (player.isAiming && IsKeyDown(KEY_F)) {
         // Handle keyboard-only aiming (e.g., using arrow keys or player movement keys)
         if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
@@ -1235,12 +1332,15 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
         player.facingRight = mousePosition.x > player.position.x; //facing right is true if mousepos.x > playerPos.x
     }
 
+    magicDoor.position.x = 3000;
+    camera.target = player.position;
     float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
     float parallaxClouds = camera.target.x * .8;
     float parallaxBackground = camera.target.x * 0.9f;  // Background moves even slower 
+    float parallaxEarth = camera.target.x * .5; // 
     
     BeginMode2D(camera);
-    camera.target = player.position;
+    
     ClearBackground(customBackgroundColor);
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
     if (!IsKeyDown(KEY_F)){
@@ -1265,23 +1365,28 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
     DrawTexturePro(resources.AstralBackground, {0, 0, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)},
                     {parallaxBackground-1024, 0, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)}, {0, 0}, 0.0f, WHITE);
 
+    
+
     DrawTexturePro(resources.AstralClouds, {0, 0, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)},
                     {parallaxClouds -1024, 0, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)}, {0, 0}, 0.0f, WHITE);
 
     DrawTexturePro(resources.AstralMidground, {0, 0, static_cast<float>(resources.AstralMidground.width), static_cast<float>(resources.AstralMidground.height)},
                     {parallaxMidground -1024, 0, static_cast<float>(resources.AstralMidground.width), static_cast<float>(resources.AstralMidground.height)}, {0, 0}, 0.0f, WHITE);
 
-    EndShaderMode(); ////////////////////////////SHADER OFF
-
+    
+    DrawMagicDoor(resources, player, magicDoor);
     player.DrawPlayer(resources, gameState, camera);
 
     DrawTexturePro(resources.AstralForeground, {0, 0, static_cast<float>(resources.AstralMidground.width), static_cast<float>(resources.AstralMidground.height)},
                     {0, 0, static_cast<float>(resources.AstralMidground.width), static_cast<float>(resources.AstralMidground.height)}, {0, 0}, 0.0f, WHITE);
 
+    EndShaderMode(); ////////////////////////////SHADER OFF
     DrawBullets(); //draw bullets in cemetery after everything else. 
-
+    DrawEarth(resources, earth, camera);
+    
     EndMode2D();
     DrawMoney(); //draw money after EndMode2d()
+    
     if (showInventory){
         RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
     }
@@ -1290,6 +1395,8 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
     }else{
         DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
+
+    if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player);
 
     if (show_dbox){
         DrawDialogBox(camera, 0, 0, 20);
@@ -1459,6 +1566,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
                 if (!player.hasShovel){
                     drawShovel = false;
                     AddItemToInventory("shovel", inventory, INVENTORY_SIZE);
+                    PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
                     showInventory = true;
                     player.hasShovel = true;
                 
@@ -1473,6 +1581,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
             if (!player.hasShovel && distance_to_shovel < 20){
                 drawShovel = false;
                 AddItemToInventory("shovel", inventory, INVENTORY_SIZE);
+                PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
                 showInventory = true;
                 player.hasShovel = true;
             
@@ -1605,19 +1714,31 @@ void RenderRoad(const GameResources& resources, PlayerCar& player_car,Player& pl
     DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE);
 
     if (player.enter_car){
-        //render headlight/breaklight
+        // Render headlight/brake light
+        Vector2 breakLight_pos;
+        Vector2 light_pos;
+        float light_scale = 1.0f; // Default scale
+
         if (!reverse_road){
-            Vector2 breakLight_pos = {player_car.position.x + 88, player_car.position.y + 53};
-            Vector2 light_pos = {player_car.position.x - 225, player_car.position.y + 32};
-            BeginBlendMode(BLEND_ADDITIVE);
-            DrawTextureV(resources.breakLight, breakLight_pos, WHITE);
-            DrawTextureV(resources.lightBeam, light_pos, WHITE);
-            EndBlendMode();
+            // Positions when not reversing
+            breakLight_pos = {player_car.position.x + 88, player_car.position.y + 53};
+            light_pos = {player_car.position.x - 225, player_car.position.y + 32};
+            light_scale = 1.0f; // Normal scale
+        } else {
+            // Positions when reversing
+            breakLight_pos = {player_car.position.x+7, player_car.position.y + 54}; 
+            light_pos = {player_car.position.x + 360, player_car.position.y + 108};   
+            light_scale = -1.0f; // Negative scale to flip horizontally
+        }
 
-        } // move the headlight and breaklight and flip the headlight. 
-  
+        BeginBlendMode(BLEND_ADDITIVE);
+        DrawTextureV(resources.breakLight, breakLight_pos, WHITE);
 
+        // Use DrawTextureEx to allow flipping
+        DrawTextureEx(resources.lightBeam, light_pos, 0.0f, light_scale, WHITE);
+        EndBlendMode();
     }
+    
     EndShaderMode();
     EndMode2D();
     DrawMoney(); //draw money after EndMode2d()
@@ -1712,7 +1833,7 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
         ghost.Update(player);
         ghost.Render();
         ghost.ClickNPC(mousePosition, camera, player);
-
+        if (ghost.health > 0) ghost.isActive = true;
         if (ghost.interacting){
             show_dbox = true;
             dboxPosition = ghost.position;
@@ -2254,7 +2375,7 @@ void spawnNPCs(GameResources& resources){
 
     //create ghost // call update on ghost where ever needed like graveyard or cemetery
     Vector2 g_pos = {2000, 700};
-    NPC ghost_npc = CreateNPC(resources.ghostSheet, g_pos, speed, IDLE, true, false);
+    NPC ghost_npc = CreateNPC(resources.ghostSheet, g_pos, speed, IDLE, false, false);
     ghost_npc.SetDestination(2000, 4000);
     ghost_npc.ghost = true;
     ghost_npc.maxHealth = 500;
@@ -2308,13 +2429,22 @@ void DisplayDate(GameCalendar& calendar){
     DrawText(calendar.GetDate().c_str(), screenWidth/2 - 450, 25, 20, WHITE);
 }
 
-void glowEffect(Shader& glowShader){
+void glowEffect(Shader& glowShader, GameState gameState){
         float time = GetTime();  // Get the total elapsed time
 
-        // Use a sine wave to oscillate glowThreshold between 0.2 and 0.6 over 1 second
+
         float minThreshold = 0.2f;
         float maxThreshold = 0.6f;
         float oscillationSpeed = 0.9f;  // 1 second duration
+
+        if (gameState == ASTRAL){
+            minThreshold = 0.5f;
+            maxThreshold = 0.10f;
+            oscillationSpeed = 0.9f;  // 1 second duration
+
+        }
+
+
 
         // Calculate the oscillating glow threshold using a sine wave
         float glowThreshold = minThreshold + (maxThreshold - minThreshold) * (0.5f * (1.0f + sin(oscillationSpeed * time)));
@@ -2373,11 +2503,9 @@ void debugKeys(Player& player){
             if (!player.hasShovel){
                 player.hasShovel = true;
                 AddItemToInventory("shovel", inventory, INVENTORY_SIZE);
-                PlaySound(SoundManager::getInstance().GetSound("shovelDig"));
+                PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
             }
         }
-
-
 
         if (IsKeyPressed(KEY_G)){
             if (!player.hasGun){
@@ -2394,8 +2522,6 @@ void debugKeys(Player& player){
         }
 
 }
-
-
 
 void InitSounds(SoundManager& soundManager){
     //We use our own custom sound manager. We have an array of sounds, and an array of musticTracks.
@@ -2421,6 +2547,7 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadSound("Keys", "assets/sounds/Keys.ogg");
     soundManager.LoadSound("Owl", "assets/sounds/Owl.ogg");
     soundManager.LoadSound("ShovelDig", "assets/sounds/ShovelDig.ogg");
+    soundManager.LoadSound("shovelPickup", "assets/sounds/shovelPickup.ogg");
 
     soundManager.LoadSound("ShotGun", "assets/sounds/ShotGun.ogg");
     soundManager.LoadSound("ShotgunReload", "assets/sounds/ShotgunReload.ogg");
@@ -2506,13 +2633,15 @@ int main() {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////shaders
-
+    
     // Initialize player
     Player player;
     PlayerCar player_car;
+    Earth earth;
     MagicDoor magicDoor;
     InitializePlayerCar(player_car);
     InitializeMagicDoor(magicDoor);
+    InitEarth(earth);
   
     // Initialize the camer
     Camera2D camera = { 0 };
@@ -2549,17 +2678,17 @@ int main() {
         CheckBulletNPCCollisions(ghosts);
         MonitorMouseClicks(player, calendar);
         UpdateZombieSpawning(resources, player);
-        glowEffect(glowShader);
+        glowEffect(glowShader, gameState); //update glow shader
         
         float deltaTime = GetFrameTime();
         totalTime += deltaTime;  //glitch timer
+
+        //set glitchshader
+        SetShaderValue(glitchShader, timeLoc, &totalTime, SHADER_UNIFORM_FLOAT);
+
         if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_D) || IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)){ //tutorial text
             start = false; //turn off dbox if any movement
         }
-        //glitchshader
-        SetShaderValue(glitchShader, timeLoc, &totalTime, SHADER_UNIFORM_FLOAT);
-
-
 
         if (IsKeyPressed(KEY_M)){ //MUTE MUSIC
             if (SoundManager::getInstance().IsMusicPlaying("Neon")){
@@ -2622,20 +2751,20 @@ int main() {
 
         handleCamera(camera, targetZoom);
 
-        BeginDrawing(); //NEEDED
-        // All the games draw calls need to be inside the main beginDrawing?
+        BeginDrawing(); 
 
-        if (gameState == OUTSIDE){
-               
+        if (gameState == OUTSIDE){     
             RenderOutside(resources, camera, player, player_car, magicDoor, npcs,mousePosition, glowShader2, glowShader, glitchShader); //glowshader2 = drunkshader
             DisplayDate(calendar);//why not display date once globally? there are reasons 
 
         }else if (gameState == APARTMENT){
             RenderApartment(resources, player, mousePosition, calendar, camera, glowShader2, glowShader, glitchShader);
             DisplayDate(calendar);
+
         }else if (gameState == ROAD){
             RenderRoad(resources, player_car, player, camera, mousePosition, glowShader2, glowShader, glitchShader);
             DisplayDate(calendar);
+
         }else if (gameState == CEMETERY){
             RenderCemetery(resources, player, player_car, camera,mousePosition, glowShader2, glowShader, glitchShader);
             DisplayDate(calendar);
@@ -2646,15 +2775,18 @@ int main() {
         }else if (gameState == LOT){ // vacant lot
             RenderLot(resources, player, camera, mousePosition, glowShader2, glowShader, glitchShader);
             DisplayDate(calendar);
+
         }else if (gameState == GRAVEYARD){
             RenderGraveyard(resources, player, camera, mousePosition, glowShader2, glowShader, glitchShader);
+            DisplayDate(calendar);
+            
         }else if (gameState == ASTRAL){
-            RenderAstral(resources, player, camera, mousePosition, glowShader2, glowShader, glitchShader);
+            DisplayDate(calendar);
+            RenderAstral(resources, player, camera, mousePosition, earth, magicDoor, glowShader2, glowShader, glitchShader);
         }
-    
 
         
-        HandleTransition(player, player_car, calendar, npcs);
+        HandleTransition(player, player_car, calendar, npcs); //Check everyframe for gamestate transition
         EndDrawing();
 
         EndShaderMode();

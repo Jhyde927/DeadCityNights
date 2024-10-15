@@ -148,6 +148,7 @@ If you don't attack the ghost he gives a mission to find something for him.
 shotgun shells icon. digspot with shotgun shells. 
 
 fortune teller is fucked. remove and start over. 
+fixed fortune teller. She just displays a random fortune for 100 dollars. Leave it for now. 
 
 Drugs allow you to see hidden door somewhere outside. Draw this hidden door. 
 
@@ -156,6 +157,18 @@ Outer space with planets in the background, parallax clouds roll by. What is the
 Pocket watch seems like it fits. He lost his watch and is doomed to haunt the graveyard until it is returned. Maybe he comes back to life if you return the watch. 
 
 What enemies could be in the astral plane. Maybe you will be running on top of clouds with a space scene in the background with ghosts attacking you. Maybe a skeleton NPC just because of Halloween. Animate a skeleton walking then. 
+
+Implemented the astral plane. You access it by taking drugs and opening the magic door. I just drew parallax layers of clouds in the same color pallet. Consider a more technicolor palette. Drug shader effect stays on when in the astral realm. Consider a different shader, maybe the same glow shader with different parameters. 
+
+The plan was, the ghost asks you to find his lost relic. He speaks in riddles and rhymes. Something about a door and an altered mind. Giving the hint that you need to take drug to find his lost relic. It's a bit obtuse. His lost relic is an old pocket watch. Why would you find a pocket watch in the astral realm. You need to fight a boss? A witch. A giant steam punk clockwork automaton. A giant spider. A disembodied head. A scare crow. 
+
+Guns work on the astral plane. Need mini ghosts or spirits of some kind. Flying enemies. Diver bomb the player and are only able to be hit when diving down to player level. Crows? that circle. Just like rad city crows. Needs to be evil spirits or something that fits with the astral realm. 
+
+what else. Implemented reverse road car headlights/break lights. light_scale = -1.0 // Negative scale to flip horizontally 
+
+Had chatGPT come up with rhymes that the ghost says. I got a list of a million of them. Need to turn off ghost agro when leaving the area. Moved ghost to graveyard instead of cemetery. To spread things out more. 
+
+Added notes to github, so there is a record of this madness. 
 
 
  

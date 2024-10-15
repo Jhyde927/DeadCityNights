@@ -67,6 +67,7 @@ struct GameResources {
     Texture2D AstralMidground;
     Texture2D AstralClouds;
     Texture2D AstralForeground;
+    Texture2D EarthSheet;
     Font defaultFont;
 };
 

@@ -186,6 +186,7 @@ void Player::HandleInput(float speed){
                 if (velocity.x > 0.0f) velocity.x = 0.0f;
             }
         }
+
         
         // Jumping logic
         if (IsKeyPressed(KEY_SPACE) && isOnGround) {
@@ -211,87 +212,9 @@ void Player::HandleInput(float speed){
         }
 }
 
-void Player::UpdateMovement(const GameResources& resources,  GameState& gameState, Vector2& mousePosition, Camera2D& camera) {
-    isMoving = false;
-    float deltaTime = GetFrameTime();
-    if (IsKeyPressed(KEY_ONE)) {
-        currentWeapon = REVOLVER;
-    } else if (IsKeyPressed(KEY_TWO)) {
-        currentWeapon = SHOTGUN;
-    }
-
-    // Apply gravity if the player is not on the ground
-    if (!isOnGround) {
-        velocity.y += gravity * deltaTime;
-    } else {
-        velocity.y = 0.0f;  // Ensure vertical velocity is zero when on the ground
-    }
-
-    // Clamp horizontal velocity
-    if (velocity.x > maxSpeedX) {
-        velocity.x = maxSpeedX;
-    } else if (velocity.x < -maxSpeedX) {
-        velocity.x = -maxSpeedX;
-    }
-
-    // Clamp vertical velocity (for downward movement)
-    if (velocity.y > maxSpeedY) {
-        velocity.y = maxSpeedY;
-    } else if (velocity.y < -maxSpeedY) {
-        velocity.y = -maxSpeedY;
-    }
-
-    // Update player position based on velocity
-    position.x += velocity.x * deltaTime;
-    position.y += velocity.y * deltaTime;
-
-    // Collision detection with the ground (assuming ground at y = groundLevel)
-    float groundLevel = 700.0f;  // Adjust based on your game's ground position
-
-    if (position.y >= groundLevel) {
-        position.y = groundLevel;
-        isOnGround = true;
-        velocity.y = 0.0f;
-
-    }
-
-    if (IsKeyPressed(KEY_R) && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL)){
-        //RefillBullets(player, (MAX_BULLETS - player.bulletCount));
-        if (currentWeapon == REVOLVER){
-            if (!isReloading){
-                isReloading = true;    
-                reloadTimer = 0.5f;
-                revolverBulletCount = 6;
-                bulletCount = MAX_BULLETS;
-                PlaySound(SoundManager::getInstance().GetSound("reload"));
-
-            }
-         
-
-        }else if (currentWeapon == SHOTGUN && shotgunBulletCount == 0){
-            if (!isReloading && shotgunBulletCount + shells >= 1){
-                if (shells == 1){
-                    shells -= 1;
-                    shotgunBulletCount = 1;
-                }else{
-                    shells -= 2;
-                    shotgunBulletCount = 2;
-
-                }
-
-                isReloading = true;
-                shotgunReloadTime = 0.7f;
- 
-                //shotgunBulletCount = 2;
-                bulletCount = MAX_BULLETS;//shotgun uses same bullets array
-                PlaySound(SoundManager::getInstance().GetSound("ShotgunReload"));
-
-            }
-
-        }
-
-    }
+void Player::reloadLogic(float deltaTime){
     ///////////RELOAD//LOGIC///////////////
+    
     if (reloadTimer > 0){
         
         reloadTimer -= deltaTime;
@@ -313,73 +236,95 @@ void Player::UpdateMovement(const GameResources& resources,  GameState& gameStat
         canShoot = true;
     }
 
-    //AIMING
-    isAiming = (hasGun || hasShotgun) && (IsKeyDown(KEY_F) || IsKeyDown(KEY_LEFT_CONTROL) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) && !isShooting && !isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL);
+}
 
-    if (currentWeapon == REVOLVER && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL)){
-
-        if ((IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && revolverBulletCount <= 0){
-            //SoundManager::getInstance().GetSound("dryFire");
-            PlaySound(SoundManager::getInstance().GetSound("dryFire"));
-
-        }
-
-    
-        if (hasGun && revolverBulletCount > 0 && isAiming && (IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT))) {
-            isShooting = true;
-            canShoot = false;
-            currentFrame = 0;
-            frameCounter = 0.0f;
-            revolverBulletCount--;
-            //SoundManager::getInstance().GetSound("gunShot");  // Access the sound directly
-            PlaySound(SoundManager::getInstance().GetSound("gunShot")); 
-
-            FireBullet(*this, false);
-            
-        }
-    }else if (currentWeapon == SHOTGUN && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL)){
-        if ((IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && shotgunBulletCount <= 0){
-            //SoundManager::getInstance().GetSound("dryFire");
-            PlaySound(SoundManager::getInstance().GetSound("dryFire"));
+void Player::Reload(){
+    if (currentWeapon == REVOLVER){
+        if (!isReloading){
+            isReloading = true;    
+            reloadTimer = 0.5f;
+            revolverBulletCount = 6;
+            bulletCount = MAX_BULLETS;
+            PlaySound(SoundManager::getInstance().GetSound("reload"));
 
         }
+        
 
-
-        if (hasShotgun && shotgunBulletCount > 0 && isAiming && (IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && canShoot) {
-            isShooting = true;
-            canShoot = false;
-            currentFrame = 0;
-            frameCounter = 0.0f;
-            shotgunBulletCount--;
-
-            PlaySound(SoundManager::getInstance().GetSound("ShotGun"));
-            // Shotgun fires multiple bullets (spread effect)
-            for (int i = 0; i < 3; i++) {  // Simulate shotgun spread with 3 bullets
-                FireBullet(*this, true);  // Modify FireBullet to allow spread by adjusting directions
+    }else if (currentWeapon == SHOTGUN && shotgunBulletCount == 0){
+        if (!isReloading && shotgunBulletCount + shells >= 1){
+            if (shells == 1){
+                shells -= 1;
+                shotgunBulletCount = 1;
+            }else{
+                shells -= 2;
+                shotgunBulletCount = 2;
 
             }
 
+            isReloading = true;
+            shotgunReloadTime = 0.7f;
+
+            //shotgunBulletCount = 2;
+            bulletCount = MAX_BULLETS;//shotgun uses same bullets array
+            PlaySound(SoundManager::getInstance().GetSound("ShotgunReload"));
+
         }
-    }       
 
-    maxSpeedX = isRunning ? runSpeed : walkSpeed;
-    frameSpeed = isRunning ? runFrameSpeed : walkFrameSpeed;
-
-    //keep player in bounds
-
-    if (position.x < GetLeftBoundary(gameState)){
-        position.x = GetLeftBoundary(gameState) + 1;
-    }else if (position.x > GetRightBoundary(gameState)){
-        position.x = GetRightBoundary(gameState)-1;
     }
 
- 
-    if (!isAiming && !isShooting && !isReloading) {
-        //KEYBOARD MOVEMENT CODE
-        HandleInput(maxSpeedX);
-    
+}
+
+void Player::playerPhysics(float deltaTime){
+    // Apply gravity if the player is not on the ground
+    if (!isOnGround) {
+        velocity.y += gravity * deltaTime;
+    } else {
+        velocity.y = 0.0f;  // Ensure vertical velocity is zero when on the ground
     }
 
+    // Clamp horizontal velocity
+    if (velocity.x > maxSpeedX) {
+        velocity.x = maxSpeedX;
+    } else if (velocity.x < -maxSpeedX) {
+        velocity.x = -maxSpeedX;
+    }
+
+    // Clamp vertical velocity (for downward movement)
+    if (velocity.y > maxSpeedY) {
+        velocity.y = maxSpeedY;
+    } else if (velocity.y < -maxSpeedY) {
+        velocity.y = -maxSpeedY;
+    }
+
+    if (isAiming || isShooting || isReloading){ // apply deceleration
+        if (velocity.x > 0.0f) {
+            velocity.x -= deceleration * deltaTime;
+            if (velocity.x < 0.0f) velocity.x = 0.0f;
+        } else if (velocity.x < 0.0f) {
+            velocity.x += deceleration * deltaTime;
+            if (velocity.x > 0.0f) velocity.x = 0.0f;
+        }
+
+    }
+
+    // Update player position based on velocity
+    position.x += velocity.x * deltaTime;
+    position.y += velocity.y * deltaTime;
+
+    // Collision detection with the ground (assuming ground at y = groundLevel)
+    float groundLevel = 700.0f;  // Adjust based on your game's ground position
+
+    if (position.y >= groundLevel) {
+        position.y = groundLevel;
+        isOnGround = true;
+        velocity.y = 0.0f;
+
+    }
+
+
+}
+
+void Player::updateAnimations(GameResources& resources){
     if (isShooting) {
         isRunning = false; // fixed bug where isrunning was causing framespeed to be higher so you could shoot 1.5 times as fast. 
         frameCounter += GetFrameTime() * frameSpeed;
@@ -439,6 +384,99 @@ void Player::UpdateMovement(const GameResources& resources,  GameState& gameStat
     } else if (!isAiming) {
         currentFrame = 0;
     }
+
+}
+
+void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vector2& mousePosition, Camera2D& camera) {
+    isMoving = false;
+    float deltaTime = GetFrameTime();
+
+    if (IsKeyPressed(KEY_ONE)) {
+        currentWeapon = REVOLVER;
+    } else if (IsKeyPressed(KEY_TWO)) {
+        currentWeapon = SHOTGUN;
+    }
+
+    playerPhysics(deltaTime);
+    reloadLogic(deltaTime);
+    
+    if (IsKeyPressed(KEY_R) && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL)){
+        Reload();
+    }
+
+    
+
+    //AIMING
+    isAiming = (hasGun || hasShotgun) && (IsKeyDown(KEY_F) || IsKeyDown(KEY_LEFT_CONTROL) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) && !isShooting && !isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL);
+
+
+    //SHOOTING
+    if (currentWeapon == REVOLVER && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL)){
+
+        if ((IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && revolverBulletCount <= 0){
+            //SoundManager::getInstance().GetSound("dryFire");
+            PlaySound(SoundManager::getInstance().GetSound("dryFire"));
+
+        }
+
+    
+        if (hasGun && revolverBulletCount > 0 && isAiming && (IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT))) {
+            isShooting = true;
+            canShoot = false;
+            currentFrame = 0;
+            frameCounter = 0.0f;
+            revolverBulletCount--;
+            //SoundManager::getInstance().GetSound("gunShot");  // Access the sound directly
+            PlaySound(SoundManager::getInstance().GetSound("gunShot")); 
+
+            FireBullet(*this, false);
+            
+        }
+
+    }else if (currentWeapon == SHOTGUN && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL)){
+        if ((IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && shotgunBulletCount <= 0){
+            //SoundManager::getInstance().GetSound("dryFire");
+            PlaySound(SoundManager::getInstance().GetSound("dryFire"));
+
+        }
+
+
+        if (hasShotgun && shotgunBulletCount > 0 && isAiming && (IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && canShoot) {
+            isShooting = true;
+            canShoot = false;
+            currentFrame = 0;
+            frameCounter = 0.0f;
+            shotgunBulletCount--;
+
+            PlaySound(SoundManager::getInstance().GetSound("ShotGun"));
+            // Shotgun fires multiple bullets (spread effect)
+            for (int i = 0; i < 3; i++) {  // Simulate shotgun spread with 3 bullets
+                FireBullet(*this, true);  // Modify FireBullet to allow spread by adjusting directions
+
+            }
+
+        }
+    }       
+
+    maxSpeedX = isRunning ? runSpeed : walkSpeed;
+    frameSpeed = isRunning ? runFrameSpeed : walkFrameSpeed;
+
+    //keep player in bounds
+
+    if (position.x < GetLeftBoundary(gameState)){
+        position.x = GetLeftBoundary(gameState) + 1;
+    }else if (position.x > GetRightBoundary(gameState)){
+        position.x = GetRightBoundary(gameState)-1;
+    }
+
+ 
+    if (!isAiming && !isShooting && !isReloading) {
+        //KEYBOARD MOVEMENT CODE
+        HandleInput(maxSpeedX);
+    
+    }
+
+    updateAnimations(resources);
 }
 
 

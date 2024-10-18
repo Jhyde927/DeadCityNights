@@ -74,10 +74,14 @@ public:
  
 
 
-        //void update();  // General update method
-        void UpdateMovement(const GameResources& resources, GameState& gameState, Vector2& mousePosition, Camera2D& camera);  // Move the update movement here
+        
+        void UpdateMovement(GameResources& resources, GameState& gameState, Vector2& mousePosition, Camera2D& camera);  // Move the update movement here
         void DrawPlayer(const GameResources& resources, GameState& gameState, Camera2D& camera);  // Draw player method
         void HandleInput(float speed);
+        void Reload();
+        void reloadLogic(float deltaTime);
+        void playerPhysics(float deltaTime);
+        void updateAnimations(GameResources& resources);
 
 
         

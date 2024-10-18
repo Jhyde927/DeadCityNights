@@ -2052,6 +2052,7 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
                 AddItemToInventory("cemeteryKey", inventory, INVENTORY_SIZE);
                 hasCemeteryKey = true;
                 showInventory = true;
+                raiseZombies = true;
                 PlaySound(SoundManager::getInstance().GetSound("Keys"));
             }
 
@@ -2454,8 +2455,6 @@ void glowEffect(Shader& glowShader, GameState gameState){
             oscillationSpeed = 0.9f;  // 1 second duration
 
         }
-
-
 
         // Calculate the oscillating glow threshold using a sine wave
         float glowThreshold = minThreshold + (maxThreshold - minThreshold) * (0.5f * (1.0f + sin(oscillationSpeed * time)));

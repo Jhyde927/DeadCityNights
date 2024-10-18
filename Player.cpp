@@ -16,8 +16,18 @@ bool step = false;
 
 Player::Player() {
     position = {1922.0, 700.0};
+
+    velocity = {0.0f, 0.0f};
+    gravity = 800.0f;    
+    isOnGround = true;
+    jumpForce = 200.0f;  
+    maxSpeedX = 50;
+    maxSpeedY = 1000;
+    acceleration = 800;
+    deceleration = 600;
     walkSpeed = 50.0f;
     runSpeed = 100.0f;
+
     maxHealth = 100;
     currentHealth = maxHealth;
     hitTimer = 0.0f;
@@ -142,15 +152,45 @@ void Player::HandleInput(float speed){
         }
         
         // Movement logic
+        // if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
+        //     position.x += speed * deltaTime;
+        //     isMoving = true;
+        //     facingRight = true;
+        // }
+        // if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
+        //     position.x -= speed * deltaTime;
+        //     isMoving = true;
+        //     facingRight = false;
+        // }
+
+        // Horizontal movement with acceleration
         if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
-            position.x += speed * deltaTime;
+            velocity.x += acceleration * deltaTime;
+            if (velocity.x > maxSpeedX) velocity.x = maxSpeedX;
             isMoving = true;
             facingRight = true;
         }
-        if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
-            position.x -= speed * deltaTime;
+        else if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
+            velocity.x -= acceleration * deltaTime;
+            if (velocity.x < -maxSpeedX) velocity.x = -maxSpeedX;
             isMoving = true;
             facingRight = false;
+        }
+        else {
+            // Apply deceleration when no input is detected
+            if (velocity.x > 0.0f) {
+                velocity.x -= deceleration * deltaTime;
+                if (velocity.x < 0.0f) velocity.x = 0.0f;
+            } else if (velocity.x < 0.0f) {
+                velocity.x += deceleration * deltaTime;
+                if (velocity.x > 0.0f) velocity.x = 0.0f;
+            }
+        }
+        
+        // Jumping logic
+        if (IsKeyPressed(KEY_SPACE) && isOnGround) {
+            velocity.y = -jumpForce;  // Negative because y increases downward
+            isOnGround = false;
         }
   
         // Check for shift key to run
@@ -173,12 +213,46 @@ void Player::HandleInput(float speed){
 
 void Player::UpdateMovement(const GameResources& resources,  GameState& gameState, Vector2& mousePosition, Camera2D& camera) {
     isMoving = false;
-  
     float deltaTime = GetFrameTime();
     if (IsKeyPressed(KEY_ONE)) {
         currentWeapon = REVOLVER;
     } else if (IsKeyPressed(KEY_TWO)) {
         currentWeapon = SHOTGUN;
+    }
+
+    // Apply gravity if the player is not on the ground
+    if (!isOnGround) {
+        velocity.y += gravity * deltaTime;
+    } else {
+        velocity.y = 0.0f;  // Ensure vertical velocity is zero when on the ground
+    }
+
+    // Clamp horizontal velocity
+    if (velocity.x > maxSpeedX) {
+        velocity.x = maxSpeedX;
+    } else if (velocity.x < -maxSpeedX) {
+        velocity.x = -maxSpeedX;
+    }
+
+    // Clamp vertical velocity (for downward movement)
+    if (velocity.y > maxSpeedY) {
+        velocity.y = maxSpeedY;
+    } else if (velocity.y < -maxSpeedY) {
+        velocity.y = -maxSpeedY;
+    }
+
+    // Update player position based on velocity
+    position.x += velocity.x * deltaTime;
+    position.y += velocity.y * deltaTime;
+
+    // Collision detection with the ground (assuming ground at y = groundLevel)
+    float groundLevel = 700.0f;  // Adjust based on your game's ground position
+
+    if (position.y >= groundLevel) {
+        position.y = groundLevel;
+        isOnGround = true;
+        velocity.y = 0.0f;
+
     }
 
     if (IsKeyPressed(KEY_R) && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL)){
@@ -288,7 +362,7 @@ void Player::UpdateMovement(const GameResources& resources,  GameState& gameStat
         }
     }       
 
-    float speed = isRunning ? runSpeed : walkSpeed;
+    maxSpeedX = isRunning ? runSpeed : walkSpeed;
     frameSpeed = isRunning ? runFrameSpeed : walkFrameSpeed;
 
     //keep player in bounds
@@ -302,7 +376,7 @@ void Player::UpdateMovement(const GameResources& resources,  GameState& gameStat
  
     if (!isAiming && !isShooting && !isReloading) {
         //KEYBOARD MOVEMENT CODE
-        HandleInput(speed);
+        HandleInput(maxSpeedX);
     
     }
 
@@ -343,7 +417,7 @@ void Player::UpdateMovement(const GameResources& resources,  GameState& gameStat
         }
     } else if (isMoving) {
         frameCounter += GetFrameTime() * frameSpeed;
-        int numFrames = (speed == runSpeed) ? (resources.runSheet.width / 64) : (resources.walkSheet.width / 64);
+        int numFrames = (maxSpeedX == runSpeed) ? (resources.runSheet.width / 64) : (resources.walkSheet.width / 64);
 
         if (frameCounter >= 0.1) {
             

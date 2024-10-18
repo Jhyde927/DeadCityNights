@@ -15,12 +15,20 @@ class Player {
 public:
     // Public member variables
     Vector2 position;
+    Vector2 velocity;      // New velocity vector
+    float gravity;         // Gravity force applied to the player
+    bool isOnGround;       // Flag to check if the player is on the ground
+    float jumpForce;       // The initial upward force when the player jumps
 
     float walkSpeed;
     float runSpeed;
     int currentFrame;    // Current animation frame
     float frameCounter;  // Counter to track time between frames
     float frameSpeed;    // Speed of the animation (frames per second)
+    float maxSpeedX;       // Maximum horizontal speed
+    float maxSpeedY;       // Maximum vertical speed (terminal velocity)
+    float acceleration;
+    float deceleration;
 
     float walkFrameSpeed; // Slower animation speed for walking
     float runFrameSpeed;   // Faster animation speed for running

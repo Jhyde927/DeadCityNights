@@ -232,6 +232,7 @@ void LoadGameResources(GameResources& resources) {
     resources.AstralMidground = LoadTexture("assets/AstralMidGround.png");
     resources.AstralClouds = LoadTexture("assets/AstralClouds.png");
     resources.AstralForeground = LoadTexture("assets/AstralForeground.png");
+    resources.AstralClouds2 = LoadTexture("assets/AstralClouds2.png");
     resources.EarthSheet = LoadTexture("assets/EarthSpin-Sheet.png");
 }
 
@@ -292,6 +293,7 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.AstralMidground);
     UnloadTexture(resources.AstralClouds);
     UnloadTexture(resources.AstralForeground);
+    UnloadTexture(resources.AstralClouds2);
     UnloadTexture(resources.EarthSheet);
    
 }
@@ -1191,7 +1193,7 @@ void DrawEarth(GameResources& resources, Earth& earth, Camera2D& camera){
     }
 
     
-    //Vector2 earthDrawPos = {earth.position.x - parallaxEarth, earth.position.y};
+    
     
     // Define the source rectangle
     Rectangle sourceRect = {
@@ -1204,10 +1206,11 @@ void DrawEarth(GameResources& resources, Earth& earth, Camera2D& camera){
     // Calculate parallax offset for the earth
     float parallaxFactor = 0.99f; // Adjust this value between 0.0f and 1.0f
 
-    float parallaxOffset = (camera.target.x - earth.position.x) * parallaxFactor;
+    float parallaxOffset = (camera.target.x - earth.position.x) * parallaxFactor; //playerpos - earthpos = distance * .99
+    
 
     Vector2 earthDrawPosition = {
-        earth.position.x + parallaxOffset,
+        earth.position.x + parallaxOffset, //offset x by 99 percent of the distance to it moves at 1 percent of player speed
         earth.position.y 
     };
 
@@ -1319,6 +1322,8 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
 }
 
 void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoor& magicDoor, Shader& drunkShader, Shader& glowShader, Shader& glitchShader){
+
+
     if (player.isAiming && IsKeyDown(KEY_F)) {
         // Handle keyboard-only aiming (e.g., using arrow keys or player movement keys)
         if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
@@ -1335,9 +1340,10 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
     magicDoor.position.x = 3000;
     camera.target = player.position;
     float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
+    float parallaxClouds2 = camera.target.x * .7;
     float parallaxClouds = camera.target.x * .8;
     float parallaxBackground = camera.target.x * 0.9f;  // Background moves even slower 
-    float parallaxEarth = camera.target.x * .5; // 
+    
     
     BeginMode2D(camera);
     
@@ -1370,6 +1376,9 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
     DrawTexturePro(resources.AstralClouds, {0, 0, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)},
                     {parallaxClouds -1024, 0, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)}, {0, 0}, 0.0f, WHITE);
 
+    DrawTexturePro(resources.AstralClouds2, {0, 0, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)},
+                    {parallaxClouds2 -1024, 0, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)}, {0, 0}, 0.0f, WHITE);
+
     DrawTexturePro(resources.AstralMidground, {0, 0, static_cast<float>(resources.AstralMidground.width), static_cast<float>(resources.AstralMidground.height)},
                     {parallaxMidground -1024, 0, static_cast<float>(resources.AstralMidground.width), static_cast<float>(resources.AstralMidground.height)}, {0, 0}, 0.0f, WHITE);
 
@@ -1386,7 +1395,9 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
     
     EndMode2D();
     DrawMoney(); //draw money after EndMode2d()
-    
+    Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
+    DrawHealthBar(barPos, player.maxHealth, player.currentHealth, 128, 16);
+
     if (showInventory){
         RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
     }
@@ -1409,7 +1420,7 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
 void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_car, Camera2D& camera,Vector2 mousePosition, Shader& drunkShader, Shader& glowShader, Shader& glitchShader){
     int carMax = 2800;
     int carMin = 2765;
-    int doorPos = 3079;
+    
     
     playOwl = false; //reset owl
     // Maybe zombiewaves can be reset to false when exiting cemetery. 

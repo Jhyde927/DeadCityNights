@@ -69,6 +69,7 @@ struct GameResources {
     Texture2D AstralClouds2;
     Texture2D EarthSheet;
     Texture2D jumpSheet;
+    Texture2D healthBorder;
 
     Font defaultFont;
 };

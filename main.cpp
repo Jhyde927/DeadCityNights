@@ -131,6 +131,8 @@ std::vector<NPC> zombies;
 std::vector<NPC>hobos;
 std::vector<NPC>ghosts;
 
+std::vector<NPC>astralGhosts;
+
 std::vector<Platform> platforms;
 
 GameState gameState = OUTSIDE;
@@ -238,6 +240,7 @@ void LoadGameResources(GameResources& resources) {
     resources.AstralClouds2 = LoadTexture("assets/AstralClouds2.png");
     resources.EarthSheet = LoadTexture("assets/EarthSpin-Sheet.png");
     resources.jumpSheet = LoadTexture("assets/JumpSheet.png");
+    resources.healthBorder = LoadTexture("assets/HealthBoarder.png");
 }
 
 void UnloadGameResources(GameResources& resources){
@@ -300,6 +303,7 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.AstralClouds2);
     UnloadTexture(resources.EarthSheet);
     UnloadTexture(resources.jumpSheet);
+    UnloadTexture(resources.healthBorder);
    
 }
 
@@ -325,14 +329,15 @@ void InitEarth(Earth& earth){
     earth.frameTime = .1;
 }
 
-// Initialize platforms (e.g., in your game initialization function)
+
 void InitPlatforms() {
-    // Example platform at position (x=300, y=400) with width=200, height=20
+ 
     platforms.emplace_back(2300.0f, 675.0f, 200.0f, 20.0f, WHITE);
 
     // Add more platforms as needed
-    platforms.emplace_back(2500.0f, 600.0f, 150.0f, 20.0f, DARKGRAY);
-    platforms.emplace_back(2800.0f, 550.0f, 250.0f, 20.0f, DARKGRAY);
+    platforms.emplace_back(2500.0f, 600.0f, 150.0f, 20.0f, WHITE);
+    platforms.emplace_back(2800.0f, 550.0f, 250.0f, 20.0f, WHITE);
+    platforms.emplace_back(2600.0f, 450.0f, 150.0f, 20.0f, WHITE);
 }
 
 
@@ -692,6 +697,22 @@ void HandleLotTransition(Player& player) {
     player.position.x = vacantLotX;
 }
 
+void HandleAstralTransition(Player& player, GameCalendar& calendar){
+    if (player.isDead){
+        gameState = APARTMENT;//wake up back at your apartment with full health.
+        player.position.x = apartmentX;
+        player.isDead = false;
+        applyShader = false; //drugs ware off if you advanced the day
+        player.currentHealth = player.maxHealth;
+        calendar.AdvanceDay();
+
+    
+    }else{
+        gameState = OUTSIDE;
+    }
+
+}
+
 void PerformStateTransition(Player& player, PlayerCar& player_car, GameCalendar& calendar, std::vector<NPC>& npcs) {
     //if we are fading out switch to the next area depending on the situation. 
     switch (gameState) {
@@ -718,7 +739,7 @@ void PerformStateTransition(Player& player, PlayerCar& player_car, GameCalendar&
             break;
 
         case ASTRAL:
-            gameState = OUTSIDE;
+            HandleAstralTransition(player, calendar);
             break;
   
     }
@@ -1240,26 +1261,43 @@ void DrawEarth(GameResources& resources, Earth& earth, Camera2D& camera){
 }
 
 
-void DrawHealthBar(Vector2 position, int maxHealth, int currentHealth, int barWidth, int barHeight) {
+void DrawHealthBar(GameResources resources, Vector2 position, int maxHealth, int currentHealth, int barWidth, int barHeight) {
     // Calculate health percentage
     float healthPercent = (float)currentHealth / maxHealth;
-
+    Color veryLightGreen = { 150, 255, 150, 255 };  // RGBA values
     // Define bar colors
-    Color borderColor = WHITE;  // Border color
-    Color barColor = WHITE;       // Color of the health bar itself
+    Color borderColor = veryLightGreen;  // Border color
+    Color barColor = veryLightGreen;       // Color of the health bar itself
 
     if (healthPercent <= 0.3f){
         barColor = RED;
         borderColor = RED;
     }else{
-        barColor = WHITE;
-        borderColor = WHITE;
+        barColor = veryLightGreen;
+        borderColor = veryLightGreen;
     }
-    
 
-    // Draw border
-    //DrawText("HEALTH", position.x, position.y+30, 20, barColor);
-    DrawRectangleLines(position.x, position.y+50, barWidth, barHeight, borderColor);
+    Texture2D texture = resources.healthBorder;
+
+    // Define the source rectangle (the part of the texture to draw)
+    Rectangle sourceRec = { 0.0f, 0.0f, (float)texture.width, (float)texture.height };
+    Rectangle destRec = { 
+        position.x, // x position on screen
+        position.y+50, // y position on screen
+        static_cast<float>(barWidth), // width on screen
+        static_cast<float>(barHeight)  // height on screen
+    };
+    Vector2 origin = { 0.0f, 0.0f };
+
+    // Rotation angle in degrees
+    float rotation = 0.0f;
+
+    //stretch texture to fit barwidth and height,
+    DrawTexturePro(texture, sourceRec, destRec, origin, rotation, borderColor);
+
+
+    //DrawRectangleLines(position.x, position.y+50, barWidth, barHeight, borderColor);
+
     // Draw health bar (adjust width based on health percentage)
     DrawRectangle(position.x, position.y+50, (int)(barWidth * healthPercent), barHeight, barColor);
 }
@@ -1397,7 +1435,10 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
 
     DrawTexturePro(resources.AstralMidground, {0, 0, static_cast<float>(resources.AstralMidground.width), static_cast<float>(resources.AstralMidground.height)},
                     {parallaxMidground -1024, 0, static_cast<float>(resources.AstralMidground.width), static_cast<float>(resources.AstralMidground.height)}, {0, 0}, 0.0f, WHITE);
+    
 
+    EndShaderMode(); ////////////////////////////SHADER OFF
+    DrawEarth(resources, earth, camera);
     
     DrawMagicDoor(resources, player, magicDoor);
     player.DrawPlayer(resources, gameState, camera);
@@ -1412,15 +1453,25 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
         platform.Draw();
     }
 
+    for (NPC& ghost: astralGhosts){
+        ghost.Update(player);
+        ghost.Render();
+        
+        if (ghost.health > 0) ghost.isActive = true;
 
-    EndShaderMode(); ////////////////////////////SHADER OFF
+    }
+
+    
     DrawBullets(); //draw bullets in cemetery after everything else. 
-    DrawEarth(resources, earth, camera);
+    
     
     EndMode2D();
     DrawMoney(); //draw money after EndMode2d()
     Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
-    DrawHealthBar(barPos, player.maxHealth, player.currentHealth, 128, 16);
+    if (player.currentHealth < 100){
+        DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);  
+    }
+    
 
     if (showInventory){
         RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
@@ -1678,7 +1729,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
     //draw healthbar 
     if (gameState == CEMETERY && !player.enter_car){
         Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
-        DrawHealthBar(barPos, player.maxHealth, player.currentHealth, 128, 16);
+        DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
 
     }
 
@@ -1937,7 +1988,7 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
     //draw healthbar 
 
     Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
-    DrawHealthBar(barPos, player.maxHealth, player.currentHealth, 128, 16);
+    DrawHealthBar(resources, barPos, player.maxHealth, player.currentHealth, 128, 16);
 
     
 }
@@ -2342,7 +2393,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 
     if (player.currentHealth < 100) showHealthbar = true; // dont show healthbar until youve taken damage, when on street
     Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
-    if (showHealthbar) DrawHealthBar(barPos, player.maxHealth, player.currentHealth, 128, 16);
+    if (showHealthbar) DrawHealthBar(resources, barPos, player.maxHealth, player.currentHealth, 128, 16);
 
     
 
@@ -2419,11 +2470,22 @@ void spawnNPCs(GameResources& resources){
     //create ghost // call update on ghost where ever needed like graveyard or cemetery
     Vector2 g_pos = {2000, 700};
     NPC ghost_npc = CreateNPC(resources.ghostSheet, g_pos, speed, IDLE, false, false);
-    ghost_npc.SetDestination(2000, 4000);
+    ghost_npc.SetDestination(2000, 2200);
     ghost_npc.ghost = true;
     ghost_npc.maxHealth = 500;
     ghost_npc.health = 500;
     ghosts.push_back(ghost_npc);
+
+    int ap = 3;
+    for (int i = 0; i < ap; i++){
+        Vector2 ag_pos = {static_cast<float>(2220 + i * 100), 700};;
+        NPC astralGhost = CreateNPC(resources.ghostSheet, ag_pos, speed, IDLE, false, false);
+        ghost_npc.SetDestination(2000, 2200);
+        astralGhost.ghost = true;
+        astralGhost.maxHealth = 500;
+        astralGhost.health = 500;
+        astralGhosts.push_back(astralGhost);
+    }
 
     //fortune teller idea is on hold
 
@@ -2481,14 +2543,14 @@ void glowEffect(Shader& glowShader, GameState gameState){
         float oscillationSpeed = 0.9f;  // 1 second duration
 
         if (gameState == ASTRAL){
-            minThreshold = 0.5f;
-            maxThreshold = 0.10f;
+            minThreshold = 0.2f;
+            maxThreshold = 0.3f;
             oscillationSpeed = 0.9f;  // 1 second duration
 
         }
 
-        // Calculate the oscillating glow threshold using a sine wave
-        float glowThreshold = minThreshold + (maxThreshold - minThreshold) * (0.5f * (1.0f + sin(oscillationSpeed * time)));
+    // Calculate the oscillating glow threshold using a sine wave
+        float glowThreshold = minThreshold + (maxThreshold - minThreshold) * (0.5f * (1.0f + sin(oscillationSpeed * time)));    
 
         // Set the glowThreshold uniform in the shader
         int glowThresholdLocation = GetShaderLocation(glowShader, "glowThreshold");
@@ -2696,7 +2758,7 @@ int main() {
     inventoryPositionY = player.position.y;  
     SetTargetFPS(60);
     dboxPosition = player.position;
-
+    AddItemToInventory("Drugs", inventory, INVENTORY_SIZE);
     //PlayMusicStream(SoundManager::getInstance().GetMusic("Jangwa"));
     PlayMusicStream(SoundManager::getInstance().GetMusic("Neon"));
 
@@ -2716,8 +2778,9 @@ int main() {
         SoundManager::getInstance().UpdateMusic("Jangwa");
         
         UpdateBullets();
-        CheckBulletNPCCollisions(zombies); 
+        CheckBulletNPCCollisions(zombies); //check each enemy group
         CheckBulletNPCCollisions(ghosts);
+        CheckBulletNPCCollisions(astralGhosts);
         MonitorMouseClicks(player, calendar);
         UpdateZombieSpawning(resources, player);
         glowEffect(glowShader, gameState); //update glow shader

@@ -292,26 +292,26 @@ bool Player::CheckIfOnPlatform(const std::vector<Platform>& platforms) {
     // Create the player's collision rectangle
     Rectangle playerRect = {
         position.x + 16,
-        position.y + 16,
-        16,
-        32
+        position.y + 24,
+        8,
+        24 //magic numbers to size hitbox smaller than texture
     };
 
-    // Reset isOnGround before checking
-    //isOnGround = false;
+    
+    //isOnGround = false; //reset elsewhere
 
-    // Check collision with platforms
+    // Check collision with platforms Simplified. 
     for (const Platform& platform : platforms) {
         if (CheckCollisionRecs(playerRect, platform.rect)) {
-            // Simple collision response
-            if (velocity.y >= 0) {  // Resolve collision if moving downward or stationary
-                // Place player on top of platform
+            if (velocity.y > 0) {
+                // Moving down; landed on top of platform
                 position.y = platform.rect.y - size.y - 16;
-                //velocity.y = 0;
+                //velocity.y = 0.0f;
                 isOnGround = true;
                 jumping = false;
-                return true;  // Player is on a platform
+                return true;
             }
+            // Handle horizontal collisions (optional)
         }
     }
 

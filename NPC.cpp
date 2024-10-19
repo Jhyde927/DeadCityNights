@@ -247,6 +247,9 @@ void NPC::HandleNPCInteraction(Player& player){
     }
 
 void NPC::HandleGhost(Player& player, float& distanceToPlayer, bool& hasTarget){
+
+    float distanceY = abs(player.position.y - position.y);
+
     if (ghost && distanceToPlayer < detectionRange){
         if (ghost && agro){
             hasTarget = true;
@@ -261,7 +264,7 @@ void NPC::HandleGhost(Player& player, float& distanceToPlayer, bool& hasTarget){
         frameSpeed = 8;
     }
 
-    if (ghost && distanceToPlayer <= 25 && !isDying && agro){
+    if (ghost && distanceToPlayer <= 25 && distanceY < 25 && !isDying && agro){
         
         attacking = true;
 

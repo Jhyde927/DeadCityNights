@@ -6,6 +6,8 @@
 #include "Bullet.h"
 #include "GameEnums.h"
 #include "SoundManager.h"
+#include <vector>
+#include "platform.h"
 
 
 WeaponType currentWeapon;  // To track the current weapon
@@ -18,16 +20,20 @@ Player::Player() {
     position = {1922.0, 700.0};
 
     velocity = {0.0f, 0.0f};
+    size.x = 16;
+    size.y = 32;
     gravity = 800.0f;    
     isOnGround = true;
-    jumpForce = 200.0f;  
+    jumpForce = 200.0f;
+    jumping = false;
+    onPlatform = false;
     maxSpeedX = 50;
     maxSpeedY = 1000;
     acceleration = 800;
     deceleration = 600;
     walkSpeed = 50.0f;
+    fallTimer = 0.0;
     runSpeed = 100.0f;
-
     maxHealth = 100;
     currentHealth = maxHealth;
     hitTimer = 0.0f;
@@ -45,12 +51,13 @@ Player::Player() {
     canShoot = true;
     hasGun = false;
     hasShotgun = false;
+
     hasShovel = false;
     hasBadge = false;
     enter_car = false;
     can_take_damage = true;
 
-    shells = 25;
+    shells = 20;
 
     LastTapTimeLeft = 0;
     LastTapTimeRight = 0;
@@ -189,10 +196,16 @@ void Player::HandleInput(float speed){
 
         
         // Jumping logic
-        if (IsKeyPressed(KEY_SPACE) && isOnGround) {
+       
+       
+        if (IsKeyPressed(KEY_SPACE) && isOnGround && !jumping) {
             velocity.y = -jumpForce;  // Negative because y increases downward
             isOnGround = false;
+            jumping = true;
+
         }
+
+
   
         // Check for shift key to run
         if ((IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) && !isAiming) {
@@ -274,13 +287,41 @@ void Player::Reload(){
 
 }
 
-void Player::playerPhysics(float deltaTime){
-    // Apply gravity if the player is not on the ground
-    if (!isOnGround) {
-        velocity.y += gravity * deltaTime;
-    } else {
-        velocity.y = 0.0f;  // Ensure vertical velocity is zero when on the ground
+
+bool Player::CheckIfOnPlatform(const std::vector<Platform>& platforms) {
+    // Create the player's collision rectangle
+    Rectangle playerRect = {
+        position.x + 16,
+        position.y + 16,
+        16,
+        32
+    };
+
+    // Reset isOnGround before checking
+    //isOnGround = false;
+
+    // Check collision with platforms
+    for (const Platform& platform : platforms) {
+        if (CheckCollisionRecs(playerRect, platform.rect)) {
+            // Simple collision response
+            if (velocity.y >= 0) {  // Resolve collision if moving downward or stationary
+                // Place player on top of platform
+                position.y = platform.rect.y - size.y - 16;
+                //velocity.y = 0;
+                isOnGround = true;
+                jumping = false;
+                return true;  // Player is on a platform
+            }
+        }
     }
+
+    return false;  // Player is not on a platform
+}
+
+
+void Player::playerPhysics(float deltaTime, std::vector<Platform> platforms){
+
+
 
     // Clamp horizontal velocity
     if (velocity.x > maxSpeedX) {
@@ -307,20 +348,37 @@ void Player::playerPhysics(float deltaTime){
 
     }
 
-    // Update player position based on velocity
+
+
     position.x += velocity.x * deltaTime;
     position.y += velocity.y * deltaTime;
-
-    // Collision detection with the ground (assuming ground at y = groundLevel)
-    float groundLevel = 700.0f;  // Adjust based on your game's ground position
-
-    if (position.y >= groundLevel) {
-        position.y = groundLevel;
+    
+    //playerRect.y = position.y;
+    if (CheckIfOnPlatform(platforms)){
         isOnGround = true;
-        velocity.y = 0.0f;
-
+    }else{
+        isOnGround = false;
     }
 
+   
+
+
+    // Collision with the ground (assuming ground at y = groundLevel)
+    float groundLevel = 700.0f + size.y;  // Adjust based on your game's ground position
+    if (position.y + size.y >= groundLevel) { //if below ground
+        position.y = groundLevel - size.y;
+        velocity.y = 0.0f;
+        isOnGround = true;
+        
+        jumping = false;
+    }
+
+    if (!isOnGround) {
+        velocity.y += gravity * deltaTime;
+    }
+    
+
+    
 
 }
 
@@ -369,7 +427,7 @@ void Player::updateAnimations(GameResources& resources){
             currentFrame++;
             frameCounter = 0;
 
-            if (currentFrame >= numFrames) {
+            if (currentFrame >= numFrames && isOnGround) {
                 currentFrame = 0;  // loop back to the first frame
                 if (!step){
                     PlaySound(SoundManager::getInstance().GetSound("Step1"));
@@ -387,8 +445,9 @@ void Player::updateAnimations(GameResources& resources){
 
 }
 
-void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vector2& mousePosition, Camera2D& camera) {
+void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vector2& mousePosition, Camera2D& camera, std::vector<Platform> platforms) {
     isMoving = false;
+    
     float deltaTime = GetFrameTime();
 
     if (IsKeyPressed(KEY_ONE)) {
@@ -397,14 +456,12 @@ void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vec
         currentWeapon = SHOTGUN;
     }
 
-    playerPhysics(deltaTime);
+    
     reloadLogic(deltaTime);
     
     if (IsKeyPressed(KEY_R) && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL)){
         Reload();
     }
-
-    
 
     //AIMING
     isAiming = (hasGun || hasShotgun) && (IsKeyDown(KEY_F) || IsKeyDown(KEY_LEFT_CONTROL) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) && !isShooting && !isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL);
@@ -469,13 +526,14 @@ void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vec
         position.x = GetRightBoundary(gameState)-1;
     }
 
- 
+    
     if (!isAiming && !isShooting && !isReloading) {
         //KEYBOARD MOVEMENT CODE
-        HandleInput(maxSpeedX);
+        HandleInput(maxSpeedX); //check input before physics
     
     }
 
+    playerPhysics(deltaTime, platforms);
     updateAnimations(resources);
 }
 
@@ -487,7 +545,7 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
     Rectangle sourceRec;
     int frameWidth = 64; // Assuming each frame is 64 pixels wide
     
-    // Prioritize drawing states: Shooting > Aiming > Moving > Idle
+    // Prioritize drawing states: Shooting > Reloading > Aiming > Moving > Idle
     if (currentWeapon == REVOLVER){
     
         if (hasGun && isShooting && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL)) { //need a way to allow guns outside cemetery at a certain point in the game. 
@@ -503,6 +561,10 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
             // Aiming but not shooting: use the first frame of the shootSheet
             currentSheet = resources.shootSheet;
             sourceRec = { 0, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };  // First frame for aiming
+
+        }else if (jumping){
+            currentSheet = resources.jumpSheet;
+            sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
         } else if (isMoving) {
             // Walking or running animation
@@ -563,7 +625,7 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
     Color tint = (hitTimer > 0) ? RED : WHITE;
     Vector2 castPos = {(float) position.x, (float) position.y};
     DrawTextureRec(currentSheet, sourceRec, castPos, tint);  // Draw the player based on the current state
-
+    
 
 }
 

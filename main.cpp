@@ -9,6 +9,7 @@
 #include "GameEnums.h"
 #include "SoundManager.h"
 #include "GameCalendar.h"
+#include "Platform.h"
 #include <string>
 #include <cstdlib>  // For rand and srand
 #include <ctime>    // For seeding rand
@@ -130,6 +131,8 @@ std::vector<NPC> zombies;
 std::vector<NPC>hobos;
 std::vector<NPC>ghosts;
 
+std::vector<Platform> platforms;
+
 GameState gameState = OUTSIDE;
 
 TransitionState transitionState = NONE;
@@ -234,6 +237,7 @@ void LoadGameResources(GameResources& resources) {
     resources.AstralForeground = LoadTexture("assets/AstralForeground.png");
     resources.AstralClouds2 = LoadTexture("assets/AstralClouds2.png");
     resources.EarthSheet = LoadTexture("assets/EarthSpin-Sheet.png");
+    resources.jumpSheet = LoadTexture("assets/JumpSheet.png");
 }
 
 void UnloadGameResources(GameResources& resources){
@@ -295,6 +299,7 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.AstralForeground);
     UnloadTexture(resources.AstralClouds2);
     UnloadTexture(resources.EarthSheet);
+    UnloadTexture(resources.jumpSheet);
    
 }
 
@@ -306,7 +311,7 @@ void InitializePlayerCar(PlayerCar& player_car){
 }
 
 void InitializeMagicDoor(MagicDoor& magicDoor){
-    magicDoor.position = {3978, 700};
+    magicDoor.position = {2089, 700};
     magicDoor.currentFrame = 0;
 }
 
@@ -319,6 +324,17 @@ void InitEarth(Earth& earth){
     earth.frameTimer = 0.0;
     earth.frameTime = .1;
 }
+
+// Initialize platforms (e.g., in your game initialization function)
+void InitPlatforms() {
+    // Example platform at position (x=300, y=400) with width=200, height=20
+    platforms.emplace_back(2300.0f, 675.0f, 200.0f, 20.0f, WHITE);
+
+    // Add more platforms as needed
+    platforms.emplace_back(2500.0f, 600.0f, 150.0f, 20.0f, DARKGRAY);
+    platforms.emplace_back(2800.0f, 300.0f, 250.0f, 20.0f, DARKGRAY);
+}
+
 
 // Function to add an item to the first available slot in the inventory
 void AddItemToInventory(const std::string& item, std::string inventory[], int inventorySize) {
@@ -601,7 +617,7 @@ void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<
     }else if (openMagicDoor){
         gameState = ASTRAL;
         
-        player.position.x = 3000;
+        //player.position.x = 3000;
         
     }
 }
@@ -634,7 +650,7 @@ void HandleCemeteryTransition(Player& player, PlayerCar& player_car, GameCalenda
         player_car.position.x = 100;
     } else if (!player.enter_car && over_gate) {
         gameState = GRAVEYARD;
-        raiseZombies = true;  // Queue up more zombies 
+        raiseZombies = true;  // Queue up more zombies for graveyard
     } else if (player.isDead) {
         gameState = APARTMENT;//wake up back at your apartment with full health. 
         player.position.x = apartmentX;
@@ -1284,7 +1300,7 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
 
     
     DrawRectangle(screen_pos.x, screen_pos.y + offset, boxWidth, boxHeight, customBackgroundColor);
-    DrawText(phrase.c_str(), screen_pos.x+ screen_offsetX, screen_pos.y + screen_offsetY, textSize, tint);
+    DrawText(phrase.c_str(), screen_pos.x+ screen_offsetX, screen_pos.y + screen_offsetY, textSize, tint); //Draw Phrase
     
     if (money >= 100 && dealer && GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY")) //button pressed
         {
@@ -1322,8 +1338,7 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
 }
 
 void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoor& magicDoor, Shader& drunkShader, Shader& glowShader, Shader& glitchShader){
-
-
+    player.gravity = 200;
     if (player.isAiming && IsKeyDown(KEY_F)) {
         // Handle keyboard-only aiming (e.g., using arrow keys or player movement keys)
         if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
@@ -1337,13 +1352,14 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
         player.facingRight = mousePosition.x > player.position.x; //facing right is true if mousepos.x > playerPos.x
     }
 
-    magicDoor.position.x = 3000;
+    magicDoor.position.x = 2089;
     camera.target = player.position;
     float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
     float parallaxClouds2 = camera.target.x * .7;
     float parallaxClouds = camera.target.x * .8;
     float parallaxBackground = camera.target.x * 0.9f;  // Background moves even slower 
     
+    show_dbox = false;
     
     BeginMode2D(camera);
     
@@ -1369,7 +1385,7 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
 
     // Draw the background layers
     DrawTexturePro(resources.AstralBackground, {0, 0, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)},
-                    {parallaxBackground-1024, 0, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)}, {0, 0}, 0.0f, WHITE);
+                    {parallaxBackground-1024, -2000, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)}, {0, 0}, 0.0f, WHITE);
 
     
 
@@ -1388,6 +1404,14 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
 
     DrawTexturePro(resources.AstralForeground, {0, 0, static_cast<float>(resources.AstralMidground.width), static_cast<float>(resources.AstralMidground.height)},
                     {0, 0, static_cast<float>(resources.AstralMidground.width), static_cast<float>(resources.AstralMidground.height)}, {0, 0}, 0.0f, WHITE);
+
+
+        // Draw platforms
+    for (const Platform& platform : platforms) {
+        
+        platform.Draw();
+    }
+
 
     EndShaderMode(); ////////////////////////////SHADER OFF
     DrawBullets(); //draw bullets in cemetery after everything else. 
@@ -1457,9 +1481,16 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
     }
     
     if (!player.enter_car && raiseZombies){
+        //zombies that spawn when you exit car
         raiseZombies = false;
+        if (hasCemeteryKey){
+            StartZombieSpawn(10); //you should have the shotgun here so spawn more. 
+        }else{
+            StartZombieSpawn(5);
+
+        }
         
-        StartZombieSpawn(5);
+        
     }
 
     show_dbox = false;
@@ -2590,6 +2621,7 @@ void InitSounds(SoundManager& soundManager){
 
 int main() {
     InitWindow(screenWidth, screenHeight, "Adventure Game");
+    
     //PUT NOTHING ABOVE THIS ^^ CAN CAUSE SEG FAULT
     InitAudioDevice();
     SoundManager& soundManager = SoundManager::getInstance();
@@ -2603,7 +2635,7 @@ int main() {
     GameCalendar calendar;
     LoadGameResources(resources);
     spawnNPCs(resources); //spawn NPCs before rendering them outside
-
+    InitPlatforms();
 
   ///////////////////SHADERS????????????????????????????????????????????????  
     // Shader shader = LoadShader("shaders/shaderGlitch.vs", "shaders/shaderGlitch.fs"); //CRT SHADER. Consider a load shader function
@@ -2677,7 +2709,7 @@ int main() {
     // Main game loop
     while (!WindowShouldClose()) {
         Vector2 mousePosition = GetMousePosition();
-        if (!player.enter_car) player.UpdateMovement(resources, gameState, mousePosition, camera);  // Update player position and animation
+        if (!player.enter_car) player.UpdateMovement(resources, gameState, mousePosition, camera, platforms);  // Update player position and animation
         UpdateInventoryPosition(camera, gameState);
         SoundManager::getInstance().UpdateMusic("Neon");
         SoundManager::getInstance().UpdateMusic("CarRun");

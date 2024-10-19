@@ -14,7 +14,6 @@ struct GameResources {
     Texture2D walkSheet;
     Texture2D runSheet;
     Texture2D reloadSheet;
-
     Texture2D apartment;
     Texture2D road;
     Texture2D car;
@@ -69,6 +68,7 @@ struct GameResources {
     Texture2D AstralForeground;
     Texture2D AstralClouds2;
     Texture2D EarthSheet;
+    Texture2D jumpSheet;
 
     Font defaultFont;
 };

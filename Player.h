@@ -4,6 +4,8 @@
 #include <raylib.h>  // Assuming Vector2 is used from raylib
 #include "GameResources.h" // Include resources for the method
 #include "GameEnums.h"
+#include "platform.h"
+#include <vector>
 
 enum WeaponType {
     REVOLVER,
@@ -16,10 +18,13 @@ public:
     // Public member variables
     Vector2 position;
     Vector2 velocity;      // New velocity vector
+    Vector2 size;
     float gravity;         // Gravity force applied to the player
     bool isOnGround;       // Flag to check if the player is on the ground
     float jumpForce;       // The initial upward force when the player jumps
-
+    bool jumping;
+    bool onPlatform;
+    float fallTimer;
     float walkSpeed;
     float runSpeed;
     int currentFrame;    // Current animation frame
@@ -75,13 +80,14 @@ public:
 
 
         
-        void UpdateMovement(GameResources& resources, GameState& gameState, Vector2& mousePosition, Camera2D& camera);  // Move the update movement here
+        void UpdateMovement(GameResources& resources, GameState& gameState, Vector2& mousePosition, Camera2D& camera,std::vector<Platform> platforms);  // Move the update movement here
         void DrawPlayer(const GameResources& resources, GameState& gameState, Camera2D& camera);  // Draw player method
         void HandleInput(float speed);
         void Reload();
         void reloadLogic(float deltaTime);
-        void playerPhysics(float deltaTime);
+        void playerPhysics(float deltaTime, std::vector<Platform> platforms);
         void updateAnimations(GameResources& resources);
+        bool CheckIfOnPlatform(const std::vector<Platform>& platforms);
 
 
         

@@ -170,8 +170,42 @@ Had chatGPT come up with rhymes that the ghost says. I got a list of a million o
 
 Added notes to github, so there is a record of this madness. 
 
+Added my own original background track. It's only 3:30 minutes long. Not long enough. gets repetative. Need another music track for when zombies are spawning, new song while in astral realm. Slow down play back when on drugs? Maybe add echo effect. Just have 2 different tracks. One for sober, one for drugged. Play the song in reverse and see how it sounds. 
 
+Make your own mixer. Tracks can be playing without being heard? So we can fade from one to another and have it be lined up. 
+Add seek function to sound manager.
+
+added shovel pickup sound effect. 
+
+bug on cemetery near shovel pickup. bullets get stopped by an invisible barrier some how. ** ghost is blocking bullets from beyond the grave.Ghost was set to active while outside of graveyard. **set ghost.isactive to false before setting it true when rendering graveyard. I think NPCs outside are set to active outside of outside? Doesn't seem to effect things. They don't stop bullets because they are not zombies or ghosts. What happens if you want pedestrian NPCs to get hit by bullets. I don't want that.  
  
+leaving outside by car, car speed is still set to fast after return from cemetery
+
+Gotta try a new song. current one is too...I don't know what. The beat gets in the way lets say. 
+
+Needs to be like a ambient synth wave. Or like a solo acoustic guitar. and it plays a little riff every time you interact. Since we are also playing street noise it has to be minimal I think. take another stab at a super ambient no melody background swells. 
+
+it takes all day to write a song. 
+
+Astral Traders: Merchants who sell unique items or artifacts not available elsewhere.
+
+Verticality. The player can some how move to higher platforms. floating platforms on the astral plane. Player takes doors that teleport the player to a higher platform. jump pads. jetpack. ability to fly. Maybe flight with very low gravity. 
+"Press space bar to fly". flying animation. 
+
+added another cloud layer. 
+
+Added physics to player. Velocity, acceleration/deceleration, jump, gravity, isOnFloor ect. 
+
+Do we just not allow jumping unless it's the astral plane? Or do we leave a weak jump and then a strong jump when in astral. 
+I think weak jump, more player input is better even if it doesn't do anything. 
+
+If the player jumps and shoots at the same time he dives like the matrix. Dodge roll? invincibility frames as a way to slide by zombies without being hit. There is not enough combat to justify a mechanic like this. Are we making a platformer or an adventure game? Leave the jump for now and see what happens.
+
+need sound when taking pills
+
+when you receive the cemetery key, raiseZombies = true
+
+Need another enemy. Flying enemy? crows wont work. They are too dark. outline them. red eyes. act like swarm
 
 
 

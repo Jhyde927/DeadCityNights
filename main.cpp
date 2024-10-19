@@ -332,7 +332,7 @@ void InitPlatforms() {
 
     // Add more platforms as needed
     platforms.emplace_back(2500.0f, 600.0f, 150.0f, 20.0f, DARKGRAY);
-    platforms.emplace_back(2800.0f, 300.0f, 250.0f, 20.0f, DARKGRAY);
+    platforms.emplace_back(2800.0f, 550.0f, 250.0f, 20.0f, DARKGRAY);
 }
 
 

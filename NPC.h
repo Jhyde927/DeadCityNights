@@ -50,9 +50,11 @@ public:
     bool hobo;
     bool ghost;
     bool teller;
+    bool bat;
     int clickCount;
     int interactions;
     float talkTimer;
+    float ghostAlpha;
 
 
     NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState initialAnimation, bool isActive, bool isZombie);

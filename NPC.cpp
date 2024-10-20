@@ -14,7 +14,7 @@
 
 float detectionRange = 300.0f;  // Set detection range for zombies
 
-float ghostAlpha = 1.0f;
+
 
 // Constructor with additional parameters for isActive and isZombie
 NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState initialAnimation, bool active, bool zombie)
@@ -41,9 +41,11 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     hobo = false;
     ghost = false;
     teller = false;
+    bat = false;
     clickCount = 0;
     interactions = 0;
     talkTimer = 0.0f;
+    ghostAlpha = 1.0f;
 
     
     
@@ -250,8 +252,8 @@ void NPC::HandleGhost(Player& player, float& distanceToPlayer, bool& hasTarget){
 
     float distanceY = abs(player.position.y - position.y);
 
-    if (ghost && distanceToPlayer < detectionRange){
-        if (ghost && agro){
+    if ((ghost || bat) && distanceToPlayer < detectionRange){
+        if ((ghost || bat) && agro){
             hasTarget = true;
             destination = player.position;
 
@@ -259,12 +261,14 @@ void NPC::HandleGhost(Player& player, float& distanceToPlayer, bool& hasTarget){
 
     }
 
-    if (ghost && distanceToPlayer > 25){
-        attacking = false;
-        frameSpeed = 8;
-    }
+    // if (ghost && (distanceToPlayer > 25 || distanceY > 25)){
+    //     attacking = false;
+    //     frameSpeed = 8;
+    // }
+    frameSpeed = 8;
+    attacking = false;
 
-    if (ghost && distanceToPlayer <= 25 && distanceY < 25 && !isDying && agro){
+    if ((bat || ghost) && distanceToPlayer <= 25 && distanceY < 25 && !isDying && agro){
         
         attacking = true;
 
@@ -414,7 +418,7 @@ void NPC::Update(Player& player) {
         switch (currentAnimation) {
             case IDLE:
                 numFrames = 1;
-                if (ghost) numFrames = 7; //ghost idle is 7 frames
+                if (ghost || bat) numFrames = 7; //ghost idle is 7 frames
                 break;
             case WALK:
                 numFrames = 7;  // 7 frames for walking
@@ -464,21 +468,55 @@ void NPC::Update(Player& player) {
     
     HandlePolice(player, distance_to_player, hasTarget); //handle distance checks and attack logic. 
     HandleZombie(player, distance_to_player, hasTarget);
-    HandleGhost(player, distance_to_player, hasTarget);
+    HandleGhost(player, distance_to_player, hasTarget); //also bats
+
+    Vector2 directionToPlayer = {
+    player.position.x - position.x,
+    player.position.y - position.y
+};
+
+    directionToPlayer = Vector2Normalize(directionToPlayer);
 
 
     //NPCs choose a random position called destination. they move toward destination until they arrive then repeat. 
     if (!isDying && riseTimer <= 0 && !attacking) { //MOVE NPCs and Police and Zombies and Ghosts. 
         // Move towards the destination
-        if (position.x < destination.x) {
-            position.x += speed * GetFrameTime();
-            facingRight = true;
-            SetAnimationState(WALK);
-        } else if (position.x > destination.x) {
-            position.x -= speed * GetFrameTime();
-            facingRight = false;
-            SetAnimationState(WALK);
+
+        if (!ghost && !bat){
+            if (position.x < destination.x) {
+                position.x += speed * GetFrameTime();
+                facingRight = true;
+                SetAnimationState(WALK);
+            } else if (position.x > destination.x) {
+                position.x -= speed * GetFrameTime();
+                facingRight = false;
+                SetAnimationState(WALK);
+            }
+
+        }else if (ghost || bat){ // ghost can move in y axis 
+            if (agro){
+                Vector2 velocity = {
+                    directionToPlayer.x * speed,
+                    directionToPlayer.y * speed
+                };
+
+                if (position.x < destination.x){
+                    facingRight = true;
+                }else if (position.x > destination.x){
+                    facingRight = false;
+                }
+
+                float deltaTime = GetFrameTime(); // Ensure you're using the frame time
+                position.x += velocity.x * deltaTime;
+                position.y += velocity.y * deltaTime;
+
+                if (!isDying) SetAnimationState(IDLE);
+
+            }
+
+
         }
+
 
 
 
@@ -656,7 +694,7 @@ void NPC::TakeDamage(int damage) {
     health -= damage;
     hitTimer = 0.3f; // Tint the sprite red for 0.3 seconds
     int soundIndex = rand() % 4; //returns 0, 1, 2 or 3
-    if (ghost) agro = true;
+    if (ghost || bat) agro = true;
 
     if (isZombie){
         switch (soundIndex){ //zombie hits
@@ -698,6 +736,14 @@ void NPC::TakeDamage(int damage) {
         isDying = true;
         deathTimer = 0.3; // same as the fade out time. So the ghost just fades out for good on death. 
         destination = position;
+    }
+
+    if (health <= 0 && bat && !isDying){
+        isDying = true;
+        frameSpeed = 14;
+        deathTimer = 0.9;
+        destination = position;
+        SetAnimationState(DEATH2);
     }
 
 }

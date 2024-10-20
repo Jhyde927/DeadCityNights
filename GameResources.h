@@ -70,6 +70,8 @@ struct GameResources {
     Texture2D EarthSheet;
     Texture2D jumpSheet;
     Texture2D healthBorder;
+    Texture2D batSheet;
+    Texture2D platformTexture;
 
     Font defaultFont;
 };

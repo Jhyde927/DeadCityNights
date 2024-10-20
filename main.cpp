@@ -130,6 +130,7 @@ std::vector<NPC> npcs;
 std::vector<NPC> zombies;
 std::vector<NPC>hobos;
 std::vector<NPC>ghosts;
+std::vector<NPC>bats;
 
 std::vector<NPC>astralGhosts;
 
@@ -241,6 +242,8 @@ void LoadGameResources(GameResources& resources) {
     resources.EarthSheet = LoadTexture("assets/EarthSpin-Sheet.png");
     resources.jumpSheet = LoadTexture("assets/JumpSheet.png");
     resources.healthBorder = LoadTexture("assets/HealthBoarder.png");
+    resources.batSheet = LoadTexture("assets/batSheet.png");
+    resources.platformTexture = LoadTexture("assets/platform(128x32).png");
 }
 
 void UnloadGameResources(GameResources& resources){
@@ -304,6 +307,8 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.EarthSheet);
     UnloadTexture(resources.jumpSheet);
     UnloadTexture(resources.healthBorder);
+    UnloadTexture(resources.batSheet);
+    UnloadTexture(resources.platformTexture);
    
 }
 
@@ -331,13 +336,16 @@ void InitEarth(Earth& earth){
 
 
 void InitPlatforms() {
- 
+    //initialize platforms before drawing them in astral
+
     platforms.emplace_back(2300.0f, 675.0f, 200.0f, 20.0f, WHITE);
 
     // Add more platforms as needed
     platforms.emplace_back(2500.0f, 600.0f, 150.0f, 20.0f, WHITE);
     platforms.emplace_back(2800.0f, 550.0f, 250.0f, 20.0f, WHITE);
     platforms.emplace_back(2600.0f, 450.0f, 150.0f, 20.0f, WHITE);
+    platforms.emplace_back(2400.0f, 400.0f, 150.0f, 20.0f, WHITE);
+    platforms.emplace_back(2100.0f, 350.0f, 250.0f, 20.0f, WHITE);
 }
 
 
@@ -705,10 +713,15 @@ void HandleAstralTransition(Player& player, GameCalendar& calendar){
         applyShader = false; //drugs ware off if you advanced the day
         player.currentHealth = player.maxHealth;
         calendar.AdvanceDay();
+        for (NPC& ghost : astralGhosts){
+            ghost.agro = false; //ghost lose agro after dying. 
 
-    
+        }
     }else{
         gameState = OUTSIDE;
+        for (NPC& ghost : astralGhosts){
+            ghost.agro = false; //ghost lose agro after leaving the plane. 
+        }
     }
 
 }
@@ -917,7 +930,7 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
         if (player.currentWeapon == SHOTGUN) shotgunTint = customTint;
         if (player.currentWeapon == REVOLVER) gunTint = customTint;
        // Draw the icon at x, y
-        if (!inventory[i].empty()) {
+        if (!inventory[i].empty()) { //inventory buttons are all done in the same for loop we use to draw it. 
 
             if (inventory[i] == "carKeys"){
                 DrawTexture(resources.CarKeys, x, y, WHITE);
@@ -952,6 +965,7 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
                             inventory[i] = std::string("");  // erase pills from the string
                             player.currentHealth = player.maxHealth;
                             hasPills = false;
+                            PlaySound(SoundManager::getInstance().GetSound("Pills"));
 
                         }
                     }
@@ -1448,10 +1462,16 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
 
 
         // Draw platforms
-    for (const Platform& platform : platforms) {
+    for (Platform& platform : platforms) {
+     
+        //platform.Draw();
+       
+        platform.DrawPlatformTexture(resources.platformTexture, platform.rect);
         
-        platform.Draw();
     }
+
+
+
 
     for (NPC& ghost: astralGhosts){
         ghost.Update(player);
@@ -1688,6 +1708,17 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         zombie.Render();
 
     }
+
+    if (hasCemeteryKey){
+        for (NPC& bat : bats){
+            bat.Update(player);
+            bat.Render();
+            bat.agro = true;
+            if (bat.health > 0) bat.isActive = true;
+        }
+
+    }
+
 
     if (show_carUI && !move_car && player.enter_car){ //destination menu
         DrawCarUI(player_car, mousePosition, camera, gameState);
@@ -2467,6 +2498,18 @@ void spawnNPCs(GameResources& resources){
         npcs.push_back(woman2_npc);
     }
 
+    //create Bats
+    for (int i = 0; i < 3; i++){
+        Vector2 b_pos = {static_cast<float>(2220 + i * 100), 700};
+        NPC bat = CreateNPC(resources.batSheet, b_pos, speed, IDLE, false, false);
+        bat.SetDestination(2000, 2200);
+        bat.bat = true;
+        bats.push_back(bat);
+
+    }
+
+
+
     //create ghost // call update on ghost where ever needed like graveyard or cemetery
     Vector2 g_pos = {2000, 700};
     NPC ghost_npc = CreateNPC(resources.ghostSheet, g_pos, speed, IDLE, false, false);
@@ -2476,7 +2519,8 @@ void spawnNPCs(GameResources& resources){
     ghost_npc.health = 500;
     ghosts.push_back(ghost_npc);
 
-    int ap = 3;
+    //spawn astral ghosts
+    int ap = 2;
     for (int i = 0; i < ap; i++){
         Vector2 ag_pos = {static_cast<float>(2220 + i * 100), 700};;
         NPC astralGhost = CreateNPC(resources.ghostSheet, ag_pos, speed, IDLE, false, false);
@@ -2484,10 +2528,12 @@ void spawnNPCs(GameResources& resources){
         astralGhost.ghost = true;
         astralGhost.maxHealth = 500;
         astralGhost.health = 500;
+        astralGhost.agro = true;
         astralGhosts.push_back(astralGhost);
+
     }
 
-    //fortune teller idea is on hold
+    //fortune teller 
 
     Vector2 tellerPos = {2700, 700};
     NPC FortuneTeller = CreateNPC(resources.FortuneTellerSheet, tellerPos, speed, IDLE, true, false);
@@ -2651,6 +2697,7 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadSound("Owl", "assets/sounds/Owl.ogg");
     soundManager.LoadSound("ShovelDig", "assets/sounds/ShovelDig.ogg");
     soundManager.LoadSound("shovelPickup", "assets/sounds/shovelPickup.ogg");
+    soundManager.LoadSound("Pills", "assets/sounds/Pills.ogg");
 
     soundManager.LoadSound("ShotGun", "assets/sounds/ShotGun.ogg");
     soundManager.LoadSound("ShotgunReload", "assets/sounds/ShotgunReload.ogg");
@@ -2775,12 +2822,13 @@ int main() {
         UpdateInventoryPosition(camera, gameState);
         SoundManager::getInstance().UpdateMusic("Neon");
         SoundManager::getInstance().UpdateMusic("CarRun");
-        SoundManager::getInstance().UpdateMusic("Jangwa");
+        //SoundManager::getInstance().UpdateMusic("Jangwa");
         
         UpdateBullets();
         CheckBulletNPCCollisions(zombies); //check each enemy group
         CheckBulletNPCCollisions(ghosts);
         CheckBulletNPCCollisions(astralGhosts);
+        CheckBulletNPCCollisions(bats);
         MonitorMouseClicks(player, calendar);
         UpdateZombieSpawning(resources, player);
         glowEffect(glowShader, gameState); //update glow shader

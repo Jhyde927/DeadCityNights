@@ -291,9 +291,9 @@ void Player::Reload(){
 bool Player::CheckIfOnPlatform(const std::vector<Platform>& platforms) {
     // Create the player's collision rectangle
     Rectangle playerRect = {
-        position.x + 16,
+        position.x + 30,
         position.y + 24,
-        8,
+        7,
         24 //magic numbers to size hitbox smaller than texture
     };
 
@@ -321,7 +321,9 @@ bool Player::CheckIfOnPlatform(const std::vector<Platform>& platforms) {
 
 void Player::playerPhysics(float deltaTime, std::vector<Platform> platforms){
 
-
+    if (!isOnGround) {
+        velocity.y += gravity * deltaTime;
+    }
 
     // Clamp horizontal velocity
     if (velocity.x > maxSpeedX) {
@@ -349,15 +351,13 @@ void Player::playerPhysics(float deltaTime, std::vector<Platform> platforms){
     }
 
 
-
+    
     position.x += velocity.x * deltaTime;
     position.y += velocity.y * deltaTime;
-    
+    isOnGround = false;
     //playerRect.y = position.y;
     if (CheckIfOnPlatform(platforms)){
         isOnGround = true;
-    }else{
-        isOnGround = false;
     }
 
    
@@ -372,13 +372,6 @@ void Player::playerPhysics(float deltaTime, std::vector<Platform> platforms){
         
         jumping = false;
     }
-
-    if (!isOnGround) {
-        velocity.y += gravity * deltaTime;
-    }
-    
-
-    
 
 }
 

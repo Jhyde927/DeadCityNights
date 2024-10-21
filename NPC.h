@@ -51,6 +51,7 @@ public:
     bool ghost;
     bool teller;
     bool bat;
+    bool MiB;
     int clickCount;
     int interactions;
     float talkTimer;
@@ -68,6 +69,7 @@ public:
     void HandlePolice(Player& player, float& distanceToPlayer, bool& hasTarget);
     void HandleZombie(Player& player, float& distanceToPlayer, bool& hasTarget);
     void HandleGhost(Player& player, float& distanceToPlayer, bool& hasTarget);
+    void HandleMiB(Player& player, float& distanceToPlayer, bool& hasTarget);
     void TakeDamage(int damage);
 };
 

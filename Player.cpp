@@ -94,7 +94,7 @@ void Player::take_damage(int damage) {
         }
         
         if (currentHealth <= 0) {
-
+            can_take_damage = false;
             // Handle player death, like resetting position to apartment
             // Handled elsewhere
         }
@@ -607,13 +607,16 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
     }
 
 
-    
-    if (hitTimer > 0){
-        hitTimer -= GetFrameTime();
-        
-    }else{
-        can_take_damage = true;
+    if (!isDead){
+        if (hitTimer > 0){
+            hitTimer -= GetFrameTime();
+            
+        }else{
+            can_take_damage = true;
+        }
+
     }
+
     // Draw the player
     Color tint = (hitTimer > 0) ? RED : WHITE;
     Vector2 castPos = {(float) position.x, (float) position.y};

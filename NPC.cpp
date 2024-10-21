@@ -42,6 +42,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     ghost = false;
     teller = false;
     bat = false;
+    MiB = false;
     clickCount = 0;
     interactions = 0;
     talkTimer = 0.0f;
@@ -138,7 +139,7 @@ void NPC::HandleNPCInteraction(Player& player){
                         speech = "GaaHh, what do you want?";
                         break;
                     case 2:
-                        speech = "wait\n\nyou're not like the others";
+                        speech = "wait...\n\nyou're not like the others";
                         break;
                     case 3:
                         speech = "maybe you'll believe me";
@@ -308,6 +309,19 @@ void NPC::HandleZombie(Player& player, float& distanceToPlayer, bool& hasTarget)
 
 }
 
+void NPC::HandleMiB(Player& player, float& distanceToPlayer, bool& hasTarget){
+    //MIB follow player up to a point then stops and waits. 
+    if (MiB && distanceToPlayer < 1000){
+        destination = player.position; //move toward player
+        hasTarget = true; //dont go idle
+    }
+    if (MiB && distanceToPlayer <= 150 && hasTarget){
+        hasTarget = false;
+        destination = position; //stop a ways away
+        SetAnimationState(IDLE);
+    }
+}
+
 void NPC::HandlePolice(Player& player, float& distanceToPlayer, bool& hasTarget){
     if (police && distanceToPlayer < detectionRange && agro){ //police chase player
         hasTarget = true;
@@ -355,6 +369,10 @@ void NPC::Update(Player& player) {
     if (!isActive) return;  // Skip update if the NPC is not active
     if (!isZombie) riseTimer = 0;
     float distance_to_player = abs(player.position.x - position.x);
+
+
+
+
     if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
         if (distance_to_player < 20 && !police && !isZombie){
             HandleNPCInteraction(player);
@@ -465,7 +483,7 @@ void NPC::Update(Player& player) {
     bool hasTarget = false;
     attacking = false;
 
-    
+    HandleMiB(player, distance_to_player, hasTarget);
     HandlePolice(player, distance_to_player, hasTarget); //handle distance checks and attack logic. 
     HandleZombie(player, distance_to_player, hasTarget);
     HandleGhost(player, distance_to_player, hasTarget); //also bats
@@ -512,13 +530,10 @@ void NPC::Update(Player& player) {
 
                 if (!isDying) SetAnimationState(IDLE);
 
+            }else{
+                SetAnimationState(IDLE);
             }
-
-
         }
-
-
-
 
         // Check if destination is reached
         if (fabs(position.x - destination.x) < 5.0f && !hasTarget) {
@@ -532,7 +547,7 @@ void NPC::Update(Player& player) {
                 if (hobo){                   
                     SetDestination(2400, 2600); // hobo stays near center
                 }else if (ghost){
-                    SetDestination(3400, 3500); //ghost stays on far left of cemetery
+                    SetDestination(1024, 1800); //ghost stays on far left of cemetery
                 }
                 else{
                     SetDestination(1800, 3000);  //Pedestrians Outside 

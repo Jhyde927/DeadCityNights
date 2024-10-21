@@ -126,12 +126,14 @@ Vector2 pc_start_pos = Vector2{1710, 668};
 Vector2 pstart_by_car = Vector2{1738, 700};
 Vector2 dboxPosition;
 Color ApartmentBgColor {41, 48, 63, 255};
+
+//containers
 std::vector<NPC> npcs;
 std::vector<NPC> zombies;
 std::vector<NPC>hobos;
 std::vector<NPC>ghosts;
 std::vector<NPC>bats;
-
+std::vector<NPC>mibs;
 std::vector<NPC>astralGhosts;
 
 std::vector<Platform> platforms;
@@ -244,6 +246,7 @@ void LoadGameResources(GameResources& resources) {
     resources.healthBorder = LoadTexture("assets/HealthBoarder.png");
     resources.batSheet = LoadTexture("assets/batSheet.png");
     resources.platformTexture = LoadTexture("assets/platform(128x32).png");
+    resources.mibSheet = LoadTexture("assets/mibSheet.png");
 }
 
 void UnloadGameResources(GameResources& resources){
@@ -309,6 +312,7 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.healthBorder);
     UnloadTexture(resources.batSheet);
     UnloadTexture(resources.platformTexture);
+    UnloadTexture(resources.mibSheet);
    
 }
 
@@ -678,6 +682,7 @@ void HandleGraveyardTransition(Player& player, GameCalendar& calendar, std::vect
         gameState = APARTMENT;//wake up back at your apartment with full health.
         player.position.x = apartmentX;
         player.isDead = false;
+
         player.currentHealth = player.maxHealth;
         calendar.AdvanceDay();
 
@@ -719,6 +724,7 @@ void HandleAstralTransition(Player& player, GameCalendar& calendar){
         }
     }else{
         gameState = OUTSIDE;
+        player.gravity = 800; //reset gravity on leaving astral plane. 
         for (NPC& ghost : astralGhosts){
             ghost.agro = false; //ghost lose agro after leaving the plane. 
         }
@@ -1469,8 +1475,6 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
         platform.DrawPlatformTexture(resources.platformTexture, platform.rect);
         
     }
-
-
 
 
     for (NPC& ghost: astralGhosts){
@@ -2312,7 +2316,16 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     }else{
         player_car.position = Vector2{1710, 668};
     }
-    
+    //mibs show up after you get cemetery key. They don't do anything yet. 
+    if (hasCemeteryKey){
+        for (NPC& mib : mibs){
+            mib.Update(player);
+            mib.Render();
+            
+        }
+
+    }
+
 
     teller = false;
     for (NPC& npc : npcs){
@@ -2496,6 +2509,16 @@ void spawnNPCs(GameResources& resources){
         NPC woman2_npc = CreateNPC(resources.woman2Sheet, w_pos, speed, IDLE, true, false);
         woman2_npc.SetDestination(1000, 4000);
         npcs.push_back(woman2_npc);
+    }
+
+    //create mibs
+    int m = 1;
+    for (int i = 0; i < m; i++){
+        Vector2 mib_pos = {static_cast<float>(2220 + i * 100), 700};
+        NPC mib = CreateNPC(resources.mibSheet, mib_pos, speed, IDLE, true, false);
+        mib.SetDestination(2000, 2400);
+        mib.MiB = true;
+        mibs.push_back(mib);
     }
 
     //create Bats

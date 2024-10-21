@@ -72,6 +72,7 @@ struct GameResources {
     Texture2D healthBorder;
     Texture2D batSheet;
     Texture2D platformTexture;
+    Texture2D mibSheet;
 
     Font defaultFont;
 };

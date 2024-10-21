@@ -13,7 +13,7 @@
 #include <string>
 #include <cstdlib>  // For rand and srand
 #include <ctime>    // For seeding rand
-
+#include "shaderControl.h"
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
 
@@ -2464,7 +2464,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 }
 
 
-//NPC zombie(zombieTexture, startPos, 50.0f, WALK, true, true); 
+
 
 // Factory function to create an NPC with default properties
 
@@ -2522,7 +2522,8 @@ void spawnNPCs(GameResources& resources){
     }
 
     //create Bats
-    for (int i = 0; i < 3; i++){
+    int b = 3;
+    for (int i = 0; i < b; i++){
         Vector2 b_pos = {static_cast<float>(2220 + i * 100), 700};
         NPC bat = CreateNPC(resources.batSheet, b_pos, speed, IDLE, false, false);
         bat.SetDestination(2000, 2200);
@@ -2603,29 +2604,27 @@ void DisplayDate(GameCalendar& calendar){
     DrawText(calendar.GetDate().c_str(), screenWidth/2 - 450, 25, 20, WHITE);
 }
 
-void glowEffect(Shader& glowShader, GameState gameState){
-        float time = GetTime();  // Get the total elapsed time
+// void glowEffect(Shader& glowShader, GameState gameState){
+//         float time = GetTime();  // Get the total elapsed time
+//         float minThreshold = 0.2f;
+//         float maxThreshold = 0.6f;
+//         float oscillationSpeed = 0.9f;  // 1 second duration
 
+//         if (gameState == ASTRAL){ //Customized look for astral plane. 
+//             minThreshold = 0.2f;
+//             maxThreshold = 0.3f;
+//             oscillationSpeed = 0.9f;  // 1 second duration
 
-        float minThreshold = 0.2f;
-        float maxThreshold = 0.6f;
-        float oscillationSpeed = 0.9f;  // 1 second duration
+//         }
 
-        if (gameState == ASTRAL){
-            minThreshold = 0.2f;
-            maxThreshold = 0.3f;
-            oscillationSpeed = 0.9f;  // 1 second duration
+//     // Calculate the oscillating glow threshold using a sine wave
+//         float glowThreshold = minThreshold + (maxThreshold - minThreshold) * (0.5f * (1.0f + sin(oscillationSpeed * time)));    
 
-        }
+//         // Set the glowThreshold uniform in the shader
+//         int glowThresholdLocation = GetShaderLocation(glowShader, "glowThreshold");
+//         SetShaderValue(glowShader, glowThresholdLocation, &glowThreshold, SHADER_UNIFORM_FLOAT);
 
-    // Calculate the oscillating glow threshold using a sine wave
-        float glowThreshold = minThreshold + (maxThreshold - minThreshold) * (0.5f * (1.0f + sin(oscillationSpeed * time)));    
-
-        // Set the glowThreshold uniform in the shader
-        int glowThresholdLocation = GetShaderLocation(glowShader, "glowThreshold");
-        SetShaderValue(glowShader, glowThresholdLocation, &glowThreshold, SHADER_UNIFORM_FLOAT);
-
-}
+// }
 
 void handleCamera(Camera2D& camera, float& targetZoom){
         // Handle zoom input
@@ -2660,7 +2659,7 @@ void debugKeys(Player& player){
             }
 
         if (IsKeyPressed(KEY_K)){
-            if (!has_car_key){
+            if (!has_car_key || !hasCemeteryKey){
                 AddItemToInventory("carKeys", inventory, INVENTORY_SIZE);
                 AddItemToInventory("cemeteryKey", inventory, INVENTORY_SIZE);
                 has_car_key = true;
@@ -2769,44 +2768,9 @@ int main() {
     spawnNPCs(resources); //spawn NPCs before rendering them outside
     InitPlatforms();
 
-  ///////////////////SHADERS????????????????????????????????????????????????  
-    // Shader shader = LoadShader("shaders/shaderGlitch.vs", "shaders/shaderGlitch.fs"); //CRT SHADER. Consider a load shader function
-
-
-    Shader glowShader = LoadShader(0, "shaders/glow.fs");
- 
-    float resolution[2] = { (float)screenWidth, (float)screenHeight }; //reuse resolution for multiper shaders
-    float glowThreshold = 0.01f; //threshold for both drunk and glow
-    float glowIntensity = 2.0f; // same intensity for drunk and glow
-    float glowColor[3] = { 0.5f, 1.0f, 2.0f }; //color is for glow
-
-    //Glow 1 animated color
-    SetShaderValue(glowShader, GetShaderLocation(glowShader, "resolution"), resolution, SHADER_UNIFORM_VEC2);
-    SetShaderValue(glowShader, GetShaderLocation(glowShader, "glowColor"), glowColor, SHADER_UNIFORM_VEC3);
-    SetShaderValue(glowShader, GetShaderLocation(glowShader, "glowThreshold"), &glowThreshold, SHADER_UNIFORM_FLOAT);
-
-    //glitch
-    Shader glitchShader = LoadShader(0, "shaders/glitch.fs");
-
-    //Drunk aka glowshader2
-    Shader glowShader2 = LoadShader(0, "shaders/glow2.fs");
-
-
-    int timeLoc = GetShaderLocation(glitchShader, "time"); //used for glitch
-    float totalTime = 0.0f; // Variable to keep track of time
-
-
-    //Drunk shader AKA glowshader2
-    int glowThresholdLoc = GetShaderLocation(glowShader2, "glowThreshold");
-    int glowIntensityLoc = GetShaderLocation(glowShader2, "glowIntensity");
-    int resolutionLoc = GetShaderLocation(glowShader2, "resolution");
-
-    SetShaderValue(glowShader2, glowThresholdLoc, &glowThreshold, SHADER_UNIFORM_FLOAT);   
-    SetShaderValue(glowShader2, glowIntensityLoc, &glowIntensity, SHADER_UNIFORM_FLOAT);
-    SetShaderValue(glowShader2, resolutionLoc, resolution, SHADER_UNIFORM_VEC2);
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////shaders
+    // Initialize shaders
+    ShaderResources shaders; //struct holding all the shaders. 
+    InitShaders(shaders, screenWidth, screenHeight); //refactored shader setup to shaderControl.cpp
     
     // Initialize player
     Player player;
@@ -2832,12 +2796,11 @@ int main() {
     //PlayMusicStream(SoundManager::getInstance().GetMusic("Jangwa"));
     PlayMusicStream(SoundManager::getInstance().GetMusic("Neon"));
 
-    //debug raise zombies on first visit. Comment out before building exe
-    // firstHobo = false;
-    // raiseZombies = true;
-    // drawShovel = true;
-
-
+    Shader glowShader = shaders.glowShader;
+    Shader glitchShader = shaders.glitchShader;
+    Shader glowShader2 = shaders.glowShader2;
+    //int timeLoc = shaders.timeLoc;
+    //float totalTime = 0.0f; // Variable to keep track of time //glitch shader
     // Main game loop
     while (!WindowShouldClose()) {
         Vector2 mousePosition = GetMousePosition();
@@ -2845,7 +2808,6 @@ int main() {
         UpdateInventoryPosition(camera, gameState);
         SoundManager::getInstance().UpdateMusic("Neon");
         SoundManager::getInstance().UpdateMusic("CarRun");
-        //SoundManager::getInstance().UpdateMusic("Jangwa");
         
         UpdateBullets();
         CheckBulletNPCCollisions(zombies); //check each enemy group
@@ -2854,14 +2816,12 @@ int main() {
         CheckBulletNPCCollisions(bats);
         MonitorMouseClicks(player, calendar);
         UpdateZombieSpawning(resources, player);
-        glowEffect(glowShader, gameState); //update glow shader
+        //glowEffect(glowShader, gameState); //update glow shader
         
         float deltaTime = GetFrameTime();
-        totalTime += deltaTime;  //glitch timer
-
-        //set glitchshader
-        SetShaderValue(glitchShader, timeLoc, &totalTime, SHADER_UNIFORM_FLOAT);
-
+    
+        UpdateShaders(shaders, deltaTime, gameState);
+        
         if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_D) || IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)){ //tutorial text
             start = false; //turn off dbox if any movement
         }

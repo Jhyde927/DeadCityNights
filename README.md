@@ -20,6 +20,8 @@ The release is a very early alpha version. Unzip and run game.exe. Windows only 
 Arrow keys left and right or A and D to move. Press up to interact with environment. Press up or click on NPCs to talk to them. Right click or F to aim. Left click or space while aiming to shoot. 1 selects handgun. 2 selects shotgun. Guns only work in the cemetery.
 
 ## Notes
-This started as a project to learn C++. I took a pixel art image I made of a city street at night, and made it into a game. I had this idea that the game would start with you doing mundane tasks like going to work, and helping out NPCs, and sleeping to advance the day. Then when the game reaches a certain date, a zombie apocalypse happens where zombies invade the city street, but for now you can only shoot zombies in the cemetery.
+I've been programming in python and making games in Godot with gd script for like 3 years. I've always wanted to learn C++ so I could eventualy make bigger and better things, but you got to start small. So I'm making a pixel art adventure game in C++ with raylib. I started by taking a piece of pixel art I had made and slowly made it more and more interactive. I added a player character and a camera, then pedestrians, then other areas, and so on until it's like a 15 minute long game you can play.
+
+
 
 I post about making the game on twitter. https://x.com/J_Hyde_

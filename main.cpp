@@ -47,6 +47,7 @@ bool buttonCemetery = false;
 bool buttonInternet = false;
 bool hasCemeteryKey = false;
 bool canGiveFortune = true;
+bool showInternet = false;
 bool firstHobo = true;
 bool firstBlood = false;
 bool drawShovel = false;
@@ -83,6 +84,7 @@ bool zombieWave2 = false;
 bool zombieWave3 = false;
 bool show_dbox = true;
 float dboxTime = 10.0;
+float internetTimer = 0.0;
 float inventoryPositionX = 0.0f;
 float inventoryPositionY = 0.0f;
 float inventoryTargetX = 0.0f;
@@ -394,6 +396,12 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
             Vector2 mousePosition = GetMousePosition();  // Get the mouse position
             Vector2 computerPos = {screenWidth/2 - 10, 587};
 
+            if (buttonInternet && player.hasBadge && !showInternet){
+                showInternet = true;
+                internetTimer = 5.0f;
+            }else{
+                showInternet = false;
+            }
 
             if (buttonSleep && !hasSlept){ ////Go to sleep
                 calendar.AdvanceDay(); 
@@ -469,7 +477,10 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
             if (CheckCollisionPointRec(mousePosition, ComputerBounds) && !showAPUI){
                 showAPUI = true;
             }else{
-                showAPUI = false;
+                if (!showInternet){
+                    showAPUI = false;
+                }
+                
             }
 
 
@@ -1110,8 +1121,22 @@ void DrawApartmentUI(GameResources& resources, GameCalendar&, Vector2& mousePosi
 
 
     if (hasSlept) tint = BLACK;
-    DrawText("     Sleep", TextPos.x, TextPos.y, 20, tint);
-    DrawText("    Internet", TextPos.x, TextPos.y + 21, 20, Itint);
+    
+    if (internetTimer > 0){
+        internetTimer -= GetFrameTime();
+    }
+
+    if (showInternet){
+        if (internetTimer > 0){
+            DrawText("\n\nSEARCHING...\n\nNECRO-TECH", TextPos.x+12, TextPos.y-20, 20, WHITE);
+        }else{
+            DrawText("Adress: \n\n 123 Paper St", TextPos.x, TextPos.y, 20, WHITE);
+        }
+        
+    }else{
+        DrawText("     Sleep", TextPos.x, TextPos.y, 20, tint);
+        DrawText("    Internet", TextPos.x, TextPos.y + 21, 20, Itint);
+    }
 }
 
 
@@ -2704,7 +2729,6 @@ void InitSounds(SoundManager& soundManager){
     SoundManager::getInstance().LoadMusic("Jangwa", "assets/sounds/Jangwa.ogg");
     SoundManager::getInstance().LoadMusic("Neon", "assets/sounds/Neon.ogg");
 
-
     soundManager.LoadSound("gunShot", "assets/sounds/gunShot.ogg");   //misc sounds
     soundManager.LoadSound("BoneCrack", "assets/sounds/BoneCrack.ogg");
     soundManager.LoadSound("reload", "assets/sounds/revolvercock.ogg");
@@ -2749,6 +2773,41 @@ void InitSounds(SoundManager& soundManager){
     SoundManager::getInstance().SetSoundVolume("Owl", 0.5);
 }
 
+void UptoEnter(Player& player, PlayerCar& player_car){
+    //enter places by pressing up 
+    if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
+
+        if (over_apartment && gameState == OUTSIDE){
+            transitionState = FADE_OUT; //Transition to apartment
+            PlaySound(SoundManager::getInstance().GetSound("mainDoor"));
+            over_apartment = false;
+            showInventory = false;
+            //player.position.x = 512; //move player, to move inventory to the middle of the screen. 
+            
+        }
+        //enter car for both outside and cemetery
+        if (over_car && !player.enter_car && has_car_key){
+            //player inside idling car
+            SoundManager::getInstance().PlayMusic("CarRun");
+            PlaySound(SoundManager::getInstance().GetSound("CarStart"));
+            PlaySound(SoundManager::getInstance().GetSound("CarDoorOpen"));
+            player.enter_car = true;
+            over_car = false;
+            player_car.currentFrame = 1;
+
+
+        }
+        if (over_lot && gameState == OUTSIDE){
+            transitionState = FADE_OUT;
+        }
+        if (over_gate && gameState == CEMETERY){
+            transitionState = FADE_OUT;
+            
+        }
+
+    }
+}
+
 
 int main() {
     InitWindow(screenWidth, screenHeight, "Adventure Game");
@@ -2765,8 +2824,6 @@ int main() {
     GameResources resources;
     GameCalendar calendar;
     LoadGameResources(resources);
-    spawnNPCs(resources); //spawn NPCs before rendering them outside
-    InitPlatforms();
 
     // Initialize shaders
     ShaderResources shaders; //struct holding all the shaders. 
@@ -2780,7 +2837,9 @@ int main() {
     InitializePlayerCar(player_car);
     InitializeMagicDoor(magicDoor);
     InitEarth(earth);
-  
+    spawnNPCs(resources); //spawn NPCs before rendering them outside
+    InitPlatforms();
+
     // Initialize the camer
     Camera2D camera = { 0 };
     camera.offset = (Vector2){ screenWidth / 2.0f, screenHeight / 2.0f + 188.0f };  // Screen center + y offset 188 lower ground for bigger sky
@@ -2799,6 +2858,7 @@ int main() {
     Shader glowShader = shaders.glowShader;
     Shader glitchShader = shaders.glitchShader;
     Shader glowShader2 = shaders.glowShader2;
+    
     //int timeLoc = shaders.timeLoc;
     //float totalTime = 0.0f; // Variable to keep track of time //glitch shader
     // Main game loop
@@ -2852,39 +2912,8 @@ int main() {
             }
             
         }
-        //enter places by pressing up
-        if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
 
-            if (over_apartment && gameState == OUTSIDE){
-                transitionState = FADE_OUT; //Transition to apartment
-                PlaySound(SoundManager::getInstance().GetSound("mainDoor"));
-                over_apartment = false;
-                showInventory = false;
-                //player.position.x = 512; //move player, to move inventory to the middle of the screen. 
-                
-            }
-            //enter car for both outside and cemetery
-            if (over_car && !player.enter_car && has_car_key){
-                //player inside idling car
-                SoundManager::getInstance().PlayMusic("CarRun");
-                PlaySound(SoundManager::getInstance().GetSound("CarStart"));
-                PlaySound(SoundManager::getInstance().GetSound("CarDoorOpen"));
-                player.enter_car = true;
-                over_car = false;
-                player_car.currentFrame = 1;
-
-
-            }
-            if (over_lot && gameState == OUTSIDE){
-                transitionState = FADE_OUT;
-            }
-            if (over_gate && gameState == CEMETERY){
-                transitionState = FADE_OUT;
-                
-            }
-
-        }
-
+        UptoEnter(player, player_car);
         handleCamera(camera, targetZoom);
 
         BeginDrawing(); 
@@ -2906,7 +2935,7 @@ int main() {
             DisplayDate(calendar);
 
         }else if (gameState == WORK){
-            ClearBackground(BLACK);
+            ClearBackground(BLACK);//do nothing at the moment
 
         }else if (gameState == LOT){ // vacant lot
             RenderLot(resources, player, camera, mousePosition, glowShader2, glowShader, glitchShader);
@@ -2922,7 +2951,7 @@ int main() {
         }
 
         
-        HandleTransition(player, player_car, calendar, npcs); //Check everyframe for gamestate transition
+        HandleTransition(player, player_car, calendar, npcs); //Check everyframe for gamestate transitions, inside draw to handle fadeouts
         EndDrawing();
 
         EndShaderMode();
@@ -2933,6 +2962,7 @@ int main() {
     // Unload resources and close the window
     UnloadGameResources(resources);
     soundManager.UnloadAllSounds();
+    UnloadShaders(shaders);
     CloseAudioDevice();
     CloseWindow();
 

@@ -62,7 +62,6 @@ void UpdateShaders(ShaderResources& shaders, float deltaTime, GameState& gameSta
         oscillationSpeed = 0.9f;  // 1 second duration
 
     }
-
     // Calculate the oscillating glow threshold using a sine wave
     float glowThreshold = minThreshold + (maxThreshold - minThreshold) * (0.5f * (1.0f + sin(oscillationSpeed * time)));    
 

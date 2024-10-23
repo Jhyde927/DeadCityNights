@@ -65,6 +65,7 @@ void UnloadShaders(ShaderResources& shaders) {
     UnloadShader(shaders.glowShader);
     UnloadShader(shaders.glitchShader);
     UnloadShader(shaders.glowShader2);
+    UnloadShader(shaders.outlineShader);
 }
 
 void UpdateShaders(ShaderResources& shaders, float deltaTime, GameState& gameState) {
@@ -90,6 +91,7 @@ void UpdateShaders(ShaderResources& shaders, float deltaTime, GameState& gameSta
     // Set the glowThreshold uniform in the shader
     int glowThresholdLocation = GetShaderLocation(shaders.glowShader, "glowThreshold");
     SetShaderValue(shaders.glowShader, glowThresholdLocation, &glowThreshold, SHADER_UNIFORM_FLOAT);
+    
 }
 
 

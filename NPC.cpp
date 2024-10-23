@@ -77,16 +77,21 @@ std::string GetRandomPhrase() {
 void NPC::HandleNPCInteraction(Player& player){
         destination = position;//Stop NPC
         interacting = true;
-        idleTime = 5;
+        //idleTime = 5;
         if (dealer) idleTime = 10;
-        if (teller) idleTime = 10;
+        //if (teller) idleTime = 10;
+
+        if (talkTimer > 0){ //click while countdown is going// works for all NPCs? could be trouble
+            talkTimer = 0; //If you click while the hobo is talking, skip the dialog by seting talk timer to 0
+        } 
 
         SetAnimationState(IDLE);
 
         if (!talked && teller){
             talked = true;
             speech = "Fortune: $100";
-            talkTimer = 30;
+            talkTimer = 5;
+            idleTime = 5;
         }
 
         if (!talked && ghost){
@@ -127,9 +132,11 @@ void NPC::HandleNPCInteraction(Player& player){
             agro = true;
         }
 
+
+
         if (hobo && !talked){
             talked = true;
-            
+
             idleTime = 3; //stops NPC while talking
             talkTimer = 3; // ensures this only runs once
             if (interactions == 0){
@@ -244,14 +251,15 @@ void NPC::HandleNPCInteraction(Player& player){
         if (!talked && !hobo && !police && !teller){
             talked = true;
             speech = GetRandomPhrase(); // NPC greets player
-            talkTimer = 30; //limit talking. 30 second cooldown
+            talkTimer = 5; //limit talking. 30 second cooldown
+            idleTime = 5;
         }
         
     }
 
 void NPC::HandleGhost(Player& player, float& distanceToPlayer, bool& hasTarget){
 
-    float distanceY = abs(player.position.y - position.y);
+    float distanceY = abs(player.position.y - position.y); //flying enemies need a Y axis
 
     if ((ghost || bat) && distanceToPlayer < detectionRange){
         if ((ghost || bat) && agro){
@@ -262,14 +270,10 @@ void NPC::HandleGhost(Player& player, float& distanceToPlayer, bool& hasTarget){
 
     }
 
-    // if (ghost && (distanceToPlayer > 25 || distanceY > 25)){
-    //     attacking = false;
-    //     frameSpeed = 8;
-    // }
     frameSpeed = 8;
     attacking = false;
 
-    if ((bat || ghost) && distanceToPlayer <= 25 && distanceY < 25 && !isDying && agro){
+    if ((bat || ghost) && distanceToPlayer <= 25 && distanceY < 25 && !isDying && agro){ //check distanceY as well
         
         attacking = true;
 
@@ -277,7 +281,7 @@ void NPC::HandleGhost(Player& player, float& distanceToPlayer, bool& hasTarget){
             player.take_damage(20);
             PlaySound(SoundManager::getInstance().GetSound("BoneCrack")); 
         }
-        frameSpeed = 14;
+        frameSpeed = 14; //faster swing
         SetAnimationState(ATTACKING);
     }
 
@@ -315,7 +319,7 @@ void NPC::HandleMiB(Player& player, float& distanceToPlayer, bool& hasTarget){
         destination = player.position; //move toward player
         hasTarget = true; //dont go idle
     }
-    if (MiB && distanceToPlayer <= 150 && hasTarget){
+    if (MiB && distanceToPlayer <= 125 && hasTarget){
         hasTarget = false;
         destination = position; //stop a ways away
         SetAnimationState(IDLE);
@@ -330,7 +334,7 @@ void NPC::HandlePolice(Player& player, float& distanceToPlayer, bool& hasTarget)
         frameSpeed = 14; //speed up animation for attacking and chasing. 
         
 
-    }else if (police && distanceToPlayer >= detectionRange){ //police loose player
+    }else if (police && distanceToPlayer >= detectionRange && agro){ //police loose player
         agro = false;
         speed = 50;
         hasTarget = false;
@@ -369,8 +373,6 @@ void NPC::Update(Player& player) {
     if (!isActive) return;  // Skip update if the NPC is not active
     if (!isZombie) riseTimer = 0;
     float distance_to_player = abs(player.position.x - position.x);
-
-
 
 
     if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
@@ -435,7 +437,7 @@ void NPC::Update(Player& player) {
         int numFrames = 0;
         switch (currentAnimation) {
             case IDLE:
-                numFrames = 1;
+                numFrames = 1; // 1 frame for idle
                 if (ghost || bat) numFrames = 7; //ghost idle is 7 frames
                 break;
             case WALK:
@@ -457,7 +459,7 @@ void NPC::Update(Player& player) {
                 break;
 
             case DEATH2:
-                numFrames = 7;
+                numFrames = 7; // 7 frames for dying2
                 break;
 
 
@@ -630,6 +632,10 @@ void NPC::ClickNPC(Vector2 mousePosition, Camera2D& camera, Player& player){
     if (talkTimer > 0){
         talkTimer -= GetFrameTime();
         talked = true; //talk and then wait for player to read message. 
+
+
+
+
     }else{
         talked = false;
         interacting = false; //NPC are only interacting if talk timer is positive.

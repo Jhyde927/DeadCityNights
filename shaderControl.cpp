@@ -13,6 +13,7 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     shaders.glowShader = LoadShader(0, "shaders/glow.fs");
     shaders.glitchShader = LoadShader(0, "shaders/glitch.fs");
     shaders.glowShader2 = LoadShader(0, "shaders/glow2.fs");
+    shaders.outlineShader = LoadShader(0, "shaders/outline.fs");
 
     // Set up shader uniforms
     float resolution[2] = { static_cast<float>(screenWidth), static_cast<float>(screenHeight) };
@@ -37,6 +38,27 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     SetShaderValue(shaders.glowShader2, shaders.glowThresholdLoc, &glowThreshold, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.glowShader2, shaders.glowIntensityLoc, &glowIntensity, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.glowShader2, shaders.resolutionLoc, resolution, SHADER_UNIFORM_VEC2);
+
+
+    //setup outline shader
+
+    // Get uniform locations
+    int outlineColorLoc = GetShaderLocation(shaders.outlineShader, "outlineColor");
+    int thresholdLoc = GetShaderLocation(shaders.outlineShader, "threshold");
+
+    // Set uniform values
+    float outlineColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };  // White color
+    SetShaderValue(shaders.outlineShader, outlineColorLoc, outlineColor, SHADER_UNIFORM_VEC4);
+
+    float threshold = 0.5f;
+    SetShaderValue(shaders.outlineShader, thresholdLoc, &threshold, SHADER_UNIFORM_FLOAT);
+
+
+
+
+
+
+
 }
 
 void UnloadShaders(ShaderResources& shaders) {

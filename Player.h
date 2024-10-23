@@ -6,6 +6,7 @@
 #include "GameEnums.h"
 #include "platform.h"
 #include <vector>
+#include "shaderControl.h"
 
 enum WeaponType {
     REVOLVER,
@@ -50,6 +51,7 @@ public:
     bool hasShotgun;
     bool hasShovel;
     bool hasBadge;
+    bool outline;
 
 
     bool enter_car;
@@ -81,7 +83,7 @@ public:
 
         
         void UpdateMovement(GameResources& resources, GameState& gameState, Vector2& mousePosition, Camera2D& camera,std::vector<Platform> platforms);  // Move the update movement here
-        void DrawPlayer(const GameResources& resources, GameState& gameState, Camera2D& camera);  // Draw player method
+        void DrawPlayer(const GameResources& resources, GameState& gameState, Camera2D& camera, ShaderResources& shaders);  // Draw player method
         void HandleInput(float speed);
         void Reload();
         void reloadLogic(float deltaTime);

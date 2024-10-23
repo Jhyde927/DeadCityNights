@@ -15,14 +15,14 @@ void Platform::Draw() const {
 }
 
 void Platform::DrawPlatformTexture(Texture2D& texture, Rectangle& platformRect) {
-    // Define the source rectangle (the portion of the texture to draw)
+    // Define the source rectangle (the portion of the texture to draw) // wait we can draw only a portion of textures..we could animate this parameter
     Rectangle sourceRec = { 0.0f, 0.0f, (float)texture.width, (float)texture.height };
-    
+
     // Define the destination rectangle (where and how big to draw the texture)
     Rectangle destRec = { 
-        platformRect.x, 
+        platformRect.x, //position
         platformRect.y, 
-        platformRect.width, 
+        platformRect.width, //destination rect width
         platformRect.height 
     };
 

@@ -68,6 +68,7 @@ bool can_talk = true;
 bool buyFortune = false;
 bool teller = false;
 bool dealer = false;
+
 bool can_sell_drugs = true;
 bool applyShader = false;
 bool drunk = false;
@@ -1420,7 +1421,7 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
 
 }
 
-void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoor& magicDoor, Shader& drunkShader, Shader& glowShader, Shader& glitchShader){
+void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoor& magicDoor, ShaderResources& shaders){
     player.gravity = 200;
     if (player.isAiming && IsKeyDown(KEY_F)) {
         // Handle keyboard-only aiming (e.g., using arrow keys or player movement keys)
@@ -1454,23 +1455,22 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
 
     if (applyShader){
         
-        BeginShaderMode(glowShader);
+        BeginShaderMode(shaders.glowShader);
         
     }
 
     if (drunk){
-        BeginShaderMode(drunkShader);
+        BeginShaderMode(shaders.glowShader2);
     }
     
     if (glitch){
-        BeginShaderMode(glitchShader);
+        BeginShaderMode(shaders.glitchShader);
     }
 
     // Draw the background layers
     DrawTexturePro(resources.AstralBackground, {0, 0, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)},
                     {parallaxBackground-1024, -2000, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)}, {0, 0}, 0.0f, WHITE);
 
-    
 
     DrawTexturePro(resources.AstralClouds, {0, 0, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)},
                     {parallaxClouds -1024, 0, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)}, {0, 0}, 0.0f, WHITE);
@@ -1486,7 +1486,9 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
     DrawEarth(resources, earth, camera);
     
     DrawMagicDoor(resources, player, magicDoor);
-    player.DrawPlayer(resources, gameState, camera);
+
+    player.DrawPlayer(resources, gameState, camera, shaders);
+
 
     DrawTexturePro(resources.AstralForeground, {0, 0, static_cast<float>(resources.AstralMidground.width), static_cast<float>(resources.AstralMidground.height)},
                     {0, 0, static_cast<float>(resources.AstralMidground.width), static_cast<float>(resources.AstralMidground.height)}, {0, 0}, 0.0f, WHITE);
@@ -1541,7 +1543,7 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
 }
 
 
-void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_car, Camera2D& camera,Vector2 mousePosition, Shader& drunkShader, Shader& glowShader, Shader& glitchShader){
+void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_car, Camera2D& camera,Vector2 mousePosition, ShaderResources& shaders){
     int carMax = 2800;
     int carMin = 2765;
     
@@ -1638,16 +1640,16 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
 
     if (applyShader){
         
-        BeginShaderMode(glowShader);
+        BeginShaderMode(shaders.glowShader);
         
     }
 
     if (drunk){
-        BeginShaderMode(drunkShader);
+        BeginShaderMode(shaders.glowShader2);
     }
     
     if (glitch){
-        BeginShaderMode(glitchShader);
+        BeginShaderMode(shaders.glitchShader);
     }
 
     // Draw the background layers
@@ -1754,7 +1756,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
     }
 
     if (player.enter_car == false){// if enter car is false, dont render player or update position camera should stay focused on player pos. 
-        player.DrawPlayer(resources, gameState, camera);
+        player.DrawPlayer(resources, gameState, camera, shaders);
 
     }
     DrawBullets(); //draw bullets in cemetery after everything else. 
@@ -1808,7 +1810,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
 
 
 
-void RenderRoad(const GameResources& resources, PlayerCar& player_car,Player& player, Camera2D& camera, Vector2 mousePosition, Shader& drunkShader, Shader& glowShader, Shader& glitchShader){
+void RenderRoad(const GameResources& resources, PlayerCar& player_car,Player& player, Camera2D& camera, Vector2 mousePosition, ShaderResources& shaders){
     if (player_car.position.x < 200 && !reverse_road){//transition to cemetery
         
         transitionState = FADE_OUT;
@@ -1830,16 +1832,16 @@ void RenderRoad(const GameResources& resources, PlayerCar& player_car,Player& pl
 
     if (applyShader){
         
-        BeginShaderMode(glowShader);
+        BeginShaderMode(shaders.glowShader);
         
     }
 
     if (drunk){
-        BeginShaderMode(drunkShader);
+        BeginShaderMode(shaders.glowShader2);
     }
     
     if (glitch){
-        BeginShaderMode(glitchShader);
+        BeginShaderMode(shaders.glitchShader);
     }
 
 
@@ -1899,7 +1901,7 @@ void RenderRoad(const GameResources& resources, PlayerCar& player_car,Player& pl
    
 }
 
-void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vector2 mousePosition,Shader& drunkShader,Shader& glowShader,Shader& glitchShader){
+void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vector2 mousePosition, ShaderResources& shaders){
     if (player.isAiming && IsKeyDown(KEY_F)) {
         // Handle keyboard-only aiming (e.g., using arrow keys or player movement keys)
         if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
@@ -1934,16 +1936,16 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
     
     if (applyShader){
         
-        BeginShaderMode(glowShader);
+        BeginShaderMode(shaders.glowShader);
         
     }
 
     if (drunk){
-        BeginShaderMode(drunkShader);
+        BeginShaderMode(shaders.glowShader2);
     }
     
     if (glitch){
-        BeginShaderMode(glitchShader);
+        BeginShaderMode(shaders.glitchShader);
     }
 
     // Draw the background layers
@@ -1965,7 +1967,7 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
 
     EndShaderMode(); ////////////////////////////SHADER OFF
     if (player.enter_car == false){// if enter car is false, dont render player or update position camera should stay focused on player pos. 
-        player.DrawPlayer(resources, gameState, camera);
+        player.DrawPlayer(resources, gameState, camera, shaders);
 
     }
     for (NPC& zombie : zombies){
@@ -2056,7 +2058,7 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
 
 
 
-void RenderApartment(GameResources& resources, Player player, Vector2 mousePosition, GameCalendar& calendar, Camera2D camera, Shader& drunkShader, Shader& glowShader, Shader& glitchShader){
+void RenderApartment(GameResources& resources, Player player, Vector2 mousePosition, GameCalendar& calendar, Camera2D camera, ShaderResources& shaders){
     player.position.x -= 20; //ensure over_apartment = false
     int screen_center = (screenWidth - resources.apartment.width)/2;
     
@@ -2064,16 +2066,16 @@ void RenderApartment(GameResources& resources, Player player, Vector2 mousePosit
 
    if (applyShader){
         
-        BeginShaderMode(glowShader);
+        BeginShaderMode(shaders.glowShader);
         
     }
 
     if (drunk){
-        BeginShaderMode(drunkShader);
+        BeginShaderMode(shaders.glowShader2);
     }
     
     if (glitch){
-        BeginShaderMode(glitchShader);
+        BeginShaderMode(shaders.glitchShader);
     }
 
     ClearBackground(ApartmentBgColor);
@@ -2114,7 +2116,7 @@ void RenderApartment(GameResources& resources, Player player, Vector2 mousePosit
     
 }
 
-void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition, Shader& drunkShader, Shader& glowShader, Shader& glitchShader){
+void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition,ShaderResources& shaders){
     //Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
     int digPos = 2600;
     if (player.position.x < 2782 && player.position.x > 2742){
@@ -2143,24 +2145,24 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
     float parallaxBackground = camera.target.x * 0.7f;  // Background moves even slower
     
     SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide
-    if (!streetSounds){ 
-        streetSounds = true; //Why do we need this bool? incase we need to turn it off?
-        SoundManager::getInstance().PlayMusic("StreetSounds");
+
+ 
+    //SoundManager::getInstance().PlayMusic("StreetSounds");
         
-    }
+
 
     if (applyShader){
         
-        BeginShaderMode(glowShader);
+        BeginShaderMode(shaders.glowShader);
         
     }
 
     if (drunk){
-        BeginShaderMode(drunkShader);
+        BeginShaderMode(shaders.glowShader2);
     }
     
     if (glitch){
-        BeginShaderMode(glitchShader);
+        BeginShaderMode(shaders.glitchShader);
     }
 
     BeginMode2D(camera);
@@ -2183,7 +2185,7 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
         hobo.ClickNPC(mousePosition, camera, player);
 
         if (hobo.interacting){ 
-            if (firstHobo){ // only raise zombie and draw shovel if it's the fist visit to the hobo
+            if (firstHobo){ // only raise zombie and draw shovel if you have talked the hobo
                 firstHobo = false;
                 raiseZombies = true; // zombies don't spawn until you talk to hobo. 
                 drawShovel = true; //shovel isn't in cemetery until you talk to hobo.
@@ -2209,7 +2211,7 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
         }
     }
     
-    player.DrawPlayer(resources, gameState, camera);
+    player.DrawPlayer(resources, gameState, camera, shaders);
 
     
     EndMode2D();  // End 2D mode 
@@ -2228,8 +2230,8 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
     DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
 }
 
-// Example function to render the outside scene with dynamic camera
-void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, PlayerCar& player_car,MagicDoor& magicDoor, std::vector<NPC>& npcs,Vector2 mousePosition, Shader& drunkShader, Shader& glowShader, Shader& glitchShader) {
+//Main Street
+void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, PlayerCar& player_car,MagicDoor& magicDoor, std::vector<NPC>& npcs,Vector2 mousePosition, ShaderResources& shaders) {
     // Update the camera target to follow the player
     int ap_min = 2246;//over apartment
     int ap_max = 2266;
@@ -2250,11 +2252,11 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 
     SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide or in vacant lot
 
-    if (!streetSounds){ 
-        streetSounds = true; //Why do we need this bool? incase we need to turn it off?
-        SoundManager::getInstance().PlayMusic("StreetSounds");
+
+
+    SoundManager::getInstance().PlayMusic("StreetSounds");
         
-    }
+    
 
 
     if (player_car.position.x < road_min && move_car){
@@ -2270,9 +2272,9 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     over_apartment = false;
     over_lot = false;
     over_car = false;
-    if (player.position.x > pc_min && player.position.x < pc_max){
+    if (player.position.x > pc_min && player.position.x < pc_max){ //over_car
         over_car = true;
-        phrase = "PRESS UP TO ENTER";
+        if (fortuneTimer <= 0) phrase = "PRESS UP TO ENTER"; //Don't interupt the fortune teller
         show_dbox = true;
         dboxPosition = player.position;
         
@@ -2280,18 +2282,18 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     }
 
     
-    if (player.position.x > lot_min && player.position.x < lot_max){
+    if (player.position.x > lot_min && player.position.x < lot_max){ //over_lot
         over_lot = true;
-        phrase = "PRESS UP TO ENTER";
+        if (fortuneTimer <= 0) phrase = "PRESS UP TO ENTER";
         dboxPosition = player.position;
         
         show_dbox = true;
 
     }
     
-    if (player.position.x > ap_min  && player.position.x < ap_max){
+    if (player.position.x > ap_min  && player.position.x < ap_max){ //over_apartment
         over_apartment = true;
-        phrase = "PRESS UP TO ENTER";
+        if (fortuneTimer <= 0) phrase = "PRESS UP TO ENTER";
         dboxPosition = player.position;
         dboxPosition.y = player.position.y + 10;
         show_dbox = true;
@@ -2304,22 +2306,19 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     
     BeginMode2D(camera);  // Begin 2D mode with the camera
     ClearBackground(customBackgroundColor);
-    //BeginShaderMode(shader); /////////////////////////////////////// UNCOMMENT FOR CRT SHADER
-
-
 
     if (applyShader){
         
-        BeginShaderMode(glowShader);
+        BeginShaderMode(shaders.glowShader);
         
     }
 
     if (drunk){
-        BeginShaderMode(drunkShader);
+        BeginShaderMode(shaders.glowShader2);
     }
     
     if (glitch){
-        BeginShaderMode(glitchShader);
+        BeginShaderMode(shaders.glitchShader);
     }
     
      // Draw the background (sky)
@@ -2381,8 +2380,12 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
                 
 
             } else{
-                phrase = npc.speech; //randomized speech
-                dealer = false;
+                if (fortuneTimer <= 0 && !teller && !dealer){
+                    phrase = npc.speech; //randomized speech
+                    dealer = false;
+
+                }
+             
             }
         }else{
             dealer = false;
@@ -2407,9 +2410,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 
     //Draw MagicDoor
     if (applyShader){
-        DrawMagicDoor(resources, player, magicDoor);
-
-        
+        DrawMagicDoor(resources, player, magicDoor);  
     }
 
 
@@ -2430,11 +2431,11 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     if (player.enter_car == false){// if enter car is false, dont render player or update position. camera should stay focused on player pos. 
         SoundManager::getInstance().StopMusic("CarRun");
         //DRAW PLAYER
-        if (!player.enter_car) { // if enter_car is false, don't render player or update position; camera should stay focused on player pos.
-            player.DrawPlayer(resources, gameState, camera);
-
-
-        }
+        
+           
+        player.DrawPlayer(resources, gameState, camera, shaders);
+            
+        
     }
     
     MoveTraffic(resources);//Draw Traffic
@@ -2629,27 +2630,6 @@ void DisplayDate(GameCalendar& calendar){
     DrawText(calendar.GetDate().c_str(), screenWidth/2 - 450, 25, 20, WHITE);
 }
 
-// void glowEffect(Shader& glowShader, GameState gameState){
-//         float time = GetTime();  // Get the total elapsed time
-//         float minThreshold = 0.2f;
-//         float maxThreshold = 0.6f;
-//         float oscillationSpeed = 0.9f;  // 1 second duration
-
-//         if (gameState == ASTRAL){ //Customized look for astral plane. 
-//             minThreshold = 0.2f;
-//             maxThreshold = 0.3f;
-//             oscillationSpeed = 0.9f;  // 1 second duration
-
-//         }
-
-//     // Calculate the oscillating glow threshold using a sine wave
-//         float glowThreshold = minThreshold + (maxThreshold - minThreshold) * (0.5f * (1.0f + sin(oscillationSpeed * time)));    
-
-//         // Set the glowThreshold uniform in the shader
-//         int glowThresholdLocation = GetShaderLocation(glowShader, "glowThreshold");
-//         SetShaderValue(glowShader, glowThresholdLocation, &glowThreshold, SHADER_UNIFORM_FLOAT);
-
-// }
 
 void handleCamera(Camera2D& camera, float& targetZoom){
         // Handle zoom input
@@ -2672,6 +2652,8 @@ void handleCamera(Camera2D& camera, float& targetZoom){
 }
 
 void debugKeys(Player& player){
+
+
         if (IsKeyPressed(KEY_SPACE)){
             std::cout << "Player Position: ";
             PrintVector2(player.position);
@@ -2682,6 +2664,14 @@ void debugKeys(Player& player){
             //     //applyShader = false;
             //     drunk = false;
             }
+
+        if (IsKeyPressed(KEY_O)){
+            if (!player.outline){
+                player.outline = true;
+            }else{
+                player.outline = false;
+            }
+        }
 
         if (IsKeyPressed(KEY_K)){
             if (!has_car_key || !hasCemeteryKey){
@@ -2717,6 +2707,41 @@ void debugKeys(Player& player){
 
         }
 
+}
+
+void UptoEnter(Player& player, PlayerCar& player_car){
+    //enter places by pressing up 
+    if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
+
+        if (over_apartment && gameState == OUTSIDE){
+            transitionState = FADE_OUT; //Transition to apartment
+            PlaySound(SoundManager::getInstance().GetSound("mainDoor"));
+            over_apartment = false;
+            showInventory = false;
+            //player.position.x = 512; //move player, to move inventory to the middle of the screen. 
+            
+        }
+        //enter car for both outside and cemetery
+        if (over_car && !player.enter_car && has_car_key){
+            //player inside idling car
+            SoundManager::getInstance().PlayMusic("CarRun");
+            PlaySound(SoundManager::getInstance().GetSound("CarStart"));
+            PlaySound(SoundManager::getInstance().GetSound("CarDoorOpen"));
+            player.enter_car = true;
+            over_car = false;
+            player_car.currentFrame = 1;
+
+
+        }
+        if (over_lot && gameState == OUTSIDE){
+            transitionState = FADE_OUT;
+        }
+        if (over_gate && gameState == CEMETERY){
+            transitionState = FADE_OUT;
+            
+        }
+
+    }
 }
 
 void InitSounds(SoundManager& soundManager){
@@ -2773,40 +2798,7 @@ void InitSounds(SoundManager& soundManager){
     SoundManager::getInstance().SetSoundVolume("Owl", 0.5);
 }
 
-void UptoEnter(Player& player, PlayerCar& player_car){
-    //enter places by pressing up 
-    if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
 
-        if (over_apartment && gameState == OUTSIDE){
-            transitionState = FADE_OUT; //Transition to apartment
-            PlaySound(SoundManager::getInstance().GetSound("mainDoor"));
-            over_apartment = false;
-            showInventory = false;
-            //player.position.x = 512; //move player, to move inventory to the middle of the screen. 
-            
-        }
-        //enter car for both outside and cemetery
-        if (over_car && !player.enter_car && has_car_key){
-            //player inside idling car
-            SoundManager::getInstance().PlayMusic("CarRun");
-            PlaySound(SoundManager::getInstance().GetSound("CarStart"));
-            PlaySound(SoundManager::getInstance().GetSound("CarDoorOpen"));
-            player.enter_car = true;
-            over_car = false;
-            player_car.currentFrame = 1;
-
-
-        }
-        if (over_lot && gameState == OUTSIDE){
-            transitionState = FADE_OUT;
-        }
-        if (over_gate && gameState == CEMETERY){
-            transitionState = FADE_OUT;
-            
-        }
-
-    }
-}
 
 
 int main() {
@@ -2868,7 +2860,6 @@ int main() {
         UpdateInventoryPosition(camera, gameState);
         SoundManager::getInstance().UpdateMusic("Neon");
         SoundManager::getInstance().UpdateMusic("CarRun");
-        
         UpdateBullets();
         CheckBulletNPCCollisions(zombies); //check each enemy group
         CheckBulletNPCCollisions(ghosts);
@@ -2913,47 +2904,52 @@ int main() {
             
         }
 
-        UptoEnter(player, player_car);
+        UptoEnter(player, player_car);//enter different areas by pressing up
         handleCamera(camera, targetZoom);
 
-        BeginDrawing(); 
+        BeginDrawing();
+
+
 
         if (gameState == OUTSIDE){     
-            RenderOutside(resources, camera, player, player_car, magicDoor, npcs,mousePosition, glowShader2, glowShader, glitchShader); //glowshader2 = drunkshader
+            RenderOutside(resources, camera, player, player_car, magicDoor, npcs,mousePosition, shaders); 
             DisplayDate(calendar);//why not display date once globally? there are reasons 
 
         }else if (gameState == APARTMENT){
-            RenderApartment(resources, player, mousePosition, calendar, camera, glowShader2, glowShader, glitchShader);
+            RenderApartment(resources, player, mousePosition, calendar, camera, shaders);
             DisplayDate(calendar);
 
         }else if (gameState == ROAD){
-            RenderRoad(resources, player_car, player, camera, mousePosition, glowShader2, glowShader, glitchShader);
+            RenderRoad(resources, player_car, player, camera, mousePosition, shaders);
             DisplayDate(calendar);
 
         }else if (gameState == CEMETERY){
-            RenderCemetery(resources, player, player_car, camera,mousePosition, glowShader2, glowShader, glitchShader);
+            RenderCemetery(resources, player, player_car, camera,mousePosition, shaders);
             DisplayDate(calendar);
 
         }else if (gameState == WORK){
             ClearBackground(BLACK);//do nothing at the moment
 
         }else if (gameState == LOT){ // vacant lot
-            RenderLot(resources, player, camera, mousePosition, glowShader2, glowShader, glitchShader);
+            RenderLot(resources, player, camera, mousePosition, shaders);
             DisplayDate(calendar);
 
         }else if (gameState == GRAVEYARD){
-            RenderGraveyard(resources, player, camera, mousePosition, glowShader2, glowShader, glitchShader);
+            RenderGraveyard(resources, player, camera, mousePosition, shaders);
             DisplayDate(calendar);
             
         }else if (gameState == ASTRAL){
             DisplayDate(calendar);
-            RenderAstral(resources, player, camera, mousePosition, earth, magicDoor, glowShader2, glowShader, glitchShader);
+            RenderAstral(resources, player, camera, mousePosition, earth, magicDoor, shaders);
         }
 
+        //show FPS
+        int fps = GetFPS();
+        
+        DrawText(std::to_string(fps).c_str(), 935, 935, 25, WHITE);
         
         HandleTransition(player, player_car, calendar, npcs); //Check everyframe for gamestate transitions, inside draw to handle fadeouts
         EndDrawing();
-
         EndShaderMode();
         
         

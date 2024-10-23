@@ -51,7 +51,7 @@ Player::Player() {
     canShoot = true;
     hasGun = false;
     hasShotgun = false;
-
+    outline = false;
     hasShovel = false;
     hasBadge = false;
     enter_car = false;
@@ -533,7 +533,7 @@ void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vec
 
 
 // Method for drawing the player
-void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Camera2D& camera) {
+void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Camera2D& camera, ShaderResources& shaders) {
     Texture2D currentSheet;
     Rectangle sourceRec;
     int frameWidth = 64; // Assuming each frame is 64 pixels wide
@@ -620,8 +620,9 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
     // Draw the player
     Color tint = (hitTimer > 0) ? RED : WHITE;
     Vector2 castPos = {(float) position.x, (float) position.y};
+    if (outline) BeginShaderMode(shaders.outlineShader);
     DrawTextureRec(currentSheet, sourceRec, castPos, tint);  // Draw the player based on the current state
-    
+    EndShaderMode();
 
 }
 

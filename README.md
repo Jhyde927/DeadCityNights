@@ -24,8 +24,7 @@ I've been programming in python and making games in Godot with gd script for lik
 
 Once I found out how easy it is to use shaders in raylib, I had the idea of making visual effects for the players state of mind. Like you can buy drugs off a dealer on the street, and when you take them I activates a glow shader that makes it look like the player is high. When zombies are spawning I play a glitch shader that adds to the tension. I also made a drunk shader, but havn't implemented booze yet. Since the style of the game is so simple, shaders can add some more art to the game, that I don't have to draw manualy. 
 
-This has been the perfect project to learn C++. Making a game with no engine requires you to structure the whole thing yourself. You have to think about all the peices of the puzzle and how they will fit together in the future. I scrapped and rewrote the whole game like 3 times when I first was starting. I put all the big things into their own seperate classes with header and cpp files, and it has helped keep things orginized enough for me to keep adding to it without breaking it, while I better learn cpp. 
-
+This has been the perfect project to learn C++. Making a game with no engine requires you to structure the whole thing yourself. You have to think about all the peices of the puzzle and how they will fit together in the future. I scrapped and rewrote the whole game like 3 times when I first was starting. I put all the big things into their own seperate classes with header and cpp files, and it has helped keep things organized enough for me to keep adding to it without breaking it, while I better learn cpp. 
 
 I post about making the game on twitter. https://x.com/J_Hyde_
 Check out the other games I have made. https://jhyde.itch.io

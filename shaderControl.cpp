@@ -14,6 +14,8 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     shaders.glitchShader = LoadShader(0, "shaders/glitch.fs");
     shaders.glowShader2 = LoadShader(0, "shaders/glow2.fs");
     shaders.outlineShader = LoadShader(0, "shaders/outline.fs");
+    shaders.vignetteShader = LoadShader(0, "shaders/vignette.fs");
+    shaders.glitchVignetteShader = LoadShader(0, "shaders/glitchVignetteShader.fs");
 
     // Set up shader uniforms
     float resolution[2] = { static_cast<float>(screenWidth), static_cast<float>(screenHeight) };
@@ -53,7 +55,46 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     float threshold = 0.5f;
     SetShaderValue(shaders.outlineShader, thresholdLoc, &threshold, SHADER_UNIFORM_FLOAT);
 
+    //setup vignette
 
+    int resolutionLoc = GetShaderLocation(shaders.vignetteShader, "resolution");
+    int radiusLoc = GetShaderLocation(shaders.vignetteShader, "radius");
+    int softnessLoc = GetShaderLocation(shaders.vignetteShader, "softness");
+
+    // Set the uniform values
+    //float resolution[2] = { (float)screenWidth, (float)screenHeight };
+    SetShaderValue(shaders.vignetteShader, resolutionLoc, resolution, SHADER_UNIFORM_VEC2);
+
+    // Vignette effect parameters
+    float radius = 0.80f;    // Starting radius (0.0 to 1.0)
+    float softness = 0.45f;  // Softness of the edges
+
+    SetShaderValue(shaders.vignetteShader, radiusLoc, &radius, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shaders.vignetteShader, softnessLoc, &softness, SHADER_UNIFORM_FLOAT);
+
+
+    //setup glitchVignetteShader
+
+    int glitchStrengthLoc = GetShaderLocation(shaders.glitchVignetteShader, "glitchStrength");
+    int maxGlitchOffsetLoc = GetShaderLocation(shaders.glitchVignetteShader, "maxGlitchOffset");
+
+
+    shaders.timeLoc = GetShaderLocation(shaders.glitchVignetteShader, "time");
+    resolutionLoc = GetShaderLocation(shaders.glitchVignetteShader, "resolution");
+    int radiusLoc2 = GetShaderLocation(shaders.glitchVignetteShader, "radius");
+    int softnessLoc2 = GetShaderLocation(shaders.glitchVignetteShader, "softness");
+
+
+    SetShaderValue(shaders.glitchVignetteShader, resolutionLoc, resolution, SHADER_UNIFORM_VEC2);
+
+    SetShaderValue(shaders.glitchVignetteShader, radiusLoc2, &radius, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shaders.glitchVignetteShader, softnessLoc2, &softness, SHADER_UNIFORM_FLOAT);
+
+    float glitchStrength = 0.1f;   // Adjust as needed
+    float maxGlitchOffset = 0.01f; // Adjust as needed
+
+    SetShaderValue(shaders.glitchVignetteShader, glitchStrengthLoc, &glitchStrength, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shaders.glitchVignetteShader, maxGlitchOffsetLoc, &maxGlitchOffset, SHADER_UNIFORM_FLOAT);
 
 
 
@@ -71,7 +112,9 @@ void UnloadShaders(ShaderResources& shaders) {
 void UpdateShaders(ShaderResources& shaders, float deltaTime, GameState& gameState) {
     // Update time for glitch shader
     shaders.totalTime += deltaTime;
-    SetShaderValue(shaders.glitchShader, shaders.timeLoc, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
+
+    //SetShaderValue(shaders.glitchShader, shaders.timeLoc, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shaders.glitchVignetteShader, shaders.timeLoc, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
 
     ///update glowShader
     float time = GetTime();  // Get the total elapsed time

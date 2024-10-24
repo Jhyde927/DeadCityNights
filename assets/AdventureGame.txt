@@ -201,12 +201,43 @@ I think weak jump, more player input is better even if it doesn't do anything.
 
 If the player jumps and shoots at the same time he dives like the matrix. Dodge roll? invincibility frames as a way to slide by zombies without being hit. There is not enough combat to justify a mechanic like this. Are we making a platformer or an adventure game? Leave the jump for now and see what happens.
 
-need sound when taking pills
+need sound when taking pills x
 
-when you receive the cemetery key, raiseZombies = true
+when you receive the cemetery key, raiseZombies = true x
 
 Need another enemy. Flying enemy? crows wont work. They are too dark. outline them. red eyes. act like swarm
 
+make the health bar green. Health bar looks too much like a platform. give it a texture? like a thermometer semi transparent
+
+ghost in graveyard needs to stay on the left side. narrow it's destination range. 
+
+Enemies on platforms. ghosts can fly? ghost should be able to track the player on the y axis as well. astral ghost start agro?
+
+Added enemy bats. seems lame. Redo sprite. Needs better behavior. whats the point of bats if they only move left and right.  
+
+wait...\n\n your not like the others
+
+Need ranged enemy. slow projectile, enemy people. cultists, private contractors. Men in black. 
+
+added MiB. They show up after you get the cemetery key. What could they do? if you click on them you die and wake up back at the apartment. Maybe they follow you upto say 150 pixels then stop. if closer they stay stopped. otherwise follow
+
+Maybe the mib will show up on the astral plane, they will carry guns as well.
+
+need a check so that fortune tellers dialog is prioritized. Teller var. if !teller
+
+Solved long standing bug with NPC speech. You can now skip dialog by clicking or pressing up. solves a host of other issues. If you click the npc a second time it stops the talk timer. It was that easy, just needed to not look at it for a while to see. 
+
+revisit platforming later maybe you will find fixes for some of those bugs. 
+
+I wonder if I could take my bat sprite and add a shader to just that draw call, then do some funky shader stuff to turn the bat into an astral bat. Shimmering semi transparent wraith like apparition.  
+
+added outline shader to player. Maybe it's better this way all the time? 
+
+continue with shaders on other sprites. ghost could glow, bats could be astral bats, could we do blood with shaders?
+
+we could active outline shader when on drugs. or a glitch shader on the player or something else. 
+
+bullets could glow. 
 
 
 

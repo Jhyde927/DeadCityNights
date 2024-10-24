@@ -12,6 +12,8 @@ struct ShaderResources {
     Shader glitchShader;
     Shader glowShader2;
     Shader outlineShader;
+    Shader vignetteShader;
+    Shader glitchVignetteShader;
     int timeLoc;
     int glowThresholdLoc;
     int glowIntensityLoc;

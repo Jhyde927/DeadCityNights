@@ -73,6 +73,7 @@ bool can_sell_drugs = true;
 bool applyShader = false;
 bool drunk = false;
 bool glitch = false;
+bool vignette = true; //start vignette
 bool openMagicDoor = false;
 bool move_car = false;
 bool showHealthbar = false;
@@ -1453,18 +1454,24 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
         if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
     } 
 
+    if (vignette){ //vignette first so others can override. 
+        BeginShaderMode(shaders.vignetteShader);
+    }
+
     if (applyShader){
-        
+
         BeginShaderMode(shaders.glowShader);
         
     }
 
     if (drunk){
         BeginShaderMode(shaders.glowShader2);
+
     }
     
     if (glitch){
-        BeginShaderMode(shaders.glitchShader);
+        BeginShaderMode(shaders.glitchVignetteShader);
+
     }
 
     // Draw the background layers
@@ -1638,18 +1645,25 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
     //BeginShaderMode(shader);
 
 
+    if (vignette){ //vignette first so others can override. 
+        BeginShaderMode(shaders.vignetteShader);
+    }
+
     if (applyShader){
-        
+
         BeginShaderMode(shaders.glowShader);
         
     }
 
     if (drunk){
         BeginShaderMode(shaders.glowShader2);
+
     }
     
     if (glitch){
-        BeginShaderMode(shaders.glitchShader);
+        //BeginShaderMode(shaders.glitchShader);
+        BeginShaderMode(shaders.glitchVignetteShader);
+ 
     }
 
     // Draw the background layers
@@ -1830,20 +1844,27 @@ void RenderRoad(const GameResources& resources, PlayerCar& player_car,Player& pl
 
     hasSlept = false; // player can sleep if they have traveled.
 
+
+    if (vignette){ //vignette first so others can override. 
+        BeginShaderMode(shaders.vignetteShader);
+    }
+
     if (applyShader){
-        
+
         BeginShaderMode(shaders.glowShader);
         
     }
 
     if (drunk){
         BeginShaderMode(shaders.glowShader2);
+
     }
     
     if (glitch){
-        BeginShaderMode(shaders.glitchShader);
-    }
+        BeginShaderMode(shaders.glitchVignetteShader);
 
+    }
+    
 
 
     BeginMode2D(camera);
@@ -1934,18 +1955,24 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
     float parallaxTrees = camera.target.x * 0.8;
     float parallaxBackground = camera.target.x * 0.9f;  // Background moves even slower 
     
+    if (vignette){ //vignette first so others can override. 
+        BeginShaderMode(shaders.vignetteShader);
+    }
+
     if (applyShader){
-        
+
         BeginShaderMode(shaders.glowShader);
         
     }
 
     if (drunk){
         BeginShaderMode(shaders.glowShader2);
+
     }
     
     if (glitch){
-        BeginShaderMode(shaders.glitchShader);
+        BeginShaderMode(shaders.glitchVignetteShader);
+
     }
 
     // Draw the background layers
@@ -2064,18 +2091,24 @@ void RenderApartment(GameResources& resources, Player player, Vector2 mousePosit
     
      //Vector2 drawerPos = {screenWidth/2 + 160, 730};
 
-   if (applyShader){
-        
+    if (vignette){ //vignette first so others can override. 
+        BeginShaderMode(shaders.vignetteShader);
+    }
+
+    if (applyShader){
+
         BeginShaderMode(shaders.glowShader);
         
     }
 
     if (drunk){
         BeginShaderMode(shaders.glowShader2);
+
     }
     
     if (glitch){
-        BeginShaderMode(shaders.glitchShader);
+        BeginShaderMode(shaders.glitchVignetteShader);
+
     }
 
     ClearBackground(ApartmentBgColor);
@@ -2162,7 +2195,7 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
     }
     
     if (glitch){
-        BeginShaderMode(shaders.glitchShader);
+        BeginShaderMode(shaders.glitchVignetteShader);
     }
 
     BeginMode2D(camera);
@@ -2306,19 +2339,25 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     
     BeginMode2D(camera);  // Begin 2D mode with the camera
     ClearBackground(customBackgroundColor);
+    if (vignette){ //vignette first so others can override. 
+        BeginShaderMode(shaders.vignetteShader);
+    }
 
     if (applyShader){
-        
+
         BeginShaderMode(shaders.glowShader);
         
     }
 
     if (drunk){
         BeginShaderMode(shaders.glowShader2);
+
     }
-    
+
     if (glitch){
-        BeginShaderMode(shaders.glitchShader);
+        BeginShaderMode(shaders.glitchVignetteShader);
+   
+
     }
     
      // Draw the background (sky)
@@ -2561,9 +2600,9 @@ void spawnNPCs(GameResources& resources){
 
 
     //create ghost // call update on ghost where ever needed like graveyard or cemetery
-    Vector2 g_pos = {2000, 700};
+    Vector2 g_pos = {2100, 700};
     NPC ghost_npc = CreateNPC(resources.ghostSheet, g_pos, speed, IDLE, false, false);
-    ghost_npc.SetDestination(2000, 2200);
+    ghost_npc.SetDestination(2100, 2200);
     ghost_npc.ghost = true;
     ghost_npc.maxHealth = 500;
     ghost_npc.health = 500;
@@ -2847,9 +2886,6 @@ int main() {
     //PlayMusicStream(SoundManager::getInstance().GetMusic("Jangwa"));
     PlayMusicStream(SoundManager::getInstance().GetMusic("Neon"));
 
-    Shader glowShader = shaders.glowShader;
-    Shader glitchShader = shaders.glitchShader;
-    Shader glowShader2 = shaders.glowShader2;
     
     //int timeLoc = shaders.timeLoc;
     //float totalTime = 0.0f; // Variable to keep track of time //glitch shader

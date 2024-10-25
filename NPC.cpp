@@ -302,6 +302,7 @@ void NPC::HandleZombie(Player& player, float& distanceToPlayer, bool& hasTarget)
    
     if (isZombie && distanceToPlayer < 15.0f && riseTimer <= 0 && !isDying) { //zombie attack
         attacking = true;
+        destination = position;
         if (player.hitTimer <= 0){
             player.take_damage(10);
             PlaySound(SoundManager::getInstance().GetSound("BoneCrack")); 

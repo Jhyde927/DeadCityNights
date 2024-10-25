@@ -148,12 +148,100 @@ If you don't attack the ghost he gives a mission to find something for him.
 shotgun shells icon. digspot with shotgun shells. 
 
 fortune teller is fucked. remove and start over. 
+fixed fortune teller. She just displays a random fortune for 100 dollars. Leave it for now. 
 
 Drugs allow you to see hidden door somewhere outside. Draw this hidden door. 
 
+Hidden door leads to another parallax background image.Use existing art, bus stop drawing. or draw something new. Like what?
+Outer space with planets in the background, parallax clouds roll by. What is the point of this new area? Maybe you can help the ghost character by visiting the astral plane and recovering a lost relic of some kind. What relic? A pocket watch, ring, amulet, 
+Pocket watch seems like it fits. He lost his watch and is doomed to haunt the graveyard until it is returned. Maybe he comes back to life if you return the watch. 
 
+What enemies could be in the astral plane. Maybe you will be running on top of clouds with a space scene in the background with ghosts attacking you. Maybe a skeleton NPC just because of Halloween. Animate a skeleton walking then. 
+
+Implemented the astral plane. You access it by taking drugs and opening the magic door. I just drew parallax layers of clouds in the same color pallet. Consider a more technicolor palette. Drug shader effect stays on when in the astral realm. Consider a different shader, maybe the same glow shader with different parameters. 
+
+The plan was, the ghost asks you to find his lost relic. He speaks in riddles and rhymes. Something about a door and an altered mind. Giving the hint that you need to take drug to find his lost relic. It's a bit obtuse. His lost relic is an old pocket watch. Why would you find a pocket watch in the astral realm. You need to fight a boss? A witch. A giant steam punk clockwork automaton. A giant spider. A disembodied head. A scare crow. 
+
+Guns work on the astral plane. Need mini ghosts or spirits of some kind. Flying enemies. Diver bomb the player and are only able to be hit when diving down to player level. Crows? that circle. Just like rad city crows. Needs to be evil spirits or something that fits with the astral realm. 
+
+what else. Implemented reverse road car headlights/break lights. light_scale = -1.0 // Negative scale to flip horizontally 
+
+Had chatGPT come up with rhymes that the ghost says. I got a list of a million of them. Need to turn off ghost agro when leaving the area. Moved ghost to graveyard instead of cemetery. To spread things out more. 
+
+Added notes to github, so there is a record of this madness. 
+
+Added my own original background track. It's only 3:30 minutes long. Not long enough. gets repetative. Need another music track for when zombies are spawning, new song while in astral realm. Slow down play back when on drugs? Maybe add echo effect. Just have 2 different tracks. One for sober, one for drugged. Play the song in reverse and see how it sounds. 
+
+Make your own mixer. Tracks can be playing without being heard? So we can fade from one to another and have it be lined up. 
+Add seek function to sound manager.
+
+added shovel pickup sound effect. 
+
+bug on cemetery near shovel pickup. bullets get stopped by an invisible barrier some how. ** ghost is blocking bullets from beyond the grave.Ghost was set to active while outside of graveyard. **set ghost.isactive to false before setting it true when rendering graveyard. I think NPCs outside are set to active outside of outside? Doesn't seem to effect things. They don't stop bullets because they are not zombies or ghosts. What happens if you want pedestrian NPCs to get hit by bullets. I don't want that.  
  
+leaving outside by car, car speed is still set to fast after return from cemetery
 
+Gotta try a new song. current one is too...I don't know what. The beat gets in the way lets say. 
+
+Needs to be like a ambient synth wave. Or like a solo acoustic guitar. and it plays a little riff every time you interact. Since we are also playing street noise it has to be minimal I think. take another stab at a super ambient no melody background swells. 
+
+it takes all day to write a song. 
+
+Astral Traders: Merchants who sell unique items or artifacts not available elsewhere.
+
+Verticality. The player can some how move to higher platforms. floating platforms on the astral plane. Player takes doors that teleport the player to a higher platform. jump pads. jetpack. ability to fly. Maybe flight with very low gravity. 
+"Press space bar to fly". flying animation. 
+
+added another cloud layer. 
+
+Added physics to player. Velocity, acceleration/deceleration, jump, gravity, isOnFloor ect. 
+
+Do we just not allow jumping unless it's the astral plane? Or do we leave a weak jump and then a strong jump when in astral. 
+I think weak jump, more player input is better even if it doesn't do anything. 
+
+If the player jumps and shoots at the same time he dives like the matrix. Dodge roll? invincibility frames as a way to slide by zombies without being hit. There is not enough combat to justify a mechanic like this. Are we making a platformer or an adventure game? Leave the jump for now and see what happens.
+
+need sound when taking pills x
+
+when you receive the cemetery key, raiseZombies = true x
+
+Need another enemy. Flying enemy? crows wont work. They are too dark. outline them. red eyes. act like swarm
+
+make the health bar green. Health bar looks too much like a platform. give it a texture? like a thermometer semi transparent
+
+ghost in graveyard needs to stay on the left side. narrow it's destination range. 
+
+Enemies on platforms. ghosts can fly? ghost should be able to track the player on the y axis as well. astral ghost start agro?
+
+Added enemy bats. seems lame. Redo sprite. Needs better behavior. whats the point of bats if they only move left and right.  
+
+wait...\n\n your not like the others
+
+Need ranged enemy. slow projectile, enemy people. cultists, private contractors. Men in black. 
+
+added MiB. They show up after you get the cemetery key. What could they do? if you click on them you die and wake up back at the apartment. Maybe they follow you up to say 150 pixels then stop. if closer they stay stopped. otherwise follow
+
+Maybe the mib will show up on the astral plane, they will carry guns as well.
+
+need a check so that fortune tellers dialog is prioritized. Teller var. if !teller
+
+Solved long standing bug with NPC speech. You can now skip dialog by clicking or pressing up. solves a host of other issues. If you click the npc a second time it stops the talk timer. It was that easy, just needed to not look at it for a while to see. 
+
+revisit platforming later maybe you will find fixes for some of those bugs. 
+
+I wonder if I could take my bat sprite and add a shader to just that draw call, then do some funky shader stuff to turn the bat into an astral bat. Shimmering semi transparent wraith like apparition.  
+
+added outline shader to player. Maybe it's better this way all the time? 
+
+continue with shaders on other sprites. ghost could glow, bats could be astral bats, could we do blood with shaders?
+
+we could active outline shader when on drugs. or a glitch shader on the player or something else. 
+
+bullets could glow. add shader to street lights?
+
+After dying, going to the cemetery doesn't work on the first try. It fades out then fades back to street. 
+
+Policeman is broken. 
 
 
 

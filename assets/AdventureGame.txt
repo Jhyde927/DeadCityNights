@@ -219,7 +219,7 @@ wait...\n\n your not like the others
 
 Need ranged enemy. slow projectile, enemy people. cultists, private contractors. Men in black. 
 
-added MiB. They show up after you get the cemetery key. What could they do? if you click on them you die and wake up back at the apartment. Maybe they follow you upto say 150 pixels then stop. if closer they stay stopped. otherwise follow
+added MiB. They show up after you get the cemetery key. What could they do? if you click on them you die and wake up back at the apartment. Maybe they follow you up to say 150 pixels then stop. if closer they stay stopped. otherwise follow
 
 Maybe the mib will show up on the astral plane, they will carry guns as well.
 
@@ -237,7 +237,11 @@ continue with shaders on other sprites. ghost could glow, bats could be astral b
 
 we could active outline shader when on drugs. or a glitch shader on the player or something else. 
 
-bullets could glow. 
+bullets could glow. add shader to street lights?
+
+After dying, going to the cemetery doesn't work on the first try. It fades out then fades back to street. 
+
+Policeman is broken. 
 
 
 

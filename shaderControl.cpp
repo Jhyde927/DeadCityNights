@@ -66,8 +66,8 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     SetShaderValue(shaders.vignetteShader, resolutionLoc, resolution, SHADER_UNIFORM_VEC2);
 
     // Vignette effect parameters
-    float radius = 0.80f;    // Starting radius (0.0 to 1.0)
-    float softness = 0.45f;  // Softness of the edges
+    float radius = 0.950f;    // Starting radius (0.0 to 1.0)
+    float softness = 0.6f;  // Softness of the edges
 
     SetShaderValue(shaders.vignetteShader, radiusLoc, &radius, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.vignetteShader, softnessLoc, &softness, SHADER_UNIFORM_FLOAT);
@@ -90,7 +90,7 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     SetShaderValue(shaders.glitchVignetteShader, radiusLoc2, &radius, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.glitchVignetteShader, softnessLoc2, &softness, SHADER_UNIFORM_FLOAT);
 
-    float glitchStrength = 0.1f;   // Adjust as needed
+    float glitchStrength = 0.05f;   // Adjust as needed
     float maxGlitchOffset = 0.01f; // Adjust as needed
 
     SetShaderValue(shaders.glitchVignetteShader, glitchStrengthLoc, &glitchStrength, SHADER_UNIFORM_FLOAT);

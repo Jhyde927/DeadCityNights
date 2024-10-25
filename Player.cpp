@@ -607,15 +607,15 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
     }
 
 
-    if (!isDead){
-        if (hitTimer > 0){
-            hitTimer -= GetFrameTime();
-            
-        }else{
-            can_take_damage = true;
-        }
 
+    if (hitTimer > 0){
+        hitTimer -= GetFrameTime();
+        
+    }else{
+        can_take_damage = true;
     }
+
+    
 
     // Draw the player
     Color tint = (hitTimer > 0) ? RED : WHITE;

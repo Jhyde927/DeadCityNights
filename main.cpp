@@ -620,7 +620,7 @@ void spawnZombies(GameResources& resources,int zombie_count){
 }
 
 
-void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<NPC>& npcs) {
+void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<NPC>& npcs, GameCalendar calendar) {
     if (move_car && !gotoWork) {  // Car is moving, go to road
         gameState = ROAD;
         player_car.facingLeft = true;  // Leaving outside = face left
@@ -634,6 +634,8 @@ void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<
         gameState = APARTMENT;
         player.position.x = apartmentX;
         player.currentHealth = player.maxHealth;
+        player.isDead = false;
+        calendar.AdvanceDay();
         for (NPC& npc : npcs) {
             if (npc.police) {
                 npc.agro = false;  // Turn off police aggression
@@ -749,7 +751,7 @@ void PerformStateTransition(Player& player, PlayerCar& player_car, GameCalendar&
     //if we are fading out switch to the next area depending on the situation. 
     switch (gameState) {
         case OUTSIDE:
-            HandleOutsideTransition(player, player_car, npcs);
+            HandleOutsideTransition(player, player_car, npcs, calendar);
             break;
         case APARTMENT:
             HandleApartmentTransition(player);
@@ -1413,10 +1415,9 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
             for (NPC& npc: npcs)
                 if (npc.teller){
                     npc.idleTime = 10;
-                    npc.talkTimer = 30;
+                    npc.talkTimer = 10;
                 } 
         }
-
 
     }
 
@@ -2183,19 +2184,25 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
     //SoundManager::getInstance().PlayMusic("StreetSounds");
         
 
+   if (vignette){ //vignette first so others can override. 
+        BeginShaderMode(shaders.vignetteShader);
+    }
 
     if (applyShader){
-        
+
         BeginShaderMode(shaders.glowShader);
         
     }
 
     if (drunk){
         BeginShaderMode(shaders.glowShader2);
+
     }
     
     if (glitch){
+        //BeginShaderMode(shaders.glitchShader);
         BeginShaderMode(shaders.glitchVignetteShader);
+ 
     }
 
     BeginMode2D(camera);
@@ -2882,7 +2889,10 @@ int main() {
     inventoryPositionY = player.position.y;  
     SetTargetFPS(60);
     dboxPosition = player.position;
-    AddItemToInventory("Drugs", inventory, INVENTORY_SIZE);
+    
+    //AddItemToInventory("Drugs", inventory, INVENTORY_SIZE);
+
+
     //PlayMusicStream(SoundManager::getInstance().GetMusic("Jangwa"));
     PlayMusicStream(SoundManager::getInstance().GetMusic("Neon"));
 

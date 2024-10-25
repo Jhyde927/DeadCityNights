@@ -327,14 +327,14 @@ void NPC::HandleMiB(Player& player, float& distanceToPlayer, bool& hasTarget){
 }
 
 void NPC::HandlePolice(Player& player, float& distanceToPlayer, bool& hasTarget){
-    if (police && distanceToPlayer < detectionRange && agro){ //police chase player
+    if (police && distanceToPlayer < detectionRange && agro && !attacking){ //police chase player
         hasTarget = true;
         destination = player.position;
         speed = 75;
         frameSpeed = 14; //speed up animation for attacking and chasing. 
         
 
-    }else if (police && distanceToPlayer >= detectionRange && agro){ //police loose player
+    }else if (police && distanceToPlayer >= detectionRange && agro && !attacking){ //police loose player
         agro = false;
         speed = 50;
         hasTarget = false;
@@ -345,8 +345,8 @@ void NPC::HandlePolice(Player& player, float& distanceToPlayer, bool& hasTarget)
 
 
     if (police && distanceToPlayer < 20.0f && hasTarget && agro && !isDying){ // police attack player
-        idleTime = 0.1f; //transition to idle before attacking so it doesn't flicker. 
-        
+        idleTime = 0.0f; //transition to idle before attacking so it doesn't flicker. 
+        destination = position;
         attacking = true;
         if (player.can_take_damage && currentFrame == 5){ //only hit on frame 5. 
             player.take_damage(10);

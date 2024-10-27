@@ -26,6 +26,7 @@ public:
     bool jumping;
     bool onPlatform;
     float fallTimer;
+    float stunTimer;
     float walkSpeed;
     float runSpeed;
     int currentFrame;    // Current animation frame
@@ -90,6 +91,7 @@ public:
         void playerPhysics(float deltaTime, std::vector<Platform> platforms);
         void updateAnimations(GameResources& resources);
         bool CheckIfOnPlatform(const std::vector<Platform>& platforms);
+        void stunPlayer(float& time);
 
 
         

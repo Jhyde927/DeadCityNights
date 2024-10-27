@@ -41,6 +41,7 @@ Player::Player() {
     currentFrame = 0;
     frameCounter = 0.0f;
     frameSpeed = 12.0f;
+    stunTimer = 0.0;
     isDead = false;
     isMoving = false;
     facingRight = true;
@@ -82,6 +83,7 @@ void Player::take_damage(int damage) {
 
         if (can_take_damage && !isDead){
             hitTimer = 0.9f; // tint the sprite red for .3 seconds
+        
             can_take_damage = false;
             currentHealth -= damage;
 
@@ -351,8 +353,10 @@ void Player::playerPhysics(float deltaTime, std::vector<Platform> platforms){
     }
 
 
+    if (stunTimer <= 0){
+        position.x += velocity.x * deltaTime;
+    }
     
-    position.x += velocity.x * deltaTime;
     position.y += velocity.y * deltaTime;
     isOnGround = false;
     //playerRect.y = position.y;
@@ -373,6 +377,12 @@ void Player::playerPhysics(float deltaTime, std::vector<Platform> platforms){
         jumping = false;
     }
 
+}
+
+void Player::stunPlayer(float& time){
+    if (can_take_damage){
+        velocity.x = 0;
+    }
 }
 
 void Player::updateAnimations(GameResources& resources){
@@ -440,7 +450,9 @@ void Player::updateAnimations(GameResources& resources){
 
 void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vector2& mousePosition, Camera2D& camera, std::vector<Platform> platforms) {
     isMoving = false;
-    
+    if (stunTimer > 0){
+        stunTimer -= GetFrameTime();
+    }
     float deltaTime = GetFrameTime();
 
     if (IsKeyPressed(KEY_ONE)) {

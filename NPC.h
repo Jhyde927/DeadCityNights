@@ -60,7 +60,7 @@ public:
 
     NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState initialAnimation, bool isActive, bool isZombie);
     void Update(Player& player);
-    void Render();
+    void Render(ShaderResources& shaders);
     void ClickNPC(Vector2 mousePosition, Camera2D& camera, Player& player);
     void SetAnimationState(AnimationState newState);
     void SetDestination(float minX, float maxX);

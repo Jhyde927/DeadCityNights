@@ -16,6 +16,8 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     shaders.outlineShader = LoadShader(0, "shaders/outline.fs");
     shaders.vignetteShader = LoadShader(0, "shaders/vignette.fs");
     shaders.glitchVignetteShader = LoadShader(0, "shaders/glitchVignetteShader.fs");
+    shaders.pixelationShader = LoadShader(0, "shaders/pixelation.fs");
+    shaders.rainbowOutlineShader = LoadShader(0, "shaders/rainbowOutline.fs");
 
     // Set up shader uniforms
     float resolution[2] = { static_cast<float>(screenWidth), static_cast<float>(screenHeight) };
@@ -66,7 +68,7 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     SetShaderValue(shaders.vignetteShader, resolutionLoc, resolution, SHADER_UNIFORM_VEC2);
 
     // Vignette effect parameters
-    float radius = 0.950f;    // Starting radius (0.0 to 1.0)
+    float radius = 1.0f;    // Starting radius (0.0 to 1.0)
     float softness = 0.6f;  // Softness of the edges
 
     SetShaderValue(shaders.vignetteShader, radiusLoc, &radius, SHADER_UNIFORM_FLOAT);
@@ -96,6 +98,25 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     SetShaderValue(shaders.glitchVignetteShader, glitchStrengthLoc, &glitchStrength, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.glitchVignetteShader, maxGlitchOffsetLoc, &maxGlitchOffset, SHADER_UNIFORM_FLOAT);
 
+    // Get uniform locations //rainbowOutline
+    int outlineColorLoc2 = GetShaderLocation(shaders.rainbowOutlineShader, "outlineColor");
+    int thresholdLoc2 = GetShaderLocation(shaders.rainbowOutlineShader, "threshold");
+    //int timeLoc = GetShaderLocation(shaders.rainbowOutlineShader, "time");
+    int textureSizeLoc2 = GetShaderLocation(shaders.rainbowOutlineShader, "textureSize");
+
+    // Set uniform values
+    float outlineColor2[4] = { 1.0f, 1.0f, 1.0f, 0.0f };  // White outline
+    SetShaderValue(shaders.rainbowOutlineShader, outlineColorLoc2, outlineColor2, SHADER_UNIFORM_VEC4);
+
+    float threshold2 = 0.9f;
+    SetShaderValue(shaders.rainbowOutlineShader, thresholdLoc2, &threshold2, SHADER_UNIFORM_FLOAT);
+
+    // Initialize time
+    //float totalTime = 0.0f;
+
+    // Set texture size (ensure you use the correct texture)
+    float textureSize[2] = { (float)512.0, (float)512.0 };
+    SetShaderValue(shaders.rainbowOutlineShader, textureSizeLoc2, textureSize, SHADER_UNIFORM_VEC2);
 
 
 
@@ -107,14 +128,16 @@ void UnloadShaders(ShaderResources& shaders) {
     UnloadShader(shaders.glitchShader);
     UnloadShader(shaders.glowShader2);
     UnloadShader(shaders.outlineShader);
+    UnloadShader(shaders.rainbowOutlineShader);
 }
 
 void UpdateShaders(ShaderResources& shaders, float deltaTime, GameState& gameState) {
     // Update time for glitch shader
     shaders.totalTime += deltaTime;
-
+    int timeLoc = GetShaderLocation(shaders.rainbowOutlineShader, "time");
     //SetShaderValue(shaders.glitchShader, shaders.timeLoc, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.glitchVignetteShader, shaders.timeLoc, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shaders.rainbowOutlineShader, timeLoc, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
 
     ///update glowShader
     float time = GetTime();  // Get the total elapsed time

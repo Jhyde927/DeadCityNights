@@ -55,6 +55,7 @@ bool drawShotgun = true;
 bool buttonWork = false;
 bool hasPills = false;
 bool digSpot = false;
+bool NecroTech = false;
 bool start = true;
 bool buttonTavern = false;
 bool gotoWork = false;
@@ -139,6 +140,7 @@ std::vector<NPC>ghosts;
 std::vector<NPC>bats;
 std::vector<NPC>mibs;
 std::vector<NPC>astralGhosts;
+std::vector<NPC>astralBats;
 
 std::vector<Platform> platforms;
 
@@ -353,7 +355,13 @@ void InitPlatforms() {
     platforms.emplace_back(2800.0f, 550.0f, 250.0f, 20.0f, WHITE);
     platforms.emplace_back(2600.0f, 450.0f, 150.0f, 20.0f, WHITE);
     platforms.emplace_back(2400.0f, 400.0f, 150.0f, 20.0f, WHITE);
-    platforms.emplace_back(2100.0f, 350.0f, 250.0f, 20.0f, WHITE);
+    platforms.emplace_back(2100.0f, 350.0f, 200.0f, 20.0f, WHITE);
+    platforms.emplace_back(1900.0f, 300.0f, 150.0f, 20.0f, WHITE);
+    platforms.emplace_back(1600.0f, 250.0f, 200.0f, 20.0f, WHITE);
+    platforms.emplace_back(1400.0f, 150.0f, 250.0f, 20.0f, WHITE);
+    platforms.emplace_back(1600.0f, 100.0f, 200.0f, 20.0f, WHITE);
+    platforms.emplace_back(1800.0f, 50.0f, 200.0f, 20.0f, WHITE);
+    platforms.emplace_back(2100.0f, 0.0f, 200.0f, 20.0f, WHITE);
 }
 
 
@@ -634,6 +642,7 @@ void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<
         gameState = APARTMENT;
         player.position.x = apartmentX;
         player.currentHealth = player.maxHealth;
+        showHealthbar = false;
         player.isDead = false;
         calendar.AdvanceDay();
         for (NPC& npc : npcs) {
@@ -688,6 +697,7 @@ void HandleCemeteryTransition(Player& player, PlayerCar& player_car, GameCalenda
         player.position.x = apartmentX;
         player.isDead = false;
         player.currentHealth = player.maxHealth;
+        showHealthbar = false;
         calendar.AdvanceDay();
     }
 }
@@ -697,7 +707,7 @@ void HandleGraveyardTransition(Player& player, GameCalendar& calendar, std::vect
         gameState = APARTMENT;//wake up back at your apartment with full health.
         player.position.x = apartmentX;
         player.isDead = false;
-
+        showHealthbar = false;
         player.currentHealth = player.maxHealth;
         calendar.AdvanceDay();
 
@@ -732,6 +742,7 @@ void HandleAstralTransition(Player& player, GameCalendar& calendar){
         player.isDead = false;
         applyShader = false; //drugs ware off if you advanced the day
         player.currentHealth = player.maxHealth;
+        showHealthbar = false;
         calendar.AdvanceDay();
         for (NPC& ghost : astralGhosts){
             ghost.agro = false; //ghost lose agro after dying. 
@@ -1135,6 +1146,8 @@ void DrawApartmentUI(GameResources& resources, GameCalendar&, Vector2& mousePosi
             DrawText("\n\nSEARCHING...\n\nNECRO-TECH", TextPos.x+12, TextPos.y-20, 20, WHITE);
         }else{
             DrawText("Adress: \n\n 123 Paper St", TextPos.x, TextPos.y, 20, WHITE);
+            //TODO Once you have the address of necrotech it shows up in the car's destinations menu
+            
         }
         
     }else{
@@ -1148,8 +1161,8 @@ void DrawApartmentUI(GameResources& resources, GameCalendar&, Vector2& mousePosi
 void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, GameState& gameState){
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
     Vector2 ui_pos = player_car.position;
-    int ui_width = 96;
-    int ui_height = 50;
+    int ui_width = 116;
+    int ui_height = 64;
 
 
     DrawRectangle(ui_pos.x, ui_pos.y - 17, ui_width, ui_height, customBackgroundColor);
@@ -1203,6 +1216,8 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, G
 
         work_tint = hasWorked ? BLACK : work_tint;
         DrawText("    Work", ui_pos.x, ui_pos.y+17, 16, work_tint);
+
+        if (NecroTech) DrawText("  NecroTech", ui_pos.x, ui_pos.y+32, 16, WHITE);
 
 
         
@@ -1514,10 +1529,17 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
 
     for (NPC& ghost: astralGhosts){
         ghost.Update(player);
-        ghost.Render();
+        ghost.Render(shaders);
         
         if (ghost.health > 0) ghost.isActive = true;
 
+    }
+
+    for (NPC& bat : astralBats){
+        bat.Update(player);
+        bat.Render(shaders);
+        //bat.agro = true;
+        if (bat.health > 0) bat.isActive = true;
     }
 
     
@@ -1751,14 +1773,14 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
 
     for (NPC& zombie : zombies){ //update and draw zombies in cemetery
         zombie.Update(player);
-        zombie.Render();
+        zombie.Render(shaders);
 
     }
 
     if (hasCemeteryKey){
         for (NPC& bat : bats){
             bat.Update(player);
-            bat.Render();
+            bat.Render(shaders);
             bat.agro = true;
             if (bat.health > 0) bat.isActive = true;
         }
@@ -1844,6 +1866,7 @@ void RenderRoad(const GameResources& resources, PlayerCar& player_car,Player& pl
 
 
     hasSlept = false; // player can sleep if they have traveled.
+    hasWorked = false; //player can go to work if he has traveled. 
 
 
     if (vignette){ //vignette first so others can override. 
@@ -2000,7 +2023,7 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
     }
     for (NPC& zombie : zombies){
         zombie.Update(player);
-        zombie.Render();
+        zombie.Render(shaders);
 
         if (zombie.isDying && !firstBlood && gameState == GRAVEYARD){ //first zombie that is dying in the graveyard
             firstBlood = true;
@@ -2014,7 +2037,7 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
 
     for (NPC& ghost: ghosts){
         ghost.Update(player);
-        ghost.Render();
+        ghost.Render(shaders);
         ghost.ClickNPC(mousePosition, camera, player);
         if (ghost.health > 0) ghost.isActive = true;
         if (ghost.interacting){
@@ -2221,7 +2244,7 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
     show_dbox = false; //turn off dbox if no one is interacting
     for (NPC& hobo : hobos){
         hobo.Update(player);
-        hobo.Render();
+        hobo.Render(shaders);
         hobo.ClickNPC(mousePosition, camera, player);
 
         if (hobo.interacting){ 
@@ -2390,7 +2413,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     if (hasCemeteryKey){
         for (NPC& mib : mibs){
             mib.Update(player);
-            mib.Render();
+            mib.Render(shaders);
             
         }
 
@@ -2400,7 +2423,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     teller = false;
     for (NPC& npc : npcs){
         npc.Update(player);
-        npc.Render();
+        npc.Render(shaders);
         npc.ClickNPC(mousePosition, camera, player);
     
 
@@ -2511,8 +2534,6 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
     if (showHealthbar) DrawHealthBar(resources, barPos, player.maxHealth, player.currentHealth, 128, 16);
 
-    
-
 
     if (show_dbox && !player.enter_car){
 
@@ -2542,10 +2563,11 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 
 void spawnNPCs(GameResources& resources){
     // Create NPCs outside and set there starting desitnations. 
+
     float speed = 50.0f;
 
     //spawn generic NPCs
-    int generic = 3;
+    int generic = 2;
     for (int i = 0; i < generic; ++i) {
         Vector2 startPosition = { static_cast<float>(512 + i * 200), 700 };  // positions spread out along the x axis    
         NPC npc = CreateNPC(resources.npcTexture, startPosition, speed, IDLE,  true, false);
@@ -2604,6 +2626,16 @@ void spawnNPCs(GameResources& resources){
 
     }
 
+    //create astral bats
+    int ba = 5;
+    for (int i = 0; i < ba; i++){
+        Vector2 b_pos = {static_cast<float>(1800 + i * 200), 100};
+        NPC bat = CreateNPC(resources.batSheet, b_pos, speed, IDLE, false, false);
+        bat.SetDestination(1500, 3000);
+        bat.bat = true;
+        astralBats.push_back(bat);
+    }
+
 
 
     //create ghost // call update on ghost where ever needed like graveyard or cemetery
@@ -2616,7 +2648,7 @@ void spawnNPCs(GameResources& resources){
     ghosts.push_back(ghost_npc);
 
     //spawn astral ghosts
-    int ap = 2;
+    int ap = 0;
     for (int i = 0; i < ap; i++){
         Vector2 ag_pos = {static_cast<float>(2220 + i * 100), 700};;
         NPC astralGhost = CreateNPC(resources.ghostSheet, ag_pos, speed, IDLE, false, false);
@@ -2719,6 +2751,10 @@ void debugKeys(Player& player){
             }
         }
 
+        if (IsKeyPressed(KEY_P)){
+            AddItemToInventory("Drugs", inventory, INVENTORY_SIZE);
+        }
+
         if (IsKeyPressed(KEY_K)){
             if (!has_car_key || !hasCemeteryKey){
                 AddItemToInventory("carKeys", inventory, INVENTORY_SIZE);
@@ -2799,6 +2835,7 @@ void InitSounds(SoundManager& soundManager){
     SoundManager::getInstance().LoadMusic("StreetSounds", "assets/sounds/StreetSounds.ogg"); 
     SoundManager::getInstance().LoadMusic("Jangwa", "assets/sounds/Jangwa.ogg");
     SoundManager::getInstance().LoadMusic("Neon", "assets/sounds/Neon.ogg");
+    SoundManager::getInstance().LoadMusic("NewNeon", "assets/sounds/Neon(noDrum).ogg");
 
     soundManager.LoadSound("gunShot", "assets/sounds/gunShot.ogg");   //misc sounds
     soundManager.LoadSound("BoneCrack", "assets/sounds/BoneCrack.ogg");
@@ -2889,12 +2926,12 @@ int main() {
     inventoryPositionY = player.position.y;  
     SetTargetFPS(60);
     dboxPosition = player.position;
-    
+
     //AddItemToInventory("Drugs", inventory, INVENTORY_SIZE);
 
 
     //PlayMusicStream(SoundManager::getInstance().GetMusic("Jangwa"));
-    PlayMusicStream(SoundManager::getInstance().GetMusic("Neon"));
+    PlayMusicStream(SoundManager::getInstance().GetMusic("NewNeon"));
 
     
     //int timeLoc = shaders.timeLoc;
@@ -2904,13 +2941,14 @@ int main() {
         Vector2 mousePosition = GetMousePosition();
         if (!player.enter_car) player.UpdateMovement(resources, gameState, mousePosition, camera, platforms);  // Update player position and animation
         UpdateInventoryPosition(camera, gameState);
-        SoundManager::getInstance().UpdateMusic("Neon");
+        SoundManager::getInstance().UpdateMusic("NewNeon");
         SoundManager::getInstance().UpdateMusic("CarRun");
         UpdateBullets();
         CheckBulletNPCCollisions(zombies); //check each enemy group
         CheckBulletNPCCollisions(ghosts);
         CheckBulletNPCCollisions(astralGhosts);
         CheckBulletNPCCollisions(bats);
+        CheckBulletNPCCollisions(astralBats);
         MonitorMouseClicks(player, calendar);
         UpdateZombieSpawning(resources, player);
         //glowEffect(glowShader, gameState); //update glow shader
@@ -2924,11 +2962,11 @@ int main() {
         }
 
         if (IsKeyPressed(KEY_M)){ //MUTE MUSIC
-            if (SoundManager::getInstance().IsMusicPlaying("Neon")){
-                SoundManager::getInstance().PauseMusic("Neon");
+            if (SoundManager::getInstance().IsMusicPlaying("NewNeon")){
+                SoundManager::getInstance().PauseMusic("NewNeon");
 
             }else{
-                SoundManager::getInstance().ResumeMusic("Neon");
+                SoundManager::getInstance().ResumeMusic("NewNeon");
             }
         }
 
@@ -2991,8 +3029,8 @@ int main() {
 
         //show FPS
         int fps = GetFPS();
-        
-        DrawText(std::to_string(fps).c_str(), 935, 935, 25, WHITE);
+        Vector2 fpos = {935, 935}; //bottom right
+        DrawText(std::to_string(fps).c_str(), fpos.x, fpos.y, 25, WHITE);
         
         HandleTransition(player, player_car, calendar, npcs); //Check everyframe for gamestate transitions, inside draw to handle fadeouts
         EndDrawing();

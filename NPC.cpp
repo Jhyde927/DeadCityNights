@@ -10,9 +10,10 @@
 #include <vector>
 #include <string>
 #include <cstdlib>  // For rand and srand
-
+#include "shaderControl.h"
 
 float detectionRange = 300.0f;  // Set detection range for zombies
+float detectionRangeBat = 150;
 
 
 
@@ -260,10 +261,13 @@ void NPC::HandleNPCInteraction(Player& player){
 void NPC::HandleGhost(Player& player, float& distanceToPlayer, bool& hasTarget){
 
     float distanceY = abs(player.position.y - position.y); //flying enemies need a Y axis
-
-    if ((ghost || bat) && distanceToPlayer < detectionRange){
-        if ((ghost || bat) && agro){
+    //float distanceToBat = Vector2Distance(position, player.position);
+    
+    if ((ghost || bat) && distanceToPlayer < 400){
+        if ((ghost || bat)){
             hasTarget = true;
+            if (bat) agro = true;
+            
             destination = player.position;
 
         }
@@ -278,7 +282,7 @@ void NPC::HandleGhost(Player& player, float& distanceToPlayer, bool& hasTarget){
         attacking = true;
 
         if (player.hitTimer <= 0){
-            player.take_damage(20);
+            player.take_damage(10);
             PlaySound(SoundManager::getInstance().GetSound("BoneCrack")); 
         }
         frameSpeed = 14; //faster swing
@@ -344,11 +348,22 @@ void NPC::HandlePolice(Player& player, float& distanceToPlayer, bool& hasTarget)
         frameSpeed = 8.0; //reset animation speed
     }
 
+    if (police && distanceToPlayer < 10.0f && hasTarget && agro && !player.isDead){
+        float t = 0.5;
+        if (player.stunTimer <= 0){
+            player.stunPlayer(t);
+            
 
-    if (police && distanceToPlayer < 20.0f && hasTarget && agro && !isDying){ // police attack player
+        }
+        
+    }
+
+
+    if (police && distanceToPlayer < 20.0f && hasTarget && agro && !player.isDead){ // police attack player
         idleTime = 0.0f; //transition to idle before attacking so it doesn't flicker. 
         destination = position;
         attacking = true;
+        frameSpeed = 24;
         if (player.can_take_damage && currentFrame == 5){ //only hit on frame 5. 
             player.take_damage(10);
             
@@ -513,27 +528,38 @@ void NPC::Update(Player& player) {
                 facingRight = false;
                 SetAnimationState(WALK);
             }
+        }else if (bat) {
+            if (agro && hasTarget) {
+                float deltaTime = GetFrameTime(); // Get the frame time
 
-        }else if (ghost || bat){ // ghost can move in y axis 
-            if (agro){
-                Vector2 velocity = {
-                    directionToPlayer.x * speed,
-                    directionToPlayer.y * speed
-                };
+                Vector2 velocity = {0.0f, 0.0f};
 
-                if (position.x < destination.x){
-                    facingRight = true;
-                }else if (position.x > destination.x){
-                    facingRight = false;
+                float yDifference = destination.y - position.y;
+                float xDifference = destination.x - position.x;
+
+                float yThreshold = 5.0f; // Adjust as needed
+
+                if (fabs(yDifference) > yThreshold) {
+                    // Move vertically towards the player's Y position
+                    velocity.y = (yDifference > 0 ? 1.0f : -1.0f) * 75;
+                    // Do not move horizontally yet
+                    velocity.x = 0.0f;
+                } else {
+                    // Once aligned in Y, move horizontally towards the player
+                    velocity.x = (xDifference > 0 ? 1.0f : -1.0f) * 75;
+                    velocity.y = 0.0f;
+
+                    // Set facing direction
+                    facingRight = (velocity.x > 0);
                 }
 
-                float deltaTime = GetFrameTime(); // Ensure you're using the frame time
+                // Update position
                 position.x += velocity.x * deltaTime;
                 position.y += velocity.y * deltaTime;
 
-                if (!isDying) SetAnimationState(IDLE);
-
-            }else{
+                // Set animation state
+                if (!isDying) SetAnimationState(WALK); // Or another appropriate state
+            } else {
                 SetAnimationState(IDLE);
             }
         }
@@ -563,7 +589,7 @@ void NPC::Update(Player& player) {
     }
 }
 
-void NPC::Render() {
+void NPC::Render(ShaderResources& shaders) {
     if (!isActive) return;  // Skip rendering if the NPC is not active. NPC still exists though
 
     // Calculate the source rectangle for the current frame of the animation
@@ -617,7 +643,9 @@ void NPC::Render() {
     // Tint the NPC red if recently hit
     Color tint = (hitTimer > 0) ? RED : WHITE;
     if (ghost) tint = ColorAlpha(WHITE, ghostAlpha);//use Color alpha to change alpha of ghost on hit
+    if (bat) BeginShaderMode(shaders.rainbowOutlineShader);
     DrawTextureRec(texture, sourceRec, position, tint);
+    EndShaderMode();
 }
 
 void NPC::SetAnimationState(AnimationState newState) {

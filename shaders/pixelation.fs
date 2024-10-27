@@ -1,19 +1,33 @@
-// pixelation.fs
+#version 330
 
-#ifdef GL_ES
-precision mediump float;
-#endif
+in vec2 fragTexCoord;
+in vec4 fragColor;
 
-varying vec2 fragTexCoord;
-uniform sampler2D texture0;
-uniform float pixelSize;
+out vec4 finalColor;
 
-void main() {
-    vec2 uv = fragTexCoord;
+uniform sampler2D texture0;    // The texture sampler
+uniform float pixelSize;       // Size of the pixelation effect (in pixels)
+uniform vec2 screenSize;       // Screen resolution
 
-    // Calculate the size of each pixel block
-    uv = floor(uv * pixelSize) / pixelSize;
+void main()
+{
+    // Get the fragment's screen coordinates
+    vec2 screenPos = gl_FragCoord.xy;
 
-    vec4 color = texture2D(texture0, uv);
-    gl_FragColor = color;
+    // Calculate the size of each "pixel" in screen coordinates
+    float size = pixelSize;
+
+    // Adjust the screen position to the center of the pixel grid
+    vec2 pixelPos = floor(screenPos / size) * size + size * 0.5;
+
+    // Flip the Y-coordinate to match the texture coordinate system
+    pixelPos.y = screenSize.y - pixelPos.y;
+
+    // Convert back to normalized texture coordinates
+    vec2 uv = pixelPos / screenSize;
+
+    // Sample the texture at the adjusted UV coordinates
+    vec4 color = texture(texture0, uv);
+
+    finalColor = color * fragColor;
 }

@@ -57,6 +57,9 @@ Player::Player() {
     hasBadge = false;
     enter_car = false;
     can_take_damage = true;
+    holdingDown = false;
+    dropping = false;
+    dropTimer = 0.0;
 
     shells = 20;
 
@@ -198,9 +201,22 @@ void Player::HandleInput(float speed){
 
         
         // Jumping logic
+
+        if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)){
+            holdingDown = true;
+            if (IsKeyPressed(KEY_SPACE)){ //hold down and press space to drop through platform. 
+                isOnGround = false;
+                dropping = true;
+                dropTimer = 1.0;
+            }
+
+        }else{
+            holdingDown = false;
+            //dropping = false;
+        }
        
        
-        if (IsKeyPressed(KEY_SPACE) && isOnGround && !jumping) {
+        if (IsKeyPressed(KEY_SPACE) && isOnGround && !jumping && !holdingDown) {
             velocity.y = -jumpForce;  // Negative because y increases downward
             isOnGround = false;
             jumping = true;
@@ -309,9 +325,17 @@ bool Player::CheckIfOnPlatform(const std::vector<Platform>& platforms) {
                 // Moving down; landed on top of platform
                 position.y = platform.rect.y - size.y - 16;
                 //velocity.y = 0.0f;
-                isOnGround = true;
-                jumping = false;
-                return true;
+                if (!dropping){
+                    isOnGround = true;
+                    jumping = false;
+                    return true;
+
+                }else{
+                    isOnGround = false;
+                    
+                    return false;
+                }
+            
             }
             // Handle horizontal collisions (optional)
         }
@@ -360,9 +384,18 @@ void Player::playerPhysics(float deltaTime, std::vector<Platform> platforms){
     position.y += velocity.y * deltaTime;
     isOnGround = false;
     //playerRect.y = position.y;
-    if (CheckIfOnPlatform(platforms)){
-        isOnGround = true;
+    if (!dropping){
+        if (CheckIfOnPlatform(platforms)){
+            isOnGround = true;
+        
+        }
+
+    }else{
+        isOnGround = false;
     }
+
+
+
 
    
 
@@ -451,8 +484,17 @@ void Player::updateAnimations(GameResources& resources){
 void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vector2& mousePosition, Camera2D& camera, std::vector<Platform> platforms) {
     isMoving = false;
     if (stunTimer > 0){
-        stunTimer -= GetFrameTime();
+        stunTimer -= GetFrameTime(); //unused I think
     }
+
+    if (dropTimer > 0){ //drop through platforms for 1 second
+        dropTimer -= GetFrameTime();
+        
+    }else{
+        dropTimer = 0;
+        dropping = false;
+    }
+
     float deltaTime = GetFrameTime();
 
     if (IsKeyPressed(KEY_ONE)) {
@@ -626,8 +668,6 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
     }else{
         can_take_damage = true;
     }
-
-    
 
     // Draw the player
     Color tint = (hitTimer > 0) ? RED : WHITE;

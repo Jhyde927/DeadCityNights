@@ -359,9 +359,17 @@ void InitPlatforms() {
     platforms.emplace_back(1900.0f, 300.0f, 150.0f, 20.0f, WHITE);
     platforms.emplace_back(1600.0f, 250.0f, 200.0f, 20.0f, WHITE);
     platforms.emplace_back(1400.0f, 150.0f, 250.0f, 20.0f, WHITE);
-    platforms.emplace_back(1600.0f, 100.0f, 200.0f, 20.0f, WHITE);
-    platforms.emplace_back(1800.0f, 50.0f, 200.0f, 20.0f, WHITE);
+    //platforms.emplace_back(1600.0f, 100.0f, 200.0f, 20.0f, WHITE);
+    platforms.emplace_back(1800.0f, 75.0f, 300.0f, 20.0f, WHITE);
     platforms.emplace_back(2100.0f, 0.0f, 200.0f, 20.0f, WHITE);
+    platforms.emplace_back(2300.0f, -100.0f, 200.0f, 20.0f, WHITE);
+    platforms.emplace_back(2500.0f, -200.0f, 200.0f, 20.0f, WHITE);
+    platforms.emplace_back(2700.0f, -300.0f, 200.0f, 20.0f, WHITE);
+    platforms.emplace_back(2800.0f, -400.0f, 200.0f, 20.0f, WHITE);
+    platforms.emplace_back(2700.0f, -500.0f, 150.0f, 20.0f, WHITE);
+    platforms.emplace_back(2500.0f, -550.0f, 200.0f, 20.0f, WHITE);
+    platforms.emplace_back(2400.0f, -650.0f, 200.0f, 20.0f, WHITE);
+    platforms.emplace_back(1400.0f, -700.0f, 2000.0f, 20.0f, WHITE);
 }
 
 
@@ -408,6 +416,7 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
 
             if (buttonInternet && player.hasBadge && !showInternet){
                 showInternet = true;
+                NecroTech = true;
                 internetTimer = 5.0f;
             }else{
                 showInternet = false;
@@ -1440,6 +1449,7 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
 
 void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoor& magicDoor, ShaderResources& shaders){
     player.gravity = 200;
+    player.outline = true;//turn on outline shader in asteral plane
     if (player.isAiming && IsKeyDown(KEY_F)) {
         // Handle keyboard-only aiming (e.g., using arrow keys or player movement keys)
         if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {

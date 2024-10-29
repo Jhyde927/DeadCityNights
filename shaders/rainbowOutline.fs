@@ -32,6 +32,7 @@ vec3 HSLtoRGB(float h, float s, float l) {
     }
 
     rgb += vec3(m);
+    
     return rgb;
 }
 
@@ -79,10 +80,11 @@ void main() {
         // Interior pixel; set to rainbow color
 
         // Generate hue based on texture coordinates and time
-        float hue = mod(fragTexCoord.y + time * 0.2, 1.0);
-
+        float hue = mod(fragTexCoord.y + time * .5, 1.0);
+        //float hue = 1.0; //RED
         // Convert HSL to RGB
         vec3 rgb = HSLtoRGB(hue, 1.0, 0.5);
+       
 
         finalColor = vec4(rgb, 0.40); //semi transparent
     }

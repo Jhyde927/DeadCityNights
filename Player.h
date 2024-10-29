@@ -53,6 +53,9 @@ public:
     bool hasShovel;
     bool hasBadge;
     bool outline;
+    bool holdingDown;
+    bool dropping;
+    float dropTimer;
 
 
     bool enter_car;

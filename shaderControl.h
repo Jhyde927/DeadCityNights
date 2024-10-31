@@ -14,7 +14,7 @@ struct ShaderResources {
     Shader outlineShader;
     Shader vignetteShader;
     Shader glitchVignetteShader;
-    Shader pixelationShader;
+    
     Shader rainbowOutlineShader;
     int timeLoc;
     int glowThresholdLoc;

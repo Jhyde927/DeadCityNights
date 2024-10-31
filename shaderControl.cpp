@@ -16,7 +16,7 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     shaders.outlineShader = LoadShader(0, "shaders/outline.fs");
     shaders.vignetteShader = LoadShader(0, "shaders/vignette.fs");
     shaders.glitchVignetteShader = LoadShader(0, "shaders/glitchVignetteShader.fs");
-    shaders.pixelationShader = LoadShader(0, "shaders/pixelation.fs");
+    
     shaders.rainbowOutlineShader = LoadShader(0, "shaders/rainbowOutline.fs");
 
     // Set up shader uniforms

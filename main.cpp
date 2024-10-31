@@ -1096,9 +1096,9 @@ void MoveTraffic(GameResources resources){
     car_pos.x -= 150 * GetFrameTime();
     truck_pos.x += 150 * GetFrameTime();
 
-    if (car_pos.x < 0) car_pos.x = car_start; //Loop back to car_start
+    if (car_pos.x < -200) car_pos.x = car_start; //Loop back to car_start
  
-    if (truck_pos.x > 4500) truck_pos.x = 512;
+    if (truck_pos.x > 4500) truck_pos.x = -200;
     
     DrawTexture(resources.car, car_pos.x, car_pos.y, WHITE);
     DrawTexture(resources.truck, truck_pos.x, truck_pos.y + 32, WHITE);
@@ -1637,6 +1637,14 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
 
     show_dbox = false;
     over_gate = false;
+    //Cemetery Gate
+    if (player.position.x > 3069 && player.position.x < 3089 && !hasCemeteryKey){
+        phrase = "Locked";
+        show_dbox = true;
+        dboxPosition = player.position;
+    }
+
+
     if (player.position.x > 3069 && player.position.x < 3089 && hasCemeteryKey){
             phrase = "UP TO ENTER";
             over_gate = true;
@@ -2215,7 +2223,7 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
 
  
     //SoundManager::getInstance().PlayMusic("StreetSounds");
-        
+    camera.target = player.position; 
 
    if (vignette){ //vignette first so others can override. 
         BeginShaderMode(shaders.vignetteShader);
@@ -2249,7 +2257,7 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
 
     // Draw the foreground (main scene),  offset by 1024 to center relative to midground. 
     DrawTexturePro(resources.vacantLot, {0, 0, static_cast<float>(resources.vacantLot.width), static_cast<float>(resources.vacantLot.height)},
-                    {705, 0, static_cast<float>(resources.vacantLot.width), static_cast<float>(resources.vacantLot.height)}, {0, 0}, 0.0f, WHITE);
+                    {705+1024, 0, static_cast<float>(resources.vacantLot.width), static_cast<float>(resources.vacantLot.height)}, {0, 0}, 0.0f, WHITE);
 
     show_dbox = false; //turn off dbox if no one is interacting
     for (NPC& hobo : hobos){
@@ -2406,11 +2414,11 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 
     // Draw the midground (silhouettes)
     DrawTexturePro(resources.midground, {0, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)},
-                    {parallaxMidground, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)}, {0, 0}, 0.0f, WHITE);
+                    {-3000 + parallaxMidground, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)}, {0, 0}, 0.0f, WHITE);
 
     // Draw the foreground (main scene),  offset by 1024 to center relative to midground. 
     DrawTexturePro(resources.foreground, {0, 0, static_cast<float>(resources.foreground.width), static_cast<float>(resources.foreground.height)},
-                    {512, 0, static_cast<float>(resources.foreground.width), static_cast<float>(resources.foreground.height)}, {0, 0}, 0.0f, WHITE);
+                    {-639, 0, static_cast<float>(resources.foreground.width), static_cast<float>(resources.foreground.height)}, {0, 0}, 0.0f, WHITE);
     
     EndShaderMode(); ////////////////////////////SHADER OFF
     
@@ -2478,6 +2486,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     BeginBlendMode(BLEND_ADDITIVE);
     DrawTexture(resources.lightCone, 1884, 610, WHITE);
     DrawTexture(resources.lightCone, 3188, 610, WHITE);
+    DrawTexture(resources.lightCone, 456, 610, WHITE);
     EndBlendMode();
     
     DrawBullets();
@@ -2581,14 +2590,14 @@ void spawnNPCs(GameResources& resources){
     for (int i = 0; i < generic; ++i) {
         Vector2 startPosition = { static_cast<float>(512 + i * 200), 700 };  // positions spread out along the x axis    
         NPC npc = CreateNPC(resources.npcTexture, startPosition, speed, IDLE,  true, false);
-        npc.SetDestination(512, 4000);
+        npc.SetDestination(-94, 4000);
         npcs.push_back(npc);  // Add the NPC to the vector
     }
 
     //spawn businessMan
     int b_men = 2;
     for (int i = 0; i < b_men; i++){
-        Vector2 b_pos = { static_cast<float>(2300 + i * 100), 700};
+        Vector2 b_pos = { static_cast<float>(1000 + i * 100), 700};
         NPC business_npc = CreateNPC(resources.businessSheet, b_pos, speed,IDLE, true, false);
         business_npc.SetDestination(1000, 4000);
         npcs.push_back(business_npc);
@@ -2599,9 +2608,9 @@ void spawnNPCs(GameResources& resources){
     //spawn woman
     int women = 1;
     for (int i = 0; i < women; i++){
-        Vector2 w_pos = {static_cast<float>(2050 + i * 100), 700};
+        Vector2 w_pos = {static_cast<float>(1000 + i * 100), 700};
         NPC woman_npc = CreateNPC(resources.womanSheet, w_pos, speed,IDLE, true, false);
-        woman_npc.SetDestination(1000, 4000);
+        woman_npc.SetDestination(0, 4000);
         npcs.push_back(woman_npc);
 
     }
@@ -2611,7 +2620,7 @@ void spawnNPCs(GameResources& resources){
     for (int i = 0; i < women2; i++){
         Vector2 w_pos = {static_cast<float>(2220 + i * 100), 700};
         NPC woman2_npc = CreateNPC(resources.woman2Sheet, w_pos, speed, IDLE, true, false);
-        woman2_npc.SetDestination(1000, 4000);
+        woman2_npc.SetDestination(0, 4000);
         npcs.push_back(woman2_npc);
     }
 
@@ -2695,7 +2704,7 @@ void spawnNPCs(GameResources& resources){
     for (int i = 0; i < police; i++){
         Vector2 w_pos = {static_cast<float>(2100 + i * 100), 700};
         NPC police_npc = CreateNPC(resources.policeSheet, w_pos, speed,IDLE, true, false);
-        police_npc.SetDestination(1000, 4000);
+        police_npc.SetDestination(0, 4000);
         police_npc.police = true;
         npcs.push_back(police_npc);
 
@@ -2707,7 +2716,7 @@ void spawnNPCs(GameResources& resources){
     for (int i = 0; i < dealer; i++){
         Vector2 d_pos = {static_cast<float>(2200 + i * 100), 700};
         NPC dealer_npc = CreateNPC(resources.dealerSheet, d_pos, speed, IDLE, true, false);
-        dealer_npc.SetDestination(1000, 4000);
+        dealer_npc.SetDestination(0, 4000);
         dealer_npc.dealer = true;
         npcs.push_back(dealer_npc);
     }

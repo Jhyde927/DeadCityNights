@@ -189,10 +189,10 @@ void NPC::HandleNPCInteraction(Player& player){
                         speech = "I see you've found my shovel";
                         break;
                     case 2:
-                        speech = "You saw them too...\n\nthe Walking Dead";
+                        speech = "You saw them too...\n\nThe Walking Dead";
                         break;
                     case 3:
-                        speech = "They are massing \n\nin the cemetery before...";
+                        speech = "They are gathering\n\nin the cemetery before...";
                         break;
                     case 4: 
                         speech = "I've tried to warn the police\n\nthey just laughed at me";
@@ -240,8 +240,13 @@ void NPC::HandleNPCInteraction(Player& player){
                         break;
 
                     case 5:
-                        speech = "...";
+                        speech = "You got a computer?";
                         break;
+
+                    case 6:
+                        speech = "Find NecroTech HQ\n\nPut a stop to their evil plans";
+                        break;
+                    
 
                 }
 
@@ -662,9 +667,6 @@ void NPC::ClickNPC(Vector2 mousePosition, Camera2D& camera, Player& player){
         talkTimer -= GetFrameTime();
         talked = true; //talk and then wait for player to read message. 
 
-
-
-
     }else{
         talked = false;
         interacting = false; //NPC are only interacting if talk timer is positive.
@@ -675,11 +677,13 @@ void NPC::ClickNPC(Vector2 mousePosition, Camera2D& camera, Player& player){
     float hitboxHeight = 32.0f;  //Tall rectange to cover the sprite. 
     
     Rectangle npcHitbox = {// Hit box for mouse clicks
-        position.x+16,   // Center horizontally
-        position.y,  
+        position.x+24,   // Center horizontally
+        position.y+16,  //Center vertically
         hitboxWidth,  // Width of hitbox
         hitboxHeight                    
     };
+
+     //DrawRectangleLines(position.x+24, position.y+16, hitboxWidth, hitboxHeight, RED); // debug show hitbox
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){ // it seems dumb to get input inside the NPC class, but here we are.  
         if (CheckCollisionPointRec(mouseWorldPos, npcHitbox)){

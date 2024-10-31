@@ -110,7 +110,7 @@ void Player::take_damage(int damage) {
 
 float GetRightBoundary(GameState gameState){
     if (gameState == OUTSIDE){
-        return 4000.0f;
+        return 6000.0f;
     }else if (gameState == CEMETERY){
         return 4000;
     }else if (gameState == LOT){
@@ -128,7 +128,7 @@ float GetRightBoundary(GameState gameState){
 
 float GetLeftBoundary(GameState gameState){
     if (gameState == OUTSIDE){
-        return 1064;
+        return -94;
     }else if (gameState == CEMETERY){
         return 1700;
     }else if (gameState == LOT){
@@ -668,6 +668,10 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
     }else{
         can_take_damage = true;
     }
+
+
+     //sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
+     //DrawRectangleLines(position.x, position.y, frameWidth, frameWidth, RED);
 
     // Draw the player
     Color tint = (hitTimer > 0) ? RED : WHITE;

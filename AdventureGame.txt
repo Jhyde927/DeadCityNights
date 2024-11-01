@@ -241,7 +241,38 @@ bullets could glow. add shader to street lights?
 
 After dying, going to the cemetery doesn't work on the first try. It fades out then fades back to street. 
 
-Policeman is broken. 
+Policeman is broken. fixed by setting destination to position when attacking. Needed same fix for zombie. how was it working before? we will never know. If you just walk away from police, they get stuck mid animation and don't attack. How to solve this. The player is stopped by the police if they touch them. This gives time for the attack to happen. Like a stun lock, but you should be able to run out of it. How can we call player from npc. in main track player and police NPC positions. if they intersect stop the player for 1 second. 
+
+Try more shaders. outline shader on bats. 
+
+experiment with gravity on the astral plane. slightly less. 
+
+Added rainbow outline shader. We draw an outline around the sprite and replace the inner pixels with a rainbow color. Try a black outline. Looks ok. A larger bat could be cool. Need a plan for the astral plane. You can visit it any time unless we don't draw the dealer until later in the game. Maybe you need to have the revolver first before we show the dealer. Need a boss of the astral plane. It should be an archetype. Death, a grim reaper. an evil wizard, a witch. an Angel of death. The astral plane should be it's own game. There should be a reason to leave and come back. Ghost is asking to find his lost relic. a pocket watch doesn't make sense being in the astral plane. 
+
+Maybe the player needs to take drugs while standing next to the ghost in the cemetery to make a magic door appear. Freeing the ghost. 
+
+There is a friendly NPC in the astral realm. He sells astral wares, He also sells a potion. which is another drug you can take.
+He also sells an old pocket watch, that belongs to the ghost in the graveyard. He sits on top of a platforming puzzle, half way up. Maybe he sells an item needed to fight what ever the boss would be at the very top of the platforms. 
+
+While climbing the platforms we show different planets as the player gets higher. 
+
+Cemetery gate needs dialog box saying "Locked"
+
+Revisit foreground. Made the foreground even wider 1600 * 4. 6400 x 1024. Now I just need to draw in a bunch of new buildings and move the left and right barrier. could make the cemetery or graveyard wider. maybe there is an old haunted house next to the cemetery further to the right. or some old insane lady lives there and gives you an item or something. She's secretly a witch and spawns a bunch of skeletons to attack you. She temporarily turns you into a frog. The camera zooms way in on a frog sprite with jump animation and everything. A big mansion house could look cool in these colors. 
+
+There is a dig spot on the far left of the street. 
+
+Added an animated UFO that floats above the cemetery after you have the badge. Reused old picture of UFO that seems to fit the style and colors. Need to add light cone beneath the UFO that turns on when your underneath it. Go from there. use draw texture pro to stretch the light cone to fit say 64x256.  
+
+UFOs to controversial? Fuck em, it's a piece of art. I'll make what I want. 
+
+When and where to UFOs show up? Need another location that isn't the cemetery. Library? police station, tavern, park?
+
+a park would make sense. An NPC asks you to meet them in the park. they have some information on the zombies. 
+
+You can enter an apartment in the building down the street. Draw building lobby? press a buzzer for the apartment. Elevator. I wish some one else could write the story.
+
+If you walked all the way to the left when outside. A UFO drops down from the sky, then shoots off at incredible speed. 
 
 
 

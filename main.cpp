@@ -446,7 +446,6 @@ void AddItemToInventory(const std::string& item, std::string inventory[], int in
 
 std::string GetTellerPhrase() {
     std::vector<std::string> tellerPhrases = {
-        "Beware of a stranger's advice\n\n trust your own instincts.",
         "Your courage will lead you\n\n to unexpected rewards.",
         "Fortune smiles upon you\n\nin your next endeavor.",
         "A difficult choice \n\nwill test your resolve.",
@@ -1332,7 +1331,7 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, G
 
 void DrawMagicDoor(GameResources& resources,Player& player, MagicDoor& magicDoor){
         int doorFrame = 64;
-        Rectangle sourceDoorRec = {magicDoor.currentFrame * doorFrame, 0, doorFrame, doorFrame};
+        Rectangle sourceDoorRec = {magicDoor.currentFrame * doorFrame, 0, static_cast<float>(doorFrame), static_cast<float>(doorFrame)};
         DrawTextureRec(resources.magicDoorSheet, sourceDoorRec, magicDoor.position, WHITE);
         if (player.position.x > magicDoor.position.x -10 && player.position.x < magicDoor.position.x +10){ //over magic door
             if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
@@ -1363,26 +1362,26 @@ void DrawMagicDoor(GameResources& resources,Player& player, MagicDoor& magicDoor
 
 void moveUFO(UFO& ufo){
     if (canMoveUfo){
-        
+        //UFO drops down from the sky, hovers a few seconds, then darts off super fast.
         float deltaTime = GetFrameTime();
         int moveSpeed = 100;
         int stopPos = 400;
-        if (ufo.basePosition.y < stopPos && move_ufo){
+        if (ufo.basePosition.y < stopPos && move_ufo){ //go from starting position to 400 y and wait for timer
             ufo.basePosition.y += moveSpeed * deltaTime;
         
-        }else if (ufoTimer <= 0){
+        }else if (ufoTimer <= 0){ //times up, shoot to the left fast
             ufo.basePosition.x -= 2000 * deltaTime;
         }
 
-        if (ufo.basePosition.x < -500){
-            ufo.basePosition = {-94.0, -100.0}; // reset ufo pos if too far left.
+        if (ufo.basePosition.x < -1000){
+            ufo.basePosition = {-94.0, -200.0}; // reset ufo position if too far left.
             canMoveUfo = false; 
         }
     }
 
 }
 
-void DrawUFO(GameResources& resources, UFO& ufo, Camera2D& camera, float& time){
+void DrawUFO(GameResources& resources, UFO& ufo, Camera2D& camera, float& time, ShaderResources& shaders){
 
     float deltaTime = GetFrameTime();
     ufo.frameTimer += deltaTime;
@@ -1450,7 +1449,9 @@ void DrawUFO(GameResources& resources, UFO& ufo, Camera2D& camera, float& time){
     
     }
     // Draw the current frame of the earth with the adjusted position
+    BeginShaderMode(shaders.vignetteShader);
     DrawTextureRec(resources.UFOsheet, sourceRect, UFODrawPosition, WHITE); 
+    EndShaderMode();
     
 }
 
@@ -1950,8 +1951,9 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         abductionBeam = true;
     }
 
-    if (player.hasBadge){ // dont show UFO until later in the game
-        DrawUFO(resources, ufo, camera, time);
+    if (hasCemeteryKey){ // dont show UFO until later in the game
+        ufo.basePosition = {3900, 400};
+        DrawUFO(resources, ufo, camera, time, shaders);
     }
 
     
@@ -2008,15 +2010,15 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
 
     }
 
-    if (hasCemeteryKey){
-        for (NPC& bat : bats){
-            bat.Update(player);
-            bat.Render(shaders);
-            bat.agro = true;
-            if (bat.health > 0) bat.isActive = true;
-        }
+    // if (hasCemeteryKey){
+    //     for (NPC& bat : bats){
+    //         bat.Update(player);
+    //         bat.Render(shaders);
+    //         bat.agro = true;
+    //         if (bat.health > 0) bat.isActive = true;
+    //     }
 
-    }
+    // }
 
 
     if (show_carUI && !move_car && player.enter_car){ //destination menu
@@ -2612,7 +2614,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     }
     if (move_ufo){
         ufoTimer -= GetFrameTime();
-        DrawUFO(resources, ufo, camera, totalTime);
+        DrawUFO(resources, ufo, camera, totalTime, shaders);
         moveUFO(ufo);
     }
 
@@ -2659,7 +2661,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     
    
     if (move_ufo){
-        DrawUFO(resources, ufo, camera, totalTime);
+        DrawUFO(resources, ufo, camera, totalTime, shaders);
     }
     if (move_car){
         player_car.position.x -= player_car.carSpeed * GetFrameTime();
@@ -3097,12 +3099,41 @@ void UptoEnter(Player& player, PlayerCar& player_car){
     }
 }
 
+void PlayPositionalSound(Sound sound, Vector2 soundPos, Vector2 listenerPos, float maxDistance) {
+    // Calculate distance between listener and sound source
+    float dx = listenerPos.x - soundPos.x;
+    float dy = listenerPos.y - soundPos.y;
+    float distance = sqrtf(dx * dx + dy * dy);
+
+    // Calculate volume based on distance
+    float volume = 1.0f - (distance / maxDistance);
+    if (volume < 0.0f) volume = 0.0f;
+
+    // Set the sound volume
+    SetSoundVolume(sound, volume);
+
+    // Play the sound if volume is greater than zero
+    if (volume > 0.0f) {
+        if (!IsSoundPlaying(sound)) {
+            PlaySound(sound);
+        }
+    } else {
+        // Stop the sound if it's playing but volume is zero
+        if (IsSoundPlaying(sound)) {
+            StopSound(sound);
+        }
+    }
+}
+
+
 void InitSounds(SoundManager& soundManager){
     //We use our own custom sound manager. We have an array of sounds, and an array of musticTracks.
     SetMasterVolume(1.0f);  // Sets the master volume to maximum
     
     SoundManager::getInstance().LoadMusic("CarRun", "assets/sounds/CarRun.ogg"); // load CarRun.ogg into music tracks with the name CarRun
     //music tracks automatically loop.The car running sound needs to loop, so we call it music.
+
+    
     SoundManager::getInstance().LoadMusic("StreetSounds", "assets/sounds/StreetSounds.ogg"); 
     SoundManager::getInstance().LoadMusic("Jangwa", "assets/sounds/Jangwa.ogg");
     SoundManager::getInstance().LoadMusic("Neon", "assets/sounds/Neon.ogg");
@@ -3124,6 +3155,7 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadSound("shovelPickup", "assets/sounds/shovelPickup.ogg");
     soundManager.LoadSound("Pills", "assets/sounds/Pills.ogg");
     soundManager.LoadSound("gulp", "assets/sounds/gulp.ogg");
+    soundManager.LoadSound("energyHum", "assets/sounds/energyHum.ogg");
 
     soundManager.LoadSound("ShotGun", "assets/sounds/ShotGun.ogg");
     soundManager.LoadSound("ShotgunReload", "assets/sounds/ShotgunReload.ogg");
@@ -3206,10 +3238,12 @@ int main() {
 
     //PlayMusicStream(SoundManager::getInstance().GetMusic("Jangwa"));
     PlayMusicStream(SoundManager::getInstance().GetMusic("NewNeon"));
+   
+    //PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.position, player.position, 300.0f);
 
     
     //int timeLoc = shaders.timeLoc;
-    float totalTime = 0.0f; // Variable to keep track of time //glitch shader
+    float totalTime = 0.0f; // time elapsed from start of game //glitch shader/ufo
     // Main game loop
     while (!WindowShouldClose()) {
         Vector2 mousePosition = GetMousePosition();
@@ -3217,12 +3251,14 @@ int main() {
         UpdateInventoryPosition(camera, gameState);
         SoundManager::getInstance().UpdateMusic("NewNeon");
         SoundManager::getInstance().UpdateMusic("CarRun");
+        PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.position, player.position, 800.0f);
         UpdateBullets();
-        CheckBulletNPCCollisions(zombies); //check each enemy group
+        CheckBulletNPCCollisions(zombies); //check each enemy group for bullet collisions
         CheckBulletNPCCollisions(ghosts);
         CheckBulletNPCCollisions(astralGhosts);
         CheckBulletNPCCollisions(bats);
         CheckBulletNPCCollisions(astralBats);
+
         MonitorMouseClicks(player, calendar);
         UpdateZombieSpawning(resources, player);
         //glowEffect(glowShader, gameState); //update glow shader
@@ -3232,6 +3268,8 @@ int main() {
         if (totalTime > 10000.0f) totalTime -= 10000.0f; //reset total time just in case. 
             
         UpdateShaders(shaders, deltaTime, gameState);
+
+
         
         if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_D) || IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)){ //tutorial text
             start = false; //turn off dbox if any movement

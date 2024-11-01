@@ -69,7 +69,7 @@ bool can_talk = true;
 bool buyFortune = false;
 bool teller = false;
 bool dealer = false;
-
+bool showLiquor = false;
 bool can_sell_drugs = true;
 bool applyShader = false;
 bool drunk = false;
@@ -80,11 +80,13 @@ bool move_car = false;
 bool showHealthbar = false;
 bool reverse_road = false;
 bool has_car_key = false;
+bool overLiquor = false;
 bool npcWalk = false;
 bool openDrawer = false;
 bool raiseZombies = false;
 bool zombieWave2 = false;
 bool zombieWave3 = false;
+bool abductionBeam = false;
 bool show_dbox = true;
 float dboxTime = 10.0;
 float internetTimer = 0.0;
@@ -182,6 +184,24 @@ struct Earth {
     float frameTimer;
 };
 
+struct UFO {
+    Vector2 position = {3500, 400};
+    int frameWidth;
+    int frameHeight;
+    int currentFrame;
+    int totalFrames;
+    float frameTime;
+    float frameTimer;
+
+    Vector2 basePosition;  // Original position where the UFO is placed
+    float bobAmplitudeX;   // Amplitude of side-to-side movement
+    float bobAmplitudeY;   // Amplitude of up-and-down movement
+    float bobSpeedX;       // Speed of side-to-side movement
+    float bobSpeedY;       // Speed of up-and-down movement
+    float bobOffsetX;      // Phase offset for side-to-side movement
+    float bobOffsetY;      // Phase offset for up-and-down movement
+};
+
 
 
 
@@ -253,6 +273,10 @@ void LoadGameResources(GameResources& resources) {
     resources.batSheet = LoadTexture("assets/batSheet.png");
     resources.platformTexture = LoadTexture("assets/platform(128x32).png");
     resources.mibSheet = LoadTexture("assets/mibSheet.png");
+    resources.whiskey = LoadTexture("assets/Whiskey.png");
+    resources.midgroundLot = LoadTexture("assets/MidGroundLot.png");
+    resources.UFOsheet = LoadTexture("assets/UFOsheet.png");
+    resources.lightBar = LoadTexture("assets/lightBar.png");
 }
 
 void UnloadGameResources(GameResources& resources){
@@ -319,6 +343,11 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.batSheet);
     UnloadTexture(resources.platformTexture);
     UnloadTexture(resources.mibSheet);
+    UnloadTexture(resources.whiskey);
+    UnloadTexture(resources.midgroundLot);
+    UnloadTexture(resources.UFOsheet);
+    UnloadTexture(resources.lightBar);
+
    
 }
 
@@ -342,6 +371,27 @@ void InitEarth(Earth& earth){
     earth.totalFrames = 94;
     earth.frameTimer = 0.0;
     earth.frameTime = .1;
+}
+
+void InitUFO(UFO& ufo){
+    //ufo.position = {3900, 400};
+    ufo.frameWidth = 144;
+    ufo.frameHeight = 144;
+    ufo.currentFrame = 0;
+    ufo.totalFrames = 4;
+    ufo.frameTimer = 0.0;
+    ufo.frameTime = 0.1;
+
+    ufo.basePosition = { 3900.0, 400.0f }; // Example position
+    ufo.position = ufo.basePosition;
+
+    // Set motion parameters
+    ufo.bobAmplitudeX = 5.0f;   // Moves 10 pixels left and right
+    ufo.bobAmplitudeY = 2.0f;    // Moves 5 pixels up and down
+    ufo.bobSpeedX = 1.0f;        // Side-to-side speed
+    ufo.bobSpeedY = 1.5f;        // Up-and-down speed
+    ufo.bobOffsetX = 0.0f;       // No initial phase offset
+    ufo.bobOffsetY = 0.0f;       // No initial phase offset
 }
 
 
@@ -375,6 +425,7 @@ void InitPlatforms() {
 
 // Function to add an item to the first available slot in the inventory
 void AddItemToInventory(const std::string& item, std::string inventory[], int inventorySize) {
+    //what happens if inventory is full and we add to it? nothing?
     for (int i = 0; i < inventorySize; i++) {
         if (inventory[i].empty()) {
             inventory[i] = item;  // Add the item to the first empty slot
@@ -880,6 +931,11 @@ void Dig(Player& player){
 
     }
 
+    if (player.position.x > 82.0 && player.position.x < 102 && gameState == OUTSIDE){
+        PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
+        shovelTint = RED;
+    }
+
     //far right side of cemetery is an item. 
                 // if (player.position.x > 3986 && player.position.x < 4016 && gameState == CEMETERY && !hasCemeteryKey){
                 //     PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
@@ -991,6 +1047,30 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
                 DrawTexture(resources.cemeteryKey, x, y, WHITE);
             }
 
+            if (inventory[i] == "whiskey"){
+                DrawTexture(resources.whiskey, x, y, WHITE);
+                Rectangle whiskeyBounds = { 
+                    x,      
+                    y,      
+                    static_cast<float>(64),  
+                    static_cast<float>(64)  
+                };
+
+                if (CheckCollisionPointRec(mousePosition, whiskeyBounds)){
+                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+                        if (player.hasWhiskey){
+                            inventory[i] = std::string("");  // erase pills from the string
+                            player.currentHealth = player.maxHealth;
+                            player.hasWhiskey = false;
+                            drunk = true;
+
+                        }
+                    }
+                }
+
+
+            }
+
             if (inventory[i] == "pills"){ // click on pills to take them 
                 DrawTexture(resources.pills, x, y, WHITE);
                 Rectangle pillBounds = { //pill button
@@ -1092,13 +1172,13 @@ void DrawHUD(const Player& player) {
 
 void MoveTraffic(GameResources resources){
     
-    int car_start = 4500;
+    int car_start = 5500;
     car_pos.x -= 150 * GetFrameTime();
     truck_pos.x += 150 * GetFrameTime();
 
-    if (car_pos.x < -200) car_pos.x = car_start; //Loop back to car_start
+    if (car_pos.x < -500) car_pos.x = car_start; //Loop back to car_start
  
-    if (truck_pos.x > 4500) truck_pos.x = -200;
+    if (truck_pos.x > 5500) truck_pos.x = -500;
     
     DrawTexture(resources.car, car_pos.x, car_pos.y, WHITE);
     DrawTexture(resources.truck, truck_pos.x, truck_pos.y + 32, WHITE);
@@ -1270,6 +1350,78 @@ void DrawMagicDoor(GameResources& resources,Player& player, MagicDoor& magicDoor
 
 }
 
+void DrawUFO(GameResources& resources, UFO& ufo, Camera2D& camera, float& time){
+
+    float deltaTime = GetFrameTime();
+    ufo.frameTimer += deltaTime;
+
+
+
+    if (ufo.frameTimer >= ufo.frameTime){
+        ufo.frameTimer -= ufo.frameTime;
+        ufo.currentFrame++;
+
+        if (ufo.currentFrame >= ufo.totalFrames){
+            ufo.currentFrame = 0; //loop
+        }
+    }
+    // Calculate current frame's row and column
+    int frameRow = 0; // Each row has 4 frames
+    int frameCol = ufo.currentFrame % 4;
+
+    // Define the source rectangle
+    Rectangle sourceRect = {
+        static_cast<float>(frameCol * ufo.frameWidth),
+        static_cast<float>(frameRow * ufo.frameHeight),
+        static_cast<float>(ufo.frameWidth),
+        static_cast<float>(ufo.frameHeight)
+    };
+
+
+
+
+    // Update horizontal (X-axis) movement
+    ufo.position.x = ufo.basePosition.x + ufo.bobAmplitudeX * sinf(ufo.bobSpeedX * time + ufo.bobOffsetX);
+
+    // Update vertical (Y-axis) movement
+    ufo.position.y = ufo.basePosition.y + ufo.bobAmplitudeY * sinf(ufo.bobSpeedY * time + ufo.bobOffsetY);
+
+    
+
+
+
+    Vector2 UFODrawPosition = {
+        ufo.position.x, 
+        ufo.position.y 
+    };
+
+    if (abductionBeam){
+        // Define the source rectangle (the part of the texture to draw)
+        
+        Rectangle sourceRec = { 0.0f, 0.0f, (float)resources.lightBar.width, (float)resources.lightBar.height };
+        Rectangle destRec = { 
+            ufo.position.x+37, // x position on screen
+            ufo.position.y+96, // y position on screen
+            static_cast<float>(64), // width on screen
+            static_cast<float>(256)  // height on screen
+        };
+        Vector2 origin = { 0.0f, 0.0f };
+
+        // Rotation angle in degrees
+        float rotation = 0.0f;
+
+        //stretch texture to fit barwidth and height,
+        BeginBlendMode(BLEND_ADDITIVE);
+        DrawTexturePro(resources.lightBar, sourceRec, destRec, origin, rotation, WHITE);
+        EndBlendMode();
+
+    
+    }
+    // Draw the current frame of the earth with the adjusted position
+    DrawTextureRec(resources.UFOsheet, sourceRect, UFODrawPosition, WHITE); 
+    
+}
+
 void DrawEarth(GameResources& resources, Earth& earth, Camera2D& camera){
     // Calculate delta time
     float deltaTime = GetFrameTime();
@@ -1375,7 +1527,7 @@ void DrawHealthBar(GameResources resources, Vector2 position, int maxHealth, int
     DrawRectangle(position.x, position.y+50, (int)(barWidth * healthPercent), barHeight, barColor);
 }
 
-void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
+void DrawDialogBox(Player& player, Camera2D camera, int boxWidth, int boxHeight,int textSize){
     //int boxWidth = 256;
     //int boxHeight = 64;
     int offset = -64;
@@ -1404,6 +1556,17 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
         screen_offsetY = -128;
        
     }
+
+    if (overLiquor){
+    
+        boxWidth = 300;
+        boxHeight = 128;
+        offset = -135;
+        screen_offsetX = 16;
+        screen_offsetY = -128;
+    }
+
+
 
     if (teller && buyFortune && fortuneTimer <= 0){
         phrase = "Namaste";
@@ -1443,7 +1606,17 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
                 } 
         }
 
+
+
     }
+    if (overLiquor && showLiquor && money >= 100 &&  GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY")){
+        addMoney(-100);
+        AddItemToInventory("whiskey", inventory, INVENTORY_SIZE);
+        player.hasWhiskey = true;
+        
+        //TODO add whiskey to inventory
+    }
+
 
 }
 
@@ -1576,14 +1749,14 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
     if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player);
 
     if (show_dbox){
-        DrawDialogBox(camera, 0, 0, 20);
+        DrawDialogBox(player, camera, 0, 0, 20);
     }
 
     
 }
 
 
-void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_car, Camera2D& camera,Vector2 mousePosition, ShaderResources& shaders){
+void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_car, UFO& ufo, float& time, Camera2D& camera,Vector2 mousePosition, ShaderResources& shaders){
     int carMax = 2800;
     int carMin = 2765;
     
@@ -1740,8 +1913,12 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         EndBlendMode();
 
     }
+    abductionBeam = false;
+    if (player.position.x > 3929 && player.position.x < 3949){
+        abductionBeam = true;
+    }
 
-    
+    DrawUFO(resources, ufo, camera, time);
 
 
     //render shovel. Click the shovel to pick it up. 
@@ -1829,11 +2006,11 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
     }
 
     if (show_dbox){
-        DrawDialogBox(camera, 0, 0, 20);
+        DrawDialogBox(player, camera, 0, 0, 20);
     }
 
     if (over_gate && hasCemeteryKey){
-        DrawDialogBox(camera, 0, 0, 20);
+        DrawDialogBox(player, camera, 0, 0, 20);
 
     }
     
@@ -2081,7 +2258,7 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
 
     if (badgeTimer > 0){ //show badge explanation
         show_dbox = true;
-        DrawDialogBox(camera, 0, 0, 20);
+        DrawDialogBox(player, camera, 0, 0, 20);
         badgeTimer -= GetFrameTime();
     }
 
@@ -2108,7 +2285,7 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
         
     }
     if (show_dbox){
-        DrawDialogBox(camera, 0, 0, 20);
+        DrawDialogBox(player, camera, 0, 0, 20);
 
     }
 
@@ -2216,7 +2393,7 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
     }    
 
     //camera.target = player.position;
-    //float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
+    float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
     float parallaxBackground = camera.target.x * 0.7f;  // Background moves even slower
     
     SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide
@@ -2251,9 +2428,9 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
     DrawTexturePro(resources.background, {0, 0, static_cast<float>(resources.background.width), static_cast<float>(resources.background.height)},
                     {parallaxBackground, 0, static_cast<float>(resources.background.width), static_cast<float>(resources.background.height)}, {0, 0}, 0.0f, WHITE);
 
-    // Draw the midground (silhouettes)
-    // DrawTexturePro(resources.midground, {0, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)},
-    //                 {parallaxMidground, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)}, {0, 0}, 0.0f, WHITE);
+    //Draw the midground (silhouettes)
+    DrawTexturePro(resources.midgroundLot, {0, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)},
+                    {parallaxMidground, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)}, {0, 0}, 0.0f, WHITE);
 
     // Draw the foreground (main scene),  offset by 1024 to center relative to midground. 
     DrawTexturePro(resources.vacantLot, {0, 0, static_cast<float>(resources.vacantLot.width), static_cast<float>(resources.vacantLot.height)},
@@ -2300,7 +2477,7 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
     DrawMoney(); //draw money after EndMode2d()
 
     if (show_dbox){      
-        DrawDialogBox(camera, 0, 0, 20); // draw box size of 0x0. hobo has no border box
+        DrawDialogBox(player, camera, 0, 0, 20); // draw box size of 0x0. hobo has no border box
     }  
 
     if (showInventory){
@@ -2312,7 +2489,7 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
 }
 
 //Main Street
-void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, PlayerCar& player_car,MagicDoor& magicDoor, std::vector<NPC>& npcs,Vector2 mousePosition, ShaderResources& shaders) {
+void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, PlayerCar& player_car,MagicDoor& magicDoor, std::vector<NPC>& npcs, UFO& ufo, Vector2 mousePosition, ShaderResources& shaders) {
     // Update the camera target to follow the player
     int ap_min = 2246;//over apartment
     int ap_max = 2266;
@@ -2320,6 +2497,8 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     int pc_min = 1728; // over player_car
     int pc_max = 1748;
     int road_min = 1340; //exiting outside via road
+
+
 
     int lot_min = vacantLotX - 20;
     int lot_max = vacantLotX + 20;
@@ -2353,6 +2532,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     over_apartment = false;
     over_lot = false;
     over_car = false;
+    overLiquor = false;
     if (player.position.x > pc_min && player.position.x < pc_max){ //over_car
         over_car = true;
         if (fortuneTimer <= 0) phrase = "PRESS UP TO ENTER"; //Don't interupt the fortune teller
@@ -2381,12 +2561,19 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
         
     }
 
+    if (player.position.x > 1124 && player.position.x < 1144){
+        overLiquor = true;
+        dboxPosition = player.position;
+        show_dbox = true;
+    }
+
     camera.target = player.position;
     float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
     float parallaxBackground = camera.target.x * 0.7f;  // Background moves even slower
     
     BeginMode2D(camera);  // Begin 2D mode with the camera
     ClearBackground(customBackgroundColor);
+    
     if (vignette){ //vignette first so others can override. 
         BeginShaderMode(shaders.vignetteShader);
     }
@@ -2420,7 +2607,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     DrawTexturePro(resources.foreground, {0, 0, static_cast<float>(resources.foreground.width), static_cast<float>(resources.foreground.height)},
                     {-639, 0, static_cast<float>(resources.foreground.width), static_cast<float>(resources.foreground.height)}, {0, 0}, 0.0f, WHITE);
     
-    EndShaderMode(); ////////////////////////////SHADER OFF
+    
     
     if (move_car){
         player_car.position.x -= player_car.carSpeed * GetFrameTime();
@@ -2481,6 +2668,8 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
         }
     
     }
+
+    EndShaderMode(); ////////////////////////////SHADER OFF
     
     //DrawStreetLight
     BeginBlendMode(BLEND_ADDITIVE);
@@ -2554,13 +2743,16 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     if (showHealthbar) DrawHealthBar(resources, barPos, player.maxHealth, player.currentHealth, 128, 16);
 
 
+
+
     if (show_dbox && !player.enter_car){
 
-        if (over_lot || over_apartment || over_car || start){
-            DrawDialogBox(camera, 0, 0, 20);
+        if (over_lot || over_apartment || over_car || start || overLiquor){
+            DrawDialogBox(player, camera, 0, 0, 20);
+            
             
         }else{
-            DrawDialogBox(camera, 0, 0, 20);
+            DrawDialogBox(player, camera, 0, 0, 20);
         }
         
     }
@@ -2814,6 +3006,14 @@ void UptoEnter(Player& player, PlayerCar& player_car){
     //enter places by pressing up 
     if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
 
+        if (overLiquor && gameState == OUTSIDE){
+            show_dbox = true;
+            showLiquor = true;
+            
+            
+            phrase = "Whiskey: $100";
+        }
+
         if (over_apartment && gameState == OUTSIDE){
             transitionState = FADE_OUT; //Transition to apartment
             PlaySound(SoundManager::getInstance().GetSound("mainDoor"));
@@ -2928,9 +3128,11 @@ int main() {
     PlayerCar player_car;
     Earth earth;
     MagicDoor magicDoor;
+    UFO ufo;
     InitializePlayerCar(player_car);
     InitializeMagicDoor(magicDoor);
     InitEarth(earth);
+    InitUFO(ufo);
     spawnNPCs(resources); //spawn NPCs before rendering them outside
     InitPlatforms();
 
@@ -2954,7 +3156,7 @@ int main() {
 
     
     //int timeLoc = shaders.timeLoc;
-    //float totalTime = 0.0f; // Variable to keep track of time //glitch shader
+    float totalTime = 0.0f; // Variable to keep track of time //glitch shader
     // Main game loop
     while (!WindowShouldClose()) {
         Vector2 mousePosition = GetMousePosition();
@@ -2973,7 +3175,7 @@ int main() {
         //glowEffect(glowShader, gameState); //update glow shader
         
         float deltaTime = GetFrameTime();
-    
+        totalTime += deltaTime;
         UpdateShaders(shaders, deltaTime, gameState);
         
         if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_D) || IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)){ //tutorial text
@@ -3015,7 +3217,7 @@ int main() {
 
 
         if (gameState == OUTSIDE){     
-            RenderOutside(resources, camera, player, player_car, magicDoor, npcs,mousePosition, shaders); 
+            RenderOutside(resources, camera, player, player_car, magicDoor, npcs, ufo, mousePosition, shaders); 
             DisplayDate(calendar);//why not display date once globally? there are reasons 
 
         }else if (gameState == APARTMENT){
@@ -3027,7 +3229,7 @@ int main() {
             DisplayDate(calendar);
 
         }else if (gameState == CEMETERY){
-            RenderCemetery(resources, player, player_car, camera,mousePosition, shaders);
+            RenderCemetery(resources, player, player_car, ufo, totalTime, camera,mousePosition, shaders);
             DisplayDate(calendar);
 
         }else if (gameState == WORK){

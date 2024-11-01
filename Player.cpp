@@ -54,6 +54,7 @@ Player::Player() {
     hasShotgun = false;
     outline = false;
     hasShovel = false;
+    hasWhiskey = false;
     hasBadge = false;
     enter_car = false;
     can_take_damage = true;
@@ -110,7 +111,7 @@ void Player::take_damage(int damage) {
 
 float GetRightBoundary(GameState gameState){
     if (gameState == OUTSIDE){
-        return 6000.0f;
+        return 5000.0f;
     }else if (gameState == CEMETERY){
         return 4000;
     }else if (gameState == LOT){
@@ -132,7 +133,7 @@ float GetLeftBoundary(GameState gameState){
     }else if (gameState == CEMETERY){
         return 1700;
     }else if (gameState == LOT){
-        return 2218;
+        return 2400;
     }else if (gameState == GRAVEYARD){
         return 1500;
     }else if (gameState == APARTMENT){
@@ -163,17 +164,6 @@ void Player::HandleInput(float speed){
             LastTapTimeRight = currentTime;  // Update last tap time
         }
         
-        // Movement logic
-        // if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
-        //     position.x += speed * deltaTime;
-        //     isMoving = true;
-        //     facingRight = true;
-        // }
-        // if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
-        //     position.x -= speed * deltaTime;
-        //     isMoving = true;
-        //     facingRight = false;
-        // }
 
         // Horizontal movement with acceleration
         if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
@@ -189,7 +179,7 @@ void Player::HandleInput(float speed){
             facingRight = false;
         }
         else {
-            // Apply deceleration when no input is detected
+            // Apply deceleration when no input is detected //need to decelerate when aiming, shooting, also
             if (velocity.x > 0.0f) {
                 velocity.x -= deceleration * deltaTime;
                 if (velocity.x < 0.0f) velocity.x = 0.0f;
@@ -217,7 +207,7 @@ void Player::HandleInput(float speed){
        
        
         if (IsKeyPressed(KEY_SPACE) && isOnGround && !jumping && !holdingDown) {
-            velocity.y = -jumpForce;  // Negative because y increases downward
+            velocity.y = -jumpForce;  
             isOnGround = false;
             jumping = true;
 

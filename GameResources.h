@@ -73,6 +73,10 @@ struct GameResources {
     Texture2D batSheet;
     Texture2D platformTexture;
     Texture2D mibSheet;
+    Texture2D whiskey;
+    Texture2D midgroundLot;
+    Texture2D UFOsheet;
+    Texture2D lightBar;
 
     Font defaultFont;
 };

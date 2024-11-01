@@ -52,6 +52,7 @@ public:
     bool hasShotgun;
     bool hasShovel;
     bool hasBadge;
+    bool hasWhiskey;
     bool outline;
     bool holdingDown;
     bool dropping;

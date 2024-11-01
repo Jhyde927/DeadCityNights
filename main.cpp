@@ -48,6 +48,8 @@ bool buttonInternet = false;
 bool hasCemeteryKey = false;
 bool canGiveFortune = true;
 bool showInternet = false;
+bool move_ufo = false;
+bool canMoveUfo = true;
 bool firstHobo = true;
 bool firstBlood = false;
 bool drawShovel = false;
@@ -88,6 +90,7 @@ bool zombieWave2 = false;
 bool zombieWave3 = false;
 bool abductionBeam = false;
 bool show_dbox = true;
+float ufoTimer = 0.0;
 float dboxTime = 10.0;
 float internetTimer = 0.0;
 float inventoryPositionX = 0.0f;
@@ -113,7 +116,13 @@ int money = 100;
 int displayMoney = 100;
 bool showInventory = false;
 const int INVENTORY_SIZE = 10;  // Define the size of the inventory
-std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", "", "", ""}; //Inventory is a fixed array for no particular reason. 
+std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", "", "", ""}; //Inventory is a fixed array for no particular reason.
+
+//const int INVENTORY_SIZE = 10;
+//std::vector<std::string> inventory(INVENTORY_SIZE, "");  // Vector of size 10, filled with empty strings
+
+
+
 //possibly make it a vector and inventory size could grow over time. Or a backpack item 
 
 std::string phrase = "A and D or Arrows\n\nto move left and right"; //initial tutorial phrase
@@ -374,7 +383,7 @@ void InitEarth(Earth& earth){
 }
 
 void InitUFO(UFO& ufo){
-    //ufo.position = {3900, 400};
+    //animation perameters
     ufo.frameWidth = 144;
     ufo.frameHeight = 144;
     ufo.currentFrame = 0;
@@ -382,7 +391,7 @@ void InitUFO(UFO& ufo){
     ufo.frameTimer = 0.0;
     ufo.frameTime = 0.1;
 
-    ufo.basePosition = { 3900.0, 400.0f }; // Example position
+    ufo.basePosition = { -94.0, 0.0f }; //base position stays the same. When moving UFO move base position.
     ufo.position = ufo.basePosition;
 
     // Set motion parameters
@@ -426,6 +435,7 @@ void InitPlatforms() {
 // Function to add an item to the first available slot in the inventory
 void AddItemToInventory(const std::string& item, std::string inventory[], int inventorySize) {
     //what happens if inventory is full and we add to it? nothing?
+
     for (int i = 0; i < inventorySize; i++) {
         if (inventory[i].empty()) {
             inventory[i] = item;  // Add the item to the first empty slot
@@ -1027,7 +1037,7 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
         if (player.currentWeapon == SHOTGUN) shotgunTint = customTint;
         if (player.currentWeapon == REVOLVER) gunTint = customTint;
        // Draw the icon at x, y
-        if (!inventory[i].empty()) { //inventory buttons are all done in the same for loop we use to draw it. 
+        if (!inventory[i].empty()) { //inventory buttons are all done in the same for loop we use to draw it. Consider abstracting this somehow. 
 
             if (inventory[i] == "carKeys"){
                 DrawTexture(resources.CarKeys, x, y, WHITE);
@@ -1063,6 +1073,7 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
                             player.currentHealth = player.maxHealth;
                             player.hasWhiskey = false;
                             drunk = true;
+                            PlaySound(SoundManager::getInstance().GetSound("gulp"));
 
                         }
                     }
@@ -1347,6 +1358,27 @@ void DrawMagicDoor(GameResources& resources,Player& player, MagicDoor& magicDoor
                 }
             }
         }
+
+}
+
+void moveUFO(UFO& ufo){
+    if (canMoveUfo){
+        
+        float deltaTime = GetFrameTime();
+        int moveSpeed = 100;
+        int stopPos = 400;
+        if (ufo.basePosition.y < stopPos && move_ufo){
+            ufo.basePosition.y += moveSpeed * deltaTime;
+        
+        }else if (ufoTimer <= 0){
+            ufo.basePosition.x -= 2000 * deltaTime;
+        }
+
+        if (ufo.basePosition.x < -500){
+            ufo.basePosition = {-94.0, -100.0}; // reset ufo pos if too far left.
+            canMoveUfo = false; 
+        }
+    }
 
 }
 
@@ -1918,7 +1950,11 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         abductionBeam = true;
     }
 
-    DrawUFO(resources, ufo, camera, time);
+    if (player.hasBadge){ // dont show UFO until later in the game
+        DrawUFO(resources, ufo, camera, time);
+    }
+
+    
 
 
     //render shovel. Click the shovel to pick it up. 
@@ -2489,7 +2525,7 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
 }
 
 //Main Street
-void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, PlayerCar& player_car,MagicDoor& magicDoor, std::vector<NPC>& npcs, UFO& ufo, Vector2 mousePosition, ShaderResources& shaders) {
+void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, PlayerCar& player_car,MagicDoor& magicDoor, float& totalTime,  std::vector<NPC>& npcs, UFO& ufo, Vector2 mousePosition, ShaderResources& shaders) {
     // Update the camera target to follow the player
     int ap_min = 2246;//over apartment
     int ap_max = 2266;
@@ -2567,6 +2603,19 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
         show_dbox = true;
     }
 
+    
+    if (player.position.x > -94 && player.position.x < -84 && !move_ufo){
+        move_ufo = true;
+        ufoTimer = 10;
+        std::cout << "Moving UFO";
+
+    }
+    if (move_ufo){
+        ufoTimer -= GetFrameTime();
+        DrawUFO(resources, ufo, camera, totalTime);
+        moveUFO(ufo);
+    }
+
     camera.target = player.position;
     float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
     float parallaxBackground = camera.target.x * 0.7f;  // Background moves even slower
@@ -2608,7 +2657,10 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
                     {-639, 0, static_cast<float>(resources.foreground.width), static_cast<float>(resources.foreground.height)}, {0, 0}, 0.0f, WHITE);
     
     
-    
+   
+    if (move_ufo){
+        DrawUFO(resources, ufo, camera, totalTime);
+    }
     if (move_car){
         player_car.position.x -= player_car.carSpeed * GetFrameTime();
     }else{
@@ -3071,6 +3123,7 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadSound("ShovelDig", "assets/sounds/ShovelDig.ogg");
     soundManager.LoadSound("shovelPickup", "assets/sounds/shovelPickup.ogg");
     soundManager.LoadSound("Pills", "assets/sounds/Pills.ogg");
+    soundManager.LoadSound("gulp", "assets/sounds/gulp.ogg");
 
     soundManager.LoadSound("ShotGun", "assets/sounds/ShotGun.ogg");
     soundManager.LoadSound("ShotgunReload", "assets/sounds/ShotgunReload.ogg");
@@ -3175,7 +3228,9 @@ int main() {
         //glowEffect(glowShader, gameState); //update glow shader
         
         float deltaTime = GetFrameTime();
-        totalTime += deltaTime;
+        totalTime += deltaTime; // used for UFO sine wave
+        if (totalTime > 10000.0f) totalTime -= 10000.0f; //reset total time just in case. 
+            
         UpdateShaders(shaders, deltaTime, gameState);
         
         if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_D) || IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)){ //tutorial text
@@ -3196,7 +3251,6 @@ int main() {
             debugKeys(player);
 
         }
-        
         //////////////////////////////////////////////
 
         //I for inventory
@@ -3217,7 +3271,7 @@ int main() {
 
 
         if (gameState == OUTSIDE){     
-            RenderOutside(resources, camera, player, player_car, magicDoor, npcs, ufo, mousePosition, shaders); 
+            RenderOutside(resources, camera, player, player_car, magicDoor, totalTime, npcs, ufo, mousePosition, shaders); 
             DisplayDate(calendar);//why not display date once globally? there are reasons 
 
         }else if (gameState == APARTMENT){

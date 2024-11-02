@@ -593,6 +593,32 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
 
 }
 
+void PlayPositionalSound(Sound sound, Vector2 soundPos, Vector2 listenerPos, float maxDistance) {
+    // Calculate distance between listener and sound source
+    float dx = listenerPos.x - soundPos.x;
+    float dy = listenerPos.y - soundPos.y;
+    float distance = sqrtf(dx * dx + dy * dy);
+
+    // Calculate volume based on distance
+    float volume = 1.0f - (distance / maxDistance);
+    if (volume < 0.0f) volume = 0.0f;
+
+    // Set the sound volume
+    SetSoundVolume(sound, volume);
+
+    // Play the sound if volume is greater than zero
+    if (volume > 0.0f) {
+        if (!IsSoundPlaying(sound)) {
+            PlaySound(sound);
+        }
+    } else {
+        // Stop the sound if it's playing but volume is zero
+        if (IsSoundPlaying(sound)) {
+            StopSound(sound);
+        }
+    }
+}
+
 void addMoney(int amount){
     money += amount;
 }
@@ -1366,11 +1392,13 @@ void moveUFO(UFO& ufo){
         float deltaTime = GetFrameTime();
         int moveSpeed = 100;
         int stopPos = 400;
-        if (ufo.basePosition.y < stopPos && move_ufo){ //go from starting position to 400 y and wait for timer
+        if (ufo.basePosition.y < stopPos && move_ufo && ufoTimer > 0){ //go from starting position to 400 y and wait for timer
             ufo.basePosition.y += moveSpeed * deltaTime;
         
         }else if (ufoTimer <= 0){ //times up, shoot to the left fast
             ufo.basePosition.x -= 2000 * deltaTime;
+            ufo.basePosition.y -= 2000 * deltaTime;
+            
         }
 
         if (ufo.basePosition.x < -1000){
@@ -1448,8 +1476,8 @@ void DrawUFO(GameResources& resources, UFO& ufo, Camera2D& camera, float& time, 
 
     
     }
-    // Draw the current frame of the earth with the adjusted position
-    BeginShaderMode(shaders.vignetteShader);
+    
+    BeginShaderMode(shaders.pixelationShader); //TODO find a good shader for UFO
     DrawTextureRec(resources.UFOsheet, sourceRect, UFODrawPosition, WHITE); 
     EndShaderMode();
     
@@ -2436,9 +2464,16 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
     
     SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide
 
- 
-    //SoundManager::getInstance().PlayMusic("StreetSounds");
-    camera.target = player.position; 
+    int cameraMinX = 2677;
+    int cameraMaxX = 3048;
+    
+    if (player.position.x > 2677 && player.position.x < 3048){
+        camera.target.x = player.position.x;
+
+    }else{
+        camera.target.x = Clamp(player.position.x, cameraMinX, cameraMaxX); //clamp camera to the center of the scene. 
+    }
+    
 
    if (vignette){ //vignette first so others can override. 
         BeginShaderMode(shaders.vignetteShader);
@@ -2761,6 +2796,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 
     if (player.enter_car == false){// if enter car is false, dont render player or update position. camera should stay focused on player pos. 
         SoundManager::getInstance().StopMusic("CarRun");
+
         //DRAW PLAYER
         
            
@@ -3056,6 +3092,8 @@ void debugKeys(Player& player){
 
 }
 
+
+
 void UptoEnter(Player& player, PlayerCar& player_car){
     //enter places by pressing up 
     if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
@@ -3080,6 +3118,7 @@ void UptoEnter(Player& player, PlayerCar& player_car){
         if (over_car && !player.enter_car && has_car_key){
             //player inside idling car
             SoundManager::getInstance().PlayMusic("CarRun");
+            //PlayPositionalSound(SoundManager::getInstance().GetSound("carRun"), player_car.position, player.position, 800);
             PlaySound(SoundManager::getInstance().GetSound("CarStart"));
             PlaySound(SoundManager::getInstance().GetSound("CarDoorOpen"));
             player.enter_car = true;
@@ -3099,46 +3138,20 @@ void UptoEnter(Player& player, PlayerCar& player_car){
     }
 }
 
-void PlayPositionalSound(Sound sound, Vector2 soundPos, Vector2 listenerPos, float maxDistance) {
-    // Calculate distance between listener and sound source
-    float dx = listenerPos.x - soundPos.x;
-    float dy = listenerPos.y - soundPos.y;
-    float distance = sqrtf(dx * dx + dy * dy);
-
-    // Calculate volume based on distance
-    float volume = 1.0f - (distance / maxDistance);
-    if (volume < 0.0f) volume = 0.0f;
-
-    // Set the sound volume
-    SetSoundVolume(sound, volume);
-
-    // Play the sound if volume is greater than zero
-    if (volume > 0.0f) {
-        if (!IsSoundPlaying(sound)) {
-            PlaySound(sound);
-        }
-    } else {
-        // Stop the sound if it's playing but volume is zero
-        if (IsSoundPlaying(sound)) {
-            StopSound(sound);
-        }
-    }
-}
-
-
 void InitSounds(SoundManager& soundManager){
     //We use our own custom sound manager. We have an array of sounds, and an array of musticTracks.
     SetMasterVolume(1.0f);  // Sets the master volume to maximum
     
     SoundManager::getInstance().LoadMusic("CarRun", "assets/sounds/CarRun.ogg"); // load CarRun.ogg into music tracks with the name CarRun
     //music tracks automatically loop.The car running sound needs to loop, so we call it music.
-
+    
+    SoundManager::getInstance().LoadMusic("enchantedNight", "assets/sounds/enchantedNight.ogg");
     
     SoundManager::getInstance().LoadMusic("StreetSounds", "assets/sounds/StreetSounds.ogg"); 
-    SoundManager::getInstance().LoadMusic("Jangwa", "assets/sounds/Jangwa.ogg");
+    //SoundManager::getInstance().LoadMusic("Jangwa", "assets/sounds/Jangwa.ogg");
     SoundManager::getInstance().LoadMusic("Neon", "assets/sounds/Neon.ogg");
     SoundManager::getInstance().LoadMusic("NewNeon", "assets/sounds/Neon(noDrum).ogg");
-
+    soundManager.LoadSound("carRun", "assets/sounds/CarRun.ogg");
     soundManager.LoadSound("gunShot", "assets/sounds/gunShot.ogg");   //misc sounds
     soundManager.LoadSound("BoneCrack", "assets/sounds/BoneCrack.ogg");
     soundManager.LoadSound("reload", "assets/sounds/revolvercock.ogg");
@@ -3178,14 +3191,14 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadSound("phit2", "assets/sounds/PlayerHit2.ogg");
 
     //Volume edits
-    SoundManager::getInstance().SetSoundVolume("CarStart", 0.5);
-    SoundManager::getInstance().SetSoundVolume("BoneCrack", 0.3f);
     SoundManager::getInstance().SetMusicVolume("CarRun", 0.25f);
     SoundManager::getInstance().SetMusicVolume("Schumann", 0.25f);
+    SoundManager::getInstance().SetMusicVolume("enchantedNight", 0.5f);
+
+    SoundManager::getInstance().SetSoundVolume("CarStart", 0.5);
+    SoundManager::getInstance().SetSoundVolume("BoneCrack", 0.3f);
     SoundManager::getInstance().SetSoundVolume("Owl", 0.5);
 }
-
-
 
 
 int main() {
@@ -3237,7 +3250,8 @@ int main() {
 
 
     //PlayMusicStream(SoundManager::getInstance().GetMusic("Jangwa"));
-    PlayMusicStream(SoundManager::getInstance().GetMusic("NewNeon"));
+    //PlayMusicStream(SoundManager::getInstance().GetMusic("NewNeon"));
+    PlayMusicStream(SoundManager::getInstance().GetMusic("enchantedNight"));
    
     //PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.position, player.position, 300.0f);
 
@@ -3249,7 +3263,8 @@ int main() {
         Vector2 mousePosition = GetMousePosition();
         if (!player.enter_car) player.UpdateMovement(resources, gameState, mousePosition, camera, platforms);  // Update player position and animation
         UpdateInventoryPosition(camera, gameState);
-        SoundManager::getInstance().UpdateMusic("NewNeon");
+        //SoundManager::getInstance().UpdateMusic("NewNeon");
+        SoundManager::getInstance().UpdateMusic("enchantedNight");
         SoundManager::getInstance().UpdateMusic("CarRun");
         PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.position, player.position, 800.0f);
         UpdateBullets();
@@ -3276,11 +3291,13 @@ int main() {
         }
 
         if (IsKeyPressed(KEY_M)){ //MUTE MUSIC
-            if (SoundManager::getInstance().IsMusicPlaying("NewNeon")){
-                SoundManager::getInstance().PauseMusic("NewNeon");
+            if (SoundManager::getInstance().IsMusicPlaying("enchantedNight")){
+                //SoundManager::getInstance().PauseMusic("NewNeon");
+                SoundManager::getInstance().PauseMusic("enchantedNight");
 
             }else{
-                SoundManager::getInstance().ResumeMusic("NewNeon");
+                //SoundManager::getInstance().ResumeMusic("NewNeon");
+                SoundManager::getInstance().ResumeMusic("enchantedNight");
             }
         }
 

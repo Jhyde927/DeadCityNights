@@ -16,6 +16,8 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     shaders.outlineShader = LoadShader(0, "shaders/outline.fs");
     shaders.vignetteShader = LoadShader(0, "shaders/vignette.fs");
     shaders.glitchVignetteShader = LoadShader(0, "shaders/glitchVignetteShader.fs");
+    shaders.pixelationShader = LoadShader(0, "shaders/pixelation.fs");
+    shaders.outlineGlowShader = LoadShader(0, "shaders/outlineGlow.fs");
     
     shaders.rainbowOutlineShader = LoadShader(0, "shaders/rainbowOutline.fs");
 
@@ -117,6 +119,24 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     // Set texture size (ensure you use the correct texture)
     float textureSize[2] = { (float)512.0, (float)512.0 };
     SetShaderValue(shaders.rainbowOutlineShader, textureSizeLoc2, textureSize, SHADER_UNIFORM_VEC2);
+    
+
+        //pixelation shader
+    float ptextureSize[2] = {(float)1024.0, (float)1024.0};
+    float pixelSize = 4.0f;
+    SetShaderValue(shaders.pixelationShader, GetShaderLocation(shaders.pixelationShader, "pixelSize"), &pixelSize, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shaders.pixelationShader, GetShaderLocation(shaders.pixelationShader, "textureSize"), ptextureSize, SHADER_UNIFORM_VEC2);
+
+
+    //outline glow
+    float glowSize = 2.0f;
+    float threshold3 = 0.05f;
+    float glowColor2[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+
+    SetShaderValue(shaders.outlineGlowShader, GetShaderLocation(shaders.outlineGlowShader, "glowColor"), glowColor2, SHADER_UNIFORM_VEC4); // Orange glow
+    SetShaderValue(shaders.outlineGlowShader, GetShaderLocation(shaders.outlineGlowShader, "threshold"), &threshold3, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shaders.outlineGlowShader, GetShaderLocation(shaders.outlineGlowShader, "glowSize"), &glowSize, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shaders.outlineGlowShader, GetShaderLocation(shaders.outlineGlowShader, "textureSize"), ptextureSize, SHADER_UNIFORM_VEC2);
 
 
 

@@ -61,6 +61,7 @@ bool NecroTech = false;
 bool start = true;
 bool buttonTavern = false;
 bool gotoWork = false;
+bool gotoPark = false;
 bool debug = true; ///////////////////////////////////////DEBUG KEYS ON/OFF
 bool hasWorked = false;
 bool buttonSleep = false;
@@ -286,6 +287,9 @@ void LoadGameResources(GameResources& resources) {
     resources.midgroundLot = LoadTexture("assets/MidGroundLot.png");
     resources.UFOsheet = LoadTexture("assets/UFOsheet.png");
     resources.lightBar = LoadTexture("assets/lightBar.png");
+    resources.ParkForeground = LoadTexture("assets/Park(foreground).png");
+    resources.ParkMidground = LoadTexture("assets/Park(midground).png");
+    resources.ParkBuildings = LoadTexture("assets/Park(buildings).png");
 }
 
 void UnloadGameResources(GameResources& resources){
@@ -356,6 +360,9 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.midgroundLot);
     UnloadTexture(resources.UFOsheet);
     UnloadTexture(resources.lightBar);
+    UnloadTexture(resources.ParkForeground);
+    UnloadTexture(resources.ParkMidground);
+    UnloadTexture(resources.ParkBuildings);
 
    
 }
@@ -574,6 +581,10 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
                     gotoWork = true;
                     move_car = true;
                     hasWorked = true;
+                }else if (player.enter_car && buttonTavern){
+                    gotoPark = true;
+                    move_car = true;
+                    
                 }
             }
 
@@ -724,7 +735,7 @@ void spawnZombies(GameResources& resources,int zombie_count){
 
 
 void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<NPC>& npcs, GameCalendar calendar) {
-    if (move_car && !gotoWork) {  // Car is moving, go to road
+    if (move_car && !gotoWork && !gotoPark) {  // Car is moving, go to road
         gameState = ROAD;
         player_car.facingLeft = true;  // Leaving outside = face left
         if (!reverse_road) {
@@ -733,6 +744,13 @@ void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<
     } else if (move_car && gotoWork) {  // Move car and go to work
         gameState = WORK;
         // Additional logic if needed
+    }else if (move_car && gotoPark){
+        gameState = PARK;
+        player_car.position.x = 1800;
+        player.position.x = player_car.position.x;
+        
+        move_car = false;
+
     } else if (player.isDead) {  // Died outside, go to apartment
         gameState = APARTMENT;
         player.position.x = apartmentX;
@@ -1336,7 +1354,7 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, G
         buttonTavern = false;
     }
     if (gameState == OUTSIDE){
-        DrawText("   Tavern", ui_pos.x, ui_pos.y-17, 16, tavern_tint);
+        DrawText("   Park", ui_pos.x, ui_pos.y-17, 16, tavern_tint);
         DrawText("   Cemetery", ui_pos.x, ui_pos.y, 16, cemetery_tint);
 
         work_tint = hasWorked ? BLACK : work_tint;
@@ -1820,7 +1838,10 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
 void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_car, UFO& ufo, float& time, Camera2D& camera,Vector2 mousePosition, ShaderResources& shaders){
     int carMax = 2800;
     int carMin = 2765;
-    
+    if (hasCemeteryKey){
+        //playe UFO hum when ufo is present. 
+        PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.position, player.position, 800.0f);
+    }
     
     playOwl = false; //reset owl
     // Maybe zombiewaves can be reset to false when exiting cemetery. 
@@ -2038,6 +2059,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
 
     }
 
+    //cemetery bats
     // if (hasCemeteryKey){
     //     for (NPC& bat : bats){
     //         bat.Update(player);
@@ -2561,9 +2583,110 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
     DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
 }
 
+void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car, Camera2D& camera,Vector2& mousePosition, ShaderResources& shaders){
+    BeginMode2D(camera);  // Begin 2D mode with the camera
+    ClearBackground(customBackgroundColor);
+    
+    
+    float parallaxBackground = camera.target.x * 0.9f;  // Background moves even slower
+    float ParallaxBuildings = camera.target.x * 0.6;
+    float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
+
+    
+    if (player.enter_car){
+        camera.target = player_car.position;
+    }else{
+        camera.target = player.position;
+    }
+
+
+    if (vignette){ //vignette first so others can override. 
+        BeginShaderMode(shaders.vignetteShader);
+    }
+
+    if (applyShader){
+
+        BeginShaderMode(shaders.glowShader);
+        
+    }
+
+    if (drunk){
+        BeginShaderMode(shaders.glowShader2);
+
+    }
+
+    if (glitch){
+        BeginShaderMode(shaders.glitchVignetteShader);
+   
+
+    }
+
+    BeginMode2D(camera);
+    
+     // Draw the background (sky)
+    DrawTexturePro(resources.background, {0, 0, static_cast<float>(resources.background.width), static_cast<float>(resources.background.height)},
+                    {parallaxBackground, 0, static_cast<float>(resources.background.width), static_cast<float>(resources.background.height)}, {0, 0}, 0.0f, WHITE);
+
+    // Draw the midground (silhouettes)
+    DrawTexturePro(resources.ParkBuildings, {0, 0, static_cast<float>(resources.ParkBuildings.width), static_cast<float>(resources.midground.height)},
+                    {-512 + ParallaxBuildings, 0, static_cast<float>(resources.ParkBuildings.width), static_cast<float>(resources.midground.height)}, {0, 0}, 0.0f, WHITE);
+
+    DrawTexturePro(resources.ParkMidground, {0, 0, static_cast<float>(resources.ParkMidground.width), static_cast<float>(resources.midground.height)},
+                    {-512+parallaxMidground, 0, static_cast<float>(resources.ParkMidground.width), static_cast<float>(resources.midground.height)}, {0, 0}, 0.0f, WHITE);
+
+    // Draw the foreground (main scene),  offset by 1024 to center relative to midground. 
+    DrawTexturePro(resources.ParkForeground, {0, 0, static_cast<float>(resources.ParkForeground.width), static_cast<float>(resources.foreground.height)},
+                    {512, 0, static_cast<float>(resources.ParkForeground.width), static_cast<float>(resources.foreground.height)}, {0, 0}, 0.0f, WHITE);
+    
+    if (player.enter_car == false){// if enter car is false, dont render player or update position. camera should stay focused on player pos. 
+        SoundManager::getInstance().StopMusic("CarRun");
+
+        //DRAW PLAYER
+        player.DrawPlayer(resources, gameState, camera, shaders);
+
+    }
+
+    //DrawPlayerCar
+    int CarFrameWidth = 128;
+    Rectangle sourceRecCar = {player_car.currentFrame * CarFrameWidth, 0, CarFrameWidth, CarFrameWidth};
+    DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE); //draw player_car
+
+    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)){
+        if (player.enter_car && !move_car){ // dont exit car if it's still moving.
+            PlaySound(SoundManager::getInstance().GetSound("CarDoorClose")); 
+            player.enter_car = false;
+            player_car.currentFrame = 0;
+        }
+    }
+
+    //DrawStreetLight
+    BeginBlendMode(BLEND_ADDITIVE);
+    DrawTexture(resources.lightCone, 1013, 610, WHITE);
+    DrawTexture(resources.lightCone, 1492, 610, WHITE);
+    DrawTexture(resources.lightCone, 1967, 610, WHITE);
+    EndBlendMode();
+
+    EndMode2D();
+
+    DrawMoney(); //draw money after EndMode2d()
+    if (showInventory){
+         
+        RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+    }
+
+    if (show_carUI && !move_car && player.enter_car){ //destination menu
+        DrawCarUI(player_car, mousePosition, camera, gameState);
+    }
+    //Draw cursor last so it's on top
+    DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
+
+}
+
 //Main Street
 void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, PlayerCar& player_car,MagicDoor& magicDoor, float& totalTime,  std::vector<NPC>& npcs, UFO& ufo, Vector2 mousePosition, ShaderResources& shaders) {
-    // Update the camera target to follow the player
+    //play ufo sound when outside. 
+    PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.position, player.position, 800.0f);
+
     int ap_min = 2246;//over apartment
     int ap_max = 2266;
 
@@ -3036,12 +3159,6 @@ void debugKeys(Player& player){
         if (IsKeyPressed(KEY_SPACE)){
             std::cout << "Player Position: ";
             PrintVector2(player.position);
-            // if (!drunk){
-            //     //applyShader = true;
-            //     drunk = true;
-            // }else{
-            //     //applyShader = false;
-            //     drunk = false;
             }
 
         if (IsKeyPressed(KEY_O)){
@@ -3250,10 +3367,11 @@ int main() {
 
 
     //PlayMusicStream(SoundManager::getInstance().GetMusic("Jangwa"));
-    //PlayMusicStream(SoundManager::getInstance().GetMusic("NewNeon"));
-    PlayMusicStream(SoundManager::getInstance().GetMusic("enchantedNight"));
+    PlayMusicStream(SoundManager::getInstance().GetMusic("NewNeon"));
+    //PlayMusicStream(SoundManager::getInstance().GetMusic("enchantedNight"));
    
-    //PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.position, player.position, 300.0f);
+  
+ 
 
     
     //int timeLoc = shaders.timeLoc;
@@ -3263,10 +3381,10 @@ int main() {
         Vector2 mousePosition = GetMousePosition();
         if (!player.enter_car) player.UpdateMovement(resources, gameState, mousePosition, camera, platforms);  // Update player position and animation
         UpdateInventoryPosition(camera, gameState);
-        //SoundManager::getInstance().UpdateMusic("NewNeon");
-        SoundManager::getInstance().UpdateMusic("enchantedNight");
+        SoundManager::getInstance().UpdateMusic("NewNeon");
+        //SoundManager::getInstance().UpdateMusic("enchantedNight");
         SoundManager::getInstance().UpdateMusic("CarRun");
-        PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.position, player.position, 800.0f);
+      
         UpdateBullets();
         CheckBulletNPCCollisions(zombies); //check each enemy group for bullet collisions
         CheckBulletNPCCollisions(ghosts);
@@ -3291,13 +3409,13 @@ int main() {
         }
 
         if (IsKeyPressed(KEY_M)){ //MUTE MUSIC
-            if (SoundManager::getInstance().IsMusicPlaying("enchantedNight")){
-                //SoundManager::getInstance().PauseMusic("NewNeon");
-                SoundManager::getInstance().PauseMusic("enchantedNight");
+            if (SoundManager::getInstance().IsMusicPlaying("NewNeon")){
+                SoundManager::getInstance().PauseMusic("NewNeon");
+                //SoundManager::getInstance().PauseMusic("enchantedNight");
 
             }else{
-                //SoundManager::getInstance().ResumeMusic("NewNeon");
-                SoundManager::getInstance().ResumeMusic("enchantedNight");
+                SoundManager::getInstance().ResumeMusic("NewNeon");
+                //SoundManager::getInstance().ResumeMusic("enchantedNight");
             }
         }
 
@@ -3323,9 +3441,7 @@ int main() {
 
         BeginDrawing();
 
-
-
-        if (gameState == OUTSIDE){     
+        if (gameState == OUTSIDE){
             RenderOutside(resources, camera, player, player_car, magicDoor, totalTime, npcs, ufo, mousePosition, shaders); 
             DisplayDate(calendar);//why not display date once globally? there are reasons 
 
@@ -3355,6 +3471,10 @@ int main() {
         }else if (gameState == ASTRAL){
             DisplayDate(calendar);
             RenderAstral(resources, player, camera, mousePosition, earth, magicDoor, shaders);
+        }else if (gameState == PARK){
+            DisplayDate(calendar);
+            RenderPark(resources, player,player_car, camera, mousePosition, shaders);
+
         }
 
         //show FPS

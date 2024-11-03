@@ -124,6 +124,8 @@ float GetRightBoundary(GameState gameState){
         return 4000;
     }else if (gameState == ASTRAL){
         return 3550;
+    }else if (gameState == PARK){
+        return 2048;
     }
 }
 
@@ -142,6 +144,8 @@ float GetLeftBoundary(GameState gameState){
         return 1064;
 
     }else if (gameState == ASTRAL){
+        return 1064;
+    }else if (gameState == PARK){
         return 1064;
     }
 }

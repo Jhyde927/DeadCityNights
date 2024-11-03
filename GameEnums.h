@@ -12,6 +12,7 @@ enum GameState {
     LOT, 
     GRAVEYARD,
     ASTRAL,
+    PARK,
 };
 
 enum TransitionState {

@@ -25,7 +25,7 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     float resolution[2] = { static_cast<float>(screenWidth), static_cast<float>(screenHeight) };
     float glowThreshold = 0.01f;
     float glowIntensity = 2.0f;
-    float glowColor[3] = { 0.5f, 1.0f, 2.0f };
+    float glowColor[3] = { 0.5f, 0.5f, 2.0f };
 
     // Glow Shader 1
     SetShaderValue(shaders.glowShader, GetShaderLocation(shaders.glowShader, "resolution"), resolution, SHADER_UNIFORM_VEC2);
@@ -161,8 +161,8 @@ void UpdateShaders(ShaderResources& shaders, float deltaTime, GameState& gameSta
 
     ///update glowShader
     float time = GetTime();  // Get the total elapsed time
-    float minThreshold = 0.2f;
-    float maxThreshold = 0.6f;
+    float minThreshold = 0.1f;
+    float maxThreshold = 0.4f;
     float oscillationSpeed = 0.9f;  // 1 second duration
 
     if (gameState == ASTRAL){ //Customized look for astral plane. 

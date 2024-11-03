@@ -77,6 +77,10 @@ struct GameResources {
     Texture2D midgroundLot;
     Texture2D UFOsheet;
     Texture2D lightBar;
+    Texture2D ParkForeground;
+    Texture2D ParkMidground;
+    Texture2D ParkBuildings;
+    
 
     Font defaultFont;
 };

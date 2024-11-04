@@ -153,6 +153,7 @@ std::vector<NPC>bats;
 std::vector<NPC>mibs;
 std::vector<NPC>astralGhosts;
 std::vector<NPC>astralBats;
+std::vector<NPC>ParkNpcs;
 
 std::vector<Platform> platforms;
 
@@ -598,7 +599,11 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
                 zombieWave3 = false;
 
             }
-        }   
+        }else if (gameState == PARK){
+            if (player.enter_car && buttonCemetery){ //street button in park
+                transitionState = FADE_OUT;
+            }
+        } 
 
     }
 
@@ -871,6 +876,13 @@ void HandleAstralTransition(Player& player, GameCalendar& calendar){
 
 }
 
+void HandleParkTransition(GameState& gamestate, Player& player, PlayerCar player_car){
+        gameState = OUTSIDE;
+        player.position.x = player_car.position.x-64; //center of car
+        gotoPark = false; //reset gotopark
+
+}
+
 void PerformStateTransition(Player& player, PlayerCar& player_car, GameCalendar& calendar, std::vector<NPC>& npcs) {
     //if we are fading out switch to the next area depending on the situation. 
     switch (gameState) {
@@ -898,6 +910,10 @@ void PerformStateTransition(Player& player, PlayerCar& player_car, GameCalendar&
 
         case ASTRAL:
             HandleAstralTransition(player, calendar);
+            break;
+
+        case PARK:
+            HandleParkTransition(gameState, player, player_car);
             break;
   
     }
@@ -1307,7 +1323,7 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, G
     int ui_width = 116;
     int ui_height = 64;
 
-
+    //DrawRectangle(player_car.position.x, player_car.position.y, 200, 200, WHITE);
     DrawRectangle(ui_pos.x, ui_pos.y - 17, ui_width, ui_height, customBackgroundColor);
     Color work_tint = WHITE;
     Color cemetery_tint = WHITE;
@@ -1353,6 +1369,8 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, G
     }else{
         buttonTavern = false;
     }
+
+
     if (gameState == OUTSIDE){
         DrawText("   Park", ui_pos.x, ui_pos.y-17, 16, tavern_tint);
         DrawText("   Cemetery", ui_pos.x, ui_pos.y, 16, cemetery_tint);
@@ -1368,7 +1386,11 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, G
     }else if (gameState == CEMETERY){
         
         DrawText("   Street", ui_pos.x, ui_pos.y, 16, cemetery_tint);
-        //DrawText("Work", ui_pos.x, ui_pos.y+17, 16, work_tint);
+       //DrawText("Work", ui_pos.x, ui_pos.y+17, 16, work_tint);
+
+    }else if (gameState == PARK){
+        DrawText("    Street", ui_pos.x, ui_pos.y, 16, cemetery_tint);
+        
     }
 
 }
@@ -1790,7 +1812,7 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
 
 
     for (NPC& ghost: astralGhosts){
-        ghost.Update(player);
+        ghost.Update(player, gameState);
         ghost.Render(shaders);
         
         if (ghost.health > 0) ghost.isActive = true;
@@ -1798,7 +1820,7 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
     }
 
     for (NPC& bat : astralBats){
-        bat.Update(player);
+        bat.Update(player, gameState);
         bat.Render(shaders);
         //bat.agro = true;
         if (bat.health > 0) bat.isActive = true;
@@ -1886,8 +1908,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
             StartZombieSpawn(5);
 
         }
-        
-        
+            
     }
 
     show_dbox = false;
@@ -1906,11 +1927,8 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
             show_dbox = true;
             dboxPosition = player.position;
 
-        }
+    }
     
-        
-    
-
     if (player_car.position.x < carMin && !leave_cemetery){
         move_car = false;
     }
@@ -2054,7 +2072,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
 
 
     for (NPC& zombie : zombies){ //update and draw zombies in cemetery
-        zombie.Update(player);
+        zombie.Update(player, gameState);
         zombie.Render(shaders);
 
     }
@@ -2071,7 +2089,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
     // }
 
 
-    if (show_carUI && !move_car && player.enter_car){ //destination menu
+    if (show_carUI && !move_car && player.enter_car){ //destination menu //draw UI inside mode2d
         DrawCarUI(player_car, mousePosition, camera, gameState);
     }
 
@@ -2305,7 +2323,7 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
 
     }
     for (NPC& zombie : zombies){
-        zombie.Update(player);
+        zombie.Update(player, gameState);
         zombie.Render(shaders);
 
         if (zombie.isDying && !firstBlood && gameState == GRAVEYARD){ //first zombie that is dying in the graveyard
@@ -2319,9 +2337,9 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
     if (!start) show_dbox = false; //set to false to hide dbox when not over spot unless start where we first show tutorial text
 
     for (NPC& ghost: ghosts){
-        ghost.Update(player);
+        ghost.Update(player, gameState);
         ghost.Render(shaders);
-        ghost.ClickNPC(mousePosition, camera, player);
+        ghost.ClickNPC(mousePosition, camera, player, gameState);
         if (ghost.health > 0) ghost.isActive = true;
         if (ghost.interacting){
             show_dbox = true;
@@ -2533,9 +2551,9 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
 
     show_dbox = false; //turn off dbox if no one is interacting
     for (NPC& hobo : hobos){
-        hobo.Update(player);
+        hobo.Update(player, gameState);
         hobo.Render(shaders);
-        hobo.ClickNPC(mousePosition, camera, player);
+        hobo.ClickNPC(mousePosition, camera, player, gameState);
 
         if (hobo.interacting){ 
             if (firstHobo){ // only raise zombie and draw shovel if you have talked the hobo
@@ -2589,15 +2607,16 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
     
     
     float parallaxBackground = camera.target.x * 0.9f;  // Background moves even slower
-    float ParallaxBuildings = camera.target.x * 0.6;
+    float ParallaxBuildings = camera.target.x * 0.7;
     float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
-
-    
-    if (player.enter_car){
-        camera.target = player_car.position;
-    }else{
-        camera.target = player.position;
+    over_car = false;
+    if (player.position.x > player_car.position.x && player.position.x < player_car.position.x +30){
+        over_car = true;
     }
+    
+
+    camera.target.x = player.position.x;
+    
 
 
     if (vignette){ //vignette first so others can override. 
@@ -2625,7 +2644,7 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
     
      // Draw the background (sky)
     DrawTexturePro(resources.background, {0, 0, static_cast<float>(resources.background.width), static_cast<float>(resources.background.height)},
-                    {parallaxBackground, 0, static_cast<float>(resources.background.width), static_cast<float>(resources.background.height)}, {0, 0}, 0.0f, WHITE);
+                    {-512 + parallaxBackground, 0, static_cast<float>(resources.background.width), static_cast<float>(resources.background.height)}, {0, 0}, 0.0f, WHITE);
 
     // Draw the midground (silhouettes)
     DrawTexturePro(resources.ParkBuildings, {0, 0, static_cast<float>(resources.ParkBuildings.width), static_cast<float>(resources.midground.height)},
@@ -2634,10 +2653,17 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
     DrawTexturePro(resources.ParkMidground, {0, 0, static_cast<float>(resources.ParkMidground.width), static_cast<float>(resources.midground.height)},
                     {-512+parallaxMidground, 0, static_cast<float>(resources.ParkMidground.width), static_cast<float>(resources.midground.height)}, {0, 0}, 0.0f, WHITE);
 
-    // Draw the foreground (main scene),  offset by 1024 to center relative to midground. 
+    // Draw the foreground (main scene),   
     DrawTexturePro(resources.ParkForeground, {0, 0, static_cast<float>(resources.ParkForeground.width), static_cast<float>(resources.foreground.height)},
                     {512, 0, static_cast<float>(resources.ParkForeground.width), static_cast<float>(resources.foreground.height)}, {0, 0}, 0.0f, WHITE);
     
+
+
+    //DrawPlayerCar
+    int CarFrameWidth = 128;
+    Rectangle sourceRecCar = {player_car.currentFrame * CarFrameWidth, 0, CarFrameWidth, CarFrameWidth};
+    DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE); //draw player_car
+
     if (player.enter_car == false){// if enter car is false, dont render player or update position. camera should stay focused on player pos. 
         SoundManager::getInstance().StopMusic("CarRun");
 
@@ -2646,17 +2672,57 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
 
     }
 
-    //DrawPlayerCar
-    int CarFrameWidth = 128;
-    Rectangle sourceRecCar = {player_car.currentFrame * CarFrameWidth, 0, CarFrameWidth, CarFrameWidth};
-    DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE); //draw player_car
+    if (player.enter_car){
+        //render headlight/breaklight
+        
+        Vector2 breakLight_pos = {player_car.position.x + 88, player_car.position.y + 53};
+        Vector2 light_pos = {player_car.position.x - 225, player_car.position.y + 32};
+        BeginBlendMode(BLEND_ADDITIVE);
+        DrawTextureV(resources.breakLight, breakLight_pos, WHITE);
+        DrawTextureV(resources.lightBeam, light_pos, WHITE);
+        EndBlendMode();
+        show_carUI = true;    
 
-    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)){
-        if (player.enter_car && !move_car){ // dont exit car if it's still moving.
-            PlaySound(SoundManager::getInstance().GetSound("CarDoorClose")); 
-            player.enter_car = false;
-            player_car.currentFrame = 0;
+    }
+    show_dbox = false;//reset box
+    for (NPC& npc : ParkNpcs){  
+        if (npc.MiB){
+            if (hasCemeteryKey){
+                npc.Update(player, gameState);
+                npc.Render(shaders);
+                npc.ClickNPC(mousePosition, camera, player, gameState);
+
+                if (npc.interacting){
+                    dboxPosition = npc.position;
+                    dealer = false; // dealer gets left on somewhere
+                    show_dbox = true;   //dialogBox
+                
+                    phrase = npc.speech;
+                }
+            }else{
+                //dont show mib until you have the cemetery key
+            }
+
+        }else{
+            npc.Update(player, gameState);
+            npc.Render(shaders);
+            npc.ClickNPC(mousePosition, camera, player, gameState);
+            if (npc.interacting){
+                dboxPosition = npc.position;
+                show_dbox = true;
+                phrase = npc.speech;
+            }
+
         }
+
+    }
+
+
+
+    if (show_carUI && !move_car && player.enter_car){ //destination menu //Draw inside mode2d
+        DrawCarUI(player_car, mousePosition, camera, gameState);
+        //drawingCarUI
+        
     }
 
     //DrawStreetLight
@@ -2674,9 +2740,23 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
         RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
     }
 
-    if (show_carUI && !move_car && player.enter_car){ //destination menu
-        DrawCarUI(player_car, mousePosition, camera, gameState);
+    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)){
+        if (player.enter_car && !move_car){ // dont exit car if it's still moving.
+            PlaySound(SoundManager::getInstance().GetSound("CarDoorClose")); 
+            player.enter_car = false;
+            player_car.currentFrame = 0;
+            //player.position.x = player_car.position.x + 32;
+        }
     }
+
+    if (show_dbox){
+        DrawDialogBox(player, camera, 0, 0, 20);
+
+    }
+
+    
+
+
     //Draw cursor last so it's on top
     DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
 
@@ -2829,7 +2909,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     //mibs show up after you get cemetery key. They don't do anything yet. 
     if (hasCemeteryKey){
         for (NPC& mib : mibs){
-            mib.Update(player);
+            mib.Update(player, gameState);
             mib.Render(shaders);
             
         }
@@ -2839,9 +2919,9 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 
     teller = false;
     for (NPC& npc : npcs){
-        npc.Update(player);
+        npc.Update(player, gameState);
         npc.Render(shaders);
-        npc.ClickNPC(mousePosition, camera, player);
+        npc.ClickNPC(mousePosition, camera, player, gameState);
     
 
         if (npc.interacting){ //Take the first one you find. 
@@ -2944,7 +3024,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     //         move_car = true;
     //     }
     // }
-    if (show_carUI && !move_car && player.enter_car){
+    if (show_carUI && !move_car && player.enter_car){ //draw carUI inside Mode2d for reasons
         DrawCarUI(player_car, mousePosition, camera, gameState);
     }
 
@@ -2997,6 +3077,7 @@ void spawnNPCs(GameResources& resources){
         NPC npc = CreateNPC(resources.npcTexture, startPosition, speed, IDLE,  true, false);
         npc.SetDestination(-94, 4000);
         npcs.push_back(npc);  // Add the NPC to the vector
+        ParkNpcs.push_back(npc);
     }
 
     //spawn businessMan
@@ -3006,6 +3087,7 @@ void spawnNPCs(GameResources& resources){
         NPC business_npc = CreateNPC(resources.businessSheet, b_pos, speed,IDLE, true, false);
         business_npc.SetDestination(1000, 4000);
         npcs.push_back(business_npc);
+        ParkNpcs.push_back(business_npc);
 
     }
 
@@ -3027,6 +3109,7 @@ void spawnNPCs(GameResources& resources){
         NPC woman2_npc = CreateNPC(resources.woman2Sheet, w_pos, speed, IDLE, true, false);
         woman2_npc.SetDestination(0, 4000);
         npcs.push_back(woman2_npc);
+        ParkNpcs.push_back(woman2_npc);
     }
 
     //create mibs
@@ -3037,6 +3120,7 @@ void spawnNPCs(GameResources& resources){
         mib.SetDestination(2000, 2400);
         mib.MiB = true;
         mibs.push_back(mib);
+        ParkNpcs.push_back(mib);
     }
 
     //create Bats
@@ -3231,7 +3315,7 @@ void UptoEnter(Player& player, PlayerCar& player_car){
             //player.position.x = 512; //move player, to move inventory to the middle of the screen. 
             
         }
-        //enter car for both outside and cemetery
+        //enter car for both outside and cemetery and Park
         if (over_car && !player.enter_car && has_car_key){
             //player inside idling car
             SoundManager::getInstance().PlayMusic("CarRun");

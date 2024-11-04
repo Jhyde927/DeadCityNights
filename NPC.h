@@ -59,13 +59,13 @@ public:
 
 
     NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState initialAnimation, bool isActive, bool isZombie);
-    void Update(Player& player);
+    void Update(Player& player, GameState& gameState);
     void Render(ShaderResources& shaders);
-    void ClickNPC(Vector2 mousePosition, Camera2D& camera, Player& player);
+    void ClickNPC(Vector2 mousePosition, Camera2D& camera, Player& player, GameState& gameState);
     void SetAnimationState(AnimationState newState);
     void SetDestination(float minX, float maxX);
     bool CheckHit(Vector2 previousPosition, Vector2 bulletPosition, Vector2 bulletSize);
-    void HandleNPCInteraction(Player& player);
+    void HandleNPCInteraction(Player& player, GameState& gameState);
     void HandlePolice(Player& player, float& distanceToPlayer, bool& hasTarget);
     void HandleZombie(Player& player, float& distanceToPlayer, bool& hasTarget);
     void HandleGhost(Player& player, float& distanceToPlayer, bool& hasTarget);

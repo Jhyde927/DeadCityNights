@@ -75,7 +75,7 @@ std::string GetRandomPhrase() {
     return phrases[randomIndex];
 }
 
-void NPC::HandleNPCInteraction(Player& player){
+void NPC::HandleNPCInteraction(Player& player, GameState& gameState){
         destination = position;//Stop NPC
         interacting = true;
         //idleTime = 5;
@@ -93,6 +93,14 @@ void NPC::HandleNPCInteraction(Player& player){
             speech = "Fortune: $100";
             talkTimer = 5;
             idleTime = 5;
+        }
+
+        if (!talked && MiB && gameState == PARK){
+            talked = true;
+            speech = "We are Watching You";
+            talkTimer = 5;
+            idleTime = 5;
+
         }
 
         if (!talked && ghost){
@@ -390,7 +398,7 @@ void NPC::SetDestination(float minX, float maxX) {
     facingRight = (destination.x > position.x);  // Determine facing direction
 }
 
-void NPC::Update(Player& player) {
+void NPC::Update(Player& player, GameState& gameState) {
     if (!isActive) return;  // Skip update if the NPC is not active
     if (!isZombie) riseTimer = 0;
     float distance_to_player = abs(player.position.x - position.x);
@@ -398,7 +406,7 @@ void NPC::Update(Player& player) {
 
     if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
         if (distance_to_player < 20 && !police && !isZombie){
-            HandleNPCInteraction(player);
+            HandleNPCInteraction(player, gameState);
         }
     }
 
@@ -661,7 +669,7 @@ void NPC::SetAnimationState(AnimationState newState) {
     }
 }
 
-void NPC::ClickNPC(Vector2 mousePosition, Camera2D& camera, Player& player){
+void NPC::ClickNPC(Vector2 mousePosition, Camera2D& camera, Player& player, GameState& gameState){
 
     if (talkTimer > 0){
         talkTimer -= GetFrameTime();
@@ -689,7 +697,7 @@ void NPC::ClickNPC(Vector2 mousePosition, Camera2D& camera, Player& player){
         if (CheckCollisionPointRec(mouseWorldPos, npcHitbox)){
             float distance = abs(mouseWorldPos.x - player.position.x);
             if (distance < 75 && !isZombie){ // NPC must be close to interact
-                HandleNPCInteraction(player);
+                HandleNPCInteraction(player, gameState);
                 
             }
 

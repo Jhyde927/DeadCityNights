@@ -18,10 +18,14 @@ enum AnimationState {
     DEATH2
 };
 
+
+
 class NPC {
 public:
     Vector2 position;
-    float speed;
+    AnimationState currentAnimation;   
+    Texture2D texture;
+    
     int currentFrame;
     float frameCounter;
     float frameSpeed;
@@ -29,15 +33,15 @@ public:
     bool patrollingRight;
     bool patrolling;
     float idleTime;
-    bool isActive;
     bool isZombie;
     bool isDying;      // Flag to check if NPC is in dying state
     float deathTimer;  // Timer for death animation
     float riseTimer;
     bool interacting;
     Vector2 destination;
-    Texture2D texture;
-    AnimationState currentAnimation;
+    
+    float speed;
+    bool isActive;
     int maxHealth;
     int health;
     float hitTimer;  // New: Timer to track hit state
@@ -59,6 +63,7 @@ public:
 
 
     NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState initialAnimation, bool isActive, bool isZombie);
+    
     void Update(Player& player, GameState& gameState);
     void Render(ShaderResources& shaders);
     void ClickNPC(Vector2 mousePosition, Camera2D& camera, Player& player, GameState& gameState);

@@ -83,9 +83,6 @@ public:
         WeaponType currentWeapon;  // Now accessible from outside the class 
         int shotgunBulletCount;
         int revolverBulletCount;
- 
-
-
         
         void UpdateMovement(GameResources& resources, GameState& gameState, Vector2& mousePosition, Camera2D& camera,std::vector<Platform> platforms);  // Move the update movement here
         void DrawPlayer(const GameResources& resources, GameState& gameState, Camera2D& camera, ShaderResources& shaders);  // Draw player method

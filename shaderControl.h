@@ -4,6 +4,8 @@
 
 #include "raylib.h"
 #include "GameEnums.h"
+//#include "Player.h"
+
 
 
 // Structure to hold all your shaders and related variables
@@ -22,6 +24,7 @@ struct ShaderResources {
     int glowThresholdLoc;
     int glowIntensityLoc;
     int resolutionLoc;
+    //int vignetteColorLoc;
     // Add any other shader-related variables here
     float totalTime;
 };

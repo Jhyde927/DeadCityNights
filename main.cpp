@@ -552,6 +552,9 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
                     showInventory = true;
                     player.hasGun = true;
                     PlaySound(SoundManager::getInstance().GetSound("reload"));
+                    if (firstHobo == false){ 
+                        raiseZombies = true; //only raise zombies if the player has the gun and first hobo = false
+                    }
 
                 }
                 
@@ -1119,8 +1122,8 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
             if (inventory[i] == "whiskey"){
                 DrawTexture(resources.whiskey, x, y, WHITE);
                 Rectangle whiskeyBounds = { 
-                    x,      
-                    y,      
+                    static_cast<float>(x),      
+                    static_cast<float>(y),      
                     static_cast<float>(64),  
                     static_cast<float>(64)  
                 };
@@ -1144,8 +1147,8 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
             if (inventory[i] == "pills"){ // click on pills to take them 
                 DrawTexture(resources.pills, x, y, WHITE);
                 Rectangle pillBounds = { //pill button
-                    x,      
-                    y,      
+                    static_cast<float>(x),      
+                    static_cast<float>(y),      
                     static_cast<float>(64),  
                     static_cast<float>(64)  
                 };
@@ -1166,8 +1169,8 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
 
             if (inventory[i] == "shovel"){
                 Rectangle shovelBounds = { //shovel button
-                    x,      
-                    y,      
+                    static_cast<float>(x),      
+                    static_cast<float>(y),      
                     static_cast<float>(64),  
                     static_cast<float>(64)  
                 };
@@ -1186,8 +1189,8 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
             if (inventory[i] == "Drugs"){
                 DrawTexture(resources.Drugs, x, y, WHITE);
                 Rectangle textureBounds = { //drug button
-                    x,      
-                    y,      
+                    static_cast<float>(x),      
+                    static_cast<float>(y),      
                     static_cast<float>(64),  
                     static_cast<float>(64)  
                 };
@@ -1396,8 +1399,8 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, G
 }
 
 void DrawMagicDoor(GameResources& resources,Player& player, MagicDoor& magicDoor){
-        int doorFrame = 64;
-        Rectangle sourceDoorRec = {magicDoor.currentFrame * doorFrame, 0, static_cast<float>(doorFrame), static_cast<float>(doorFrame)};
+        float doorFrame = 64.0;
+        Rectangle sourceDoorRec = {static_cast<float>(magicDoor.currentFrame) * doorFrame, 0, static_cast<float>(doorFrame), static_cast<float>(doorFrame)};
         DrawTextureRec(resources.magicDoorSheet, sourceDoorRec, magicDoor.position, WHITE);
         if (player.position.x > magicDoor.position.x -10 && player.position.x < magicDoor.position.x +10){ //over magic door
             if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
@@ -1454,8 +1457,6 @@ void DrawUFO(GameResources& resources, UFO& ufo, Camera2D& camera, float& time, 
     float deltaTime = GetFrameTime();
     ufo.frameTimer += deltaTime;
 
-
-
     if (ufo.frameTimer >= ufo.frameTime){
         ufo.frameTimer -= ufo.frameTime;
         ufo.currentFrame++;
@@ -1476,18 +1477,11 @@ void DrawUFO(GameResources& resources, UFO& ufo, Camera2D& camera, float& time, 
         static_cast<float>(ufo.frameHeight)
     };
 
-
-
-
     // Update horizontal (X-axis) movement
     ufo.position.x = ufo.basePosition.x + ufo.bobAmplitudeX * sinf(ufo.bobSpeedX * time + ufo.bobOffsetX);
 
     // Update vertical (Y-axis) movement
     ufo.position.y = ufo.basePosition.y + ufo.bobAmplitudeY * sinf(ufo.bobSpeedY * time + ufo.bobOffsetY);
-
-    
-
-
 
     Vector2 UFODrawPosition = {
         ufo.position.x, 
@@ -1495,7 +1489,7 @@ void DrawUFO(GameResources& resources, UFO& ufo, Camera2D& camera, float& time, 
     };
 
     if (abductionBeam){
-        // Define the source rectangle (the part of the texture to draw)
+        //show abduction beam. if player is under UFO
         
         Rectangle sourceRec = { 0.0f, 0.0f, (float)resources.lightBar.width, (float)resources.lightBar.height };
         Rectangle destRec = { 
@@ -1553,10 +1547,7 @@ void DrawEarth(GameResources& resources, Earth& earth, Camera2D& camera){
         earth.currentFrame = 0;
         frameRow = 0;
         frameCol = 0;
-    }
-
-    
-    
+    } 
     
     // Define the source rectangle
     Rectangle sourceRect = {
@@ -1575,15 +1566,10 @@ void DrawEarth(GameResources& resources, Earth& earth, Camera2D& camera){
     Vector2 earthDrawPosition = {
         earth.position.x + parallaxOffset, //offset x by 99 percent of the distance to it moves at 1 percent of player speed
         earth.position.y 
-    };
-
-    
+    }; 
     
     // Draw the current frame of the earth with the adjusted position
     DrawTextureRec(resources.EarthSheet, sourceRect, earthDrawPosition, WHITE); 
-
-
-
 }
 
 
@@ -1706,18 +1692,13 @@ void DrawDialogBox(Player& player, Camera2D camera, int boxWidth, int boxHeight,
                     npc.talkTimer = 10;
                 } 
         }
-
-
-
     }
     if (overLiquor && showLiquor && money >= 100 &&  GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY")){
         addMoney(-100);
         AddItemToInventory("whiskey", inventory, INVENTORY_SIZE);
         player.hasWhiskey = true;
         
-        //TODO add whiskey to inventory
     }
-
 
 }
 
@@ -1790,7 +1771,7 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
     
 
     EndShaderMode(); ////////////////////////////SHADER OFF
-    DrawEarth(resources, earth, camera);
+    DrawEarth(resources, earth, camera); //draw earth outside of shader. 
     
     DrawMagicDoor(resources, player, magicDoor);
 
@@ -1809,7 +1790,6 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
         platform.DrawPlatformTexture(resources.platformTexture, platform.rect);
         
     }
-
 
     for (NPC& ghost: astralGhosts){
         ghost.Update(player, gameState);
@@ -1964,7 +1944,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
     }
 
     if (applyShader){
-
+        //drug shader
         BeginShaderMode(shaders.glowShader);
         
     }
@@ -2146,8 +2126,6 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
     
 }
 
-
-
 void RenderRoad(const GameResources& resources, PlayerCar& player_car,Player& player, Camera2D& camera, Vector2 mousePosition, ShaderResources& shaders){
     if (player_car.position.x < 200 && !reverse_road){//transition to cemetery
         
@@ -2175,7 +2153,7 @@ void RenderRoad(const GameResources& resources, PlayerCar& player_car,Player& pl
     }
 
     if (applyShader){
-
+        //drug shader
         BeginShaderMode(shaders.glowShader);
         
     }
@@ -2558,8 +2536,11 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
         if (hobo.interacting){ 
             if (firstHobo){ // only raise zombie and draw shovel if you have talked the hobo
                 firstHobo = false;
-                raiseZombies = true; // zombies don't spawn until you talk to hobo. 
+                
                 drawShovel = true; //shovel isn't in cemetery until you talk to hobo.
+                if (player.hasGun){
+                    raiseZombies = true; // zombies don't spawn until you talk to hobo. 
+                }
             }
 
             if (hobo.interactions == 1 && hobo.clickCount == 6 && !hasCemeteryKey){
@@ -2660,7 +2641,7 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
 
 
     //DrawPlayerCar
-    int CarFrameWidth = 128;
+    float CarFrameWidth = 128.0;
     Rectangle sourceRecCar = {player_car.currentFrame * CarFrameWidth, 0, CarFrameWidth, CarFrameWidth};
     DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE); //draw player_car
 
@@ -2973,7 +2954,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     DrawBullets();
     UpdateBullets();
     //DrawPlayerCar
-    int CarFrameWidth = 128;
+    float CarFrameWidth = 128;
     Rectangle sourceRecCar = {player_car.currentFrame * CarFrameWidth, 0, CarFrameWidth, CarFrameWidth};
     DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE); //draw player_car
 
@@ -3428,12 +3409,16 @@ int main() {
     Earth earth;
     MagicDoor magicDoor;
     UFO ufo;
+
+
     InitializePlayerCar(player_car);
     InitializeMagicDoor(magicDoor);
     InitEarth(earth);
     InitUFO(ufo);
     spawnNPCs(resources); //spawn NPCs before rendering them outside
     InitPlatforms();
+
+
 
     // Initialize the camer
     Camera2D camera = { 0 };

@@ -275,11 +275,11 @@ void Player::Reload(){
         }
         
 
-    }else if (currentWeapon == SHOTGUN && shotgunBulletCount == 0){
+    }else if (currentWeapon == SHOTGUN && shotgunBulletCount == 0){// you can't reload unless fully empty, this simplifies things. 
         if (!isReloading && shotgunBulletCount + shells >= 1){
             if (shells == 1){
                 shells -= 1;
-                shotgunBulletCount = 1;
+                shotgunBulletCount = 1; 
             }else{
                 shells -= 2;
                 shotgunBulletCount = 2;
@@ -359,7 +359,7 @@ void Player::playerPhysics(float deltaTime, std::vector<Platform> platforms){
         velocity.y = -maxSpeedY;
     }
 
-    if (isAiming || isShooting || isReloading){ // apply deceleration
+    if (isAiming || isShooting || isReloading){ // apply deceleration here, and when there is no input
         if (velocity.x > 0.0f) {
             velocity.x -= deceleration * deltaTime;
             if (velocity.x < 0.0f) velocity.x = 0.0f;
@@ -387,11 +387,6 @@ void Player::playerPhysics(float deltaTime, std::vector<Platform> platforms){
     }else{
         isOnGround = false;
     }
-
-
-
-
-   
 
 
     // Collision with the ground (assuming ground at y = groundLevel)

@@ -17,20 +17,27 @@ float detectionRangeBat = 150;
 
 
 
-// Constructor with additional parameters for isActive and isZombie
+// Constructor 
 NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState initialAnimation, bool active, bool zombie)
-    : texture(npcTexture), position(startPos), speed(npcSpeed), currentAnimation(initialAnimation), isActive(active), isZombie(zombie) {
+{
+    texture = npcTexture;
+    position = startPos;
+    speed = npcSpeed;
+    currentAnimation = initialAnimation;
+    isActive = active;
+    isZombie = zombie;
+
     frameCounter = 0;
     frameSpeed = 8.0f;
     currentFrame = 0;
     facingRight = true;
     patrollingRight = rand() % 2 == 0;  // Randomly set initial direction
-    patrolling = false;  // Default to not patrolling
-    idleTime = 0;  // Initialize idle time
-    maxHealth = 75;  // Initialize max health
-    health = maxHealth;  // Initialize current health
-    hitTimer = 0.0f;  // Initialize hit timer to 0
-    isDying = false;  // Initialize dying state to false
+    patrolling = false;                 // Default to not patrolling
+    idleTime = 0;                       // Initialize idle time
+    maxHealth = 75;                     // Initialize max health
+    health = maxHealth;                 // Initialize current health
+    hitTimer = 0.0f;                    // Initialize hit timer to 0
+    isDying = false;                    // Initialize dying state to false
     riseTimer = 0.9f;
     interacting = false;
     talked = false;
@@ -48,10 +55,9 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     interactions = 0;
     talkTimer = 0.0f;
     ghostAlpha = 1.0f;
-
-    
-    
+    deathTimer = 0.0;
 }
+
 
 
 

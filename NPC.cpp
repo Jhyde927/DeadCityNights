@@ -59,8 +59,6 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
 }
 
 
-
-
 // Function to get a random phrase
 std::string GetRandomPhrase() {
     std::vector<std::string> phrases = {

@@ -17,14 +17,16 @@ struct ShaderResources {
     Shader vignetteShader;
     Shader glitchVignetteShader;
     Shader pixelationShader;
-    Shader outlineGlowShader;
-    
+    Shader outlineGlowShader; 
     Shader rainbowOutlineShader;
+    
     int timeLoc;
     int glowThresholdLoc;
     int glowIntensityLoc;
     int resolutionLoc;
-    //int vignetteColorLoc;
+    int vignetteColorLoc;
+    int radiusLoc;
+
     // Add any other shader-related variables here
     float totalTime;
 };

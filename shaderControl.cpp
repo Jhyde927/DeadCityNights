@@ -5,6 +5,9 @@
 #include "GameEnums.h"
 #include <raymath.h>
 
+
+
+
 void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     // Initialize random seed
     srand(static_cast<unsigned>(time(0)));
@@ -59,22 +62,27 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     float threshold = 0.5f;
     SetShaderValue(shaders.outlineShader, thresholdLoc, &threshold, SHADER_UNIFORM_FLOAT);
 
-    //setup vignette
+    //setup vignette////////////////////////////////////////////////////////////////
 
     int resolutionLoc = GetShaderLocation(shaders.vignetteShader, "resolution");
     int radiusLoc = GetShaderLocation(shaders.vignetteShader, "radius");
     int softnessLoc = GetShaderLocation(shaders.vignetteShader, "softness");
+    int vignetteColorLoc = GetShaderLocation(shaders.vignetteShader, "vignetteColor");
 
     // Set the uniform values
     //float resolution[2] = { (float)screenWidth, (float)screenHeight };
     SetShaderValue(shaders.vignetteShader, resolutionLoc, resolution, SHADER_UNIFORM_VEC2);
 
     // Vignette effect parameters
-    float radius = 1.0f;    // Starting radius (0.0 to 1.0)
-    float softness = 0.6f;  // Softness of the edges
+    float radius = 0.9f;    // Starting radius (0.0 to 1.0)
+    float softness = 0.5f;  // Softness of the edges
 
     SetShaderValue(shaders.vignetteShader, radiusLoc, &radius, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.vignetteShader, softnessLoc, &softness, SHADER_UNIFORM_FLOAT);
+
+        // Set the initial vignette color (e.g., black)
+    float vignetteColor[3] = { 0.0f, 0.0f, 0.0f }; // Black color
+    SetShaderValue(shaders.vignetteShader, vignetteColorLoc, vignetteColor, SHADER_UNIFORM_VEC3);
 
 
     //setup glitchVignetteShader
@@ -149,6 +157,8 @@ void UnloadShaders(ShaderResources& shaders) {
     UnloadShader(shaders.glowShader2);
     UnloadShader(shaders.outlineShader);
     UnloadShader(shaders.rainbowOutlineShader);
+    UnloadShader(shaders.vignetteShader);
+    UnloadShader(shaders.glitchVignetteShader);
 }
 
 void UpdateShaders(ShaderResources& shaders, float deltaTime, GameState& gameState) {
@@ -177,6 +187,26 @@ void UpdateShaders(ShaderResources& shaders, float deltaTime, GameState& gameSta
     // Set the glowThreshold uniform in the shader
     int glowThresholdLocation = GetShaderLocation(shaders.glowShader, "glowThreshold");
     SetShaderValue(shaders.glowShader, glowThresholdLocation, &glowThreshold, SHADER_UNIFORM_FLOAT);
+
+
+
+    // if (player.hitTimer > 0){
+        
+        
+    //     float redVignetteColor[3] = { 1.0f, 0.0f, 0.0f }; // Red color
+    //     float sradius = 0.8; //lower radius to make the vignette more visible
+    //     // Set the vignette color in the shader
+    //     SetShaderValue(shaders.vignetteShader, shaders.radiusLoc, &sradius, SHADER_UNIFORM_FLOAT);
+    //     SetShaderValue(shaders.vignetteShader, shaders.vignetteColorLoc, redVignetteColor, SHADER_UNIFORM_VEC3);
+ 
+        
+    // }else{
+       
+    //     float blackVignetteColor[3] = { 0.0f, 0.0f, 0.0f }; // Red color
+    //     float sradius = 1.0;
+    //     SetShaderValue(shaders.vignetteShader, shaders.radiusLoc, &sradius, SHADER_UNIFORM_FLOAT);
+    //     SetShaderValue(shaders.vignetteShader, shaders.vignetteColorLoc, blackVignetteColor, SHADER_UNIFORM_VEC3);
+    // }
     
 }
 

@@ -291,6 +291,7 @@ void LoadGameResources(GameResources& resources) {
     resources.ParkForeground = LoadTexture("assets/Park(foreground).png");
     resources.ParkMidground = LoadTexture("assets/Park(midground).png");
     resources.ParkBuildings = LoadTexture("assets/Park(buildings).png");
+    resources.MidBuildings = LoadTexture("assets/MidBuildings.png");
 }
 
 void UnloadGameResources(GameResources& resources){
@@ -2838,8 +2839,9 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     }
 
     camera.target = player.position;
-    float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
-    float parallaxBackground = camera.target.x * 0.7f;  // Background moves even slower
+    float parallaxMidBuildings = camera.target.x * 0.4;
+    float parallaxMidground = camera.target.x * 0.6f;  // Midground moves slower
+    float parallaxBackground = camera.target.x * 0.8f;  // Background moves even slower
     
     BeginMode2D(camera);  // Begin 2D mode with the camera
     ClearBackground(customBackgroundColor);
@@ -2865,13 +2867,18 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 
     }
     
+    //background/midground width = 6400
+
      // Draw the background (sky)
     DrawTexturePro(resources.background, {0, 0, static_cast<float>(resources.background.width), static_cast<float>(resources.background.height)},
-                    {parallaxBackground, 0, static_cast<float>(resources.background.width), static_cast<float>(resources.background.height)}, {0, 0}, 0.0f, WHITE);
+                    {-1000 + parallaxBackground, 0, static_cast<float>(resources.background.width), static_cast<float>(resources.background.height)}, {0, 0}, 0.0f, WHITE);
 
     // Draw the midground (silhouettes)
     DrawTexturePro(resources.midground, {0, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)},
                     {-3000 + parallaxMidground, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)}, {0, 0}, 0.0f, WHITE);
+
+    DrawTexturePro(resources.MidBuildings, {0, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)},
+                    {-3000 + parallaxMidBuildings, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)}, {0, 0}, 0.0f, WHITE);
 
     // Draw the foreground (main scene),  offset by 1024 to center relative to midground. 
     DrawTexturePro(resources.foreground, {0, 0, static_cast<float>(resources.foreground.width), static_cast<float>(resources.foreground.height)},
@@ -3470,7 +3477,13 @@ int main() {
         if (totalTime > 10000.0f) totalTime -= 10000.0f; //reset total time just in case. 
             
         UpdateShaders(shaders, deltaTime, gameState);
-
+        if (player.hitTimer > 0){
+            float redVignetteColor[3] = { 1.0f, 0.0f, 0.0f }; // Red color
+            float sradius = 0.5; //lower radius to make the vignette more visible
+            // Set the vignette color in the shader
+            SetShaderValue(shaders.vignetteShader, shaders.radiusLoc, &sradius, SHADER_UNIFORM_FLOAT);
+            SetShaderValue(shaders.vignetteShader, shaders.vignetteColorLoc, redVignetteColor, SHADER_UNIFORM_VEC3);
+        }
 
         
         if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_D) || IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)){ //tutorial text

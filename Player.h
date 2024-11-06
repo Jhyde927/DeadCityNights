@@ -74,7 +74,7 @@ public:
     double tapInterval;
 
 
-    // Constructor
+    //declare class
     Player();
 
     // Methods

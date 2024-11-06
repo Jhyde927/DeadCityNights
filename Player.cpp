@@ -8,6 +8,7 @@
 #include "SoundManager.h"
 #include <vector>
 #include "platform.h"
+#include "shaderControl.h"
 
 
 WeaponType currentWeapon;  // To track the current weapon
@@ -97,6 +98,7 @@ void Player::take_damage(int damage) {
             }else{
                 PlaySound(SoundManager::getInstance().GetSound("phit2"));
             }
+            
         }
         
         if (currentHealth <= 0) {
@@ -653,9 +655,12 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
 
     if (hitTimer > 0){
         hitTimer -= GetFrameTime();
+    
+ 
         
     }else{
         can_take_damage = true;
+
     }
 
 

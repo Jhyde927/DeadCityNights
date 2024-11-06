@@ -80,6 +80,7 @@ struct GameResources {
     Texture2D ParkForeground;
     Texture2D ParkMidground;
     Texture2D ParkBuildings;
+    Texture2D MidBuildings;
     
 
     Font defaultFont;

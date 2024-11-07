@@ -27,7 +27,7 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     // Set up shader uniforms
     float resolution[2] = { static_cast<float>(screenWidth), static_cast<float>(screenHeight) };
     float glowThreshold = 0.01f;
-    float glowIntensity = 2.0f;
+    float glowIntensity = 1.0f;
     float glowColor[3] = { 0.5f, 0.5f, 2.0f };
 
     // Glow Shader 1

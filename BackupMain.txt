@@ -305,3 +305,17 @@ int main() {
 //         DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, fadeAlpha));
 //     }
 // }
+
+
+
+
+
+        if (over_car && !player.enter_car && has_car_key){
+            //player inside idling car
+            SoundManager::getInstance().PlayMusic("CarRun");
+            //PlayPositionalSound(SoundManager::getInstance().GetSound("carRun"), player_car.position, player.position, 800);
+            PlaySound(SoundManager::getInstance().GetSound("CarStart"));
+            PlaySound(SoundManager::getInstance().GetSound("CarDoorOpen"));
+            player.enter_car = true;
+            over_car = false;
+            player_car.currentFrame = 1;

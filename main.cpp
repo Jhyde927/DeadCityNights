@@ -2744,14 +2744,11 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
 
 }
 
-//Main Street
-void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, PlayerCar& player_car,MagicDoor& magicDoor, float& totalTime,  std::vector<NPC>& npcs, UFO& ufo, Vector2 mousePosition, ShaderResources& shaders) {
-    //play ufo sound when outside. 
-    PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.position, player.position, 800.0f);
+
+void playerInteraction(Player& player, PlayerCar& player_car){
 
     int ap_min = 2246;//over apartment
     int ap_max = 2266;
-
     int pc_min = 1728; // over player_car
     int pc_max = 1748;
     int road_min = 1340; //exiting outside via road
@@ -2760,22 +2757,6 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 
     int lot_min = vacantLotX - 20;
     int lot_max = vacantLotX + 20;
-
-    int dist = abs(player.position.x - ap_max);
-
-    if (dist > 1000){ //get far enough away from the apartment and you can sleep again. 
-        hasSlept = false;
-    }
-
-
-    SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide or in vacant lot
-
-
-
-    SoundManager::getInstance().PlayMusic("StreetSounds");
-        
-    
-
 
     if (player_car.position.x < road_min && move_car){
         transitionState = FADE_OUT;
@@ -2791,6 +2772,8 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     over_lot = false;
     over_car = false;
     overLiquor = false;
+
+    //consider abstracting this into a seperate function. is_interacting, return true if any of these checks 
     if (player.position.x > pc_min && player.position.x < pc_max){ //over_car
         over_car = true;
         if (fortuneTimer <= 0) phrase = "PRESS UP TO ENTER"; //Don't interupt the fortune teller
@@ -2821,6 +2804,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 
     if (player.position.x > 1124 && player.position.x < 1144){
         overLiquor = true;
+        if (fortuneTimer <= 0) phrase = "OPEN";
         dboxPosition = player.position;
         show_dbox = true;
     }
@@ -2832,6 +2816,35 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
         std::cout << "Moving UFO";
 
     }
+
+}
+
+//Main Street
+void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, PlayerCar& player_car,MagicDoor& magicDoor, float& totalTime,  std::vector<NPC>& npcs, UFO& ufo, Vector2 mousePosition, ShaderResources& shaders) {
+    //play ufo sound when outside. 
+    PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.position, player.position, 800.0f);
+
+    int ap_min = 2246;//over apartment
+    int ap_max = 2266;
+
+    int dist = abs(player.position.x - ap_max);
+
+    if (dist > 1000){ //get far enough away from the apartment and you can sleep again. 
+        hasSlept = false;
+    }
+
+
+    SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide or in vacant lot
+
+
+
+    SoundManager::getInstance().PlayMusic("StreetSounds");
+        
+
+
+    playerInteraction(player, player_car);
+
+
     if (move_ufo){
         ufoTimer -= GetFrameTime();
         DrawUFO(resources, ufo, camera, totalTime, shaders);
@@ -2858,6 +2871,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 
     if (drunk){
         BeginShaderMode(shaders.glowShader2);
+        //player.outline = true;
 
     }
 
@@ -2878,7 +2892,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
                     {-3000 + parallaxMidground, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)}, {0, 0}, 0.0f, WHITE);
 
     DrawTexturePro(resources.MidBuildings, {0, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)},
-                    {-3000 + parallaxMidBuildings, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)}, {0, 0}, 0.0f, WHITE);
+                    {-3050 + parallaxMidBuildings, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)}, {0, 0}, 0.0f, WHITE);
 
     // Draw the foreground (main scene),  offset by 1024 to center relative to midground. 
     DrawTexturePro(resources.foreground, {0, 0, static_cast<float>(resources.foreground.width), static_cast<float>(resources.foreground.height)},
@@ -2889,6 +2903,17 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     if (move_ufo){
         DrawUFO(resources, ufo, camera, totalTime, shaders);
     }
+
+    abductionBeam = false;
+    if (player.position.x > ufo.position.x && player.position.x < ufo.position.x + 64){
+        if (ufo.position.y > 395){
+            abductionBeam = true;
+        }
+        
+    }
+
+
+
     if (move_car){
         player_car.position.x -= player_car.carSpeed * GetFrameTime();
     }else{
@@ -2949,7 +2974,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     
     }
 
-    EndShaderMode(); ////////////////////////////SHADER OFF
+    
     
     //DrawStreetLight
     BeginBlendMode(BLEND_ADDITIVE);
@@ -2997,7 +3022,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     }
     
     MoveTraffic(resources);//Draw Traffic
-
+    EndShaderMode(); ////////////////////////////SHADER OFF
 
     if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)){
         if (player.enter_car && !move_car){ // dont exit car if it's still moving.

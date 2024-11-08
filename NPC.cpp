@@ -12,7 +12,7 @@
 #include <cstdlib>  // For rand and srand
 #include "shaderControl.h"
 
-float detectionRange = 300.0f;  // Set detection range for zombies
+float detectionRange = 200.0f;  // Set detection range for zombies
 float detectionRangeBat = 150;
 
 
@@ -56,6 +56,10 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     talkTimer = 0.0f;
     ghostAlpha = 1.0f;
     deathTimer = 0.0;
+    hasTarget = false;
+    isTargeted = false;
+    NPC* targetNPC = nullptr; //set in main
+ 
 }
 
 
@@ -275,7 +279,7 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){
         
     }
 
-void NPC::HandleGhost(Player& player, float& distanceToPlayer, bool& hasTarget){
+void NPC::HandleGhost(Player& player, float& distanceToPlayer){
 
     float distanceY = abs(player.position.y - position.y); //flying enemies need a Y axis
     //float distanceToBat = Vector2Distance(position, player.position);
@@ -309,7 +313,15 @@ void NPC::HandleGhost(Player& player, float& distanceToPlayer, bool& hasTarget){
 
 }
 
-void NPC::HandleZombie(Player& player, float& distanceToPlayer, bool& hasTarget){
+void NPC::HandleZombie(Player& player, float& distanceToPlayer){
+    if (!isActive) return; 
+
+
+
+
+    float distToDest = fabs(position.x - destination.x);
+    attacking = false;
+
     if (isZombie && distanceToPlayer < detectionRange && riseTimer <= 0) {
         hasTarget = true; //if hasTarget dont go idle
         destination = player.position;  // Move towards the player
@@ -317,9 +329,7 @@ void NPC::HandleZombie(Player& player, float& distanceToPlayer, bool& hasTarget)
     }
 
     
-    if (isZombie && distanceToPlayer > 15 && riseTimer <= 0){ //player leaves attack area
-        attacking = false;
-    }
+
    
     if (isZombie && distanceToPlayer < 15.0f && riseTimer <= 0 && !isDying) { //zombie attack
         attacking = true;
@@ -333,9 +343,43 @@ void NPC::HandleZombie(Player& player, float& distanceToPlayer, bool& hasTarget)
 
     }
 
+    if (targetNPC == nullptr && !hasTarget && distToDest < 1){
+        SetDestination(1000, 4000);
+        
+        
+    }
+
+    if (targetNPC != nullptr && riseTimer <= 0){
+        if (!targetNPC->isActive) return;
+        float distToNPC = fabs(targetNPC->position.x - position.x);
+        if (distToNPC < 15){
+            
+            attacking = true;
+            destination = position;
+            if (targetNPC->hitTimer <= 0){
+                targetNPC->TakeDamage(25);
+                
+            }
+            SetAnimationState(ATTACKING);  // Switch to attacking animation
+
+        if (targetNPC->health <= 0){
+            hasTarget = false;
+            targetNPC->isActive = false;
+            targetNPC = nullptr;
+            attacking = false;
+                
+
+            }
+
+            
+        }
+    }
+
+
+
 }
 
-void NPC::HandleMiB(Player& player, float& distanceToPlayer, bool& hasTarget){
+void NPC::HandleMiB(Player& player, float& distanceToPlayer){
     //MIB follow player up to a point then stops and waits. 
     if (MiB && distanceToPlayer < 1000){
         destination = player.position; //move toward player
@@ -348,7 +392,7 @@ void NPC::HandleMiB(Player& player, float& distanceToPlayer, bool& hasTarget){
     }
 }
 
-void NPC::HandlePolice(Player& player, float& distanceToPlayer, bool& hasTarget){
+void NPC::HandlePolice(Player& player, float& distanceToPlayer){
     if (police && distanceToPlayer < detectionRange && agro && !attacking){ //police chase player
         hasTarget = true;
         destination = player.position;
@@ -515,13 +559,13 @@ void NPC::Update(Player& player, GameState& gameState) {
 
     // Check if the player is within a certain range to chase
     float distanceToPlayer = Vector2Distance(position, player.position);
-    bool hasTarget = false;
+    hasTarget = false; //reset hasTarget before setting in below
     attacking = false;
 
-    HandleMiB(player, distance_to_player, hasTarget);
-    HandlePolice(player, distance_to_player, hasTarget); //handle distance checks and attack logic. 
-    HandleZombie(player, distance_to_player, hasTarget);
-    HandleGhost(player, distance_to_player, hasTarget); //also bats
+    HandleMiB(player, distance_to_player);
+    HandlePolice(player, distance_to_player); //handle distance checks and attack logic. 
+    HandleZombie(player, distance_to_player);
+    HandleGhost(player, distance_to_player); //also bats
 
     Vector2 directionToPlayer = {
     player.position.x - position.x,
@@ -591,15 +635,17 @@ void NPC::Update(Player& player, GameState& gameState) {
             // Only set a new random destination if not chasing the player
             if (!isZombie || distanceToPlayer >= detectionRange) {
                 if (hobo){                   
-                    SetDestination(2400, 2600); // hobo stays near center
+                    SetDestination(2550, 2600); // hobo stays near center
                 }else if (ghost){
                     SetDestination(1024, 1800); //ghost stays on far left of cemetery
                 }
                 else{
-                    SetDestination(1800, 3000);  //Pedestrians Outside 
+                    SetDestination(1000, 3500);  //Pedestrians Outside 
                 }
                 
             }
+
+        
         
         }
 
@@ -810,6 +856,11 @@ void NPC::TakeDamage(int damage) {
         deathTimer = 0.9;
         destination = position;
         SetAnimationState(DEATH2);
+    }
+
+    if (health <= 0 && isTargeted){
+        isActive = false;
+        
     }
 
 }

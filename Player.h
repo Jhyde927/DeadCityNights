@@ -73,6 +73,8 @@ public:
     double LastTapTimeRight;
     double tapInterval;
 
+    bool AllowGuns;
+
 
     //declare class
     Player();

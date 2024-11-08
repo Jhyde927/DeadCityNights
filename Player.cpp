@@ -76,7 +76,7 @@ Player::Player() {
     shotgunBulletCount = 2;  // For Shotgun
     shotgunReloadTime = 0.7f;  // Reload time for Shotgun
     currentWeapon = REVOLVER;  // Start with Revolver
-
+    AllowGuns = true;
 
 }
 
@@ -113,7 +113,7 @@ void Player::take_damage(int damage) {
 
 float GetRightBoundary(GameState gameState){
     if (gameState == OUTSIDE){
-        return 5000.0f;
+        return 4707.0f;
     }else if (gameState == CEMETERY){
         return 4000;
     }else if (gameState == LOT){
@@ -497,16 +497,16 @@ void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vec
     
     reloadLogic(deltaTime);
     
-    if (IsKeyPressed(KEY_R) && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL)){
+    if (IsKeyPressed(KEY_R) && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
         Reload();
     }
 
     //AIMING
-    isAiming = (hasGun || hasShotgun) && (IsKeyDown(KEY_F) || IsKeyDown(KEY_LEFT_CONTROL) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) && !isShooting && !isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL);
+    isAiming = (hasGun || hasShotgun) && (IsKeyDown(KEY_F) || IsKeyDown(KEY_LEFT_CONTROL) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) && !isShooting && !isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns);
 
 
     //SHOOTING
-    if (currentWeapon == REVOLVER && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL)){
+    if (currentWeapon == REVOLVER && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
 
         if ((IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && revolverBulletCount <= 0){
             //SoundManager::getInstance().GetSound("dryFire");
@@ -528,7 +528,7 @@ void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vec
             
         }
 
-    }else if (currentWeapon == SHOTGUN && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL)){
+    }else if (currentWeapon == SHOTGUN && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
         if ((IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && shotgunBulletCount <= 0){
             //SoundManager::getInstance().GetSound("dryFire");
             PlaySound(SoundManager::getInstance().GetSound("dryFire"));
@@ -586,16 +586,16 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
     // Prioritize drawing states: Shooting > Reloading > Aiming > Moving > Idle
     if (currentWeapon == REVOLVER){
     
-        if (hasGun && isShooting && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL)) { //need a way to allow guns outside cemetery at a certain point in the game. 
+        if (hasGun && isShooting && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)) { //need a way to allow guns outside cemetery at a certain point in the game. 
             currentSheet = resources.shootSheet;
             sourceRec = { static_cast<float>(currentFrame * frameWidth), 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
-        }else if (hasGun && isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL)){
+        }else if (hasGun && isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
         
             currentSheet = resources.reloadSheet;
             sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
-        }else if (hasGun && isAiming && !isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL)) {
+        }else if (hasGun && isAiming && !isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)) {
             // Aiming but not shooting: use the first frame of the shootSheet
             currentSheet = resources.shootSheet;
             sourceRec = { 0, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };  // First frame for aiming
@@ -619,15 +619,15 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
     /////////////////shotgun//////////////
     }else if (currentWeapon == SHOTGUN){
         
-         if (hasShotgun && isShooting && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL)){
+         if (hasShotgun && isShooting && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
             currentSheet = resources.ShotGunSheet;
             sourceRec = {static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
-        } else if (hasShotgun && isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL)){
+        } else if (hasShotgun && isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
             currentSheet = resources.ShotgunReload;
             sourceRec = {static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
-        }else if (hasShotgun && isAiming && !isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL)) {
+        }else if (hasShotgun && isAiming && !isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)) {
             // Aiming but not shooting: use the first frame of the shootSheet
             currentSheet = resources.ShotGunSheet;
             sourceRec = { 0, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth)};  // First frame for aiming

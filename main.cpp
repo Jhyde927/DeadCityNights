@@ -16,6 +16,7 @@
 #include "shaderControl.h"
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
+#include <random>
 
 
 
@@ -90,6 +91,7 @@ bool raiseZombies = false;
 bool zombieWave2 = false;
 bool zombieWave3 = false;
 bool abductionBeam = false;
+bool raiseParkZombies = false;
 bool show_dbox = true;
 float ufoTimer = 0.0;
 float dboxTime = 10.0;
@@ -109,6 +111,9 @@ float nextSpawnDelay = 0.0f;        // Time delay between spawns
 
 float blackoutTime = 2.0f;  // Time to stay blacked out
 float blackoutTimer = 0.0f; // Timer to keep track of blackout period
+
+float minDistToPlayer = 50;
+float maxDistToPlayer = 200;
 
 Color customBackgroundColor = {32, 42, 63, 255};  //Same Color as street background image. 
 Color shovelTint = WHITE;
@@ -155,6 +160,7 @@ std::vector<NPC>astralGhosts;
 std::vector<NPC>astralBats;
 std::vector<NPC>ParkNpcs;
 
+
 std::vector<Platform> platforms;
 
 GameState gameState = OUTSIDE;
@@ -164,6 +170,10 @@ float fadeAlpha = 1.0f;  // Starts fully opaque
 float fadeSpeed = 0.02f; // Speed of fade (adjust as needed)
 bool firstTransition = true;
 
+// Initialize random number generator
+std::random_device rd;   // Seed for the random number engine
+std::mt19937 gen(rd());  // Mersenne Twister engine
+std::uniform_real_distribution<float> dis(0.0f, 4000.0f); // Uniform distribution between 1000 and 4000 for NPC distribution
 
 
 void PrintVector2(const Vector2& vec) {
@@ -690,7 +700,7 @@ void UpdateZombieSpawning(GameResources& resources, Player& player){
         spawnTimer += GetFrameTime();
 
         if (spawnTimer >= nextSpawnDelay){ // spawn zombies at randomm position around the player
-            Vector2 z_pos = GetRandomSpawnPositionX(player.position, 50.0f, 200.0f);  // Min/max distance from player
+            Vector2 z_pos = GetRandomSpawnPositionX(player.position, minDistToPlayer, maxDistToPlayer);  // Min/max distance from player
             int zombie_speed = 25;
             NPC zombie_npc = CreateNPC(resources.zombieSheet, z_pos, zombie_speed, RISING, true, true);
             zombie_npc.SetDestination(1000, 4000);
@@ -1430,14 +1440,16 @@ void DrawMagicDoor(GameResources& resources,Player& player, MagicDoor& magicDoor
 
 }
 
-void moveUFO(UFO& ufo){
+void moveUFO(UFO& ufo, Player& player){
     if (canMoveUfo){
         //UFO drops down from the sky, hovers a few seconds, then darts off super fast.
         float deltaTime = GetFrameTime();
         int moveSpeed = 100;
         int stopPos = 400;
+        
         if (ufo.basePosition.y < stopPos && move_ufo && ufoTimer > 0){ //go from starting position to 400 y and wait for timer
             ufo.basePosition.y += moveSpeed * deltaTime;
+            ufo.basePosition.x = player.position.x-32;
         
         }else if (ufoTimer <= 0){ //times up, shoot to the left fast
             ufo.basePosition.x -= 2000 * deltaTime;
@@ -1512,7 +1524,7 @@ void DrawUFO(GameResources& resources, UFO& ufo, Camera2D& camera, float& time, 
     
     }
     
-    BeginShaderMode(shaders.pixelationShader); //TODO find a good shader for UFO
+    BeginShaderMode(shaders.glitchShader); //TODO find a good shader for UFO
     DrawTextureRec(resources.UFOsheet, sourceRect, UFODrawPosition, WHITE); 
     EndShaderMode();
     
@@ -1703,6 +1715,88 @@ void DrawDialogBox(Player& player, Camera2D camera, int boxWidth, int boxHeight,
 
 }
 
+void playerInteraction(Player& player, PlayerCar& player_car){
+
+
+
+    int ap_min = 2246;//over apartment
+    int ap_max = 2266;
+    int pc_min = 1728; // over player_car
+    int pc_max = 1748;
+    int road_min = 1340; //exiting outside via road
+
+    int dist = abs(player.position.x - ap_max);
+
+    if (dist > 1000){ //get far enough away from the apartment and you can sleep again. 
+        hasSlept = false;
+    }
+
+
+
+    int lot_min = vacantLotX - 20;
+    int lot_max = vacantLotX + 20;
+
+    if (player_car.position.x < road_min && move_car){
+        transitionState = FADE_OUT;
+        
+        //player_car.position = Vector2 {900, 700 - 32};
+
+    }
+
+
+
+    if (!start) show_dbox = false; // reset to false so it can fall through unless start where we first show tutorial text
+    over_apartment = false;
+    over_lot = false;
+    over_car = false;
+    overLiquor = false;
+
+    //consider abstracting this into a seperate function. is_interacting, return true if any of these checks 
+    if (player.position.x > pc_min && player.position.x < pc_max && has_car_key){ //over_car with keys
+        over_car = true;
+        if (fortuneTimer <= 0) phrase = "PRESS UP TO ENTER"; //Don't interupt the fortune teller
+        show_dbox = true;
+        dboxPosition = player.position;
+        
+        
+    }
+
+    
+    if (player.position.x > lot_min && player.position.x < lot_max){ //over_lot
+        over_lot = true;
+        if (fortuneTimer <= 0) phrase = "PRESS UP TO ENTER";
+        dboxPosition = player.position;
+        
+        show_dbox = true;
+
+    }
+    
+    if (player.position.x > ap_min  && player.position.x < ap_max){ //over_apartment
+        over_apartment = true;
+        if (fortuneTimer <= 0) phrase = "PRESS UP TO ENTER";
+        dboxPosition = player.position;
+        dboxPosition.y = player.position.y + 10;
+        show_dbox = true;
+        
+    }
+
+    if (player.position.x > 1124 && player.position.x < 1144){
+        overLiquor = true;
+        //dont set phrase here, because it will override showing whiskey button. 
+        dboxPosition = player.position;
+        show_dbox = true;
+    }
+
+    
+    if (player.position.x < 64 && !move_ufo){
+        move_ufo = true;
+        ufoTimer = 10;
+        std::cout << "Moving UFO";
+
+    }
+
+}
+
 void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoor& magicDoor, ShaderResources& shaders){
     player.gravity = 200;
     player.outline = true;//turn on outline shader in asteral plane
@@ -1841,10 +1935,14 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
 void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_car, UFO& ufo, float& time, Camera2D& camera,Vector2 mousePosition, ShaderResources& shaders){
     int carMax = 2800;
     int carMin = 2765;
+
+    //UFO shows up in the begining at the far left outside, and once you have the cemetery key in the cemetery. 
     if (hasCemeteryKey){
         //playe UFO hum when ufo is present. 
         PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.position, player.position, 800.0f);
     }
+
+
     
     playOwl = false; //reset owl
     // Maybe zombiewaves can be reset to false when exiting cemetery. 
@@ -1865,10 +1963,15 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
     if (!player.enter_car && player.position.x < 1900 && !zombieWave3 && !firstHobo){ // walk to far left and zombies spawn again
         zombieWave3 = true;
         StartZombieSpawn(10);
+        minDistToPlayer = 50;
+        maxDistToPlayer = 200;
     }
     if (!player.enter_car && player.position.x > 3500 && !zombieWave2 && !firstHobo){ //walk too far right and zombies spawn again
         zombieWave2 = true;
         StartZombieSpawn(10);
+
+        minDistToPlayer = 50;
+        maxDistToPlayer = 200;
     }
 
     if (move_car){
@@ -1885,8 +1988,12 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         raiseZombies = false;
         if (hasCemeteryKey){
             StartZombieSpawn(10); //you should have the shotgun here so spawn more. 
+            minDistToPlayer = 50;
+            maxDistToPlayer = 200;
         }else{
             StartZombieSpawn(5);
+            minDistToPlayer = 50;
+            maxDistToPlayer = 200;
 
         }
             
@@ -2243,6 +2350,8 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
     if (player.position.x > 3437 and raiseZombies){
         raiseZombies = false;
         StartZombieSpawn(20);
+        minDistToPlayer = 50;
+        maxDistToPlayer = 200;
     }
 
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
@@ -2478,8 +2587,9 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
     }    
 
     //camera.target = player.position;
-    float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
-    float parallaxBackground = camera.target.x * 0.7f;  // Background moves even slower
+    float parallaxMidground = camera.target.x * 0.6f;  // Midground moves slower
+    float parallaxMidBuilding = camera.target.x * 0.4;
+    float parallaxBackground = camera.target.x * 0.8f;  // Background moves even slower
     
     SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide
 
@@ -2523,6 +2633,10 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
     //Draw the midground (silhouettes)
     DrawTexturePro(resources.midgroundLot, {0, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)},
                     {parallaxMidground, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)}, {0, 0}, 0.0f, WHITE);
+            
+    //mid grouind buildings 
+    DrawTexturePro(resources.MidBuildings, {0, 0, static_cast<float>(resources.MidBuildings.width), static_cast<float>(resources.midground.height)},
+                    {parallaxMidBuilding, 0, static_cast<float>(resources.MidBuildings.width), static_cast<float>(resources.midground.height)}, {0, 0}, 0.0f, WHITE);
 
     // Draw the foreground (main scene),  offset by 1024 to center relative to midground. 
     DrawTexturePro(resources.vacantLot, {0, 0, static_cast<float>(resources.vacantLot.width), static_cast<float>(resources.vacantLot.height)},
@@ -2586,8 +2700,22 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
 void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car, Camera2D& camera,Vector2& mousePosition, ShaderResources& shaders){
     BeginMode2D(camera);  // Begin 2D mode with the camera
     ClearBackground(customBackgroundColor);
-    
-    
+    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
+    if (player.isAiming && IsKeyDown(KEY_F)) {
+        // Handle keyboard-only aiming (e.g., using arrow keys or player movement keys)
+        if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
+            player.facingRight = true;
+        }
+        if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
+            player.facingRight = false;
+        }
+    }
+
+
+    if (!IsKeyDown(KEY_F)){
+        if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
+    }
+
     float parallaxBackground = camera.target.x * 0.9f;  // Background moves even slower
     float ParallaxBuildings = camera.target.x * 0.7;
     float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
@@ -2695,9 +2823,49 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
                 phrase = npc.speech;
             }
 
+            if (npc.isZombie && npc.health <= 0){
+                npc.isActive = false;
+                
+            }
+
         }
 
     }
+
+    for (NPC& zombie : zombies){
+        zombie.Update(player, gameState);
+        zombie.Render(shaders);
+        float minDist = 1000;
+        float closestNPCPositionX = 0.0f;
+        zombie.targetNPC = nullptr;
+
+        for (NPC& npc : ParkNpcs) { //find the cloeset NPC and chase them. 
+            // Skip NPCs that are already targeted
+           //if (npc.isTargeted) continue;
+            if (npc.isActive){
+                float dist = fabs(zombie.position.x - npc.position.x);
+
+                if (dist < minDist) {
+                    minDist = dist;
+                    closestNPCPositionX = npc.position.x;
+                    zombie.targetNPC = &npc;
+                    
+                }
+
+            }
+
+        }
+
+        if (zombie.targetNPC != nullptr) {
+            zombie.hasTarget = true;
+            zombie.destination = { closestNPCPositionX, zombie.position.y };
+            zombie.targetNPC->isTargeted = true;  // Mark NPC as targeted
+        } else {
+            //zombie.hasTarget = false;
+            // Optional behavior when no target is found
+        }
+    }
+
 
 
 
@@ -2706,7 +2874,7 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
         //drawingCarUI
         
     }
-
+    DrawBullets(); //draw bullets in cemetery after everything else. 
     //DrawStreetLight
     BeginBlendMode(BLEND_ADDITIVE);
     DrawTexture(resources.lightCone, 1013, 610, WHITE);
@@ -2731,124 +2899,59 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
         }
     }
 
+    if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
+        DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+    }else{
+        DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+    }
+
     if (show_dbox){
         DrawDialogBox(player, camera, 0, 0, 20);
 
     }
 
-    
 
-
-    //Draw cursor last so it's on top
-    DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
-
-}
-
-
-void playerInteraction(Player& player, PlayerCar& player_car){
-
-    int ap_min = 2246;//over apartment
-    int ap_max = 2266;
-    int pc_min = 1728; // over player_car
-    int pc_max = 1748;
-    int road_min = 1340; //exiting outside via road
-
-
-
-    int lot_min = vacantLotX - 20;
-    int lot_max = vacantLotX + 20;
-
-    if (player_car.position.x < road_min && move_car){
-        transitionState = FADE_OUT;
-        
-        //player_car.position = Vector2 {900, 700 - 32};
+    if (raiseParkZombies){
+        raiseParkZombies = false;
+        StartZombieSpawn(10);
+        minDistToPlayer = 200;
+        maxDistToPlayer = 400;
 
     }
 
 
+   if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player); //always show ammo when outside of car in the cemetery
 
-    if (!start) show_dbox = false; // reset to false so it can fall through unless start where we first show tutorial text
-    over_apartment = false;
-    over_lot = false;
-    over_car = false;
-    overLiquor = false;
+    //DrawText("Cemetery", screenWidth/2 - 100, 60, 50, WHITE);
 
-    //consider abstracting this into a seperate function. is_interacting, return true if any of these checks 
-    if (player.position.x > pc_min && player.position.x < pc_max){ //over_car
-        over_car = true;
-        if (fortuneTimer <= 0) phrase = "PRESS UP TO ENTER"; //Don't interupt the fortune teller
-        show_dbox = true;
-        dboxPosition = player.position;
-        
-        
-    }
-
-    
-    if (player.position.x > lot_min && player.position.x < lot_max){ //over_lot
-        over_lot = true;
-        if (fortuneTimer <= 0) phrase = "PRESS UP TO ENTER";
-        dboxPosition = player.position;
-        
-        show_dbox = true;
-
-    }
-    
-    if (player.position.x > ap_min  && player.position.x < ap_max){ //over_apartment
-        over_apartment = true;
-        if (fortuneTimer <= 0) phrase = "PRESS UP TO ENTER";
-        dboxPosition = player.position;
-        dboxPosition.y = player.position.y + 10;
-        show_dbox = true;
-        
-    }
-
-    if (player.position.x > 1124 && player.position.x < 1144){
-        overLiquor = true;
-        if (fortuneTimer <= 0) phrase = "OPEN";
-        dboxPosition = player.position;
-        show_dbox = true;
-    }
-
-    
-    if (player.position.x > -94 && player.position.x < -84 && !move_ufo){
-        move_ufo = true;
-        ufoTimer = 10;
-        std::cout << "Moving UFO";
+    //draw healthbar 
+    if (gameState == PARK && !player.enter_car){
+        Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
+        DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
 
     }
 
 }
+
 
 //Main Street
 void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, PlayerCar& player_car,MagicDoor& magicDoor, float& totalTime,  std::vector<NPC>& npcs, UFO& ufo, Vector2 mousePosition, ShaderResources& shaders) {
     //play ufo sound when outside. 
     PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.position, player.position, 800.0f);
-
-    int ap_min = 2246;//over apartment
-    int ap_max = 2266;
-
-    int dist = abs(player.position.x - ap_max);
-
-    if (dist > 1000){ //get far enough away from the apartment and you can sleep again. 
-        hasSlept = false;
-    }
-
-
     SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide or in vacant lot
-
-
-
     SoundManager::getInstance().PlayMusic("StreetSounds");
-        
-
-
+    
     playerInteraction(player, player_car);
-
+    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
 
     if (move_ufo){
         ufoTimer -= GetFrameTime();
         DrawUFO(resources, ufo, camera, totalTime, shaders);
-        moveUFO(ufo);
+        moveUFO(ufo, player);
+    }
+
+    if (!IsKeyDown(KEY_F)){
+        if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
     }
 
     camera.target = player.position;
@@ -3086,31 +3189,50 @@ void spawnNPCs(GameResources& resources){
     //spawn generic NPCs
     int generic = 2;
     for (int i = 0; i < generic; ++i) {
-        Vector2 startPosition = { static_cast<float>(512 + i * 200), 700 };  // positions spread out along the x axis    
-        NPC npc = CreateNPC(resources.npcTexture, startPosition, speed, IDLE,  true, false);
-        npc.SetDestination(-94, 4000);
+        float randomX = dis(gen);
+        Vector2 g_pos = {randomX, 700.0f};   
+        NPC npc = CreateNPC(resources.npcTexture, g_pos, speed, IDLE,  true, false);
+        if (gameState == OUTSIDE){
+            npc.SetDestination(0, 4000.0f);
+        }else if (gameState == PARK){
+            npc.SetDestination(1000, 2100);
+        }
         npcs.push_back(npc);  // Add the NPC to the vector
         ParkNpcs.push_back(npc);
     }
 
     //spawn businessMan
+
     int b_men = 2;
     for (int i = 0; i < b_men; i++){
-        Vector2 b_pos = { static_cast<float>(1000 + i * 100), 700};
-        NPC business_npc = CreateNPC(resources.businessSheet, b_pos, speed,IDLE, true, false);
-        business_npc.SetDestination(1000, 4000);
+        // Generate a random X position between 1000 and 4000
+        float randomX = dis(gen);
+        Vector2 b_pos = { randomX, 700.0f };
+        
+        NPC business_npc = CreateNPC(resources.businessSheet, b_pos, speed, IDLE, true, false);
+        if (gameState == OUTSIDE){
+            business_npc.SetDestination(0, 4000.0f);
+        }else if (gameState == PARK){
+            business_npc.SetDestination(1000, 2100);
+        }
+        
+        
         npcs.push_back(business_npc);
         ParkNpcs.push_back(business_npc);
-
     }
 
 
     //spawn woman
     int women = 1;
     for (int i = 0; i < women; i++){
-        Vector2 w_pos = {static_cast<float>(1000 + i * 100), 700};
+        float randomX = dis(gen);
+        Vector2 w_pos = {randomX, 700};
         NPC woman_npc = CreateNPC(resources.womanSheet, w_pos, speed,IDLE, true, false);
-        woman_npc.SetDestination(0, 4000);
+        if (gameState == OUTSIDE){
+            woman_npc.SetDestination(0, 4000.0f);
+        }else if (gameState == PARK){
+            woman_npc.SetDestination(1000, 2100);
+        }
         npcs.push_back(woman_npc);
 
     }
@@ -3118,9 +3240,14 @@ void spawnNPCs(GameResources& resources){
     //spawn woman2
     int women2 = 2;
     for (int i = 0; i < women2; i++){
-        Vector2 w_pos = {static_cast<float>(2220 + i * 100), 700};
+        float randomX = dis(gen);
+        Vector2 w_pos = {randomX, 700};
         NPC woman2_npc = CreateNPC(resources.woman2Sheet, w_pos, speed, IDLE, true, false);
-        woman2_npc.SetDestination(0, 4000);
+        if (gameState == OUTSIDE){
+            woman2_npc.SetDestination(0, 4000.0f);
+        }else if (gameState == PARK){
+            woman2_npc.SetDestination(1000, 2100);
+        }
         npcs.push_back(woman2_npc);
         ParkNpcs.push_back(woman2_npc);
     }
@@ -3196,7 +3323,7 @@ void spawnNPCs(GameResources& resources){
     
     Vector2 h_pos = {2600, 700};
     NPC hobo_npc = CreateNPC(resources.hoboSheet, h_pos, speed, IDLE, true, false);
-    hobo_npc.SetDestination(2500, 2600);
+    hobo_npc.SetDestination(2600, 2650);
     hobo_npc.hobo = true;
     hobos.push_back(hobo_npc);//hobo is in it's own vector of hobos. incase we need another hobo
     
@@ -3251,58 +3378,58 @@ void handleCamera(Camera2D& camera, float& targetZoom){
 }
 
 void debugKeys(Player& player){
-
-
-        if (IsKeyPressed(KEY_SPACE)){
-            std::cout << "Player Position: ";
-            PrintVector2(player.position);
-            }
-
-        if (IsKeyPressed(KEY_O)){
-            if (!player.outline){
-                player.outline = true;
-            }else{
-                player.outline = false;
-            }
+    //Debug keys, disable for release. 
+    if (IsKeyPressed(KEY_SPACE)){
+        std::cout << "Player Position: "; //print player position on key_space
+        PrintVector2(player.position);
+        raiseParkZombies = true;
         }
 
-        if (IsKeyPressed(KEY_P)){
-            AddItemToInventory("Drugs", inventory, INVENTORY_SIZE);
+    if (IsKeyPressed(KEY_O)){
+        if (!player.outline){
+            player.outline = true;
+        }else{
+            player.outline = false;
+        }
+    }
+
+    if (IsKeyPressed(KEY_P)){
+        AddItemToInventory("Drugs", inventory, INVENTORY_SIZE);
+    }
+
+    if (IsKeyPressed(KEY_K)){
+        if (!has_car_key || !hasCemeteryKey){
+            AddItemToInventory("carKeys", inventory, INVENTORY_SIZE);
+            AddItemToInventory("cemeteryKey", inventory, INVENTORY_SIZE);
+            has_car_key = true;
+            hasCemeteryKey = true;
+            PlaySound(SoundManager::getInstance().GetSound("Keys"));
+
         }
 
-        if (IsKeyPressed(KEY_K)){
-            if (!has_car_key || !hasCemeteryKey){
-                AddItemToInventory("carKeys", inventory, INVENTORY_SIZE);
-                AddItemToInventory("cemeteryKey", inventory, INVENTORY_SIZE);
-                has_car_key = true;
-                hasCemeteryKey = true;
-                PlaySound(SoundManager::getInstance().GetSound("Keys"));
+    }
 
-            }
+    if (IsKeyPressed(KEY_H)){
+        if (!player.hasShovel){
+            player.hasShovel = true;
+            AddItemToInventory("shovel", inventory, INVENTORY_SIZE);
+            PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
+        }
+    }
+
+    if (IsKeyPressed(KEY_G)){
+        if (!player.hasGun){
+            AddItemToInventory("Gun", inventory, INVENTORY_SIZE);
+            player.hasGun = true;
+            PlaySound(SoundManager::getInstance().GetSound("reload"));
 
         }
-
-        if (IsKeyPressed(KEY_H)){
-            if (!player.hasShovel){
-                player.hasShovel = true;
-                AddItemToInventory("shovel", inventory, INVENTORY_SIZE);
-                PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
-            }
+        if (!player.hasShotgun){
+            AddItemToInventory("shotgun", inventory, INVENTORY_SIZE);
+            player.hasShotgun = true;
         }
 
-        if (IsKeyPressed(KEY_G)){
-            if (!player.hasGun){
-                AddItemToInventory("Gun", inventory, INVENTORY_SIZE);
-                player.hasGun = true;
-                PlaySound(SoundManager::getInstance().GetSound("reload"));
-
-            }
-            if (!player.hasShotgun){
-                AddItemToInventory("shotgun", inventory, INVENTORY_SIZE);
-                player.hasShotgun = true;
-            }
-
-        }
+    }
 
 }
 
@@ -3315,7 +3442,6 @@ void UptoEnter(Player& player, PlayerCar& player_car){
         if (overLiquor && gameState == OUTSIDE){
             show_dbox = true;
             showLiquor = true;
-            
             
             phrase = "Whiskey: $100";
         }
@@ -3502,13 +3628,15 @@ int main() {
         if (totalTime > 10000.0f) totalTime -= 10000.0f; //reset total time just in case. 
             
         UpdateShaders(shaders, deltaTime, gameState);
-        if (player.hitTimer > 0){
-            float redVignetteColor[3] = { 1.0f, 0.0f, 0.0f }; // Red color
-            float sradius = 0.5; //lower radius to make the vignette more visible
-            // Set the vignette color in the shader
-            SetShaderValue(shaders.vignetteShader, shaders.radiusLoc, &sradius, SHADER_UNIFORM_FLOAT);
-            SetShaderValue(shaders.vignetteShader, shaders.vignetteColorLoc, redVignetteColor, SHADER_UNIFORM_VEC3);
-        }
+
+        //using current vignette shader doesn't work for take damage indicator, consider a seperate shader, or just a texture.
+        // if (player.hitTimer > 0){
+        //     float redVignetteColor[3] = { 1.0f, 0.0f, 0.0f }; // Red color
+        //     float sradius = 0.5; //lower radius to make the vignette more visible
+        //     // Set the vignette color in the shader
+        //     SetShaderValue(shaders.vignetteShader, shaders.radiusLoc, &sradius, SHADER_UNIFORM_FLOAT);
+        //     SetShaderValue(shaders.vignetteShader, shaders.vignetteColorLoc, redVignetteColor, SHADER_UNIFORM_VEC3);
+        // }
 
         
         if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_D) || IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)){ //tutorial text

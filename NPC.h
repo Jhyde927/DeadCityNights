@@ -60,6 +60,10 @@ public:
     int interactions;
     float talkTimer;
     float ghostAlpha;
+    bool hasTarget;
+    bool isTargeted;
+    NPC* targetNPC;
+ 
 
 
     NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState initialAnimation, bool isActive, bool isZombie);
@@ -71,10 +75,10 @@ public:
     void SetDestination(float minX, float maxX);
     bool CheckHit(Vector2 previousPosition, Vector2 bulletPosition, Vector2 bulletSize);
     void HandleNPCInteraction(Player& player, GameState& gameState);
-    void HandlePolice(Player& player, float& distanceToPlayer, bool& hasTarget);
-    void HandleZombie(Player& player, float& distanceToPlayer, bool& hasTarget);
-    void HandleGhost(Player& player, float& distanceToPlayer, bool& hasTarget);
-    void HandleMiB(Player& player, float& distanceToPlayer, bool& hasTarget);
+    void HandlePolice(Player& player, float& distanceToPlayer);
+    void HandleZombie(Player& player, float& distanceToPlayer);
+    void HandleGhost(Player& player, float& distanceToPlayer);
+    void HandleMiB(Player& player, float& distanceToPlayer);
     void TakeDamage(int damage);
 };
 

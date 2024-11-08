@@ -316,9 +316,6 @@ void NPC::HandleGhost(Player& player, float& distanceToPlayer){
 void NPC::HandleZombie(Player& player, float& distanceToPlayer){
     if (!isActive) return; 
 
-
-
-
     float distToDest = fabs(position.x - destination.x);
     attacking = false;
 
@@ -331,7 +328,7 @@ void NPC::HandleZombie(Player& player, float& distanceToPlayer){
     
 
    
-    if (isZombie && distanceToPlayer < 15.0f && riseTimer <= 0 && !isDying) { //zombie attack
+    if (isZombie && distanceToPlayer < 10.0f && riseTimer <= 0 && !isDying) { //zombie attack
         attacking = true;
         destination = position;
         if (player.hitTimer <= 0){
@@ -350,23 +347,31 @@ void NPC::HandleZombie(Player& player, float& distanceToPlayer){
     }
 
     if (targetNPC != nullptr && riseTimer <= 0){
-        if (!targetNPC->isActive) return;
+        //if (!targetNPC->isActive) return;
         float distToNPC = fabs(targetNPC->position.x - position.x);
-        if (distToNPC < 15){
+        if (distToNPC < 15 && !isDying){
             
             attacking = true;
-            destination = position;
+
+            
             if (targetNPC->hitTimer <= 0){
                 targetNPC->TakeDamage(25);
+            
+                //PlaySound(SoundManager::getInstance().GetSound("BoneCrack"));
                 
             }
             SetAnimationState(ATTACKING);  // Switch to attacking animation
 
+            if (distToNPC < 10){  //wait till your within attack range before stopping. 
+                destination = position;
+
+            }
+
         if (targetNPC->health <= 0){
-            hasTarget = false;
-            targetNPC->isActive = false;
+            //hasTarget = false;
+            //targetNPC->isActive = false;
             targetNPC = nullptr;
-            attacking = false;
+            //attacking = false;
                 
 
             }
@@ -496,6 +501,7 @@ void NPC::Update(Player& player, GameState& gameState) {
     // Handle death logic
     if (isDying) { //death animation plays wile isDying is true
         deathTimer -= GetFrameTime();
+
         if (deathTimer <= 0.0f) {
             isActive = false;  // Set NPC as inactive after death animation
             isDying = false; //set dying back to false once dead.
@@ -626,7 +632,7 @@ void NPC::Update(Player& player, GameState& gameState) {
         }
 
         // Check if destination is reached
-        if (fabs(position.x - destination.x) < 5.0f && !hasTarget) {
+        if (fabs(position.x - destination.x) < 5.0f && !hasTarget && !isZombie) { //dont go idle if your zombie and you have reached destination
             // Reached destination, go idle for a moment, then set a new destination
             idleTime = 3.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 2.0f));  // 3-6 seconds of idle time
             
@@ -643,10 +649,11 @@ void NPC::Update(Player& player, GameState& gameState) {
                     SetDestination(1000, 3500);  //Pedestrians Outside 
                 }
                 
-            }
-
+            }   
         
-        
+        }
+        if (fabs(position.x - destination.x) < 5.0f && hasTarget && isZombie){
+            destination = position;
         }
 
     }
@@ -807,7 +814,10 @@ void NPC::TakeDamage(int damage) {
     hitTimer = 0.3f; // Tint the sprite red for 0.3 seconds
     int soundIndex = rand() % 4; //returns 0, 1, 2 or 3
     if (ghost || bat) agro = true;
-
+    if (!isZombie && !bat && !ghost){
+        destination = position; //if your an NPC, stop when you take damage so we can play the death animation. 
+        
+    }
     if (isZombie){
         switch (soundIndex){ //zombie hits
             case 0:
@@ -858,8 +868,15 @@ void NPC::TakeDamage(int damage) {
         SetAnimationState(DEATH2);
     }
 
-    if (health <= 0 && isTargeted){
-        isActive = false;
+    if (health <= 0 && !isDying && isTargeted){
+        std::cout << "NPC DEATH";
+        //PlaySound(SoundManager::getInstance().GetSound("zombieDeath"));
+        riseTimer = 0; //if killed while still rising set the risetimer back to 0 as to not play rise animation
+        isDying = true;           // Start dying process   
+        SetAnimationState(DEATH);  // Set to death animation
+
+        deathTimer = 0.85f;        // Set death animation duration // needs to be exact
+        destination = position; //zombie is at it's destination on death as to not play walk animation
         
     }
 

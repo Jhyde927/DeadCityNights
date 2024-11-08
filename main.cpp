@@ -2797,7 +2797,7 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
     show_dbox = false;//reset box
     for (NPC& npc : ParkNpcs){  
         if (npc.MiB){
-            if (hasCemeteryKey){
+            if (hasCemeteryKey && gameState == OUTSIDE){
                 npc.Update(player, gameState);
                 npc.Render(shaders);
                 npc.ClickNPC(mousePosition, camera, player, gameState);
@@ -2823,10 +2823,7 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
                 phrase = npc.speech;
             }
 
-            if (npc.isZombie && npc.health <= 0){
-                npc.isActive = false;
-                
-            }
+      
 
         }
 
@@ -3187,9 +3184,9 @@ void spawnNPCs(GameResources& resources){
     float speed = 50.0f;
 
     //spawn generic NPCs
-    int generic = 2;
+    int generic = 10;
     for (int i = 0; i < generic; ++i) {
-        float randomX = dis(gen);
+        float randomX = dis(gen); //random distrabution using RNG
         Vector2 g_pos = {randomX, 700.0f};   
         NPC npc = CreateNPC(resources.npcTexture, g_pos, speed, IDLE,  true, false);
         if (gameState == OUTSIDE){
@@ -3203,7 +3200,7 @@ void spawnNPCs(GameResources& resources){
 
     //spawn businessMan
 
-    int b_men = 2;
+    int b_men = 5;
     for (int i = 0; i < b_men; i++){
         // Generate a random X position between 1000 and 4000
         float randomX = dis(gen);

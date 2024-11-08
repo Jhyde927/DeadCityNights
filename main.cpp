@@ -623,31 +623,31 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
 
 }
 
-void PlayPositionalSound(Sound sound, Vector2 soundPos, Vector2 listenerPos, float maxDistance) {
-    // Calculate distance between listener and sound source
-    float dx = listenerPos.x - soundPos.x;
-    float dy = listenerPos.y - soundPos.y;
-    float distance = sqrtf(dx * dx + dy * dy);
+// void PlayPositionalSound(Sound sound, Vector2 soundPos, Vector2 listenerPos, float maxDistance) {
+//     // Calculate distance between listener and sound source
+//     float dx = listenerPos.x - soundPos.x;
+//     float dy = listenerPos.y - soundPos.y;
+//     float distance = sqrtf(dx * dx + dy * dy);
 
-    // Calculate volume based on distance
-    float volume = 1.0f - (distance / maxDistance);
-    if (volume < 0.0f) volume = 0.0f;
+//     // Calculate volume based on distance
+//     float volume = 1.0f - (distance / maxDistance);
+//     if (volume < 0.0f) volume = 0.0f;
 
-    // Set the sound volume
-    SetSoundVolume(sound, volume);
+//     // Set the sound volume
+//     SetSoundVolume(sound, volume);
 
-    // Play the sound if volume is greater than zero
-    if (volume > 0.0f) {
-        if (!IsSoundPlaying(sound)) {
-            PlaySound(sound);
-        }
-    } else {
-        // Stop the sound if it's playing but volume is zero
-        if (IsSoundPlaying(sound)) {
-            StopSound(sound);
-        }
-    }
-}
+//     // Play the sound if volume is greater than zero
+//     if (volume > 0.0f) {
+//         if (!IsSoundPlaying(sound)) {
+//             PlaySound(sound);
+//         }
+//     } else {
+//         // Stop the sound if it's playing but volume is zero
+//         if (IsSoundPlaying(sound)) {
+//             StopSound(sound);
+//         }
+//     }
+// }
 
 void addMoney(int amount){
     money += amount;
@@ -1939,7 +1939,8 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
     //UFO shows up in the begining at the far left outside, and once you have the cemetery key in the cemetery. 
     if (hasCemeteryKey){
         //playe UFO hum when ufo is present. 
-        PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.position, player.position, 800.0f);
+        //PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.position, player.position, 800.0f);
+        SoundManager::getInstance().PlaySoundAtPosition("engeryHum", ufo.position.x, player.position.x, 800.0f);
     }
 
 
@@ -2700,6 +2701,7 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
 void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car, Camera2D& camera,Vector2& mousePosition, ShaderResources& shaders){
     BeginMode2D(camera);  // Begin 2D mode with the camera
     ClearBackground(customBackgroundColor);
+    SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
     if (player.isAiming && IsKeyDown(KEY_F)) {
         // Handle keyboard-only aiming (e.g., using arrow keys or player movement keys)
@@ -2934,7 +2936,12 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
 //Main Street
 void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, PlayerCar& player_car,MagicDoor& magicDoor, float& totalTime,  std::vector<NPC>& npcs, UFO& ufo, Vector2 mousePosition, ShaderResources& shaders) {
     //play ufo sound when outside. 
-    PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.position, player.position, 800.0f);
+    //PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.position, player.position, 800.0f);
+    if (!SoundManager::getInstance().IsSoundPlaying("energyHum")){
+        SoundManager::getInstance().PlayPositionalSound("energyHum", ufo.position, player.position, 1000);
+    }
+
+    //SoundManager::getInstance().UpdatePositionalSounds(player.position);
     SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide or in vacant lot
     SoundManager::getInstance().PlayMusic("StreetSounds");
     
@@ -3491,6 +3498,7 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadSound("carRun", "assets/sounds/CarRun.ogg");
     soundManager.LoadSound("gunShot", "assets/sounds/gunShot.ogg");   //misc sounds
     soundManager.LoadSound("BoneCrack", "assets/sounds/BoneCrack.ogg");
+    soundManager.LoadSound("boneBreak", "assets/sounds/boneBreak.ogg");
     soundManager.LoadSound("reload", "assets/sounds/revolvercock.ogg");
     soundManager.LoadSound("dryFire", "assets/sounds/DryFire.ogg");
     soundManager.LoadSound("CarStart", "assets/sounds/CarStart.ogg");

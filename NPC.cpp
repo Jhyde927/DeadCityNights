@@ -304,7 +304,7 @@ void NPC::HandleGhost(Player& player, float& distanceToPlayer){
 
         if (player.hitTimer <= 0){
             player.take_damage(10);
-            PlaySound(SoundManager::getInstance().GetSound("BoneCrack")); 
+            PlaySound(SoundManager::getInstance().GetSound("boneBreak")); 
         }
         frameSpeed = 14; //faster swing
         SetAnimationState(ATTACKING);
@@ -333,7 +333,8 @@ void NPC::HandleZombie(Player& player, float& distanceToPlayer){
         destination = position;
         if (player.hitTimer <= 0){
             player.take_damage(10);
-            PlaySound(SoundManager::getInstance().GetSound("BoneCrack")); 
+            SoundManager::getInstance().PlayPositionalSound("boneBreak", position, player.position, 200);
+            //PlaySound(SoundManager::getInstance().GetSound("BoneCrack")); 
         }
         
         SetAnimationState(ATTACKING);  // Switch to attacking animation
@@ -356,8 +357,10 @@ void NPC::HandleZombie(Player& player, float& distanceToPlayer){
             
             if (targetNPC->hitTimer <= 0){
                 targetNPC->TakeDamage(25);
-            
-                //PlaySound(SoundManager::getInstance().GetSound("BoneCrack"));
+                if (!SoundManager::getInstance().IsSoundPlaying("boneBreak")){
+                     SoundManager::getInstance().PlayPositionalSound("boneBreak", position, player.position, 200);
+
+                }
                 
             }
             SetAnimationState(ATTACKING);  // Switch to attacking animation
@@ -372,6 +375,8 @@ void NPC::HandleZombie(Player& player, float& distanceToPlayer){
             //targetNPC->isActive = false;
             targetNPC = nullptr;
             //attacking = false;
+            SetAnimationState(IDLE);
+            
                 
 
             }
@@ -813,6 +818,7 @@ void NPC::TakeDamage(int damage) {
     health -= damage;
     hitTimer = 0.3f; // Tint the sprite red for 0.3 seconds
     int soundIndex = rand() % 4; //returns 0, 1, 2 or 3
+    
     if (ghost || bat) agro = true;
     if (!isZombie && !bat && !ghost){
         destination = position; //if your an NPC, stop when you take damage so we can play the death animation. 
@@ -869,7 +875,7 @@ void NPC::TakeDamage(int damage) {
     }
 
     if (health <= 0 && !isDying && isTargeted){
-        std::cout << "NPC DEATH";
+
         //PlaySound(SoundManager::getInstance().GetSound("zombieDeath"));
         riseTimer = 0; //if killed while still rising set the risetimer back to 0 as to not play rise animation
         isDying = true;           // Start dying process   

@@ -262,7 +262,7 @@ Revisit foreground. Made the foreground even wider 1600 * 4. 6400 x 1024. Now I 
 
 There is a dig spot on the far left of the street. 
 
-Added an animated UFO that floats above the cemetery after you have the badge. Reused old picture of UFO that seems to fit the style and colors. Need to add light cone beneath the UFO that turns on when your underneath it. Go from there. use draw texture pro to stretch the light cone to fit say 64x256.  
+Added an animated UFO that floats above the cemetery after you have the badge. Reused old picture of UFO that seems to fit the style and colors. Need to add light cone beneath the UFO that turns on when your underneath it. Go from there. use draw texture pro to stretch the light cone to fit say 64x256. Made light bar. A bar of light 32 by 256. 
 
 UFOs to controversial? Fuck em, it's a piece of art. I'll make what I want. 
 
@@ -272,7 +272,34 @@ a park would make sense. An NPC asks you to meet them in the park. they have som
 
 You can enter an apartment in the building down the street. Draw building lobby? press a buzzer for the apartment. Elevator. I wish some one else could write the story.
 
-If you walked all the way to the left when outside. A UFO drops down from the sky, then shoots off at incredible speed. 
+If you walked all the way to the left when outside. A UFO drops down from the sky, then shoots off at incredible speed.
+
+UFO needs a sound effect.
+
+Added a low hum with positional audio. Consider positional audio for player_car. When car drives away it's sound could fade out.
+
+apply drunk shader to ufo. Too subtle. rainbow outline shader looks cool, could transition from shader to shader. 
+
+You meet the boss NPC in the park. He warns you to stay out of it. He then disappears and zombies spawn. He's a necromancer CEO of NecroTech. Maybe there are pedestrians in the park who can get attacked by zombies. Start by putting NPCs in park. 
+
+MiB talk to you at park if you have the cemetery key. 
+
+Tried using vignette shader colored red to indicate taking damage. I could not pass player to shadercontrol.h it would break everything for some reason. but I can update the shader from main anyway. SetShaderValue(shaders.vignetteShader, ect) Since we store shaders in a struct that is shared with main. Still won't work. Just use a texture. Draw a semi transparent Red vignette the size of the screen 1024x1024. show it when hitTimer > 0;
+
+if within 15 attack, if within 10 stop. 
+
+
+for each zombie, iterate NPCs in park, return the closest NPC, hasTarget = true, destination = NPC.position
+
+Don't spawn zombies if you don't have the revolver. It could be pretty tragic if someone missed the gun and got killed by zombies. 
+
+Draw trees in the park foreground, possibly mid ground trees?
+
+If you talk to the MiB in the park, he say's "we are watching you", then vanishes, then zombies raise from the ground and start attacking the pedestrians. He only shows up if you have the cemetery key. Zombie/pedestrian behavior is till a little buggy. NPCs now seem to set a new destination when they are hit, so it looks like they try to run away. I think I'll keep it like that for now but it might look better if they just stand there and take it. 
+
+
+
+
 
 
 

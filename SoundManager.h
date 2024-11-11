@@ -46,16 +46,6 @@ public:
     }
 
 
-    void PlaySoundAtPosition(const std::string& name, float sourceX, float listenerX, float maxDistance) {
-        if (sounds.find(name) != sounds.end()) {
-            float volume = CalculateVolume(sourceX, listenerX, maxDistance);
-            ::SetSoundVolume(sounds[name], volume);
-            ::PlaySound(sounds[name]);
-            std::cout << "adjusting Volume";
-        }
-    }
-
-
     // Play music with looping enabled
     void PlayMusic(const std::string& name) {
         if (musicTracks.find(name) != musicTracks.end()) {
@@ -71,6 +61,11 @@ public:
         }
     }
 
+    void ManagerStopSound(const std::string& name){
+        if (sounds.find(name) != sounds.end()){
+            StopSound(sounds[name]);
+        }
+    }
 
 
     // Update music stream (call every frame to keep it playing)
@@ -181,17 +176,9 @@ public:
 
 private:
 
-    float CalculateVolume(float sourceX, float listenerX, float maxDistance) {
-        float distance = std::fabs(sourceX - listenerX);
-        float volume = 1.0f - (distance / maxDistance);
-        if (volume < 0.0f) volume = 0.0f;
-        return volume;
-    }
-
-
     std::vector<ActiveSound> activeSounds;
-    std::map<std::string, Sound> sounds; // vector of sounds?
-    std::map<std::string, Music> musicTracks;  // Map for storing music streams
+    std::map<std::string, Sound> sounds; //array of sounds 
+    std::map<std::string, Music> musicTracks;  // array of music tracks
 
     // Make constructor private to enforce Singleton pattern
     SoundManager() = default;

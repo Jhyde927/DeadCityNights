@@ -29,6 +29,7 @@
 //Enter_road = 1340, 700
 //key_pos 380, 666
 //street_light = 1913, 500?
+
 int apartmentX = 2256;
 int vacantLotX = 2753;
 int vacantExitX = 2762;
@@ -49,6 +50,8 @@ bool buttonInternet = false;
 bool hasCemeteryKey = false;
 bool canGiveFortune = true;
 bool showInternet = false;
+bool borderlessWindow = false;
+bool windowStateChanged = false;
 bool move_ufo = false;
 bool canMoveUfo = true;
 bool firstHobo = true;
@@ -108,7 +111,7 @@ float fortuneTimer = 0.0f;
 int remainingZombiesToSpawn = 0;    // Tracks remaining zombies to spawn
 float spawnTimer = 0.0f;            // Timer for spawning
 float nextSpawnDelay = 0.0f;        // Time delay between spawns
-
+float mibTimer = 3.0f;
 float blackoutTime = 2.0f;  // Time to stay blacked out
 float blackoutTimer = 0.0f; // Timer to keep track of blackout period
 
@@ -126,6 +129,11 @@ std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", "", "", ""}
 
 //const int INVENTORY_SIZE = 10;
 //std::vector<std::string> inventory(INVENTORY_SIZE, "");  // Vector of size 10, filled with empty strings
+// During initialization
+
+const int GAME_SCREEN_WIDTH = 1024;
+const int GAME_SCREEN_HEIGHT = 1024;
+
 
 
 
@@ -133,8 +141,9 @@ std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", "", "", ""}
 
 std::string phrase = "A and D or Arrows\n\nto move left and right"; //initial tutorial phrase
 
-const int screenWidth = 1024;
-const int screenHeight = 1024;
+const int screenWidth = 1024; //screen is square for gameplay reasons, we don't want to reveal to much of the screen at one time. 
+const int screenHeight = 1024; // is it crazy to keep the resolution square? Implement full screen that keeps sqaure rotation.
+
 
 Color purplishGrey = {128, 96, 128, 255};  // RGBA format: (R, G, B, A)
 
@@ -623,31 +632,36 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
 
 }
 
-// void PlayPositionalSound(Sound sound, Vector2 soundPos, Vector2 listenerPos, float maxDistance) {
-//     // Calculate distance between listener and sound source
-//     float dx = listenerPos.x - soundPos.x;
-//     float dy = listenerPos.y - soundPos.y;
-//     float distance = sqrtf(dx * dx + dy * dy);
 
-//     // Calculate volume based on distance
-//     float volume = 1.0f - (distance / maxDistance);
-//     if (volume < 0.0f) volume = 0.0f;
+void PlayPositionalSound(Sound sound, Vector2 soundPos, Vector2 listenerPos, float maxDistance) {
+    //There are 2 ways to play positional sounds, this function and one built into sound manager.
+    //This function loops and is used for UFO energyHum, and posible player_car. Sound manager positional sound is for non looping sounds. 
 
-//     // Set the sound volume
-//     SetSoundVolume(sound, volume);
 
-//     // Play the sound if volume is greater than zero
-//     if (volume > 0.0f) {
-//         if (!IsSoundPlaying(sound)) {
-//             PlaySound(sound);
-//         }
-//     } else {
-//         // Stop the sound if it's playing but volume is zero
-//         if (IsSoundPlaying(sound)) {
-//             StopSound(sound);
-//         }
-//     }
-// }
+    // Calculate distance between listener and sound source
+    float dx = listenerPos.x - soundPos.x;
+    float dy = listenerPos.y - soundPos.y;
+    float distance = sqrtf(dx * dx + dy * dy);
+
+    // Calculate volume based on distance
+    float volume = 1.0f - (distance / maxDistance);
+    if (volume < 0.0f) volume = 0.0f;
+
+    // Set the sound volume
+    SetSoundVolume(sound, volume);
+
+    // Play the sound if volume is greater than zero
+    if (volume > 0.0f) {
+        if (!IsSoundPlaying(sound)) {
+            PlaySound(sound);
+        }
+    } else {
+        // Stop the sound if it's playing but volume is zero
+        if (IsSoundPlaying(sound)) {
+            StopSound(sound);
+        }
+    }
+}
 
 void addMoney(int amount){
     money += amount;
@@ -1390,7 +1404,7 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, G
         DrawText("   Cemetery", ui_pos.x, ui_pos.y, 16, cemetery_tint);
 
         work_tint = hasWorked ? BLACK : work_tint;
-        DrawText("    Work", ui_pos.x, ui_pos.y+17, 16, work_tint);
+        DrawText("   Work", ui_pos.x, ui_pos.y+17, 16, work_tint);
 
         if (NecroTech) DrawText("  NecroTech", ui_pos.x, ui_pos.y+32, 16, WHITE);
 
@@ -1446,6 +1460,7 @@ void moveUFO(UFO& ufo, Player& player){
         float deltaTime = GetFrameTime();
         int moveSpeed = 100;
         int stopPos = 400;
+
         
         if (ufo.basePosition.y < stopPos && move_ufo && ufoTimer > 0){ //go from starting position to 400 y and wait for timer
             ufo.basePosition.y += moveSpeed * deltaTime;
@@ -1459,7 +1474,8 @@ void moveUFO(UFO& ufo, Player& player){
 
         if (ufo.basePosition.x < -1000){
             ufo.basePosition = {-94.0, -200.0}; // reset ufo position if too far left.
-            canMoveUfo = false; 
+            canMoveUfo = false;
+
         }
     }
 
@@ -1658,7 +1674,7 @@ void DrawDialogBox(Player& player, Camera2D camera, int boxWidth, int boxHeight,
     }
 
     if (overLiquor){
-    
+        
         boxWidth = 300;
         boxHeight = 128;
         offset = -135;
@@ -1782,6 +1798,9 @@ void playerInteraction(Player& player, PlayerCar& player_car){
 
     if (player.position.x > 1124 && player.position.x < 1144){
         overLiquor = true;
+        if (!showLiquor){
+            phrase = "Up to Enter";
+        }
         //dont set phrase here, because it will override showing whiskey button. 
         dboxPosition = player.position;
         show_dbox = true;
@@ -1834,21 +1853,21 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
         BeginShaderMode(shaders.vignetteShader);
     }
 
-    if (applyShader){
+    // if (applyShader){
 
-        BeginShaderMode(shaders.glowShader);
+    //     BeginShaderMode(shaders.glowShader);
         
-    }
+    // }
 
-    if (drunk){
-        BeginShaderMode(shaders.glowShader2);
+    // if (drunk){
+    //     BeginShaderMode(shaders.glowShader2);
 
-    }
+    // }
     
-    if (glitch){
-        BeginShaderMode(shaders.glitchVignetteShader);
+    // if (glitch){
+    //     BeginShaderMode(shaders.glitchVignetteShader);
 
-    }
+    // }
 
     // Draw the background layers
     DrawTexturePro(resources.AstralBackground, {0, 0, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)},
@@ -1938,15 +1957,14 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
 
     //UFO shows up in the begining at the far left outside, and once you have the cemetery key in the cemetery. 
     if (hasCemeteryKey){
-        //playe UFO hum when ufo is present. 
-        //PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.position, player.position, 800.0f);
-        SoundManager::getInstance().PlaySoundAtPosition("engeryHum", ufo.position.x, player.position.x, 800.0f);
+        //playe UFO hum when ufo is present.
+
+        PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.position, player.position, 800.0f);
+        
     }
-
-
     
     playOwl = false; //reset owl
-    // Maybe zombiewaves can be reset to false when exiting cemetery. 
+
     if (player.isAiming && IsKeyDown(KEY_F)) {
         // Handle keyboard-only aiming (e.g., using arrow keys or player movement keys)
         if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
@@ -1960,7 +1978,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         player.facingRight = mousePosition.x > player.position.x; //facing right is true if mousepos.x > playerPos.x
     }
     
-    //dont spawn unless raise zombies is true. raise zombies is set to true by talking to the hobo. 
+    //dont spawn unless raise zombies is true. raise zombies is set to true by talking to the hobo, and finding the gun
     if (!player.enter_car && player.position.x < 1900 && !zombieWave3 && !firstHobo){ // walk to far left and zombies spawn again
         zombieWave3 = true;
         StartZombieSpawn(10);
@@ -2052,22 +2070,22 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         BeginShaderMode(shaders.vignetteShader);
     }
 
-    if (applyShader){
-        //drug shader
-        BeginShaderMode(shaders.glowShader);
+    // if (applyShader){
+    //     //drug shader
+    //     BeginShaderMode(shaders.glowShader);
         
-    }
+    // }
 
-    if (drunk){
-        BeginShaderMode(shaders.glowShader2);
+    // if (drunk){
+    //     BeginShaderMode(shaders.glowShader2);
 
-    }
+    // }
     
-    if (glitch){
-        //BeginShaderMode(shaders.glitchShader);
-        BeginShaderMode(shaders.glitchVignetteShader);
+    // if (glitch){
+    //     //BeginShaderMode(shaders.glitchShader);
+    //     BeginShaderMode(shaders.glitchVignetteShader);
  
-    }
+    // }
 
     // Draw the background layers
     DrawTexturePro(resources.cemeteryBackground, {0, 0, static_cast<float>(resources.cemeteryBackground.width), static_cast<float>(resources.cemeteryBackground.height)},
@@ -2373,21 +2391,21 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
         BeginShaderMode(shaders.vignetteShader);
     }
 
-    if (applyShader){
+    // if (applyShader){
 
-        BeginShaderMode(shaders.glowShader);
+    //     BeginShaderMode(shaders.glowShader);
         
-    }
+    // }
 
-    if (drunk){
-        BeginShaderMode(shaders.glowShader2);
+    // if (drunk){
+    //     BeginShaderMode(shaders.glowShader2);
 
-    }
+    // }
     
-    if (glitch){
-        BeginShaderMode(shaders.glitchVignetteShader);
+    // if (glitch){
+    //     BeginShaderMode(shaders.glitchVignetteShader);
 
-    }
+    // }
 
     // Draw the background layers
     DrawTexturePro(resources.cemeteryBackground, {0, 0, static_cast<float>(resources.cemeteryBackground.width), static_cast<float>(resources.cemeteryBackground.height)},
@@ -2509,21 +2527,21 @@ void RenderApartment(GameResources& resources, Player player, Vector2 mousePosit
         BeginShaderMode(shaders.vignetteShader);
     }
 
-    if (applyShader){
+    // if (applyShader){
 
-        BeginShaderMode(shaders.glowShader);
+    //     BeginShaderMode(shaders.glowShader);
         
-    }
+    // }
 
-    if (drunk){
-        BeginShaderMode(shaders.glowShader2);
+    // if (drunk){
+    //     BeginShaderMode(shaders.glowShader2);
 
-    }
+    // }
     
-    if (glitch){
-        BeginShaderMode(shaders.glitchVignetteShader);
+    // if (glitch){
+    //     BeginShaderMode(shaders.glitchVignetteShader);
 
-    }
+    // }
 
     ClearBackground(ApartmentBgColor);
 
@@ -2609,22 +2627,22 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
         BeginShaderMode(shaders.vignetteShader);
     }
 
-    if (applyShader){
+    // if (applyShader){
 
-        BeginShaderMode(shaders.glowShader);
+    //     BeginShaderMode(shaders.glowShader);
         
-    }
+    // }
 
-    if (drunk){
-        BeginShaderMode(shaders.glowShader2);
+    // if (drunk){
+    //     BeginShaderMode(shaders.glowShader2);
 
-    }
+    // }
     
-    if (glitch){
-        //BeginShaderMode(shaders.glitchShader);
-        BeginShaderMode(shaders.glitchVignetteShader);
+    // if (glitch){
+    //     //BeginShaderMode(shaders.glitchShader);
+    //     BeginShaderMode(shaders.glitchVignetteShader);
  
-    }
+    // }
 
     BeginMode2D(camera);
      // Draw the background (sky)
@@ -2650,6 +2668,7 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
         hobo.ClickNPC(mousePosition, camera, player, gameState);
 
         if (hobo.interacting){ 
+   
             if (firstHobo){ // only raise zombie and draw shovel if you have talked the hobo
                 firstHobo = false;
                 
@@ -2735,22 +2754,22 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
         BeginShaderMode(shaders.vignetteShader);
     }
 
-    if (applyShader){
+    // if (applyShader){
 
-        BeginShaderMode(shaders.glowShader);
+    //     BeginShaderMode(shaders.glowShader);
         
-    }
+    // }
 
-    if (drunk){
-        BeginShaderMode(shaders.glowShader2);
+    // if (drunk){
+    //     BeginShaderMode(shaders.glowShader2);
 
-    }
+    // }
 
-    if (glitch){
-        BeginShaderMode(shaders.glitchVignetteShader);
+    // if (glitch){
+    //     BeginShaderMode(shaders.glitchVignetteShader);
    
 
-    }
+    // }
 
     BeginMode2D(camera);
     
@@ -2797,25 +2816,27 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
 
     }
     show_dbox = false;//reset box
+    
     for (NPC& npc : ParkNpcs){  
-        if (npc.MiB){
-            if (hasCemeteryKey && gameState == OUTSIDE){
+        if (npc.MiB){//update mibs if cemeterykey and no zombies. Mib activates zombies, then disapears
+            if (hasCemeteryKey && mibTimer > 0){//mibTimer is initially set to 3 seconds
                 npc.Update(player, gameState);
                 npc.Render(shaders);
                 npc.ClickNPC(mousePosition, camera, player, gameState);
-
+                //mib shows up in park, interacting with him spawns zombies and he vanishes
                 if (npc.interacting){
                     dboxPosition = npc.position;
-                    dealer = false; // dealer gets left on somewhere
                     show_dbox = true;   //dialogBox
-                
-                    phrase = npc.speech;
+                    raiseParkZombies = true;
+                    mibTimer -= GetFrameTime(); //mib timer tics down when interacting for 3 seconds then deactivate 
+                    phrase = npc.speech;//WE are Watching You
+                    if (mibTimer <= 0){
+                        npc.isActive = false;
+                    }
                 }
-            }else{
-                //dont show mib until you have the cemetery key
             }
 
-        }else{
+        }else{//update and render all other NPCs 
             npc.Update(player, gameState);
             npc.Render(shaders);
             npc.ClickNPC(mousePosition, camera, player, gameState);
@@ -2935,16 +2956,11 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
 
 //Main Street
 void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, PlayerCar& player_car,MagicDoor& magicDoor, float& totalTime,  std::vector<NPC>& npcs, UFO& ufo, Vector2 mousePosition, ShaderResources& shaders) {
-    //play ufo sound when outside. 
-    //PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.position, player.position, 800.0f);
-    if (!SoundManager::getInstance().IsSoundPlaying("energyHum")){
-        SoundManager::getInstance().PlayPositionalSound("energyHum", ufo.position, player.position, 1000);
-    }
 
-    //SoundManager::getInstance().UpdatePositionalSounds(player.position);
     SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide or in vacant lot
     SoundManager::getInstance().PlayMusic("StreetSounds");
-    
+    PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.position, player.position, 800);
+
     playerInteraction(player, player_car);
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
 
@@ -2966,27 +2982,27 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     BeginMode2D(camera);  // Begin 2D mode with the camera
     ClearBackground(customBackgroundColor);
     
-    if (vignette){ //vignette first so others can override. 
+    if (vignette){ //Do vignett here so we can keep it while doing other shaders globally. 
         BeginShaderMode(shaders.vignetteShader);
     }
 
-    if (applyShader){
+    // if (applyShader){
 
-        BeginShaderMode(shaders.glowShader);
+    //     BeginShaderMode(shaders.glowShader);
         
-    }
+    // }
 
-    if (drunk){
-        BeginShaderMode(shaders.glowShader2);
-        //player.outline = true;
+    // if (drunk){
+    //     BeginShaderMode(shaders.glowShader2);
+    //     //player.outline = true;
 
-    }
+    // }
 
-    if (glitch){
-        BeginShaderMode(shaders.glitchVignetteShader);
+    // if (glitch){
+    //     BeginShaderMode(shaders.glitchVignetteShader);
    
 
-    }
+    // }
     
     //background/midground width = 6400
 
@@ -3019,13 +3035,12 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
         
     }
 
-
-
     if (move_car){
         player_car.position.x -= player_car.carSpeed * GetFrameTime();
     }else{
         player_car.position = Vector2{1710, 668};
     }
+
     //mibs show up after you get cemetery key. They don't do anything yet. 
     if (hasCemeteryKey){
         for (NPC& mib : mibs){
@@ -3387,7 +3402,25 @@ void debugKeys(Player& player){
         std::cout << "Player Position: "; //print player position on key_space
         PrintVector2(player.position);
         raiseParkZombies = true;
+        
         }
+
+    if (IsKeyPressed(KEY_EQUAL)){
+        if (!borderlessWindow){
+            borderlessWindow = true;
+            ToggleBorderlessWindowed();
+            windowStateChanged = true;
+        
+
+        }else{
+            borderlessWindow = false;
+            windowStateChanged = true;
+            ToggleBorderlessWindowed();
+        }
+        
+
+
+    }
 
     if (IsKeyPressed(KEY_O)){
         if (!player.outline){
@@ -3482,6 +3515,30 @@ void UptoEnter(Player& player, PlayerCar& player_car){
     }
 }
 
+void UpdateDrawRectangle(Rectangle* destRect) {
+    int screenWidth = GetScreenWidth();
+    int screenHeight = GetScreenHeight();
+
+    float gameAspectRatio = (float)GAME_SCREEN_WIDTH / (float)GAME_SCREEN_HEIGHT;
+    float screenAspectRatio = (float)screenWidth / (float)screenHeight;
+
+    float scale = 1.0f;
+
+    if (screenAspectRatio > gameAspectRatio) {
+        // Screen is wider than the game aspect ratio (pillarbox)
+        scale = (float)screenHeight / (float)GAME_SCREEN_HEIGHT;
+        float scaledWidth = GAME_SCREEN_WIDTH * scale;
+        float xOffset = ((float)screenWidth - scaledWidth) / 2.0f;
+        *destRect = (Rectangle){ xOffset, 0, scaledWidth, (float)screenHeight };
+    } else {
+        // Screen is taller than the game aspect ratio (letterbox)
+        scale = (float)screenWidth / (float)GAME_SCREEN_WIDTH;
+        float scaledHeight = GAME_SCREEN_HEIGHT * scale;
+        float yOffset = ((float)screenHeight - scaledHeight) / 2.0f;
+        *destRect = (Rectangle){ 0, yOffset, (float)screenWidth, scaledHeight };
+    }
+}
+
 void InitSounds(SoundManager& soundManager){
     //We use our own custom sound manager. We have an array of sounds, and an array of musticTracks.
     SetMasterVolume(1.0f);  // Sets the master volume to maximum
@@ -3489,11 +3546,11 @@ void InitSounds(SoundManager& soundManager){
     SoundManager::getInstance().LoadMusic("CarRun", "assets/sounds/CarRun.ogg"); // load CarRun.ogg into music tracks with the name CarRun
     //music tracks automatically loop.The car running sound needs to loop, so we call it music.
     
-    SoundManager::getInstance().LoadMusic("enchantedNight", "assets/sounds/enchantedNight.ogg");
+    
     
     SoundManager::getInstance().LoadMusic("StreetSounds", "assets/sounds/StreetSounds.ogg"); 
     //SoundManager::getInstance().LoadMusic("Jangwa", "assets/sounds/Jangwa.ogg");
-    SoundManager::getInstance().LoadMusic("Neon", "assets/sounds/Neon.ogg");
+    
     SoundManager::getInstance().LoadMusic("NewNeon", "assets/sounds/Neon(noDrum).ogg");
     soundManager.LoadSound("carRun", "assets/sounds/CarRun.ogg");
     soundManager.LoadSound("gunShot", "assets/sounds/gunShot.ogg");   //misc sounds
@@ -3538,7 +3595,7 @@ void InitSounds(SoundManager& soundManager){
     //Volume edits
     SoundManager::getInstance().SetMusicVolume("CarRun", 0.25f);
     SoundManager::getInstance().SetMusicVolume("Schumann", 0.25f);
-    SoundManager::getInstance().SetMusicVolume("enchantedNight", 0.5f);
+    
 
     SoundManager::getInstance().SetSoundVolume("CarStart", 0.5);
     SoundManager::getInstance().SetSoundVolume("BoneCrack", 0.3f);
@@ -3585,7 +3642,7 @@ int main() {
 
     // Initialize the camer
     Camera2D camera = { 0 };
-    camera.offset = (Vector2){ screenWidth / 2.0f, screenHeight / 2.0f + 188.0f };  // Screen center + y offset 188 lower ground for bigger sky
+    camera.offset = (Vector2){ GAME_SCREEN_WIDTH / 2.0f, GAME_SCREEN_HEIGHT / 2.0f + 188.0f };  // Screen center + y offset 188 lower ground for bigger sky
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
     float targetZoom = camera.zoom;  // Initialize targetZoom to the initial zoom value
@@ -3600,10 +3657,11 @@ int main() {
 
     //PlayMusicStream(SoundManager::getInstance().GetMusic("Jangwa"));
     PlayMusicStream(SoundManager::getInstance().GetMusic("NewNeon"));
-    //PlayMusicStream(SoundManager::getInstance().GetMusic("enchantedNight"));
-   
+    
+    RenderTexture2D target = LoadRenderTexture(GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT); //render target. Draw to rendertexture2d first
   
- 
+    Rectangle destRect = { 0, 0, (float)GetScreenWidth(), (float)GetScreenHeight() };
+    UpdateDrawRectangle(&destRect);
 
     
     //int timeLoc = shaders.timeLoc;
@@ -3614,7 +3672,7 @@ int main() {
         if (!player.enter_car) player.UpdateMovement(resources, gameState, mousePosition, camera, platforms);  // Update player position and animation
         UpdateInventoryPosition(camera, gameState);
         SoundManager::getInstance().UpdateMusic("NewNeon");
-        //SoundManager::getInstance().UpdateMusic("enchantedNight");
+       
         SoundManager::getInstance().UpdateMusic("CarRun");
       
         UpdateBullets();
@@ -3634,28 +3692,32 @@ int main() {
             
         UpdateShaders(shaders, deltaTime, gameState);
 
-        //using current vignette shader doesn't work for take damage indicator, consider a seperate shader, or just a texture.
-        // if (player.hitTimer > 0){
-        //     float redVignetteColor[3] = { 1.0f, 0.0f, 0.0f }; // Red color
-        //     float sradius = 0.5; //lower radius to make the vignette more visible
-        //     // Set the vignette color in the shader
-        //     SetShaderValue(shaders.vignetteShader, shaders.radiusLoc, &sradius, SHADER_UNIFORM_FLOAT);
-        //     SetShaderValue(shaders.vignetteShader, shaders.vignetteColorLoc, redVignetteColor, SHADER_UNIFORM_VEC3);
-        // }
+        if (windowStateChanged) { //toggle full screen    
+            UpdateDrawRectangle(&destRect); 
+            windowStateChanged = false;
+
+            
+        }
+
 
         
         if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_D) || IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)){ //tutorial text
-            start = false; //turn off dbox if any movement
+            if (start){
+                start = false; //turn off dbox if any movement
+                phrase = "UP to Enter"; //set phrase to uptoenter cause liquor store doesn't set it
+
+            }
+
         }
 
         if (IsKeyPressed(KEY_M)){ //MUTE MUSIC
             if (SoundManager::getInstance().IsMusicPlaying("NewNeon")){
                 SoundManager::getInstance().PauseMusic("NewNeon");
-                //SoundManager::getInstance().PauseMusic("enchantedNight");
+                
 
             }else{
                 SoundManager::getInstance().ResumeMusic("NewNeon");
-                //SoundManager::getInstance().ResumeMusic("enchantedNight");
+                
             }
         }
 
@@ -3678,8 +3740,9 @@ int main() {
 
         UptoEnter(player, player_car);//enter different areas by pressing up
         handleCamera(camera, targetZoom);
-
-        BeginDrawing();
+        
+        BeginTextureMode(target);
+        
 
         if (gameState == OUTSIDE){
             RenderOutside(resources, camera, player, player_car, magicDoor, totalTime, npcs, ufo, mousePosition, shaders); 
@@ -3723,8 +3786,31 @@ int main() {
         DrawText(std::to_string(fps).c_str(), fpos.x, fpos.y, 25, WHITE);
         
         HandleTransition(player, player_car, calendar, npcs); //Check everyframe for gamestate transitions, inside draw to handle fadeouts
-        EndDrawing();
+        
+        
+        //EndDrawing();
+        EndTextureMode();
+
+
+
+
+        // Draw to the screen
+        BeginDrawing();
+            ClearBackground(BLACK);
+            if (applyShader) BeginShaderMode(shaders.glowShader);
+            if (drunk) BeginShaderMode(shaders.glowShader2);
+            if (glitch) BeginShaderMode(shaders.glitchVignetteShader);
+            DrawTexturePro(
+                target.texture,
+                (Rectangle){ 0, 0, (float)target.texture.width, -(float)target.texture.height },
+                destRect,
+                (Vector2){ 0, 0 },
+                0.0f,
+                WHITE
+            );
+            
         EndShaderMode();
+        EndDrawing();
         
         
     }

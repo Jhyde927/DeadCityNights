@@ -58,7 +58,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     deathTimer = 0.0;
     hasTarget = false;
     isTargeted = false;
-    NPC* targetNPC = nullptr; //set in main
+    targetNPC = nullptr; //set in main
  
 }
 
@@ -315,7 +315,7 @@ void NPC::HandleGhost(Player& player, float& distanceToPlayer){
 
 void NPC::HandleZombie(Player& player, float& distanceToPlayer){
     if (!isActive) return; 
-
+    hasTarget = false;
     float distToDest = fabs(position.x - destination.x);
     attacking = false;
 
@@ -325,9 +325,6 @@ void NPC::HandleZombie(Player& player, float& distanceToPlayer){
         
     }
 
-    
-
-   
     if (isZombie && distanceToPlayer < 10.0f && riseTimer <= 0 && !isDying) { //zombie attack
         attacking = true;
         destination = position;
@@ -341,7 +338,7 @@ void NPC::HandleZombie(Player& player, float& distanceToPlayer){
 
     }
 
-    if (targetNPC == nullptr && !hasTarget && distToDest < 1){
+    if (targetNPC == nullptr && isZombie && !hasTarget && distToDest < 1){
         SetDestination(1000, 4000);
         
         
@@ -377,6 +374,8 @@ void NPC::HandleZombie(Player& player, float& distanceToPlayer){
             //attacking = false;
             SetAnimationState(IDLE);
             
+            return; //Needed return here to stop seg fault. because code continues to run if health <= 0.
+            
                 
 
             }
@@ -385,18 +384,16 @@ void NPC::HandleZombie(Player& player, float& distanceToPlayer){
         }
     }
 
-
-
 }
 
 void NPC::HandleMiB(Player& player, float& distanceToPlayer){
     //MIB follow player up to a point then stops and waits. 
-    if (MiB && distanceToPlayer < 1000){
+    if (MiB && distanceToPlayer < 1000 && !hasTarget){
         destination = player.position; //move toward player
         hasTarget = true; //dont go idle
     }
     if (MiB && distanceToPlayer <= 125 && hasTarget){
-        hasTarget = false;
+       
         destination = position; //stop a ways away
         SetAnimationState(IDLE);
     }
@@ -637,28 +634,31 @@ void NPC::Update(Player& player, GameState& gameState) {
         }
 
         // Check if destination is reached
+
         if (fabs(position.x - destination.x) < 5.0f && !hasTarget && !isZombie) { //dont go idle if your zombie and you have reached destination
             // Reached destination, go idle for a moment, then set a new destination
             idleTime = 3.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 2.0f));  // 3-6 seconds of idle time
-            
-            SetAnimationState(IDLE);
 
-            // Only set a new random destination if not chasing the player
-            if (!isZombie || distanceToPlayer >= detectionRange) {
-                if (hobo){                   
-                    SetDestination(2550, 2600); // hobo stays near center
-                }else if (ghost){
-                    SetDestination(1024, 1800); //ghost stays on far left of cemetery
-                }
-                else{
-                    SetDestination(1000, 3500);  //Pedestrians Outside 
-                }
-                
-            }   
+            SetAnimationState(IDLE);
+            
+            if (hobo){
+                SetDestination(2550, 2600); // hobo stays near middle
+            }else if (ghost){
+                SetDestination(1024, 1800); //ghost stays on far left of cemetery
+            }else{
+                SetDestination(1000, 3500);  //Pedestrians Outside 
+            }
+
         
         }
-        if (fabs(position.x - destination.x) < 5.0f && hasTarget && isZombie){
-            destination = position;
+
+        if (isZombie && distanceToPlayer >= detectionRange && fabs(position.x - destination.x) < 5){ //at destination and zombie and no target
+            
+            SetDestination(1000, 4000); //wander around if player is far away
+        }
+
+        if (fabs(position.x - destination.x) < 5.0f && hasTarget && isZombie){ //destination = targetNPC pos or player pos when has target is true
+            destination = position; //zombie stop while attacking
         }
 
     }
@@ -732,6 +732,7 @@ void NPC::SetAnimationState(AnimationState newState) {
 }
 
 void NPC::ClickNPC(Vector2 mousePosition, Camera2D& camera, Player& player, GameState& gameState){
+    if (!isActive) return; //dont click on inactive NPCs 
 
     if (talkTimer > 0){
         talkTimer -= GetFrameTime();

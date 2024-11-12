@@ -64,7 +64,7 @@ public:
     int shells;
     bool can_take_damage;
 
-    // New health-related variables
+   
     int maxHealth;
     int currentHealth;
     float hitTimer;
@@ -72,7 +72,6 @@ public:
     double LastTapTimeLeft;
     double LastTapTimeRight;
     double tapInterval;
-
     bool AllowGuns;
 
 
@@ -82,7 +81,7 @@ public:
     // Methods
     public:
         void take_damage(int damage);
-        WeaponType currentWeapon;  // Now accessible from outside the class 
+        WeaponType currentWeapon;  
         int shotgunBulletCount;
         int revolverBulletCount;
         

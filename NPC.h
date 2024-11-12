@@ -79,7 +79,7 @@ public:
     void HandleZombie(Player& player, float& distanceToPlayer);
     void HandleGhost(Player& player, float& distanceToPlayer);
     void HandleMiB(Player& player, float& distanceToPlayer);
-    void TakeDamage(int damage);
+    void TakeDamage(int damage, Player& player);
 };
 
 #endif

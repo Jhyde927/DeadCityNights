@@ -102,7 +102,7 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     SetShaderValue(shaders.glitchVignetteShader, radiusLoc2, &radius, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.glitchVignetteShader, softnessLoc2, &softness2, SHADER_UNIFORM_FLOAT);
 
-    float glitchStrength = 0.05f;   // Adjust as needed
+    float glitchStrength = 0.03f;   // Adjust as needed
     float maxGlitchOffset = 0.01f; // Adjust as needed
 
     SetShaderValue(shaders.glitchVignetteShader, glitchStrengthLoc, &glitchStrength, SHADER_UNIFORM_FLOAT);

@@ -330,7 +330,7 @@ void NPC::HandleZombie(Player& player, float& distanceToPlayer){
         destination = position;
         if (player.hitTimer <= 0){
             player.take_damage(10);
-            SoundManager::getInstance().PlayPositionalSound("boneBreak", position, player.position, 200);
+            SoundManager::getInstance().PlayPositionalSound("boneBreak", position, player.position, 500);
             //PlaySound(SoundManager::getInstance().GetSound("BoneCrack")); 
         }
         
@@ -339,8 +339,8 @@ void NPC::HandleZombie(Player& player, float& distanceToPlayer){
     }
 
     if (targetNPC == nullptr && isZombie && !hasTarget && distToDest < 1){
-        SetDestination(1000, 4000);
-        
+        //SetDestination(1000, 4000);
+        idleTime = 1;
         
     }
 
@@ -353,7 +353,7 @@ void NPC::HandleZombie(Player& player, float& distanceToPlayer){
 
             
             if (targetNPC->hitTimer <= 0){
-                targetNPC->TakeDamage(25);
+                targetNPC->TakeDamage(25, player);
                 if (!SoundManager::getInstance().IsSoundPlaying("boneBreak")){
                      SoundManager::getInstance().PlayPositionalSound("boneBreak", position, player.position, 200);
 
@@ -815,7 +815,7 @@ bool NPC::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition
 }
 
 
-void NPC::TakeDamage(int damage) {
+void NPC::TakeDamage(int damage, Player& player) {
     health -= damage;
     hitTimer = 0.3f; // Tint the sprite red for 0.3 seconds
     int soundIndex = rand() % 4; //returns 0, 1, 2 or 3
@@ -829,18 +829,22 @@ void NPC::TakeDamage(int damage) {
         switch (soundIndex){ //zombie hits
             case 0:
                 //SoundManager::getInstance().GetSound("zhit1");  // Access the sound directly
-                PlaySound(SoundManager::getInstance().GetSound("zhit1"));
+                //PlaySound(SoundManager::getInstance().GetSound("zhit1"));
+                SoundManager::getInstance().PlayPositionalSound("zhit1", position, player.position, 500);
                 break;
             case 1:
-                PlaySound(SoundManager::getInstance().GetSound("zhit2"));
+                //PlaySound(SoundManager::getInstance().GetSound("zhit2"));
+                SoundManager::getInstance().PlayPositionalSound("zhit2", position, player.position, 500);
                 break;
 
             case 2:
-                PlaySound(SoundManager::getInstance().GetSound("zhit3"));
+                //PlaySound(SoundManager::getInstance().GetSound("zhit3"));
+                SoundManager::getInstance().PlayPositionalSound("zhit3", position, player.position, 500);
                 break;
             
             case 3:
-                PlaySound(SoundManager::getInstance().GetSound("zhit4"));
+                //PlaySound(SoundManager::getInstance().GetSound("zhit4"));
+                SoundManager::getInstance().PlayPositionalSound("zhit4", position, player.position, 500);
                 break;
 
         }
@@ -848,7 +852,8 @@ void NPC::TakeDamage(int damage) {
 
 
     if (health <= 0 && !isDying && isZombie) {
-        PlaySound(SoundManager::getInstance().GetSound("zombieDeath"));
+        //PlaySound(SoundManager::getInstance().GetSound("zombieDeath"));
+        SoundManager::getInstance().PlayPositionalSound("zombieDeath", position, player.position, 500);
         riseTimer = 0; //if killed while still rising set the risetimer back to 0 as to not play rise animation
         isDying = true;           // Start dying process
         if (rand() % 2 == 0){
@@ -881,7 +886,7 @@ void NPC::TakeDamage(int damage) {
         riseTimer = 0; //if killed while still rising set the risetimer back to 0 as to not play rise animation
         isDying = true;           // Start dying process   
         SetAnimationState(DEATH);  // Set to death animation
-
+        SoundManager::getInstance().PlayPositionalSound("deathScream", position, player.position, 500);
         deathTimer = 0.85f;        // Set death animation duration // needs to be exact
         destination = position; //zombie is at it's destination on death as to not play walk animation
         

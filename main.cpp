@@ -896,7 +896,8 @@ void HandleAstralTransition(Player& player, GameCalendar& calendar){
         }
     }else{
         gameState = OUTSIDE;
-        player.gravity = 800; //reset gravity on leaving astral plane. 
+        player.gravity = 800; //reset gravity on leaving astral plane.
+        player.outline = false; //set outline off when exiting astral
         for (NPC& ghost : astralGhosts){
             ghost.agro = false; //ghost lose agro after leaving the plane. 
         }
@@ -1237,7 +1238,7 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
 
 
 
-void CheckBulletNPCCollisions(std::vector<NPC>& npcs) {
+void CheckBulletNPCCollisions(std::vector<NPC>& npcs, Player& player) {
     Vector2 bulletSize = {1, 1};  // Size of the bullet hitbox
 
     for (int i = 0; i < MAX_BULLETS; i++) {
@@ -1246,7 +1247,7 @@ void CheckBulletNPCCollisions(std::vector<NPC>& npcs) {
                 if (npc.isActive && npc.CheckHit(bullets[i].previousPosition, bullets[i].position, bulletSize)) { //
                     // Collision detected
                     bullets[i].isActive = false;  // Deactivate the bullet
-                    npc.TakeDamage(25);  // Apply 25 damage to the NPC
+                    npc.TakeDamage(25, player);  // Apply 25 damage to the NPC
                     break;  // Exit loop since the bullet is deactivated
                 }
             }
@@ -1849,25 +1850,13 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
         if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
     } 
 
-    if (vignette){ //vignette first so others can override. 
-        BeginShaderMode(shaders.vignetteShader);
+
+    if (drunk){
+        BeginShaderMode(shaders.glowShader2);
+
     }
-
-    // if (applyShader){
-
-    //     BeginShaderMode(shaders.glowShader);
-        
-    // }
-
-    // if (drunk){
-    //     BeginShaderMode(shaders.glowShader2);
-
-    // }
     
-    // if (glitch){
-    //     BeginShaderMode(shaders.glitchVignetteShader);
 
-    // }
 
     // Draw the background layers
     DrawTexturePro(resources.AstralBackground, {0, 0, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)},
@@ -2063,29 +2052,10 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
     float parallaxTrees = camera.target.x * .8;
     float parallaxBackground = camera.target.x * 0.9f;  // Background moves even slower 
 
-    //BeginShaderMode(shader);
+    if (drunk){
+        BeginShaderMode(shaders.glowShader2);
 
-
-    if (vignette){ //vignette first so others can override. 
-        BeginShaderMode(shaders.vignetteShader);
-    }
-
-    // if (applyShader){
-    //     //drug shader
-    //     BeginShaderMode(shaders.glowShader);
-        
-    // }
-
-    // if (drunk){
-    //     BeginShaderMode(shaders.glowShader2);
-
-    // }
-    
-    // if (glitch){
-    //     //BeginShaderMode(shaders.glitchShader);
-    //     BeginShaderMode(shaders.glitchVignetteShader);
- 
-    // }
+    } 
 
     // Draw the background layers
     DrawTexturePro(resources.cemeteryBackground, {0, 0, static_cast<float>(resources.cemeteryBackground.width), static_cast<float>(resources.cemeteryBackground.height)},
@@ -2274,28 +2244,11 @@ void RenderRoad(const GameResources& resources, PlayerCar& player_car,Player& pl
     hasSlept = false; // player can sleep if they have traveled.
     hasWorked = false; //player can go to work if he has traveled. 
 
-
-    if (vignette){ //vignette first so others can override. 
-        BeginShaderMode(shaders.vignetteShader);
-    }
-
-    if (applyShader){
-        //drug shader
-        BeginShaderMode(shaders.glowShader);
-        
-    }
-
     if (drunk){
         BeginShaderMode(shaders.glowShader2);
 
     }
     
-    if (glitch){
-        BeginShaderMode(shaders.glitchVignetteShader);
-
-    }
-    
-
 
     BeginMode2D(camera);
     DrawTexture(resources.road, screenWidth/2 - 1280, 0, WHITE);
@@ -2387,27 +2340,12 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
     float parallaxTrees = camera.target.x * 0.8;
     float parallaxBackground = camera.target.x * 0.9f;  // Background moves even slower 
     
-    if (vignette){ //vignette first so others can override. 
-        BeginShaderMode(shaders.vignetteShader);
+
+    if (drunk){
+        BeginShaderMode(shaders.glowShader2);
+
     }
 
-    // if (applyShader){
-
-    //     BeginShaderMode(shaders.glowShader);
-        
-    // }
-
-    // if (drunk){
-    //     BeginShaderMode(shaders.glowShader2);
-
-    // }
-    
-    // if (glitch){
-    //     BeginShaderMode(shaders.glitchVignetteShader);
-
-    // }
-
-    // Draw the background layers
     DrawTexturePro(resources.cemeteryBackground, {0, 0, static_cast<float>(resources.cemeteryBackground.width), static_cast<float>(resources.cemeteryBackground.height)},
                     {parallaxBackground-1024, 0, static_cast<float>(resources.cemeteryBackground.width), static_cast<float>(resources.cemeteryBackground.height)}, {0, 0}, 0.0f, WHITE);
 
@@ -2520,28 +2458,12 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
 void RenderApartment(GameResources& resources, Player player, Vector2 mousePosition, GameCalendar& calendar, Camera2D camera, ShaderResources& shaders){
     player.position.x -= 20; //ensure over_apartment = false
     int screen_center = (screenWidth - resources.apartment.width)/2;
-    
-     //Vector2 drawerPos = {screenWidth/2 + 160, 730};
 
-    if (vignette){ //vignette first so others can override. 
-        BeginShaderMode(shaders.vignetteShader);
+    if (drunk){
+        BeginShaderMode(shaders.glowShader2);
+
     }
-
-    // if (applyShader){
-
-    //     BeginShaderMode(shaders.glowShader);
-        
-    // }
-
-    // if (drunk){
-    //     BeginShaderMode(shaders.glowShader2);
-
-    // }
     
-    // if (glitch){
-    //     BeginShaderMode(shaders.glitchVignetteShader);
-
-    // }
 
     ClearBackground(ApartmentBgColor);
 
@@ -2623,26 +2545,12 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
     }
     
 
-   if (vignette){ //vignette first so others can override. 
-        BeginShaderMode(shaders.vignetteShader);
+
+    if (drunk){
+        BeginShaderMode(shaders.glowShader2);
+
     }
-
-    // if (applyShader){
-
-    //     BeginShaderMode(shaders.glowShader);
-        
-    // }
-
-    // if (drunk){
-    //     BeginShaderMode(shaders.glowShader2);
-
-    // }
     
-    // if (glitch){
-    //     //BeginShaderMode(shaders.glitchShader);
-    //     BeginShaderMode(shaders.glitchVignetteShader);
- 
-    // }
 
     BeginMode2D(camera);
      // Draw the background (sky)
@@ -2749,27 +2657,11 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
     camera.target.x = player.position.x;
     
 
+    if (drunk){
+        BeginShaderMode(shaders.glowShader2);
 
-    if (vignette){ //vignette first so others can override. 
-        BeginShaderMode(shaders.vignetteShader);
     }
 
-    // if (applyShader){
-
-    //     BeginShaderMode(shaders.glowShader);
-        
-    // }
-
-    // if (drunk){
-    //     BeginShaderMode(shaders.glowShader2);
-
-    // }
-
-    // if (glitch){
-    //     BeginShaderMode(shaders.glitchVignetteShader);
-   
-
-    // }
 
     BeginMode2D(camera);
     
@@ -2963,7 +2855,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 
     playerInteraction(player, player_car);
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
-
+    
     if (move_ufo){
         ufoTimer -= GetFrameTime();
         DrawUFO(resources, ufo, camera, totalTime, shaders);
@@ -2982,9 +2874,9 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     BeginMode2D(camera);  // Begin 2D mode with the camera
     ClearBackground(customBackgroundColor);
     
-    if (vignette){ //Do vignett here so we can keep it while doing other shaders globally. 
-        BeginShaderMode(shaders.vignetteShader);
-    }
+    // if (vignette){ //Do vignett here so we can keep it while doing other shaders globally. 
+    //     BeginShaderMode(shaders.vignetteShader);
+    // }
 
     // if (applyShader){
 
@@ -2992,11 +2884,11 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
         
     // }
 
-    // if (drunk){
-    //     BeginShaderMode(shaders.glowShader2);
-    //     //player.outline = true;
+    if (drunk){
+        BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
+        //player.outline = true;
 
-    // }
+    }
 
     // if (glitch){
     //     BeginShaderMode(shaders.glitchVignetteShader);
@@ -3571,6 +3463,7 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadSound("Pills", "assets/sounds/Pills.ogg");
     soundManager.LoadSound("gulp", "assets/sounds/gulp.ogg");
     soundManager.LoadSound("energyHum", "assets/sounds/energyHum.ogg");
+    soundManager.LoadSound("deathScream", "assets/sounds/deathScream.ogg");
 
     soundManager.LoadSound("ShotGun", "assets/sounds/ShotGun.ogg");
     soundManager.LoadSound("ShotgunReload", "assets/sounds/ShotgunReload.ogg");
@@ -3638,7 +3531,8 @@ int main() {
     spawnNPCs(resources); //spawn NPCs before rendering them outside
     InitPlatforms();
 
-
+    //
+    
 
     // Initialize the camer
     Camera2D camera = { 0 };
@@ -3658,8 +3552,9 @@ int main() {
     //PlayMusicStream(SoundManager::getInstance().GetMusic("Jangwa"));
     PlayMusicStream(SoundManager::getInstance().GetMusic("NewNeon"));
     
-    RenderTexture2D target = LoadRenderTexture(GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT); //render target. Draw to rendertexture2d first
-  
+    RenderTexture2D targetTexture = LoadRenderTexture(GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT); //render target. Draw to rendertexture2d first
+    RenderTexture2D vignetteTexture = LoadRenderTexture(GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT);
+    RenderTexture2D finalTexture = LoadRenderTexture(GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT);
     Rectangle destRect = { 0, 0, (float)GetScreenWidth(), (float)GetScreenHeight() };
     UpdateDrawRectangle(&destRect);
 
@@ -3676,11 +3571,11 @@ int main() {
         SoundManager::getInstance().UpdateMusic("CarRun");
       
         UpdateBullets();
-        CheckBulletNPCCollisions(zombies); //check each enemy group for bullet collisions
-        CheckBulletNPCCollisions(ghosts);
-        CheckBulletNPCCollisions(astralGhosts);
-        CheckBulletNPCCollisions(bats);
-        CheckBulletNPCCollisions(astralBats);
+        CheckBulletNPCCollisions(zombies, player); //check each enemy group for bullet collisions
+        CheckBulletNPCCollisions(ghosts, player);
+        CheckBulletNPCCollisions(astralGhosts, player);
+        CheckBulletNPCCollisions(bats, player);
+        CheckBulletNPCCollisions(astralBats, player);
 
         MonitorMouseClicks(player, calendar);
         UpdateZombieSpawning(resources, player);
@@ -3741,7 +3636,7 @@ int main() {
         UptoEnter(player, player_car);//enter different areas by pressing up
         handleCamera(camera, targetZoom);
         
-        BeginTextureMode(target);
+        BeginTextureMode(targetTexture); //Render to Texture. First Pass/////////////////////////////
         
 
         if (gameState == OUTSIDE){
@@ -3774,6 +3669,7 @@ int main() {
         }else if (gameState == ASTRAL){
             DisplayDate(calendar);
             RenderAstral(resources, player, camera, mousePosition, earth, magicDoor, shaders);
+
         }else if (gameState == PARK){
             DisplayDate(calendar);
             RenderPark(resources, player,player_car, camera, mousePosition, shaders);
@@ -3791,18 +3687,27 @@ int main() {
         //EndDrawing();
         EndTextureMode();
 
+        //Render to texture //////////////////////////// Second Pass: Apply vignette shader seperate so we can stack effects. 
+        BeginTextureMode(vignetteTexture);
+            ClearBackground(BLACK);
+            BeginShaderMode(shaders.vignetteShader);
+                DrawTextureRec(targetTexture.texture, (Rectangle){ 0, 0, (float)targetTexture.texture.width, -(float)targetTexture.texture.height }, (Vector2){ 0, 0 }, WHITE);
+            EndShaderMode();
+        EndTextureMode();
 
 
 
-        // Draw to the screen
+        // Draw the target texture ////////////////////final pass Draw vignettTexture to screen. Vignette texture is the scene with vignette shader applied. 
         BeginDrawing();
             ClearBackground(BLACK);
+            
+            
             if (applyShader) BeginShaderMode(shaders.glowShader);
-            if (drunk) BeginShaderMode(shaders.glowShader2);
+            
             if (glitch) BeginShaderMode(shaders.glitchVignetteShader);
             DrawTexturePro(
-                target.texture,
-                (Rectangle){ 0, 0, (float)target.texture.width, -(float)target.texture.height },
+                vignetteTexture.texture, //use vignette texture because thats what we last drew too. 
+                (Rectangle){ 0, 0, (float)vignetteTexture.texture.width, -(float)vignetteTexture.texture.height },
                 destRect,
                 (Vector2){ 0, 0 },
                 0.0f,

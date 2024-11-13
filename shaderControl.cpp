@@ -24,8 +24,14 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     
     shaders.rainbowOutlineShader = LoadShader(0, "shaders/rainbowOutline.fs");
 
-    // Set up shader uniforms
-    float resolution[2] = { static_cast<float>(screenWidth), static_cast<float>(screenHeight) };
+    shaders.oldFilmShader = LoadShader(0, "shaders/oldFilm.fs");
+
+    
+
+
+    float resolution[2] = { static_cast<float>(screenWidth), static_cast<float>(screenHeight) }; //used for everything
+
+
     float glowThreshold = 0.01f;
     float glowIntensity = 1.0f;
     float glowColor[3] = { 0.5f, 0.5f, 2.0f };
@@ -131,7 +137,7 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
 
         //pixelation shader
     float ptextureSize[2] = {(float)1024.0, (float)1024.0};
-    float pixelSize = 4.0f;
+    float pixelSize = 5.0f;
     SetShaderValue(shaders.pixelationShader, GetShaderLocation(shaders.pixelationShader, "pixelSize"), &pixelSize, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.pixelationShader, GetShaderLocation(shaders.pixelationShader, "textureSize"), ptextureSize, SHADER_UNIFORM_VEC2);
 
@@ -145,6 +151,31 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     SetShaderValue(shaders.outlineGlowShader, GetShaderLocation(shaders.outlineGlowShader, "threshold"), &threshold3, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.outlineGlowShader, GetShaderLocation(shaders.outlineGlowShader, "glowSize"), &glowSize, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.outlineGlowShader, GetShaderLocation(shaders.outlineGlowShader, "textureSize"), ptextureSize, SHADER_UNIFORM_VEC2);
+
+    //old Film
+
+    int timeLoc = GetShaderLocation(shaders.oldFilmShader, "time");
+    int resolutionLoc3 = GetShaderLocation(shaders.oldFilmShader, "resolution");
+    int grainIntensityLoc = GetShaderLocation(shaders.oldFilmShader, "grainIntensity");
+    int sepiaIntensityLoc = GetShaderLocation(shaders.oldFilmShader, "sepiaIntensity");
+
+    int flickerIntensityLoc = GetShaderLocation(shaders.oldFilmShader, "flickerIntensity");
+    int scratchIntensityLoc = GetShaderLocation(shaders.oldFilmShader, "scratchIntensity");
+
+    // Set initial uniform values
+    //float resolution[2] = { (float)GAME_SCREEN_WIDTH, (float)GAME_SCREEN_HEIGHT };
+    SetShaderValue(shaders.oldFilmShader, resolutionLoc3, resolution, SHADER_UNIFORM_VEC2);
+
+    // Set initial effect intensities
+    float grainIntensity = 0.2f;      // Adjust as desired (keep small to avoid overpowering)
+    float sepiaIntensity = 0.01f;       // Adjust as desired
+    float flickerIntensity = 0.01f;    // Adjust as desired (keep small)
+    float scratchIntensity = 0.1f;     // Adjust as desired (keep small)
+
+    SetShaderValue(shaders.oldFilmShader, grainIntensityLoc, &grainIntensity, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shaders.oldFilmShader, sepiaIntensityLoc, &sepiaIntensity, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shaders.oldFilmShader, flickerIntensityLoc, &flickerIntensity, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shaders.oldFilmShader, scratchIntensityLoc, &scratchIntensity, SHADER_UNIFORM_FLOAT);
 
 
 
@@ -165,6 +196,7 @@ void UpdateShaders(ShaderResources& shaders, float deltaTime, GameState& gameSta
     // Update time for glitch shader
     shaders.totalTime += deltaTime;
     int timeLoc = GetShaderLocation(shaders.rainbowOutlineShader, "time");
+    int timeLoc2 = GetShaderLocation(shaders.oldFilmShader, "time");
     //SetShaderValue(shaders.glitchShader, shaders.timeLoc, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.glitchVignetteShader, shaders.timeLoc, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.rainbowOutlineShader, timeLoc, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
@@ -188,7 +220,7 @@ void UpdateShaders(ShaderResources& shaders, float deltaTime, GameState& gameSta
     int glowThresholdLocation = GetShaderLocation(shaders.glowShader, "glowThreshold");
     SetShaderValue(shaders.glowShader, glowThresholdLocation, &glowThreshold, SHADER_UNIFORM_FLOAT);
 
-
+    SetShaderValue(shaders.oldFilmShader, timeLoc2, &time, SHADER_UNIFORM_FLOAT);
 
     // if (player.hitTimer > 0){
         

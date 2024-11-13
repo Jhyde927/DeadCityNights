@@ -62,6 +62,7 @@ bool buttonWork = false;
 bool hasPills = false;
 bool digSpot = false;
 bool NecroTech = false;
+bool film = false;
 bool start = true;
 bool buttonTavern = false;
 bool gotoWork = false;
@@ -705,7 +706,7 @@ void StartZombieSpawn(int zombie_count){
     remainingZombiesToSpawn = zombie_count;
     spawnTimer = 0.0f; //reset timer
     nextSpawnDelay = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 3.0f));  // Random delay between 1-4 seconds
-
+    film = true;
     glitch = true; //Activate glitch shader to make things more dramatic
 }
 
@@ -745,7 +746,7 @@ void UpdateZombieSpawning(GameResources& resources, Player& player){
         }
     }else{
         glitch = false; //glitch only runs if zombies are actively spawning.
-
+        film = false;
     }
 
 }
@@ -3332,6 +3333,9 @@ void debugKeys(Player& player){
             AddItemToInventory("cemeteryKey", inventory, INVENTORY_SIZE);
             has_car_key = true;
             hasCemeteryKey = true;
+            
+            raiseZombies = true; // giving yourself keys also triggers zombies if you talk to the hobo first. 
+            
             PlaySound(SoundManager::getInstance().GetSound("Keys"));
 
         }
@@ -3636,7 +3640,9 @@ int main() {
         UptoEnter(player, player_car);//enter different areas by pressing up
         handleCamera(camera, targetZoom);
         
-        BeginTextureMode(targetTexture); //Render to Texture. First Pass/////////////////////////////
+        //MULTIPASS RENDERING. We first render the whole scene to a target texture. Then we draw the target texture inside texture mode, and apply vignette shader
+        //This creates a final vignette texture that we render to the screen. We can apply other shaders one at a time to this final texture.  
+        BeginTextureMode(targetTexture); //Render to targetTexture. First Pass/////////////////////////////
         
 
         if (gameState == OUTSIDE){
@@ -3682,31 +3688,44 @@ int main() {
         DrawText(std::to_string(fps).c_str(), fpos.x, fpos.y, 25, WHITE);
         
         HandleTransition(player, player_car, calendar, npcs); //Check everyframe for gamestate transitions, inside draw to handle fadeouts
-        
-        
-        //EndDrawing();
         EndTextureMode();
+        
 
         //Render to texture //////////////////////////// Second Pass: Apply vignette shader seperate so we can stack effects. 
         BeginTextureMode(vignetteTexture);
             ClearBackground(BLACK);
             BeginShaderMode(shaders.vignetteShader);
-                DrawTextureRec(targetTexture.texture, (Rectangle){ 0, 0, (float)targetTexture.texture.width, -(float)targetTexture.texture.height }, (Vector2){ 0, 0 }, WHITE);
+                DrawTextureRec( //Drawing the target texture inside texture mode saves it to what ever other target texture you provide. 
+                    targetTexture.texture, 
+                    (Rectangle){ 0, 0, (float)targetTexture.texture.width, -(float)targetTexture.texture.height }, 
+                    (Vector2){ 0, 0 },
+                     WHITE);
+            EndShaderMode();
+        EndTextureMode();
+
+
+        BeginTextureMode(finalTexture);
+            ClearBackground(BLACK);
+            if (film) BeginShaderMode(shaders.oldFilmShader);
+                DrawTextureRec( //Drawing the target texture inside texture mode saves it to what ever other target texture you provide. 
+                    vignetteTexture.texture, 
+                    (Rectangle){ 0, 0, (float)targetTexture.texture.width, -(float)targetTexture.texture.height }, 
+                    (Vector2){ 0, 0 },
+                     WHITE);
             EndShaderMode();
         EndTextureMode();
 
 
 
-        // Draw the target texture ////////////////////final pass Draw vignettTexture to screen. Vignette texture is the scene with vignette shader applied. 
+        // Draw the target texture //////FINAL PASS: Draw vignettTexture to screen. Vignette texture is the targetTexture with vignette shader applied. 
         BeginDrawing();
             ClearBackground(BLACK);
-            
-            
-            if (applyShader) BeginShaderMode(shaders.glowShader);
-            
+            //drunk shader is set inside render functions      
+            if (applyShader) BeginShaderMode(shaders.glowShader);     
             if (glitch) BeginShaderMode(shaders.glitchVignetteShader);
+            //BeginShaderMode(shaders.oldFilmShader);
             DrawTexturePro(
-                vignetteTexture.texture, //use vignette texture because thats what we last drew too. 
+                finalTexture.texture, 
                 (Rectangle){ 0, 0, (float)vignetteTexture.texture.width, -(float)vignetteTexture.texture.height },
                 destRect,
                 (Vector2){ 0, 0 },

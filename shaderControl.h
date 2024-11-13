@@ -19,6 +19,8 @@ struct ShaderResources {
     Shader pixelationShader;
     Shader outlineGlowShader; 
     Shader rainbowOutlineShader;
+    Shader oldFilmShader;
+ 
     
     int timeLoc;
     int glowThresholdLoc;

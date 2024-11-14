@@ -297,7 +297,29 @@ Draw trees in the park foreground, possibly mid ground trees?
 
 If you talk to the MiB in the park, he say's "we are watching you", then vanishes, then zombies raise from the ground and start attacking the pedestrians. He only shows up if you have the cemetery key. Zombie/pedestrian behavior is till a little buggy. NPCs now seem to set a new destination when they are hit, so it looks like they try to run away. I think I'll keep it like that for now but it might look better if they just stand there and take it. 
 
+Zombie/pedestrian interaction uses pointers. We iterate 2 vectors and set a pointer from zombie in one vector to NPC in another. So zombie can call take damage on NPC. First time I've needed pointers so far. 
 
+Need dramatic version of the music for zombie attacks. 
+
+Game is getting too big to keep in my head. What happens in the game so far. You start under the street light outside your apartment. You can either go to the apartment and get your keys and the gun, or you can talk to the homeless guy, but you need to do both for zombies to spawn in the cemetery. If you visit the cemetery before this, it is empty. Once getting to the cemetery, zombies ambush you once you get out of your car. You can then walk left to find the shovel where zombies again attack. You can go right and find nothing but another zombie attack. the gate says locked. So you go back to main street. There are NPCs to interact with on main street like the dealer, the fortune teller, the liquor store also. At some point you need to go back to the hobo and talk to him again. He says zombies are gathering in the cemetery before invading the city and you need to stop them. He gives you the key to the cemetery gate, and tells you where to dig up the shotgun. You then return to the cemetery where you are ambushed again. You then can enter the graveyard. You can go left and talk to the ghost who says a cryptic rhyme about setting him free. You can go right and get ambushed by zombies. The first zombie you kill drops a dead body with a ID card. You can pick up the ID card and it says it belongs to some one who works for a company named necrotech. You again return to the hobo who says necrotech was his old employer and you should use your computer to look up necrotech, once you do a new destination is on the car menu. That is how far that story ark goes. The ghost story arc is you talk to the ghost you says you need an altered mind. You talk to the dealer and buy drugs. You take the drugs on main street and find a magic door. This leads to the astral realm. There are platforms and astral bats to fight on the astral plane. Platforms lead up to a really high big platform where a boss fight will take place. I forgot to mention if you walk to the far left when on main street a UFO drops down out of the sky, and shines a beam of light onto the player. Once you have the cemetery key the UFO appears in the cemetery for no reason right now. And that is about it. 
+
+So you could continue the Necrotech ark, or make a boss for the astral plane, or remove the UFO from the cemetery. 
+
+Not sure I like the necrotech idea, but you can always change it. 
+
+fixed hobo moving while trying to talk. refactored some code and it seemed to fix it, also fixed zombies bugging out when out of range of player. 
+
+Implement full screen feature. Involves drawing everything to a separate texture then resizing said texture. We could use this for shaders as well I think. If we are drawing to a separate texture anyway, why not apply shaders to it. 
+
+implemented multi pass rendering. BeginTextureMode(targetTexture) saves whatever is drawn under it to a target texture2D. We can then add shaders to the whole scene and save it to yet another texture before we draw that texture to the screen while applying more shaders. There are 4 passes. targetTexture, vignetteTexture, finalTexture, then draw to screen where more individual shaders are applied. Looking at it now, I see I can add vignette texture to the starting targetTexture to save a step. But I might need another pass in the future so I can just replace vignette with whatever that is. 
+
+Added old film shader. Could be used for a cut scene. Adds film grain, horizontal line glitches, sepia tone, and something else. It's added to the finalTexture pass, and only runs if film is true. film grain is cool looking. Maybe an underground area we could apply film grain because it looks good on black. implies darkness. Subway station? 
+
+Ghost is broken. Does not follow player once attacked. in graveyard. 
+
+zombie npc attack still buggy. 
+
+put rainbow outline shader on magic door. 
 
 
 

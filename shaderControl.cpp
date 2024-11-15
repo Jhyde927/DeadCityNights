@@ -20,11 +20,9 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     shaders.vignetteShader = LoadShader(0, "shaders/vignette.fs");
     shaders.glitchVignetteShader = LoadShader(0, "shaders/glitchVignetteShader.fs");
     shaders.pixelationShader = LoadShader(0, "shaders/pixelation.fs");
-    shaders.outlineGlowShader = LoadShader(0, "shaders/outlineGlow.fs");
-    
     shaders.rainbowOutlineShader = LoadShader(0, "shaders/rainbowOutline.fs");
-
     shaders.oldFilmShader = LoadShader(0, "shaders/oldFilm.fs");
+    shaders.redVignetteShader = LoadShader(0, "shaders/redVignette.fs");
 
     
 
@@ -33,26 +31,25 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
 
 
     float glowThreshold = 0.01f;
-    float glowIntensity = 1.0f;
-    float glowColor[3] = { 0.5f, 0.5f, 2.0f };
+    float drunkGlowThreshold = .15f;
+  
+    float glowColor[3] = { 0.5f, 0.5f, 2.0f }; //blue
 
-    // Glow Shader 1
+    // Glow Shader 1 //we use the shader struct's vars here and no where else
     SetShaderValue(shaders.glowShader, GetShaderLocation(shaders.glowShader, "resolution"), resolution, SHADER_UNIFORM_VEC2);
     SetShaderValue(shaders.glowShader, GetShaderLocation(shaders.glowShader, "glowColor"), glowColor, SHADER_UNIFORM_VEC3);
     SetShaderValue(shaders.glowShader, GetShaderLocation(shaders.glowShader, "glowThreshold"), &glowThreshold, SHADER_UNIFORM_FLOAT);
 
-    // Glitch Shader
-    shaders.timeLoc = GetShaderLocation(shaders.glitchShader, "time");
-    shaders.totalTime = 0.0f;
 
     // Glow Shader 2 (Drunk Shader)
-    shaders.glowThresholdLoc = GetShaderLocation(shaders.glowShader2, "glowThreshold");
-    shaders.glowIntensityLoc = GetShaderLocation(shaders.glowShader2, "glowIntensity");
-    shaders.resolutionLoc = GetShaderLocation(shaders.glowShader2, "resolution");
+    int glowThresholdLoc = GetShaderLocation(shaders.glowShader2, "glowThreshold");
+    int glowIntensityLoc = GetShaderLocation(shaders.glowShader2, "glowIntensity");
+    int drunkResolutionLoc = GetShaderLocation(shaders.glowShader2, "resolution");
 
-    SetShaderValue(shaders.glowShader2, shaders.glowThresholdLoc, &glowThreshold, SHADER_UNIFORM_FLOAT);
-    SetShaderValue(shaders.glowShader2, shaders.glowIntensityLoc, &glowIntensity, SHADER_UNIFORM_FLOAT);
-    SetShaderValue(shaders.glowShader2, shaders.resolutionLoc, resolution, SHADER_UNIFORM_VEC2);
+    float drunkglowIntensity = 0.5f;
+    SetShaderValue(shaders.glowShader2, glowThresholdLoc, &drunkGlowThreshold, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shaders.glowShader2, glowIntensityLoc, &drunkglowIntensity, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shaders.glowShader2, drunkResolutionLoc, resolution, SHADER_UNIFORM_VEC2);
 
 
     //setup outline shader
@@ -97,8 +94,8 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     int maxGlitchOffsetLoc = GetShaderLocation(shaders.glitchVignetteShader, "maxGlitchOffset");
 
 
-    shaders.timeLoc = GetShaderLocation(shaders.glitchVignetteShader, "time");
-    resolutionLoc = GetShaderLocation(shaders.glitchVignetteShader, "resolution");
+    int timeLoc = GetShaderLocation(shaders.glitchVignetteShader, "time");
+    int resolutionLoc2 = GetShaderLocation(shaders.glitchVignetteShader, "resolution");
     int radiusLoc2 = GetShaderLocation(shaders.glitchVignetteShader, "radius");
     int softnessLoc2 = GetShaderLocation(shaders.glitchVignetteShader, "softness");
     float softness2 = 0.1;
@@ -114,21 +111,20 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     SetShaderValue(shaders.glitchVignetteShader, glitchStrengthLoc, &glitchStrength, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.glitchVignetteShader, maxGlitchOffsetLoc, &maxGlitchOffset, SHADER_UNIFORM_FLOAT);
 
-    // Get uniform locations //rainbowOutline
+    //rainbowOutline
     int outlineColorLoc2 = GetShaderLocation(shaders.rainbowOutlineShader, "outlineColor");
     int thresholdLoc2 = GetShaderLocation(shaders.rainbowOutlineShader, "threshold");
     //int timeLoc = GetShaderLocation(shaders.rainbowOutlineShader, "time");
     int textureSizeLoc2 = GetShaderLocation(shaders.rainbowOutlineShader, "textureSize");
 
-    // Set uniform values
+   
     float outlineColor2[4] = { 0.0f, 0.0f, 0.0f, 1.0f };  // White outline
     SetShaderValue(shaders.rainbowOutlineShader, outlineColorLoc2, outlineColor2, SHADER_UNIFORM_VEC4);
 
     float threshold2 = 0.9f;
     SetShaderValue(shaders.rainbowOutlineShader, thresholdLoc2, &threshold2, SHADER_UNIFORM_FLOAT);
 
-    // Initialize time
-    //float totalTime = 0.0f;
+
 
     // Set texture size (ensure you use the correct texture)
     float textureSize[2] = { (float)512.0, (float)512.0 };
@@ -142,19 +138,11 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     SetShaderValue(shaders.pixelationShader, GetShaderLocation(shaders.pixelationShader, "textureSize"), ptextureSize, SHADER_UNIFORM_VEC2);
 
 
-    //outline glow
-    float glowSize = 2.0f;
-    float threshold3 = 0.05f;
-    float glowColor2[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 
-    SetShaderValue(shaders.outlineGlowShader, GetShaderLocation(shaders.outlineGlowShader, "glowColor"), glowColor2, SHADER_UNIFORM_VEC4); // Orange glow
-    SetShaderValue(shaders.outlineGlowShader, GetShaderLocation(shaders.outlineGlowShader, "threshold"), &threshold3, SHADER_UNIFORM_FLOAT);
-    SetShaderValue(shaders.outlineGlowShader, GetShaderLocation(shaders.outlineGlowShader, "glowSize"), &glowSize, SHADER_UNIFORM_FLOAT);
-    SetShaderValue(shaders.outlineGlowShader, GetShaderLocation(shaders.outlineGlowShader, "textureSize"), ptextureSize, SHADER_UNIFORM_VEC2);
 
     //old Film
 
-    int timeLoc = GetShaderLocation(shaders.oldFilmShader, "time");
+    int timeLocFilm = GetShaderLocation(shaders.oldFilmShader, "time");
     int resolutionLoc3 = GetShaderLocation(shaders.oldFilmShader, "resolution");
     int grainIntensityLoc = GetShaderLocation(shaders.oldFilmShader, "grainIntensity");
     int sepiaIntensityLoc = GetShaderLocation(shaders.oldFilmShader, "sepiaIntensity");
@@ -177,7 +165,20 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     SetShaderValue(shaders.oldFilmShader, flickerIntensityLoc, &flickerIntensity, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.oldFilmShader, scratchIntensityLoc, &scratchIntensity, SHADER_UNIFORM_FLOAT);
 
+    //red vignette
 
+
+    int resolutionLocRed = GetShaderLocation(shaders.redVignetteShader, "resolution");
+    int vignetteIntensityLoc = GetShaderLocation(shaders.redVignetteShader, "vignetteIntensity");
+    int tintColorLoc = GetShaderLocation(shaders.redVignetteShader, "tintColor");
+
+    SetShaderValue(shaders.redVignetteShader, resolutionLocRed, resolution, SHADER_UNIFORM_VEC2);
+
+    float vignetteIntensity = 0.8f; // Range from 0.0 (no vignette) to 1.0 (strong vignette)
+    SetShaderValue(shaders.redVignetteShader, vignetteIntensityLoc, &vignetteIntensity, SHADER_UNIFORM_FLOAT);
+
+    float tintColor[4] = { 20.0f, 2.0f, 2.0f, 0.3f }; // RGBA values
+    SetShaderValue(shaders.redVignetteShader, tintColorLoc, tintColor, SHADER_UNIFORM_VEC4);
 
 
 }
@@ -197,8 +198,9 @@ void UpdateShaders(ShaderResources& shaders, float deltaTime, GameState& gameSta
     shaders.totalTime += deltaTime;
     int timeLoc = GetShaderLocation(shaders.rainbowOutlineShader, "time");
     int timeLoc2 = GetShaderLocation(shaders.oldFilmShader, "time");
+    int timeLoc3 = GetShaderLocation(shaders.glitchVignetteShader, "time");
     //SetShaderValue(shaders.glitchShader, shaders.timeLoc, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
-    SetShaderValue(shaders.glitchVignetteShader, shaders.timeLoc, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shaders.glitchVignetteShader, timeLoc3, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.rainbowOutlineShader, timeLoc, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
 
     ///update glowShader

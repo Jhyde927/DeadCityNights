@@ -706,7 +706,7 @@ void StartZombieSpawn(int zombie_count){
     remainingZombiesToSpawn = zombie_count;
     spawnTimer = 0.0f; //reset timer
     nextSpawnDelay = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 3.0f));  // Random delay between 1-4 seconds
-    film = true;
+    //film = true;
     glitch = true; //Activate glitch shader to make things more dramatic
 }
 
@@ -746,7 +746,7 @@ void UpdateZombieSpawning(GameResources& resources, Player& player){
         }
     }else{
         glitch = false; //glitch only runs if zombies are actively spawning.
-        film = false;
+        //film = false;
     }
 
 }
@@ -883,10 +883,12 @@ void HandleLotTransition(Player& player) {
 }
 
 void HandleAstralTransition(Player& player, GameCalendar& calendar){
-    if (player.isDead){
+    if (player.isDead){ //player dies on the astral plane, reset back to apartment.
         gameState = APARTMENT;//wake up back at your apartment with full health.
         player.position.x = apartmentX;
         player.isDead = false;
+        player.gravity = 800; //reset gravity to normal. 
+        player.outline = false; //set outline off when exiting astral
         applyShader = false; //drugs ware off if you advanced the day
         player.currentHealth = player.maxHealth;
         showHealthbar = false;
@@ -895,10 +897,11 @@ void HandleAstralTransition(Player& player, GameCalendar& calendar){
             ghost.agro = false; //ghost lose agro after dying. 
 
         }
-    }else{
+    }else{ //call fade out in astral, presumably magic door exit, may want to check for this, instead of just assuming. 
         gameState = OUTSIDE;
         player.gravity = 800; //reset gravity on leaving astral plane.
         player.outline = false; //set outline off when exiting astral
+       
         for (NPC& ghost : astralGhosts){
             ghost.agro = false; //ghost lose agro after leaving the plane. 
         }
@@ -907,14 +910,25 @@ void HandleAstralTransition(Player& player, GameCalendar& calendar){
 }
 
 void HandleParkTransition(GameState& gamestate, Player& player, PlayerCar player_car){
-        gameState = OUTSIDE;
+    if (player.isDead){ //player dies in park, reset to apartment.
+        gameState = APARTMENT;
+        player.position.x = apartmentX;
+        player.isDead = false;
+        player.currentHealth = player.maxHealth;
+        applyShader = false; //if you die, you are no longer high when respawning
+        
+    }else{ //call fade out in park, leaving by car to outside. 
+        gameState = OUTSIDE; //call fadeout in park, can you die in the park?
         player.position.x = player_car.position.x-64; //center of car
         gotoPark = false; //reset gotopark
+
+    }
+
 
 }
 
 void PerformStateTransition(Player& player, PlayerCar& player_car, GameCalendar& calendar, std::vector<NPC>& npcs) {
-    //if we are fading out switch to the next area depending on the situation. 
+    //if we are fading out, we are transitioning, switch to the next area depending on the gameState. 
     switch (gameState) {
         case OUTSIDE:
             HandleOutsideTransition(player, player_car, npcs, calendar);
@@ -986,6 +1000,7 @@ void HandleFadeOut(Player& player, PlayerCar& player_car, GameCalendar& calendar
 
 
 void HandleTransition(Player& player, PlayerCar& player_car, GameCalendar& calendar, std::vector<NPC>& npcs) {
+    //if you want to tranision to a new scene, just say FADEOUT = TRUE
     if (firstTransition) {
         fadeAlpha = 0.0f;  // Ensure it starts at 0 for the first fade
         firstTransition = false;  // Reset flag after first transition
@@ -1001,6 +1016,7 @@ void HandleTransition(Player& player, PlayerCar& player_car, GameCalendar& calen
     if (player.currentHealth <= 0 && !player.isDead) {
         player.isDead = true;
         transitionState = FADE_OUT;
+        
     }
 
     // Draw the fade mask
@@ -1031,7 +1047,7 @@ void Dig(Player& player){
     }
 
     if (player.position.x > 82.0 && player.position.x < 102 && gameState == OUTSIDE){
-        PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
+        PlaySound(SoundManager::getInstance().GetSound("ShovelDig")); //far left outside, pills?
         shovelTint = RED;
     }
 
@@ -1425,10 +1441,12 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, G
 
 }
 
-void DrawMagicDoor(GameResources& resources,Player& player, MagicDoor& magicDoor){
+void DrawMagicDoor(GameResources& resources,Player& player, MagicDoor& magicDoor, ShaderResources& shaders){
         float doorFrame = 64.0;
         Rectangle sourceDoorRec = {static_cast<float>(magicDoor.currentFrame) * doorFrame, 0, static_cast<float>(doorFrame), static_cast<float>(doorFrame)};
+        BeginShaderMode(shaders.rainbowOutlineShader);
         DrawTextureRec(resources.magicDoorSheet, sourceDoorRec, magicDoor.position, WHITE);
+        EndShaderMode();
         if (player.position.x > magicDoor.position.x -10 && player.position.x < magicDoor.position.x +10){ //over magic door
             if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
                 openMagicDoor = true;
@@ -1877,7 +1895,7 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
     EndShaderMode(); ////////////////////////////SHADER OFF
     DrawEarth(resources, earth, camera); //draw earth outside of shader. 
     
-    DrawMagicDoor(resources, player, magicDoor);
+    DrawMagicDoor(resources, player, magicDoor, shaders);
 
     player.DrawPlayer(resources, gameState, camera, shaders);
 
@@ -2875,27 +2893,12 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     BeginMode2D(camera);  // Begin 2D mode with the camera
     ClearBackground(customBackgroundColor);
     
-    // if (vignette){ //Do vignett here so we can keep it while doing other shaders globally. 
-    //     BeginShaderMode(shaders.vignetteShader);
-    // }
-
-    // if (applyShader){
-
-    //     BeginShaderMode(shaders.glowShader);
-        
-    // }
-
     if (drunk){
         BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
         //player.outline = true;
 
     }
 
-    // if (glitch){
-    //     BeginShaderMode(shaders.glitchVignetteShader);
-   
-
-    // }
     
     //background/midground width = 6400
 
@@ -3007,7 +3010,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 
     //Draw MagicDoor
     if (applyShader){
-        DrawMagicDoor(resources, player, magicDoor);  
+        DrawMagicDoor(resources, player, magicDoor, shaders);  
     }
 
 
@@ -3292,9 +3295,15 @@ void handleCamera(Camera2D& camera, float& targetZoom){
 void debugKeys(Player& player){
     //Debug keys, disable for release. 
     if (IsKeyPressed(KEY_SPACE)){
-        std::cout << "Player Position: "; //print player position on key_space
+        std::cout << "Player Position: "; //print player position on key_space for debug purposes
         PrintVector2(player.position);
-        raiseParkZombies = true;
+        if (!film){
+            film = true;
+        }else{
+            film = false;
+        }
+        
+
         
         }
 
@@ -3640,52 +3649,40 @@ int main() {
         UptoEnter(player, player_car);//enter different areas by pressing up
         handleCamera(camera, targetZoom);
         
-        //MULTIPASS RENDERING. We first render the whole scene to a target texture. Then we draw the target texture inside texture mode, and apply vignette shader
-        //This creates a final vignette texture that we render to the screen. We can apply other shaders one at a time to this final texture.  
+        //MULTIPASS RENDERING. First render everything to a target texture. then create vignetted texture, then whatever else, then final render to screen with begin draw 
         BeginTextureMode(targetTexture); //Render to targetTexture. First Pass/////////////////////////////
         
 
         if (gameState == OUTSIDE){
             RenderOutside(resources, camera, player, player_car, magicDoor, totalTime, npcs, ufo, mousePosition, shaders); 
-            DisplayDate(calendar);//why not display date once globally? there are reasons 
-
+            
         }else if (gameState == APARTMENT){
             RenderApartment(resources, player, mousePosition, calendar, camera, shaders);
-            DisplayDate(calendar);
-
+            
         }else if (gameState == ROAD){
             RenderRoad(resources, player_car, player, camera, mousePosition, shaders);
-            DisplayDate(calendar);
-
+            
         }else if (gameState == CEMETERY){
             RenderCemetery(resources, player, player_car, ufo, totalTime, camera,mousePosition, shaders);
-            DisplayDate(calendar);
-
+            
         }else if (gameState == WORK){
             ClearBackground(BLACK);//do nothing at the moment
 
         }else if (gameState == LOT){ // vacant lot
             RenderLot(resources, player, camera, mousePosition, shaders);
-            DisplayDate(calendar);
-
+            
         }else if (gameState == GRAVEYARD){
             RenderGraveyard(resources, player, camera, mousePosition, shaders);
-            DisplayDate(calendar);
             
         }else if (gameState == ASTRAL){
-            DisplayDate(calendar);
             RenderAstral(resources, player, camera, mousePosition, earth, magicDoor, shaders);
 
         }else if (gameState == PARK){
-            DisplayDate(calendar);
             RenderPark(resources, player,player_car, camera, mousePosition, shaders);
 
         }
 
-        //show FPS
-        int fps = GetFPS();
-        Vector2 fpos = {935, 935}; //bottom right
-        DrawText(std::to_string(fps).c_str(), fpos.x, fpos.y, 25, WHITE);
+
         
         HandleTransition(player, player_car, calendar, npcs); //Check everyframe for gamestate transitions, inside draw to handle fadeouts
         EndTextureMode();
@@ -3706,10 +3703,11 @@ int main() {
 
         BeginTextureMode(finalTexture);
             ClearBackground(BLACK);
-            if (film) BeginShaderMode(shaders.oldFilmShader);
+            if (player.hitTimer > 0) BeginShaderMode(shaders.redVignetteShader);
+            
                 DrawTextureRec( //Drawing the target texture inside texture mode saves it to what ever other target texture you provide. 
                     vignetteTexture.texture, 
-                    (Rectangle){ 0, 0, (float)targetTexture.texture.width, -(float)targetTexture.texture.height }, 
+                    (Rectangle){ 0, 0, (float)vignetteTexture.texture.width, -(float)vignetteTexture.texture.height }, 
                     (Vector2){ 0, 0 },
                      WHITE);
             EndShaderMode();
@@ -3717,21 +3715,28 @@ int main() {
 
 
 
-        // Draw the target texture //////FINAL PASS: Draw vignettTexture to screen. Vignette texture is the targetTexture with vignette shader applied. 
+        // Draw the target texture //////FINAL PASS: Draw finalTexture to screen. 
         BeginDrawing();
             ClearBackground(BLACK);
             //drunk shader is set inside render functions      
-            if (applyShader) BeginShaderMode(shaders.glowShader);     
+            if (applyShader) BeginShaderMode(shaders.glowShader);     //Apply various shaders before rendering to screen
             if (glitch) BeginShaderMode(shaders.glitchVignetteShader);
             //BeginShaderMode(shaders.oldFilmShader);
             DrawTexturePro(
                 finalTexture.texture, 
-                (Rectangle){ 0, 0, (float)vignetteTexture.texture.width, -(float)vignetteTexture.texture.height },
+                (Rectangle){ 0, 0, (float)finalTexture.texture.width, -(float)finalTexture.texture.height },
                 destRect,
                 (Vector2){ 0, 0 },
                 0.0f,
                 WHITE
             );
+            DrawMoney(); //draw UI on top of everything else.
+            DisplayDate(calendar);
+
+            //show FPS
+            int fps = GetFPS();
+            Vector2 fpos = {935, 935}; //bottom right
+            DrawText(std::to_string(fps).c_str(), fpos.x, fpos.y, 25, WHITE);
             
         EndShaderMode();
         EndDrawing();

@@ -8,7 +8,7 @@
 
 
 
-// Structure to hold all your shaders and related variables
+// Structure to hold all shaders and related variables
 struct ShaderResources {
     Shader glowShader;
     Shader glitchShader;
@@ -17,10 +17,9 @@ struct ShaderResources {
     Shader vignetteShader;
     Shader glitchVignetteShader;
     Shader pixelationShader;
-    Shader outlineGlowShader; 
     Shader rainbowOutlineShader;
     Shader oldFilmShader;
- 
+    Shader redVignetteShader;
     
     int timeLoc;
     int glowThresholdLoc;
@@ -29,14 +28,14 @@ struct ShaderResources {
     int vignetteColorLoc;
     int radiusLoc;
 
-    // Add any other shader-related variables here
+    
     float totalTime;
 };
 
-// Function to initialize shaders
+
 void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight);
 
-// Function to unload shaders when closing the application
+
 void UnloadShaders(ShaderResources& shaders);
 
 // Function to update shader variables (e.g., time)

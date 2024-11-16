@@ -100,7 +100,7 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     int softnessLoc2 = GetShaderLocation(shaders.glitchVignetteShader, "softness");
     float softness2 = 0.1;
 
-    SetShaderValue(shaders.glitchVignetteShader, resolutionLoc, resolution, SHADER_UNIFORM_VEC2);
+    SetShaderValue(shaders.glitchVignetteShader, resolutionLoc2, resolution, SHADER_UNIFORM_VEC2);
 
     SetShaderValue(shaders.glitchVignetteShader, radiusLoc2, &radius, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.glitchVignetteShader, softnessLoc2, &softness2, SHADER_UNIFORM_FLOAT);

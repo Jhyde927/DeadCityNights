@@ -285,13 +285,15 @@ void NPC::HandleGhost(Player& player, float& distanceToPlayer){
     //float distanceToBat = Vector2Distance(position, player.position);
     
     if ((ghost || bat) && distanceToPlayer < 400){
-        if ((ghost || bat)){
-            hasTarget = true;
-            if (bat) agro = true;
-            
-            destination = player.position;
+        hasTarget = true;
+        if (bat) agro = true; //bats are always angry
 
+        if (agro){
+            destination = player.position;
         }
+        
+
+        
 
     }
 
@@ -453,6 +455,54 @@ void NPC::SetDestination(float minX, float maxX) {
     facingRight = (destination.x > position.x);  // Determine facing direction
 }
 
+
+void NPC::HandleAnimationLogic(){
+        // Update frame counter and animation logic
+    frameCounter += GetFrameTime() * frameSpeed;
+    if (frameCounter >= 1.0f) {
+        frameCounter = 0.0f;
+        currentFrame++;
+
+        // Determine the number of frames based on the current animation
+        int numFrames = 0;
+        switch (currentAnimation) {
+            case IDLE:
+                numFrames = 1; // 1 frame for idle
+                if (ghost || bat) numFrames = 7; //ghost idle is 7 frames
+                break;
+            case WALK:
+                numFrames = 7;  // 7 frames for walking
+                break;
+            case RUN:
+                numFrames = 7;  // 7 frames for running
+                break;
+            case DEATH:
+                numFrames = 7;  // 7 frames for dying
+                break;
+
+            case ATTACKING:
+                numFrames = 7; // 7 frames for attacking
+                break;
+
+            case RISING:    // 7 frame for rising      
+                numFrames = 7;
+                break;
+
+            case DEATH2:
+                numFrames = 7; // 7 frames for dying2
+                break;
+
+
+        }
+
+        // Loop back to the first frame if currentFrame exceeds numFrames
+        if (currentFrame >= numFrames) {
+            currentFrame = 0;
+        }
+    }
+
+}
+
 void NPC::Update(Player& player, GameState& gameState) {
     if (!isActive) return;  // Skip update if the NPC is not active
     if (!isZombie) riseTimer = 0;
@@ -512,49 +562,7 @@ void NPC::Update(Player& player, GameState& gameState) {
         }
     }
 
-    // Update frame counter and animation logic
-    frameCounter += GetFrameTime() * frameSpeed;
-    if (frameCounter >= 1.0f) {
-        frameCounter = 0.0f;
-        currentFrame++;
-
-        // Determine the number of frames based on the current animation
-        int numFrames = 0;
-        switch (currentAnimation) {
-            case IDLE:
-                numFrames = 1; // 1 frame for idle
-                if (ghost || bat) numFrames = 7; //ghost idle is 7 frames
-                break;
-            case WALK:
-                numFrames = 7;  // 7 frames for walking
-                break;
-            case RUN:
-                numFrames = 7;  // 7 frames for running
-                break;
-            case DEATH:
-                numFrames = 7;  // 7 frames for dying
-                break;
-
-            case ATTACKING:
-                numFrames = 7; // 7 frames for attacking
-                break;
-
-            case RISING:    // 7 frame for rising      
-                numFrames = 7;
-                break;
-
-            case DEATH2:
-                numFrames = 7; // 7 frames for dying2
-                break;
-
-
-        }
-
-        // Loop back to the first frame if currentFrame exceeds numFrames
-        if (currentFrame >= numFrames) {
-            currentFrame = 0;
-        }
-    }
+    HandleAnimationLogic();
 
     // If NPC is idle, reduce idle time
     if (idleTime > 0) {
@@ -597,10 +605,10 @@ void NPC::Update(Player& player, GameState& gameState) {
                 facingRight = false;
                 SetAnimationState(WALK);
             }
-        }else if (bat) {
+        }else if (bat || ghost) {
             if (agro && hasTarget) {
                 float deltaTime = GetFrameTime(); // Get the frame time
-
+               
                 Vector2 velocity = {0.0f, 0.0f};
 
                 float yDifference = destination.y - position.y;

@@ -80,6 +80,7 @@ public:
     void HandleGhost(Player& player, float& distanceToPlayer);
     void HandleMiB(Player& player, float& distanceToPlayer);
     void TakeDamage(int damage, Player& player);
+    void HandleAnimationLogic();
 };
 
 #endif

@@ -52,6 +52,7 @@ bool canGiveFortune = true;
 bool showInternet = false;
 bool borderlessWindow = false;
 bool windowStateChanged = false;
+bool fullscreen = false;
 bool move_ufo = false;
 bool canMoveUfo = true;
 bool firstHobo = true;
@@ -678,7 +679,12 @@ void updateMoney(){
 }
 void DrawMoney(){
     std::string smoney = "$ " + std::to_string(displayMoney);
-    DrawText(smoney.c_str(), screenWidth/2+400, 25, 30, WHITE);
+    if (!borderlessWindow){
+        DrawText(smoney.c_str(), screenWidth/2+400, 25, 30, WHITE);
+    }else{
+        DrawText(smoney.c_str(), screenWidth/2+900, 25, 30, WHITE);
+    }
+    
     updateMoney();
 }
 
@@ -1933,7 +1939,7 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
     
     
     EndMode2D();
-    DrawMoney(); //draw money after EndMode2d()
+    
     Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
     if (player.currentHealth < 100){
         DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);  
@@ -2196,7 +2202,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
     DrawBullets(); //draw bullets in cemetery after everything else. 
 
     EndMode2D();
-    DrawMoney(); //draw money after EndMode2d()
+
     if (showInventory){
         RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
     }
@@ -2319,7 +2325,7 @@ void RenderRoad(const GameResources& resources, PlayerCar& player_car,Player& pl
     
     EndShaderMode();
     EndMode2D();
-    DrawMoney(); //draw money after EndMode2d()
+ 
     DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D
    
 }
@@ -2424,7 +2430,7 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
 
     EndMode2D();
 
-    DrawMoney(); //draw money after EndMode2d()
+    
 
     if (badgeTimer > 0){ //show badge explanation
         show_dbox = true;
@@ -2489,7 +2495,7 @@ void RenderApartment(GameResources& resources, Player player, Vector2 mousePosit
     DrawTexture(resources.apartment, screen_center, 0, WHITE);
     EndShaderMode(); ////////////////////////////SHADER OFF
 
-    DrawMoney(); //draw money after EndMode2d()
+    
     if (showAPUI){
         DrawApartmentUI(resources, calendar, mousePosition, camera);
     }
@@ -2630,7 +2636,7 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
     
     EndMode2D();  // End 2D mode 
  
-    DrawMoney(); //draw money after EndMode2d()
+    
 
     if (show_dbox){      
         DrawDialogBox(player, camera, 0, 0, 20); // draw box size of 0x0. hobo has no border box
@@ -3268,7 +3274,13 @@ void spawnNPCs(GameResources& resources){
 }
 
 void DisplayDate(GameCalendar& calendar){
-    DrawText(calendar.GetDate().c_str(), screenWidth/2 - 450, 25, 20, WHITE);
+    if (!borderlessWindow){
+        DrawText(calendar.GetDate().c_str(), screenWidth/2 - 450, 25, 20, WHITE);
+
+    }else{
+        DrawText(calendar.GetDate().c_str(), screenWidth/2, 25, 20, WHITE);
+    }
+    
 }
 
 
@@ -3297,10 +3309,8 @@ void debugKeys(Player& player){
     if (IsKeyPressed(KEY_SPACE)){
         std::cout << "Player Position: "; //print player position on key_space for debug purposes
         PrintVector2(player.position);
-        if (!film){
-            film = true;
-        }else{
-            film = false;
+        if (!glitch){
+            glitch = true;
         }
         
 
@@ -3572,7 +3582,7 @@ int main() {
     UpdateDrawRectangle(&destRect);
 
     
-    //int timeLoc = shaders.timeLoc;
+    
     float totalTime = 0.0f; // time elapsed from start of game //glitch shader/ufo
     // Main game loop
     while (!WindowShouldClose()) {
@@ -3604,10 +3614,9 @@ int main() {
             UpdateDrawRectangle(&destRect); 
             windowStateChanged = false;
 
+
             
         }
-
-
         
         if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_D) || IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)){ //tutorial text
             if (start){
@@ -3651,6 +3660,7 @@ int main() {
         
         //MULTIPASS RENDERING. First render everything to a target texture. then create vignetted texture, then whatever else, then final render to screen with begin draw 
         BeginTextureMode(targetTexture); //Render to targetTexture. First Pass/////////////////////////////
+        
         
 
         if (gameState == OUTSIDE){
@@ -3735,7 +3745,8 @@ int main() {
 
             //show FPS
             int fps = GetFPS();
-            Vector2 fpos = {935, 935}; //bottom right
+            Vector2 fpos = {screenWidth/2 + 450, 935}; //bottom right
+            if (borderlessWindow) fpos.x += 400;
             DrawText(std::to_string(fps).c_str(), fpos.x, fpos.y, 25, WHITE);
             
         EndShaderMode();

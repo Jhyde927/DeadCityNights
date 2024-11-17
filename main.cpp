@@ -679,12 +679,8 @@ void updateMoney(){
 }
 void DrawMoney(){
     std::string smoney = "$ " + std::to_string(displayMoney);
-    if (!borderlessWindow){
-        DrawText(smoney.c_str(), screenWidth/2+400, 25, 30, WHITE);
-    }else{
-        DrawText(smoney.c_str(), screenWidth/2+900, 25, 30, WHITE);
-    }
-    
+
+    DrawText(smoney.c_str(), screenWidth/2+400, 25, 30, WHITE);
     updateMoney();
 }
 
@@ -3274,12 +3270,8 @@ void spawnNPCs(GameResources& resources){
 }
 
 void DisplayDate(GameCalendar& calendar){
-    if (!borderlessWindow){
-        DrawText(calendar.GetDate().c_str(), screenWidth/2 - 450, 25, 20, WHITE);
 
-    }else{
-        DrawText(calendar.GetDate().c_str(), screenWidth/2, 25, 20, WHITE);
-    }
+    DrawText(calendar.GetDate().c_str(), screenWidth/2 - 450, 25, 20, WHITE);
     
 }
 
@@ -3329,9 +3321,15 @@ void debugKeys(Player& player){
             windowStateChanged = true;
             ToggleBorderlessWindowed();
         }
-        
 
+    }
 
+    if (IsKeyPressed(KEY_ESCAPE)){ //press escape to exit full screen
+        if (borderlessWindow){
+            borderlessWindow = false;
+            ToggleBorderlessWindowed();
+            windowStateChanged = true;
+        }
     }
 
     if (IsKeyPressed(KEY_O)){
@@ -3608,7 +3606,7 @@ int main() {
         totalTime += deltaTime; // used for UFO sine wave
         if (totalTime > 10000.0f) totalTime -= 10000.0f; //reset total time just in case. 
             
-        UpdateShaders(shaders, deltaTime, gameState);
+        UpdateShaders(shaders, deltaTime, borderlessWindow,  gameState);
 
         if (windowStateChanged) { //toggle full screen    
             UpdateDrawRectangle(&destRect); 
@@ -3721,6 +3719,15 @@ int main() {
                     (Vector2){ 0, 0 },
                      WHITE);
             EndShaderMode();
+            DrawMoney(); //draw UI on top of everything else.
+            DisplayDate(calendar);
+
+            //show FPS
+            int fps = GetFPS();
+            Vector2 fpos = {screenWidth/2 + 450, 935}; //bottom right
+            //if (borderlessWindow) fpos.x += 400;
+            DrawText(std::to_string(fps).c_str(), fpos.x, fpos.y, 25, WHITE);
+
         EndTextureMode();
 
 
@@ -3730,7 +3737,7 @@ int main() {
             ClearBackground(BLACK);
             //drunk shader is set inside render functions      
             if (applyShader) BeginShaderMode(shaders.glowShader);     //Apply various shaders before rendering to screen
-            if (glitch) BeginShaderMode(shaders.glitchVignetteShader);
+            if (glitch) BeginShaderMode(shaders.glitchShader);
             //BeginShaderMode(shaders.oldFilmShader);
             DrawTexturePro(
                 finalTexture.texture, 
@@ -3740,14 +3747,7 @@ int main() {
                 0.0f,
                 WHITE
             );
-            DrawMoney(); //draw UI on top of everything else.
-            DisplayDate(calendar);
 
-            //show FPS
-            int fps = GetFPS();
-            Vector2 fpos = {screenWidth/2 + 450, 935}; //bottom right
-            if (borderlessWindow) fpos.x += 400;
-            DrawText(std::to_string(fps).c_str(), fpos.x, fpos.y, 25, WHITE);
             
         EndShaderMode();
         EndDrawing();

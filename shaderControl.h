@@ -39,7 +39,7 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight);
 void UnloadShaders(ShaderResources& shaders);
 
 // Function to update shader variables (e.g., time)
-void UpdateShaders(ShaderResources& shaders, float deltaTime, GameState& gameState);
+void UpdateShaders(ShaderResources& shaders, float deltaTime, bool fullscreen, GameState& gameState);
 
 
 

@@ -13,9 +13,11 @@ uniform float glitchStrength;  // Glitch strength
 uniform float maxGlitchOffset; // Maximum offset
 
 // Vignette uniforms
-uniform vec2 resolution;     // Screen resolution (in pixels)
+uniform vec2 resolution;     // Rendering area resolution (e.g., 1024x1024)
 uniform float radius;        // Radius where the vignette starts (0.0 to 0.5)
 uniform float softness;      // Softness of the vignette edges (0.0 to 0.5)
+
+uniform vec2 offset;         // Offset in pixels (to adjust for fullscreen centering)
 
 // Random function for glitch effect
 float rand(vec2 co) {
@@ -40,8 +42,15 @@ void main() {
     color.rgb *= glitch;
 
     // Vignette effect
-    vec2 position = gl_FragCoord.xy / resolution;
-    position = position - vec2(0.5); // Shift origin to center of screen
+    // Adjust fragment coordinate for offset
+    vec2 fragPos = gl_FragCoord.xy - offset;
+
+    // Normalize position within the rendering area
+    vec2 position = fragPos / resolution;
+
+    // Shift origin to center of rendering area
+    position = position - vec2(0.5);
+
     float len = length(position);
 
     float vignette = smoothstep(radius, radius - softness, len);

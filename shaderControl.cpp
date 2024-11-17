@@ -73,7 +73,7 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     int vignetteColorLoc = GetShaderLocation(shaders.vignetteShader, "vignetteColor");
 
     // Set the uniform values
-    //float resolution[2] = { (float)screenWidth, (float)screenHeight };
+   
     SetShaderValue(shaders.vignetteShader, resolutionLoc, resolution, SHADER_UNIFORM_VEC2);
 
     // Vignette effect parameters
@@ -89,7 +89,7 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
 
 
     //setup glitchVignetteShader
-
+    int offsetLoc = GetShaderLocation(shaders.glitchVignetteShader, "offset");
     int glitchStrengthLoc = GetShaderLocation(shaders.glitchVignetteShader, "glitchStrength");
     int maxGlitchOffsetLoc = GetShaderLocation(shaders.glitchVignetteShader, "maxGlitchOffset");
 
@@ -110,6 +110,11 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
 
     SetShaderValue(shaders.glitchVignetteShader, glitchStrengthLoc, &glitchStrength, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.glitchVignetteShader, maxGlitchOffsetLoc, &maxGlitchOffset, SHADER_UNIFORM_FLOAT);
+
+
+    //regular glitch
+
+    int timeLocGlitch = GetShaderLocation(shaders.glitchShader, "time");
 
     //rainbowOutline
     int outlineColorLoc2 = GetShaderLocation(shaders.rainbowOutlineShader, "outlineColor");
@@ -193,16 +198,19 @@ void UnloadShaders(ShaderResources& shaders) {
     UnloadShader(shaders.glitchVignetteShader);
 }
 
-void UpdateShaders(ShaderResources& shaders, float deltaTime, GameState& gameState) {
+void UpdateShaders(ShaderResources& shaders, float deltaTime, bool fullscreen, GameState& gameState) {
     // Update time for glitch shader
+
+    float renderWidth = 1024.0f;
     shaders.totalTime += deltaTime;
     int timeLoc = GetShaderLocation(shaders.rainbowOutlineShader, "time");
     int timeLoc2 = GetShaderLocation(shaders.oldFilmShader, "time");
     int timeLoc3 = GetShaderLocation(shaders.glitchVignetteShader, "time");
+    int timeLoc4 = GetShaderLocation(shaders.glitchShader, "time");
     //SetShaderValue(shaders.glitchShader, shaders.timeLoc, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.glitchVignetteShader, timeLoc3, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.rainbowOutlineShader, timeLoc, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
-
+    SetShaderValue(shaders.glitchShader, timeLoc4, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
     ///update glowShader
     float time = GetTime();  // Get the total elapsed time
     float minThreshold = 0.1f;
@@ -224,23 +232,6 @@ void UpdateShaders(ShaderResources& shaders, float deltaTime, GameState& gameSta
 
     SetShaderValue(shaders.oldFilmShader, timeLoc2, &time, SHADER_UNIFORM_FLOAT);
 
-    // if (player.hitTimer > 0){
-        
-        
-    //     float redVignetteColor[3] = { 1.0f, 0.0f, 0.0f }; // Red color
-    //     float sradius = 0.8; //lower radius to make the vignette more visible
-    //     // Set the vignette color in the shader
-    //     SetShaderValue(shaders.vignetteShader, shaders.radiusLoc, &sradius, SHADER_UNIFORM_FLOAT);
-    //     SetShaderValue(shaders.vignetteShader, shaders.vignetteColorLoc, redVignetteColor, SHADER_UNIFORM_VEC3);
- 
-        
-    // }else{
-       
-    //     float blackVignetteColor[3] = { 0.0f, 0.0f, 0.0f }; // Red color
-    //     float sradius = 1.0;
-    //     SetShaderValue(shaders.vignetteShader, shaders.radiusLoc, &sradius, SHADER_UNIFORM_FLOAT);
-    //     SetShaderValue(shaders.vignetteShader, shaders.vignetteColorLoc, blackVignetteColor, SHADER_UNIFORM_VEC3);
-    // }
     
 }
 

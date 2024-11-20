@@ -319,3 +319,8 @@ int main() {
             player.enter_car = true;
             over_car = false;
             player_car.currentFrame = 1;
+
+
+
+
+

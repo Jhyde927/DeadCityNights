@@ -11,6 +11,8 @@ struct Bullet {
     float speed;
     bool isActive;
     float lifeTime;
+    float damage;
+    
 };
 
 const int MAX_BULLETS = 50;  // Max number of bullets // bullets are used for both the revolver and shotgun
@@ -19,7 +21,7 @@ const int MAX_BULLETS = 50;  // Max number of bullets // bullets are used for bo
 
 extern Bullet bullets[MAX_BULLETS];  // Declare the global bullets array
 
-void FireBullet(Player& player, bool spread);  // Declare the FireBullet function
+void FireBullet(Player& player, bool spread, float damage);  // Declare the FireBullet function
 void UpdateBullets();             // Function to update bullet positions
 void DrawBullets();               // Function to draw bullets
 

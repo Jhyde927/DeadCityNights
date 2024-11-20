@@ -81,6 +81,9 @@ struct GameResources {
     Texture2D ParkMidground;
     Texture2D ParkBuildings;
     Texture2D MidBuildings;
+    Texture2D shootSheetAuto;
+    Texture2D reloadSheetAuto;
+    Texture2D Mac10;
     
 
     Font defaultFont;

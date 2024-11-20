@@ -12,10 +12,10 @@
 
 
 WeaponType currentWeapon;  // To track the current weapon
-int shotgunBulletCount;
-float shotgunReloadTime;
 
-bool step = false;
+
+
+
 
 Player::Player() {
     position = {1922.0, 700.0};
@@ -53,6 +53,7 @@ Player::Player() {
     canShoot = true;
     hasGun = false;
     hasShotgun = false;
+    hasMac10 = false;
     outline = false;
     hasShovel = false;
     hasWhiskey = false;
@@ -62,8 +63,9 @@ Player::Player() {
     holdingDown = false;
     dropping = false;
     dropTimer = 0.0;
-
+    step = false;
     shells = 20;
+    autoAmmo = 150;
 
     LastTapTimeLeft = 0;
     LastTapTimeRight = 0;
@@ -72,11 +74,13 @@ Player::Player() {
     runFrameSpeed = 1.5;
     walkFrameSpeed = 1;
     bulletCount = 6;
+    mac10BulletCount = 30;
     revolverBulletCount = 6;
     shotgunBulletCount = 2;  // For Shotgun
     shotgunReloadTime = 0.7f;  // Reload time for Shotgun
     currentWeapon = REVOLVER;  // Start with Revolver
     AllowGuns = true;
+    
 
 }
 
@@ -298,6 +302,25 @@ void Player::Reload(){
         }
 
     }
+    else if (currentWeapon == MAC10) {
+    // Check if not already reloading, there is reserve ammo, and the magazine is not full
+        if (!isReloading && autoAmmo > 0 && mac10BulletCount < 30) {
+            isReloading = true;
+            reloadTimer = 0.5f; 
+
+            // Calculate how many bullets are needed to fill the magazine
+            int bulletsNeeded = 30 - mac10BulletCount;
+
+            // Determine how many bullets we can actually reload
+            int bulletsToReload = (autoAmmo >= bulletsNeeded) ? bulletsNeeded : autoAmmo; 
+
+            // Update ammo counts
+            autoAmmo -= bulletsToReload;
+            mac10BulletCount += bulletsToReload;
+            
+            PlaySound(SoundManager::getInstance().GetSound("reload"));
+    }
+}
 
 }
 
@@ -411,6 +434,7 @@ void Player::stunPlayer(float& time){
 
 void Player::updateAnimations(GameResources& resources){
     if (isShooting) {
+        if (currentWeapon == MAC10) frameSpeed = frameSpeed * 10;
         isRunning = false; // fixed bug where isrunning was causing framespeed to be higher so you could shoot 1.5 times as fast. 
         frameCounter += GetFrameTime() * frameSpeed;
         int numFrames = (resources.shootSheet.width / 64);
@@ -473,10 +497,7 @@ void Player::updateAnimations(GameResources& resources){
 }
 
 void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vector2& mousePosition, Camera2D& camera, std::vector<Platform> platforms) {
-    isMoving = false;
-    if (stunTimer > 0){
-        stunTimer -= GetFrameTime(); //unused I think
-    }
+    isMoving = false; //reset is moving to false at the start of the frame. If it remains false all the way though to the next frame, we are not moving. 
 
     if (dropTimer > 0){ //drop through platforms for 1 second
         dropTimer -= GetFrameTime();
@@ -492,6 +513,8 @@ void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vec
         currentWeapon = REVOLVER;
     } else if (IsKeyPressed(KEY_TWO)) {
         currentWeapon = SHOTGUN;
+    }else if (IsKeyPressed(KEY_THREE)){
+        currentWeapon = MAC10;
     }
 
     
@@ -502,13 +525,13 @@ void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vec
     }
 
     //AIMING
-    isAiming = (hasGun || hasShotgun) && (IsKeyDown(KEY_F) || IsKeyDown(KEY_LEFT_CONTROL) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) && !isShooting && !isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns);
+    isAiming = (hasGun || hasShotgun || hasMac10) && (IsKeyDown(KEY_F) || IsKeyDown(KEY_LEFT_CONTROL) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) && !isShooting && !isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns);
 
 
     //SHOOTING
     if (currentWeapon == REVOLVER && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
 
-        if ((IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && revolverBulletCount <= 0){
+        if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && revolverBulletCount <= 0){
             //SoundManager::getInstance().GetSound("dryFire");
             PlaySound(SoundManager::getInstance().GetSound("dryFire"));
 
@@ -524,12 +547,12 @@ void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vec
             //SoundManager::getInstance().GetSound("gunShot");  // Access the sound directly
             PlaySound(SoundManager::getInstance().GetSound("gunShot")); 
 
-            FireBullet(*this, false);
+            FireBullet(*this, false, 25);
             
         }
 
     }else if (currentWeapon == SHOTGUN && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
-        if ((IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && shotgunBulletCount <= 0){
+        if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && shotgunBulletCount <= 0){
             //SoundManager::getInstance().GetSound("dryFire");
             PlaySound(SoundManager::getInstance().GetSound("dryFire"));
 
@@ -546,9 +569,30 @@ void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vec
             PlaySound(SoundManager::getInstance().GetSound("ShotGun"));
             // Shotgun fires multiple bullets (spread effect)
             for (int i = 0; i < 3; i++) {  // Simulate shotgun spread with 3 bullets
-                FireBullet(*this, true);  // Modify FireBullet to allow spread by adjusting directions
+                FireBullet(*this, true, 25);  // Modify FireBullet to allow spread by adjusting directions
 
             }
+
+        }
+    }else if (currentWeapon == MAC10 && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
+        if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && shotgunBulletCount <= 0){
+            //SoundManager::getInstance().GetSound("dryFire");
+            PlaySound(SoundManager::getInstance().GetSound("dryFire"));
+
+        }
+
+
+        if (hasMac10 && mac10BulletCount > 0 && isAiming && (IsKeyPressed(KEY_SPACE) || IsMouseButtonDown(MOUSE_BUTTON_LEFT)) && canShoot) {
+            isShooting = true;
+            canShoot = false;
+            currentFrame = 0;
+            frameCounter = 0.0f;
+            mac10BulletCount--;
+
+            PlaySound(SoundManager::getInstance().GetSound("Mac10"));
+                
+            FireBullet(*this, true, 10);  //mac10 does less damage. 10 instead of 25. it's a 9mm bullet instead of a 44 revolver, or shotgun pellet
+            
 
         }
     }       
@@ -616,8 +660,9 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
 
 
 
-    /////////////////shotgun//////////////
-    }else if (currentWeapon == SHOTGUN){
+    
+    }
+    else if (currentWeapon == SHOTGUN){/////////////////shotgun//////////////
         
          if (hasShotgun && isShooting && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
             currentSheet = resources.ShotGunSheet;
@@ -643,21 +688,45 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
         }      
 
     }
+    else if (currentWeapon == MAC10){
     
+        if (hasMac10 && isShooting && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)) { //need a way to allow guns outside cemetery at a certain point in the game. 
+            currentSheet = resources.shootSheetAuto;
+            sourceRec = { static_cast<float>(currentFrame * frameWidth), 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
+        }else if (hasMac10 && isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
+        
+            currentSheet = resources.reloadSheetAuto;
+            sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
+
+        }else if (hasMac10 && isAiming && !isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)) {
+            // Aiming but not shooting: use the first frame of the shootSheet
+            currentSheet = resources.shootSheetAuto;
+            sourceRec = { 0, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };  // First frame for aiming
+
+        }else if (jumping){
+            currentSheet = resources.jumpSheet;
+            sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
+
+        } else if (isMoving) {
+            // Walking or running animation
+            currentSheet = isRunning ? resources.runSheet : resources.walkSheet;  // Use runSheet if running, else walkSheet
+            sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
+        } else {
+            // Idle pose
+            currentSheet = resources.manTexture;  // Idle pose
+            sourceRec = { 0, 0, static_cast<float>(currentSheet.width), static_cast<float>(currentSheet.height) };
+        }
+    }
 
     // Adjust source rectangle for direction
     if (!facingRight) {
         sourceRec.width = -frameWidth;  // Flip the texture if facing left
     }
 
-
-
     if (hitTimer > 0){
         hitTimer -= GetFrameTime();
-    
- 
-        
+       
     }else{
         can_take_damage = true;
 

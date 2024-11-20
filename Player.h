@@ -10,7 +10,8 @@
 
 enum WeaponType {
     REVOLVER,
-    SHOTGUN
+    SHOTGUN,
+    MAC10
 };
 
 
@@ -50,6 +51,7 @@ public:
     bool canShoot;
     bool hasGun;
     bool hasShotgun;
+    bool hasMac10;
     bool hasShovel;
     bool hasBadge;
     bool hasWhiskey;
@@ -57,14 +59,11 @@ public:
     bool holdingDown;
     bool dropping;
     float dropTimer;
-
-
     bool enter_car;
     int bulletCount;
     int shells;
-    bool can_take_damage;
-
-   
+    int autoAmmo;
+    bool can_take_damage; 
     int maxHealth;
     int currentHealth;
     float hitTimer;
@@ -73,18 +72,20 @@ public:
     double LastTapTimeRight;
     double tapInterval;
     bool AllowGuns;
+    float shotgunReloadTime;
 
+    bool step = false;
 
     //declare class
     Player();
 
     // Methods
     public:
-        void take_damage(int damage);
         WeaponType currentWeapon;  
         int shotgunBulletCount;
         int revolverBulletCount;
-        
+        int mac10BulletCount;
+        void take_damage(int damage);
         void UpdateMovement(GameResources& resources, GameState& gameState, Vector2& mousePosition, Camera2D& camera,std::vector<Platform> platforms);  // Move the update movement here
         void DrawPlayer(const GameResources& resources, GameState& gameState, Camera2D& camera, ShaderResources& shaders);  // Draw player method
         void HandleInput(float speed);

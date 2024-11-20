@@ -160,7 +160,7 @@ Vector2 pstart_by_car = Vector2{1738, 700};
 Vector2 dboxPosition;
 Color ApartmentBgColor {41, 48, 63, 255};
 
-//containers
+
 std::vector<NPC> npcs;
 std::vector<NPC> zombies;
 std::vector<NPC>hobos;
@@ -313,6 +313,9 @@ void LoadGameResources(GameResources& resources) {
     resources.ParkMidground = LoadTexture("assets/Park(midground).png");
     resources.ParkBuildings = LoadTexture("assets/Park(buildings).png");
     resources.MidBuildings = LoadTexture("assets/MidBuildings.png");
+    resources.shootSheetAuto = LoadTexture("assets/shootSheetAuto.png");
+    resources.reloadSheetAuto = LoadTexture("assets/reloadSheetAuto.png");
+    resources.Mac10 = LoadTexture("assets/Mac10.png");
 }
 
 void UnloadGameResources(GameResources& resources){
@@ -386,6 +389,10 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.ParkForeground);
     UnloadTexture(resources.ParkMidground);
     UnloadTexture(resources.ParkBuildings);
+    UnloadTexture(resources.MidBuildings);
+    UnloadTexture(resources.shootSheetAuto);
+    UnloadTexture(resources.reloadSheetAuto);
+    UnloadTexture(resources.Mac10);
 
    
 }
@@ -710,6 +717,31 @@ void StartZombieSpawn(int zombie_count){
     nextSpawnDelay = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 3.0f));  // Random delay between 1-4 seconds
     //film = true;
     glitch = true; //Activate glitch shader to make things more dramatic
+}
+
+void spawnZombiePark(GameResources& resources, Vector2 position){
+    //spawn a zombie at the dead NPC position
+    int zombie_speed = 25;
+    NPC zombie_npc = CreateNPC(resources.zombieSheet, position, zombie_speed, RISING, true, true);
+    zombie_npc.SetDestination(1000, 3000);
+    zombies.push_back(zombie_npc);
+
+    int soundIndex = rand() % 3; //zombie moans while rising.
+    switch (soundIndex){  
+        case 0:
+            PlaySound(SoundManager::getInstance().GetSound("moan1"));
+            break;
+        
+        case 1:
+            PlaySound(SoundManager::getInstance().GetSound("moan2"));
+            break;
+
+        case 2:
+            PlaySound(SoundManager::getInstance().GetSound("moan3"));
+            break;
+    }
+    
+    
 }
 
 void UpdateZombieSpawning(GameResources& resources, Player& player){
@@ -1128,6 +1160,7 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
     shovelTint = WHITE;
     Color gunTint = WHITE;
     Color shotgunTint = WHITE;
+    Color macTint = WHITE;
     // Use integer values to snap to the nearest pixel, based on the camera-relative inventory position
     //casting to int was to prevent stutter. not needed no mo.
     int startX = static_cast<int>(inventoryPositionX) - (slotWidth * inventorySize / 2);
@@ -1143,6 +1176,7 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
         Color customTint = {255, 100, 100, 255}; // light red
         if (player.currentWeapon == SHOTGUN) shotgunTint = customTint;
         if (player.currentWeapon == REVOLVER) gunTint = customTint;
+        if (player.currentWeapon == MAC10) macTint = customTint;
        // Draw the icon at x, y
         if (!inventory[i].empty()) { //inventory buttons are all done in the same for loop we use to draw it. Consider abstracting this somehow. 
 
@@ -1158,6 +1192,10 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
             }
             if (inventory[i] == "shotgun"){
                 DrawTexture(resources.shotgunIcon, x, y, shotgunTint);
+            }
+
+            if (inventory[i] == "mac10"){
+                DrawTexture(resources.Mac10, x, y, macTint);
             }
 
             if (inventory[i] == "cemeteryKey"){
@@ -1266,7 +1304,7 @@ void CheckBulletNPCCollisions(std::vector<NPC>& npcs, Player& player) {
                 if (npc.isActive && npc.CheckHit(bullets[i].previousPosition, bullets[i].position, bulletSize)) { //
                     // Collision detected
                     bullets[i].isActive = false;  // Deactivate the bullet
-                    npc.TakeDamage(25, player);  // Apply 25 damage to the NPC
+                    npc.TakeDamage(bullets[i].damage, player);  // Bullets can do more or less damage, use the bullet's damage, it's set when firing
                     break;  // Exit loop since the bullet is deactivated
                 }
             }
@@ -1280,9 +1318,14 @@ void DrawHUD(const Player& player) {
     float ammoX = 140.0;
     if (player.currentWeapon == REVOLVER && player.hasGun){
         DrawText(TextFormat("Ammo: %d", player.revolverBulletCount), screenWidth/2 + ammoX, ammoY, 20, WHITE); //screen space coordiantes
-    }else if (player.currentWeapon == SHOTGUN && player.hasShotgun){
+    }
+    else if (player.currentWeapon == SHOTGUN && player.hasShotgun){
         DrawText(TextFormat("Ammo: %d", player.shotgunBulletCount), screenWidth/2 + ammoX, ammoY, 20, WHITE); //screen space coordiantes
         DrawText(TextFormat("SHELLS: %d", player.shells), screenWidth/2 + ammoX, ammoY+20, 20, WHITE); //screen space coordiantes
+    }
+    else if (player.currentWeapon == MAC10 && player.hasMac10){
+        DrawText(TextFormat("Ammo: %d", player.mac10BulletCount), screenWidth/2 + ammoX, ammoY, 20, WHITE); //screen space coordiantes
+        DrawText(TextFormat("9mm: %d", player.autoAmmo), screenWidth/2 + ammoX, ammoY+20, 20, WHITE);
     }
     
 }
@@ -2758,6 +2801,10 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
                 show_dbox = true;
                 phrase = npc.speech;
             }
+            if (npc.isDying && npc.CanSpawnZombie){
+                npc.CanSpawnZombie = false;
+                spawnZombiePark(resources, npc.position);
+            }
 
       
 
@@ -3300,14 +3347,9 @@ void debugKeys(Player& player){
     //Debug keys, disable for release. 
     if (IsKeyPressed(KEY_SPACE)){
         std::cout << "Player Position: "; //print player position on key_space for debug purposes
-        PrintVector2(player.position);
-        if (!glitch){
-            glitch = true;
-        }
+        PrintVector2(player.position);       
         
-
-        
-        }
+    }
 
     if (IsKeyPressed(KEY_EQUAL)){
         if (!borderlessWindow){
@@ -3377,6 +3419,11 @@ void debugKeys(Player& player){
         if (!player.hasShotgun){
             AddItemToInventory("shotgun", inventory, INVENTORY_SIZE);
             player.hasShotgun = true;
+        }
+
+        if (!player.hasMac10){
+            AddItemToInventory("mac10", inventory, INVENTORY_SIZE);
+            player.hasMac10 = true;
         }
 
     }
@@ -3485,6 +3532,7 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadSound("gulp", "assets/sounds/gulp.ogg");
     soundManager.LoadSound("energyHum", "assets/sounds/energyHum.ogg");
     soundManager.LoadSound("deathScream", "assets/sounds/deathScream.ogg");
+    soundManager.LoadSound("Mac10", "assets/sounds/Mac10.ogg");
 
     soundManager.LoadSound("ShotGun", "assets/sounds/ShotGun.ogg");
     soundManager.LoadSound("ShotgunReload", "assets/sounds/ShotgunReload.ogg");
@@ -3655,52 +3703,48 @@ int main() {
 
         UptoEnter(player, player_car);//enter different areas by pressing up
         handleCamera(camera, targetZoom);
-        
-        //MULTIPASS RENDERING. First render everything to a target texture. then create vignetted texture, then whatever else, then final render to screen with begin draw 
+
+        //MULTIPASS RENDERING. Everything inside BeginTextureMode is saved to a RenderTexture2D. This makes it possible to stack shaders.   
         BeginTextureMode(targetTexture); //Render to targetTexture. First Pass/////////////////////////////
-        
-        
 
-        if (gameState == OUTSIDE){
-            RenderOutside(resources, camera, player, player_car, magicDoor, totalTime, npcs, ufo, mousePosition, shaders); 
-            
-        }else if (gameState == APARTMENT){
-            RenderApartment(resources, player, mousePosition, calendar, camera, shaders);
-            
-        }else if (gameState == ROAD){
-            RenderRoad(resources, player_car, player, camera, mousePosition, shaders);
-            
-        }else if (gameState == CEMETERY){
-            RenderCemetery(resources, player, player_car, ufo, totalTime, camera,mousePosition, shaders);
-            
-        }else if (gameState == WORK){
-            ClearBackground(BLACK);//do nothing at the moment
-
-        }else if (gameState == LOT){ // vacant lot
-            RenderLot(resources, player, camera, mousePosition, shaders);
-            
-        }else if (gameState == GRAVEYARD){
-            RenderGraveyard(resources, player, camera, mousePosition, shaders);
-            
-        }else if (gameState == ASTRAL){
-            RenderAstral(resources, player, camera, mousePosition, earth, magicDoor, shaders);
-
-        }else if (gameState == PARK){
-            RenderPark(resources, player,player_car, camera, mousePosition, shaders);
-
+        switch (gameState){
+            case OUTSIDE:
+                RenderOutside(resources, camera, player, player_car, magicDoor, totalTime, npcs, ufo, mousePosition, shaders); 
+                break;
+            case APARTMENT:
+                RenderApartment(resources, player, mousePosition, calendar, camera, shaders);
+                break;
+            case ROAD:
+                RenderRoad(resources, player_car, player, camera, mousePosition, shaders);
+                break;
+            case CEMETERY:
+                RenderCemetery(resources, player, player_car, ufo, totalTime, camera,mousePosition, shaders);
+                break;
+            case WORK:
+                ClearBackground(BLACK);//do nothing at the moment
+                break;
+            case LOT:
+                RenderLot(resources, player, camera, mousePosition, shaders);
+                break;
+            case GRAVEYARD:
+                RenderGraveyard(resources, player, camera, mousePosition, shaders);
+                break;
+            case ASTRAL:
+                RenderAstral(resources, player, camera, mousePosition, earth, magicDoor, shaders);
+                break;
+            case PARK:
+                RenderPark(resources, player,player_car, camera, mousePosition, shaders);
+                break;
         }
 
-
-        
         HandleTransition(player, player_car, calendar, npcs); //Check everyframe for gamestate transitions, inside draw to handle fadeouts
-        EndTextureMode();
-        
+        EndTextureMode();  
 
         //Render to texture //////////////////////////// Second Pass: Apply vignette shader seperate so we can stack effects. 
         BeginTextureMode(vignetteTexture);
             ClearBackground(BLACK);
             BeginShaderMode(shaders.vignetteShader);
-                DrawTextureRec( //Drawing the target texture inside texture mode saves it to what ever other target texture you provide. 
+                DrawTextureRec( //Drawing the target texture inside texture mode saves it to what ever RenderTextur2D you provide. 
                     targetTexture.texture, 
                     (Rectangle){ 0, 0, (float)targetTexture.texture.width, -(float)targetTexture.texture.height }, 
                     (Vector2){ 0, 0 },
@@ -3713,24 +3757,21 @@ int main() {
             ClearBackground(BLACK);
             if (player.hitTimer > 0) BeginShaderMode(shaders.redVignetteShader);
             
-                DrawTextureRec( //Drawing the target texture inside texture mode saves it to what ever other target texture you provide. 
+                DrawTextureRec( 
                     vignetteTexture.texture, 
                     (Rectangle){ 0, 0, (float)vignetteTexture.texture.width, -(float)vignetteTexture.texture.height }, 
                     (Vector2){ 0, 0 },
                      WHITE);
             EndShaderMode();
-            DrawMoney(); //draw UI on top of everything else.
-            DisplayDate(calendar);
+            DrawMoney(); //render UI to texture over top of vignette shaders
+            //DisplayDate(calendar);
 
             //show FPS
             int fps = GetFPS();
             Vector2 fpos = {screenWidth/2 + 450, 935}; //bottom right
-            //if (borderlessWindow) fpos.x += 400;
             DrawText(std::to_string(fps).c_str(), fpos.x, fpos.y, 25, WHITE);
 
         EndTextureMode();
-
-
 
         // Draw the target texture //////FINAL PASS: Draw finalTexture to screen. 
         BeginDrawing();

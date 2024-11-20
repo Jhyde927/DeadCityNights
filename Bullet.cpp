@@ -7,6 +7,7 @@
 
 Bullet bullets[MAX_BULLETS];  // Define the global bullets array
 
+
 // Function to generate a random float between 0 and 1
 float randf() {
     return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
@@ -30,12 +31,12 @@ Vector2 ApplySpread(Vector2 direction, float spreadAngle) {
 }
 
 
-void FireBullet(Player& player, bool spread) {
+void FireBullet(Player& player, bool spread, float damage) {
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (!bullets[i].isActive) {
             bullets[i].position = Vector2{player.position.x + 32, player.position.y + 23};  // Adjust bullet position to match player
             bullets[i].direction = player.facingRight ? Vector2{1, 0} : Vector2{-1, 0};    // Set direction based on player facing
-            
+            bullets[i].damage = damage; //take different damage for different guns
             bullets[i].speed = 1000.0f;  // Set bullet speed
             bullets[i].lifeTime = 2.0f;  // Bullet will last for 2 seconds
             bullets[i].isActive = true;

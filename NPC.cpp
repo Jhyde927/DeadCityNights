@@ -59,6 +59,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     hasTarget = false;
     isTargeted = false;
     targetNPC = nullptr; //set in main
+    CanSpawnZombie = true; //everytime a NPC dies it spawns a zombie?
  
 }
 
@@ -888,9 +889,9 @@ void NPC::TakeDamage(int damage, Player& player) {
         SetAnimationState(DEATH2);
     }
 
-    if (health <= 0 && !isDying && isTargeted){
+    if (health <= 0 && !isDying && isTargeted){ //NPC killed by zombie
 
-        //PlaySound(SoundManager::getInstance().GetSound("zombieDeath"));
+        
         riseTimer = 0; //if killed while still rising set the risetimer back to 0 as to not play rise animation
         isDying = true;           // Start dying process   
         SetAnimationState(DEATH);  // Set to death animation

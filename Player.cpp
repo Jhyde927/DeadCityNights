@@ -591,7 +591,7 @@ void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vec
 
             PlaySound(SoundManager::getInstance().GetSound("Mac10"));
                 
-            FireBullet(*this, true, 10);  //mac10 does less damage. 10 instead of 25. it's a 9mm bullet instead of a 44 revolver, or shotgun pellet
+            FireBullet(*this, true, 20);  //mac10 does less damage. 10 instead of 25. it's a 9mm bullet instead of a 44 revolver, or shotgun pellet
             
 
         }

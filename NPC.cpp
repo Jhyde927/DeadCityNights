@@ -558,6 +558,7 @@ void NPC::Update(Player& player, GameState& gameState) {
         if (deathTimer <= 0.0f) {
             isActive = false;  // Set NPC as inactive after death animation
             isDying = false; //set dying back to false once dead.
+            
             speech = ""; //dead men don't talk
             return;
         }

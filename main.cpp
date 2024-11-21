@@ -110,6 +110,7 @@ float astralThreshold = 0.5f;
 float DoorframeTime = 0.1f;
 float badgeTimer = 0.0f;
 float fortuneTimer = 0.0f;
+float resTimer = 0.0;
 int remainingZombiesToSpawn = 0;    // Tracks remaining zombies to spawn
 float spawnTimer = 0.0f;            // Timer for spawning
 float nextSpawnDelay = 0.0f;        // Time delay between spawns
@@ -721,6 +722,7 @@ void StartZombieSpawn(int zombie_count){
 
 void spawnZombiePark(GameResources& resources, Vector2 position){
     //spawn a zombie at the dead NPC position
+    
     int zombie_speed = 25;
     NPC zombie_npc = CreateNPC(resources.zombieSheet, position, zombie_speed, RISING, true, true);
     zombie_npc.SetDestination(1000, 3000);
@@ -2694,6 +2696,12 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
     ClearBackground(customBackgroundColor);
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
+
+    if (resTimer > 0){
+        resTimer -= GetFrameTime();
+    }
+
+
     if (player.isAiming && IsKeyDown(KEY_F)) {
         // Handle keyboard-only aiming (e.g., using arrow keys or player movement keys)
         if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
@@ -2708,6 +2716,9 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
     if (!IsKeyDown(KEY_F)){
         if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
     }
+
+
+
 
     float parallaxBackground = camera.target.x * 0.9f;  // Background moves even slower
     float ParallaxBuildings = camera.target.x * 0.7;
@@ -2790,9 +2801,10 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
                         npc.isActive = false;
                     }
                 }
+                
             }
 
-        }else{//update and render all other NPCs 
+        }else{//update and render all other NPCs in the Park, zombies can attack NPCs in the park
             npc.Update(player, gameState);
             npc.Render(shaders);
             npc.ClickNPC(mousePosition, camera, player, gameState);
@@ -2801,9 +2813,10 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
                 show_dbox = true;
                 phrase = npc.speech;
             }
-            if (npc.isDying && npc.CanSpawnZombie){
+            if (!npc.isActive && npc.CanSpawnZombie){ //wait untill NPC is not active before raising zombie, so death animation can finish.  
                 npc.CanSpawnZombie = false;
-                spawnZombiePark(resources, npc.position);
+                
+                spawnZombiePark(resources, npc.position); //NPC is transformed into a zombie. 
             }
 
       

@@ -63,6 +63,8 @@ public:
     float ghostAlpha;
     bool hasTarget;
     bool isTargeted;
+    float detectionRange; // Set detection range for zombies
+    float detectionRangeBat;
     NPC* targetNPC;
  
 

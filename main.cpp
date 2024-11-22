@@ -1198,20 +1198,69 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
             if (inventory[i] == "Badge"){
                 DrawTexture(resources.Badge, x, y, WHITE);
             }
-            if (inventory[i] == "Gun"){
-                DrawTexture(resources.Revolver, x, y, gunTint);
-            }
-            if (inventory[i] == "shotgun"){
-                DrawTexture(resources.shotgunIcon, x, y, shotgunTint);
-            }
-
-            if (inventory[i] == "mac10"){
-                DrawTexture(resources.Mac10, x, y, macTint);
-            }
 
             if (inventory[i] == "cemeteryKey"){
                 DrawTexture(resources.cemeteryKey, x, y, WHITE);
             }
+
+            if (inventory[i] == "Gun"){
+                DrawTexture(resources.Revolver, x, y, gunTint);
+                Rectangle RevolverBounds = { 
+                    static_cast<float>(x),      
+                    static_cast<float>(y),      
+                    static_cast<float>(64),  
+                    static_cast<float>(64)  
+                };
+
+                if (CheckCollisionPointRec(mousePosition, RevolverBounds)){
+                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+                        if (player.currentWeapon != REVOLVER){
+                            player.currentWeapon = REVOLVER;
+                        }
+                    }
+
+                }
+            }
+            if (inventory[i] == "shotgun"){
+                DrawTexture(resources.shotgunIcon, x, y, shotgunTint);
+                Rectangle ShotGunBounds = { 
+                    static_cast<float>(x),      
+                    static_cast<float>(y),      
+                    static_cast<float>(64),  
+                    static_cast<float>(64)  
+                };
+
+                if (CheckCollisionPointRec(mousePosition, ShotGunBounds)){
+                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+                        if (player.currentWeapon != SHOTGUN){
+                            player.currentWeapon = SHOTGUN;
+                        }
+                    }
+
+                }
+
+            }
+
+            if (inventory[i] == "mac10"){
+                DrawTexture(resources.Mac10, x, y, macTint);
+                Rectangle MacBounds = { 
+                    static_cast<float>(x),      
+                    static_cast<float>(y),      
+                    static_cast<float>(64),  
+                    static_cast<float>(64)  
+                };
+
+                if (CheckCollisionPointRec(mousePosition, MacBounds)){
+                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+                        if (player.currentWeapon != MAC10){
+                            player.currentWeapon = MAC10;
+                        }
+                    }
+
+                }
+            }
+
+
 
             if (inventory[i] == "whiskey"){
                 DrawTexture(resources.whiskey, x, y, WHITE);

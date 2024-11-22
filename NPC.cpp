@@ -12,8 +12,7 @@
 #include <cstdlib>  // For rand and srand
 #include "shaderControl.h"
 
-float detectionRange = 200.0f;  // Set detection range for zombies
-float detectionRangeBat = 150;
+
 
 
 
@@ -60,6 +59,8 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     isTargeted = false;
     targetNPC = nullptr; //set in main
     CanSpawnZombie = true; //everytime a NPC dies it spawns a zombie?
+    detectionRange = 300.0f;  // Set detection range for zombies
+    detectionRangeBat = 150;
  
 }
 
@@ -291,10 +292,7 @@ void NPC::HandleGhost(Player& player, float& distanceToPlayer){
 
         if (agro){
             destination = player.position;
-        }
-        
-
-        
+        }   
 
     }
 
@@ -513,7 +511,7 @@ void NPC::Update(Player& player, GameState& gameState) {
     if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
         if (distance_to_player < 20 && !police && !isZombie){
             HandleNPCInteraction(player, gameState);
-            
+
         }
     }
 

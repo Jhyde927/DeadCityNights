@@ -145,7 +145,7 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){
         if (police && !talked){
             talked = true;
             speech = (rand() % 2 == 0) ? "Freeze!" : "Halt!";
-            talkTimer = 1;
+            talkTimer = 3;
             idleTime = 1;
             agro = true;
         }
@@ -274,8 +274,8 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){
         if (!talked && !hobo && !police && !teller){
             talked = true;
             speech = GetRandomPhrase(); // NPC greets player
-            talkTimer = 5; //limit talking. 30 second cooldown
-            idleTime = 5;
+            talkTimer = 3; //limit talking. 
+            idleTime = 3;
         }
         
     }
@@ -513,6 +513,7 @@ void NPC::Update(Player& player, GameState& gameState) {
     if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
         if (distance_to_player < 20 && !police && !isZombie){
             HandleNPCInteraction(player, gameState);
+            
         }
     }
 

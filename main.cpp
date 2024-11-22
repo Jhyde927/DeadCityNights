@@ -192,6 +192,15 @@ void PrintVector2(const Vector2& vec) {
     std::cout << "(" << vec.x << ", " << vec.y << ")" << "\n";
 }
 
+struct DialogBoxProperties {
+    int boxWidth;
+    int boxHeight;
+    int offsetY;
+    int textOffsetX;
+    int textOffsetY;
+};
+
+
 
 struct PlayerCar {
     Vector2 position;
@@ -1710,92 +1719,194 @@ void DrawHealthBar(GameResources resources, Vector2 position, int maxHealth, int
     DrawRectangle(position.x, position.y+50, (int)(barWidth * healthPercent), barHeight, barColor);
 }
 
-void DrawDialogBox(Player& player, Camera2D camera, int boxWidth, int boxHeight,int textSize){
-    //int boxWidth = 256;
-    //int boxHeight = 64;
-    int offset = -64;
-    int screen_offsetX = 16;
-    int screen_offsetY = -55;
 
-    if (fortuneTimer > 0){
+DialogBoxProperties GetDialogBoxProperties(bool dealer, bool teller, bool overLiquor, int defaultBoxWidth, int defaultBoxHeight) {
+    DialogBoxProperties props;
 
-;        fortuneTimer -= GetFrameTime();
+    if (dealer || teller || overLiquor) {
+        props.boxWidth = (dealer) ? 256 : 300;
+        props.boxHeight = 128;
+        props.offsetY = -135;
+        props.textOffsetX = 16;
+        props.textOffsetY = -128;
+    } else {
+        props.boxWidth = defaultBoxWidth;
+        props.boxHeight = defaultBoxHeight;
+        props.offsetY = -64;
+        props.textOffsetX = 16;
+        props.textOffsetY = -55;
     }
-    Vector2 screen_pos = GetWorldToScreen2D(dboxPosition, camera); // position to draw text and rectangle at. position is set to npc position
+
+    return props;
+}
+
+void DrawDialogBox(Player& player, Camera2D camera, int defaultBoxWidth, int defaultBoxHeight, int textSize) {
+    // Update fortune timer
+    if (fortuneTimer > 0) {
+        fortuneTimer -= GetFrameTime();
+    }
+
+    // Get the screen position
+    Vector2 screen_pos = GetWorldToScreen2D(dboxPosition, camera);
     Color tint = WHITE;
-    if (dealer){
-        boxWidth = 256;
-        boxHeight = 128;
-        offset = -135;
-        screen_offsetX = 16;
-        screen_offsetY = -128;
 
-    }
-    if (teller){
-        boxWidth = 300;
-        boxHeight = 128;
-        offset = -135;
-        screen_offsetX = 16;
-        screen_offsetY = -128;
-       
-    }
+    // Get dialog box properties based on the conditions
+    DialogBoxProperties dialogProps = GetDialogBoxProperties(dealer, teller, overLiquor, defaultBoxWidth, defaultBoxHeight);
 
-    if (overLiquor){
-        
-        boxWidth = 300;
-        boxHeight = 128;
-        offset = -135;
-        screen_offsetX = 16;
-        screen_offsetY = -128;
-    }
-
-
-
-    if (teller && buyFortune && fortuneTimer <= 0){
+    // Update phrase for fortune teller
+    if (teller && buyFortune && fortuneTimer <= 0) {
         phrase = "Namaste";
     }
 
-    
-    DrawRectangle(screen_pos.x, screen_pos.y + offset, boxWidth, boxHeight, customBackgroundColor);
-    DrawText(phrase.c_str(), screen_pos.x+ screen_offsetX, screen_pos.y + screen_offsetY, textSize, tint); //Draw Phrase
-    
-    if (money >= 100 && dealer && GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY")) //button pressed
-        {
-            if (can_sell_drugs){ //can sell drugs gets reset once you take the drug
-                can_sell_drugs = false; // Dealer only has 1 drug for now. 
+    // Draw the dialog box and text
+    DrawRectangle(screen_pos.x, screen_pos.y + dialogProps.offsetY, dialogProps.boxWidth, dialogProps.boxHeight, customBackgroundColor);
+    DrawText(phrase.c_str(), screen_pos.x + dialogProps.textOffsetX, screen_pos.y + dialogProps.textOffsetY, textSize, tint);
+
+    // Define button properties
+    const int buttonWidth = 64;
+    const int buttonHeight = 48;
+    const int buttonOffsetX = 16;
+    const int buttonOffsetY = -64;
+
+    Rectangle buttonRect = { screen_pos.x + buttonOffsetX, screen_pos.y + buttonOffsetY, buttonWidth, buttonHeight };
+
+    // Handle interactions
+    if (money >= 100) {
+        if (dealer && GuiButton(buttonRect, "BUY")) {
+            if (can_sell_drugs) {
+                can_sell_drugs = false;
                 addMoney(-100);
                 AddItemToInventory("Drugs", inventory, INVENTORY_SIZE);
                 for (NPC& npc : npcs)
-                    if (npc.interacting){
+                    if (npc.interacting) {
                         npc.interacting = false;
                         npc.idleTime = 1;
                     }
             }
-        }
-
-    if (teller && !buyFortune && money >= 100 &&  GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY")){
-
-        if (canGiveFortune){
-            canGiveFortune = false;
-            buyFortune = true;
-            fortuneTimer = 5;
-            
+        } else if (teller && !buyFortune && GuiButton(buttonRect, "BUY")) {
+            if (canGiveFortune) {
+                canGiveFortune = false;
+                buyFortune = true;
+                fortuneTimer = 5;
+                addMoney(-100);
+                phrase = GetTellerPhrase();
+                for (NPC& npc : npcs)
+                    if (npc.teller) {
+                        npc.idleTime = 10;
+                        npc.talkTimer = 10;
+                    }
+            }
+        } else if (overLiquor && showLiquor && GuiButton(buttonRect, "BUY")) {
             addMoney(-100);
-            phrase = GetTellerPhrase();
-            for (NPC& npc: npcs)
-                if (npc.teller){
-                    npc.idleTime = 10;
-                    npc.talkTimer = 10;
-                } 
+            AddItemToInventory("whiskey", inventory, INVENTORY_SIZE);
+            player.hasWhiskey = true;
         }
     }
-    if (overLiquor && showLiquor && money >= 100 &&  GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY")){
-        addMoney(-100);
-        AddItemToInventory("whiskey", inventory, INVENTORY_SIZE);
-        player.hasWhiskey = true;
-        
-    }
+}
 
+
+
+
+// void DrawDialogBox(Player& player, Camera2D camera, int boxWidth, int boxHeight,int textSize){
+//     //int boxWidth = 256;
+//     //int boxHeight = 64;
+//     int offset = -64;
+//     int screen_offsetX = 16;
+//     int screen_offsetY = -55;
+
+//     if (fortuneTimer > 0){
+
+// ;        fortuneTimer -= GetFrameTime();
+//     }
+//     Vector2 screen_pos = GetWorldToScreen2D(dboxPosition, camera); // position to draw text and rectangle at. position is set to npc position
+//     Color tint = WHITE;
+//     if (dealer){
+//         boxWidth = 256;
+//         boxHeight = 128;
+//         offset = -135;
+//         screen_offsetX = 16;
+//         screen_offsetY = -128;
+
+//     }
+//     if (teller){
+//         boxWidth = 300;
+//         boxHeight = 128;
+//         offset = -135;
+//         screen_offsetX = 16;
+//         screen_offsetY = -128;
+       
+//     }
+
+//     if (overLiquor){
+        
+//         boxWidth = 300;
+//         boxHeight = 128;
+//         offset = -135;
+//         screen_offsetX = 16;
+//         screen_offsetY = -128;
+//     }
+
+
+
+//     if (teller && buyFortune && fortuneTimer <= 0){
+//         phrase = "Namaste";
+//     }
+
+    
+//     DrawRectangle(screen_pos.x, screen_pos.y + offset, boxWidth, boxHeight, customBackgroundColor);
+//     DrawText(phrase.c_str(), screen_pos.x+ screen_offsetX, screen_pos.y + screen_offsetY, textSize, tint); //Draw Phrase
+    
+//     if (money >= 100 && dealer && GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY")) //button pressed
+//         {
+//             if (can_sell_drugs){ //can sell drugs gets reset once you take the drug
+//                 can_sell_drugs = false; // Dealer only has 1 drug for now. 
+//                 addMoney(-100);
+//                 AddItemToInventory("Drugs", inventory, INVENTORY_SIZE);
+//                 for (NPC& npc : npcs)
+//                     if (npc.interacting){
+//                         npc.interacting = false;
+//                         npc.idleTime = 1;
+//                     }
+//             }
+//         }
+
+//     if (teller && !buyFortune && money >= 100 &&  GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY")){
+
+//         if (canGiveFortune){
+//             canGiveFortune = false;
+//             buyFortune = true;
+//             fortuneTimer = 5;
+            
+//             addMoney(-100);
+//             phrase = GetTellerPhrase();
+//             for (NPC& npc: npcs)
+//                 if (npc.teller){
+//                     npc.idleTime = 10;
+//                     npc.talkTimer = 10;
+//                 } 
+//         }
+//     }
+//     if (overLiquor && showLiquor && money >= 100 &&  GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY")){
+//         addMoney(-100);
+//         AddItemToInventory("whiskey", inventory, INVENTORY_SIZE);
+//         player.hasWhiskey = true;
+        
+//     }
+
+// }
+
+void EnterCar(GameResources& resources, Player& player, PlayerCar& player_car){
+        //render headlight/breaklight
+        
+        Vector2 breakLight_pos = {player_car.position.x + 88, player_car.position.y + 53};
+        Vector2 light_pos = {player_car.position.x - 225, player_car.position.y + 32};
+        BeginBlendMode(BLEND_ADDITIVE);
+        DrawTextureV(resources.breakLight, breakLight_pos, WHITE);
+        DrawTextureV(resources.lightBeam, light_pos, WHITE);
+        EndBlendMode();
+        show_carUI = true;    
+
+    
 }
 
 void playerInteraction(Player& player, PlayerCar& player_car){
@@ -2145,17 +2256,8 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
 
     //render player car
     DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE);
-    if (player.enter_car){
-        //render headlight/breaklight
-        Vector2 breakLight_pos = {player_car.position.x + 88, player_car.position.y + 53};
-        Vector2 light_pos = {player_car.position.x - 225, player_car.position.y + 32};
+    if (player.enter_car) EnterCar(resources, player, player_car);
 
-        BeginBlendMode(BLEND_ADDITIVE);
-        DrawTextureV(resources.breakLight, breakLight_pos, WHITE);
-        DrawTextureV(resources.lightBeam, light_pos, WHITE);
-        EndBlendMode();
-
-    }
     abductionBeam = false;
     if (player.position.x > 3929 && player.position.x < 3949){
         abductionBeam = true;
@@ -2770,18 +2872,8 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
 
     }
 
-    if (player.enter_car){
-        //render headlight/breaklight
-        
-        Vector2 breakLight_pos = {player_car.position.x + 88, player_car.position.y + 53};
-        Vector2 light_pos = {player_car.position.x - 225, player_car.position.y + 32};
-        BeginBlendMode(BLEND_ADDITIVE);
-        DrawTextureV(resources.breakLight, breakLight_pos, WHITE);
-        DrawTextureV(resources.lightBeam, light_pos, WHITE);
-        EndBlendMode();
-        show_carUI = true;    
+    if (player.enter_car) EnterCar(resources, player, player_car); //draws headlights and such
 
-    }
     show_dbox = false;//reset box
     
     for (NPC& npc : ParkNpcs){  
@@ -3018,7 +3110,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     
 
         if (npc.interacting){ //Take the first one you find. 
-            dboxPosition = npc.position;    
+            dboxPosition = npc.position;   
             show_dbox = true;   //dialogBox
             if (npc.dealer){
                 phrase = "I gOt wHat YoU NEEd\n\nDrugs: $100";
@@ -3076,18 +3168,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     }
 
 
-    if (player.enter_car){
-        //render headlight/breaklight
-        
-        Vector2 breakLight_pos = {player_car.position.x + 88, player_car.position.y + 53};
-        Vector2 light_pos = {player_car.position.x - 225, player_car.position.y + 32};
-        BeginBlendMode(BLEND_ADDITIVE);
-        DrawTextureV(resources.breakLight, breakLight_pos, WHITE);
-        DrawTextureV(resources.lightBeam, light_pos, WHITE);
-        EndBlendMode();
-        show_carUI = true;    
-
-    }
+    if (player.enter_car) EnterCar(resources, player, player_car);
    
 
     if (player.enter_car == false){// if enter car is false, dont render player or update position. camera should stay focused on player pos. 

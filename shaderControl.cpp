@@ -123,10 +123,10 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     int textureSizeLoc2 = GetShaderLocation(shaders.rainbowOutlineShader, "textureSize");
 
    
-    float outlineColor2[4] = { 0.0f, 0.0f, 0.0f, 1.0f };  // White outline
+    float outlineColor2[4] = { 0.0f, 0.0f, 0.0f, 1.0f };  // Black outline
     SetShaderValue(shaders.rainbowOutlineShader, outlineColorLoc2, outlineColor2, SHADER_UNIFORM_VEC4);
 
-    float threshold2 = 0.9f;
+    float threshold2 = 1.0f;
     SetShaderValue(shaders.rainbowOutlineShader, thresholdLoc2, &threshold2, SHADER_UNIFORM_FLOAT);
 
 

@@ -634,25 +634,30 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
             currentSheet = resources.shootSheet;
             sourceRec = { static_cast<float>(currentFrame * frameWidth), 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
-        }else if (hasGun && isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
+        }
+        else if (hasGun && isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
         
             currentSheet = resources.reloadSheet;
             sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
-        }else if (hasGun && isAiming && !isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)) {
+        }
+        else if (hasGun && isAiming && !isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)) {
             // Aiming but not shooting: use the first frame of the shootSheet
             currentSheet = resources.shootSheet;
             sourceRec = { 0, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };  // First frame for aiming
 
-        }else if (jumping){
+        }
+        else if (jumping){
             currentSheet = resources.jumpSheet;
             sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
-        } else if (isMoving) {
+        } 
+        else if (isMoving) {
             // Walking or running animation
             currentSheet = isRunning ? resources.runSheet : resources.walkSheet;  // Use runSheet if running, else walkSheet
             sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
-        } else {
+        } 
+        else {
             // Idle pose
             currentSheet = resources.manTexture;  // Idle pose
             sourceRec = { 0, 0, static_cast<float>(currentSheet.width), static_cast<float>(currentSheet.height) };
@@ -668,20 +673,24 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
             currentSheet = resources.ShotGunSheet;
             sourceRec = {static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
-        } else if (hasShotgun && isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
+        }
+        else if (hasShotgun && isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
             currentSheet = resources.ShotgunReload;
             sourceRec = {static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
-        }else if (hasShotgun && isAiming && !isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)) {
+        }
+        else if (hasShotgun && isAiming && !isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)) {
             // Aiming but not shooting: use the first frame of the shootSheet
             currentSheet = resources.ShotGunSheet;
             sourceRec = { 0, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth)};  // First frame for aiming
 
-        } else if (isMoving) {
+        } 
+        else if (isMoving) {
             // Walking or running animation
             currentSheet = isRunning ? resources.runSheet : resources.walkSheet;  // Use runSheet if running, else walkSheet
             sourceRec = {static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
-        } else {
+        } 
+        else {
             // Idle pose
             currentSheet = resources.manTexture;  // Idle pose
             sourceRec = { 0, 0, static_cast<float>(currentSheet.width), static_cast<float>(currentSheet.height) };
@@ -694,25 +703,30 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
             currentSheet = resources.shootSheetAuto;
             sourceRec = { static_cast<float>(currentFrame * frameWidth), 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
-        }else if (hasMac10 && isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
+        }
+        else if (hasMac10 && isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
         
             currentSheet = resources.reloadSheetAuto;
             sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
-        }else if (hasMac10 && isAiming && !isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)) {
+        }
+        else if (hasMac10 && isAiming && !isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)) {
             // Aiming but not shooting: use the first frame of the shootSheet
             currentSheet = resources.shootSheetAuto;
             sourceRec = { 0, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };  // First frame for aiming
 
-        }else if (jumping){
+        }
+        else if (jumping){
             currentSheet = resources.jumpSheet;
             sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
-        } else if (isMoving) {
+        } 
+        else if (isMoving) {
             // Walking or running animation
             currentSheet = isRunning ? resources.runSheet : resources.walkSheet;  // Use runSheet if running, else walkSheet
             sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
-        } else {
+        } 
+        else {
             // Idle pose
             currentSheet = resources.manTexture;  // Idle pose
             sourceRec = { 0, 0, static_cast<float>(currentSheet.width), static_cast<float>(currentSheet.height) };

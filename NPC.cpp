@@ -58,7 +58,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     hasTarget = false;
     isTargeted = false;
     targetNPC = nullptr; //set in main
-    CanSpawnZombie = true; //everytime a NPC dies it spawns a zombie?
+    CanSpawnZombie = true; //everytime a NPC dies it spawns a zombie? //only in the park
     detectionRange = 300.0f;  // Set detection range for zombies
     detectionRangeBat = 150;
  
@@ -539,11 +539,11 @@ void NPC::Update(Player& player, GameState& gameState) {
     // Update hit timer if the NPC has been hit
     if (hitTimer > 0) {
         hitTimer -= GetFrameTime();
-        if (ghost) ghostAlpha = hitTimer / .3; //ghost becomes fully transparent on hit. tics down with hit timer .3 seconds.
+        if (ghost) ghostAlpha = hitTimer / .3; //ghost becomes fully transparent on hit. 
         if (ghost) ghostAlpha = Clamp(ghostAlpha, 0.0f, 1.0f); 
         
     }else{
-        ghostAlpha += 0.1;
+        ghostAlpha += 0.1; //is this redundant? ghostAlpha should tic up as hitTimer becomes smaller.
         
         if (ghostAlpha >= 1.0f){
             ghostAlpha = 1.0f;
@@ -570,13 +570,13 @@ void NPC::Update(Player& player, GameState& gameState) {
         idleTime -= GetFrameTime();
         return;  // Remain idle until idleTime runs out
     }
-    if (idleTime <= 0) interacting = false; // NPCs stop  when IdleTime is up. 
+    if (idleTime <= 0) interacting = false; // NPCs stop interacting when IdleTime is up. 
 
 
 
     // Check if the player is within a certain range to chase
     float distanceToPlayer = Vector2Distance(position, player.position);
-    hasTarget = false; //reset hasTarget before setting in below
+    hasTarget = false; //reset hasTarget incase we loose
     attacking = false;
 
     HandleMiB(player, distance_to_player);
@@ -596,7 +596,7 @@ void NPC::Update(Player& player, GameState& gameState) {
     if (!isDying && riseTimer <= 0 && !attacking) { //MOVE NPCs and Police and Zombies and Ghosts. 
         // Move towards the destination
 
-        if (!ghost && !bat){
+        if (!ghost && !bat){ //pedestrians on the street/zombies
             if (position.x < destination.x) {
                 position.x += speed * GetFrameTime();
                 facingRight = true;
@@ -644,7 +644,7 @@ void NPC::Update(Player& player, GameState& gameState) {
 
         // Check if destination is reached
 
-        if (fabs(position.x - destination.x) < 5.0f && !hasTarget && !isZombie) { //dont go idle if your zombie and you have reached destination
+        if (fabs(position.x - destination.x) < 5.0f && !hasTarget && !isZombie) { //Pedestrians
             // Reached destination, go idle for a moment, then set a new destination
             idleTime = 3.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 2.0f));  // 3-6 seconds of idle time
 
@@ -727,7 +727,7 @@ void NPC::Render(ShaderResources& shaders) {
     // Tint the NPC red if recently hit
     Color tint = (hitTimer > 0) ? RED : WHITE;
     if (ghost) tint = ColorAlpha(WHITE, ghostAlpha);//use Color alpha to change alpha of ghost on hit
-    if (bat) BeginShaderMode(shaders.rainbowOutlineShader);
+    if (bat) BeginShaderMode(shaders.rainbowOutlineShader); //raindbow bats
     DrawTextureRec(texture, sourceRec, position, tint);
     EndShaderMode();
 }

@@ -86,6 +86,6 @@ void main() {
         vec3 rgb = HSLtoRGB(hue, 1.0, 0.5);
        
 
-        finalColor = vec4(rgb, 0.40); //semi transparent
+        finalColor = vec4(rgb, 0.80); //semi transparent
     }
 }

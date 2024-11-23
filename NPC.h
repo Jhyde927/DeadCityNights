@@ -84,6 +84,7 @@ public:
     void HandleMiB(Player& player, float& distanceToPlayer);
     void TakeDamage(int damage, Player& player);
     void HandleAnimationLogic();
+    void MoveNPC(Player& player, GameState& gameState);
 };
 
 #endif

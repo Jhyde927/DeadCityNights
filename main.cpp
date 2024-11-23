@@ -58,6 +58,7 @@ bool canMoveUfo = true;
 bool firstHobo = true;
 bool firstBlood = false;
 bool drawShovel = false;
+bool drawMac10 = true;
 bool drawShotgun = true;
 bool buttonWork = false;
 bool hasPills = false;
@@ -65,7 +66,7 @@ bool digSpot = false;
 bool NecroTech = false;
 bool film = false;
 bool start = true;
-bool buttonTavern = false;
+bool buttonPark = false;
 bool gotoWork = false;
 bool gotoPark = false;
 bool debug = true; ///////////////////////////////////////DEBUG KEYS ON/OFF
@@ -110,7 +111,6 @@ float astralThreshold = 0.5f;
 float DoorframeTime = 0.1f;
 float badgeTimer = 0.0f;
 float fortuneTimer = 0.0f;
-float resTimer = 0.0;
 int remainingZombiesToSpawn = 0;    // Tracks remaining zombies to spawn
 float spawnTimer = 0.0f;            // Timer for spawning
 float nextSpawnDelay = 0.0f;        // Time delay between spawns
@@ -191,15 +191,6 @@ std::uniform_real_distribution<float> dis(0.0f, 4000.0f); // Uniform distributio
 void PrintVector2(const Vector2& vec) {
     std::cout << "(" << vec.x << ", " << vec.y << ")" << "\n";
 }
-
-// struct DialogBoxProperties {
-//     int boxWidth;
-//     int boxHeight;
-//     int offsetY;
-//     int textOffsetX;
-//     int textOffsetY;
-// };
-
 
 
 struct PlayerCar {
@@ -624,7 +615,7 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
                     gotoWork = true;
                     move_car = true;
                     hasWorked = true;
-                }else if (player.enter_car && buttonTavern){
+                }else if (player.enter_car && buttonPark){
                     gotoPark = true;
                     move_car = true;
                     
@@ -686,19 +677,17 @@ void addMoney(int amount){
     money += amount;
 }
 
-void updateMoney(){
+
+void DrawMoney(){
+    std::string smoney = "$ " + std::to_string(displayMoney);
+
+    DrawText(smoney.c_str(), screenWidth/2+400, 25, 30, WHITE);
+    //Animate money ticking up or down. 
     if (displayMoney < money){
         displayMoney++;
     }else if (displayMoney > money){
         displayMoney--;
     }
-
-}
-void DrawMoney(){
-    std::string smoney = "$ " + std::to_string(displayMoney);
-
-    DrawText(smoney.c_str(), screenWidth/2+400, 25, 30, WHITE);
-    updateMoney();
 }
 
 //Factory function to creat NPCs
@@ -760,7 +749,7 @@ void UpdateZombieSpawning(GameResources& resources, Player& player){
         spawnTimer += GetFrameTime();
 
         if (spawnTimer >= nextSpawnDelay){ // spawn zombies at randomm position around the player
-            Vector2 z_pos = GetRandomSpawnPositionX(player.position, minDistToPlayer, maxDistToPlayer);  // Min/max distance from player
+            Vector2 z_pos = GetRandomSpawnPositionX(player.position, minDistToPlayer, maxDistToPlayer);  // Min/max distance from player, set globally so it can change
             int zombie_speed = 25;
             NPC zombie_npc = CreateNPC(resources.zombieSheet, z_pos, zombie_speed, RISING, true, true);
             zombie_npc.SetDestination(1000, 4000);
@@ -796,21 +785,93 @@ void UpdateZombieSpawning(GameResources& resources, Player& player){
 
 }
 
+void DrawMac10Pickup(GameResources& resources, Player& player, Vector2 mousePosition, Camera2D& camera){
+    //Mac10 pickup in asteral plane
+    Vector2 macPos = {2445, -751}; // 
+    Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
+    float distance_to_mac = abs(macPos.x - player.position.x);
+    if (drawMac10){ //mac10 pickup
+        DrawTexture(resources.Mac10, macPos.x, macPos.y, WHITE);
+        Rectangle macBounds = { //shovel button
+            macPos.x,      
+            macPos.y,     
+            static_cast<float>(32),  
+            static_cast<float>(64)  
+        };
 
-void spawnZombies(GameResources& resources,int zombie_count){
-    //spawn zombies in balk
-    int zombie_speed = 25;
-    
-    for (int i = 0; i < zombie_count; i++){
-        Vector2 z_pos = {2500 + i * 200, 700};
-        NPC zombie_npc = CreateNPC(resources.zombieSheet, z_pos, zombie_speed,RISING, true, true);
-        zombie_npc.SetDestination(1000, 4000);
-        zombies.push_back(zombie_npc);
-        
-        
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)&& distance_to_mac < 20){ //pickup shovel 
+            if (CheckCollisionPointRec(mouseWorldPos, macBounds)){
+                //add shovel in inventory
+                if (!player.hasMac10){
+                    drawMac10 = false;
+                    AddItemToInventory("mac10", inventory, INVENTORY_SIZE);
+                    PlaySound(SoundManager::getInstance().GetSound("reload"));
+                    showInventory = true;
+                    player.hasMac10 = true;
+                }
+            }
+        }
+        if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
+            if (!player.hasShovel && distance_to_mac < 20){
+                drawMac10 = false;
+                AddItemToInventory("mac10", inventory, INVENTORY_SIZE);
+                PlaySound(SoundManager::getInstance().GetSound("reload"));
+                showInventory = true;
+                player.hasMac10= true;
+            
+            }
+        }
+
     }
-
+    
 }
+
+void DrawShovelPickup(GameResources& resources, Player& player, Vector2 mousePosition, Camera2D& camera){
+    //render shovel. Click the shovel to pick it up. 
+
+    Vector2 shovelPos = {1870, 700}; // render within 1900. where zombies trigger
+    Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
+    float distance_to_shovel = abs(shovelPos.x - player.position.x);
+    if (drawShovel){ //shovel pickup
+        DrawTexture(resources.shovelWorld, shovelPos.x, shovelPos.y, WHITE);
+        Rectangle shovelBounds = { //shovel button
+            shovelPos.x,      
+            shovelPos.y,     
+            static_cast<float>(32),  
+            static_cast<float>(64)  
+        };
+
+    
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)&& distance_to_shovel < 20){ //pickup shovel 
+            if (CheckCollisionPointRec(mouseWorldPos, shovelBounds)){
+                //add shovel in inventory
+                if (!player.hasShovel){
+                    drawShovel = false;
+                    AddItemToInventory("shovel", inventory, INVENTORY_SIZE);
+                    PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
+                    showInventory = true;
+                    player.hasShovel = true;
+                
+                }
+            
+            }
+
+
+        }
+        //Press up key or W to pickup shovel when close enough
+        if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
+            if (!player.hasShovel && distance_to_shovel < 20){
+                drawShovel = false;
+                AddItemToInventory("shovel", inventory, INVENTORY_SIZE);
+                PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
+                showInventory = true;
+                player.hasShovel = true;
+            
+            }
+        }
+    }
+}
+
 
 
 void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<NPC>& npcs, GameCalendar calendar) {
@@ -823,7 +884,7 @@ void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<
     } else if (move_car && gotoWork) {  // Move car and go to work
         gameState = WORK;
         // Additional logic if needed
-    }else if (move_car && gotoPark){
+    }else if (move_car && gotoPark){ //move car and go to park
         gameState = PARK;
         player_car.position.x = 1800;
         player.position.x = player_car.position.x;
@@ -847,7 +908,7 @@ void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<
         gameState = APARTMENT;
     } else if (over_lot) { // over_lot go to Vacant Lot
         gameState = LOT;
-    }else if (openMagicDoor){
+    }else if (openMagicDoor){ //over magic door, go to astral
         gameState = ASTRAL;
         
         //player.position.x = 3000;
@@ -1022,7 +1083,7 @@ void HandleFadeIn() {
     }
 }
 
-void HandleFadeOut(Player& player, PlayerCar& player_car, GameCalendar& calendar, std::vector<NPC>& npcs) {
+void HandleFadeOut(Player& player, PlayerCar& player_car, GameCalendar& calendar, std::vector<NPC>& npcs) { 
     fadeAlpha += fadeSpeed;  // Fade out gradually
     if (fadeAlpha >= 1.0f) {
         fadeAlpha = 1.0f;
@@ -1172,14 +1233,11 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
     Color gunTint = WHITE;
     Color shotgunTint = WHITE;
     Color macTint = WHITE;
-    // Use integer values to snap to the nearest pixel, based on the camera-relative inventory position
-    //casting to int was to prevent stutter. not needed no mo.
-    // int startX = static_cast<int>(inventoryPositionX) - (slotWidth * inventorySize / 2);
-    // int startY = static_cast<int>(inventoryPositionY);
+
     int startX = (inventoryPositionX - (slotWidth * inventorySize/2));
     int startY = inventoryPositionY;
 
-    // Draw each inventory slot //chatGPT suggests using enum ItemType and struct inventoryDefinitions
+    // Draw each inventory slot 
     for (int i = 0; i < inventorySize; i++) {
         int x = startX + (i * (slotWidth + 10));  // Offset each slot horizontally
         int y = startY;
@@ -1193,6 +1251,7 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
 
        // Draw the icon at x, y
         if (!inventory[i].empty()) { //inventory buttons are all done in the same for loop we use to draw it. Consider abstracting this somehow. 
+        //chatGPT suggests using enum ItemType and struct inventoryDefinitions, just makes it more spread out and complicated.
 
             if (inventory[i] == "carKeys"){
                 DrawTexture(resources.CarKeys, x, y, WHITE);
@@ -1358,12 +1417,12 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
 
 
 
-void CheckBulletNPCCollisions(std::vector<NPC>& npcs, Player& player) {
+void CheckBulletNPCCollisions(std::vector<NPC>& npcs, Player& player) { //Bullet collision with zombies, bats, and ghosts
     Vector2 bulletSize = {1, 1};  // Size of the bullet hitbox
 
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (bullets[i].isActive) {  // Only check active bullets
-            for (NPC& npc : npcs) { //zombies is passed as npcs
+            for (NPC& npc : npcs) { //zombies vector is passed to this func which calls them npcs
                 if (npc.isActive && npc.CheckHit(bullets[i].previousPosition, bullets[i].position, bulletSize)) { //
                     // Collision detected
                     bullets[i].isActive = false;  // Deactivate the bullet
@@ -1383,11 +1442,11 @@ void DrawHUD(const Player& player) {
         DrawText(TextFormat("Ammo: %d", player.revolverBulletCount), screenWidth/2 + ammoX, ammoY, 20, WHITE); //screen space coordiantes
     }
     else if (player.currentWeapon == SHOTGUN && player.hasShotgun){
-        DrawText(TextFormat("Ammo: %d", player.shotgunBulletCount), screenWidth/2 + ammoX, ammoY, 20, WHITE); //screen space coordiantes
-        DrawText(TextFormat("SHELLS: %d", player.shells), screenWidth/2 + ammoX, ammoY+20, 20, WHITE); //screen space coordiantes
+        DrawText(TextFormat("Ammo: %d", player.shotgunBulletCount), screenWidth/2 + ammoX, ammoY, 20, WHITE);
+        DrawText(TextFormat("SHELLS: %d", player.shells), screenWidth/2 + ammoX, ammoY+20, 20, WHITE);
     }
     else if (player.currentWeapon == MAC10 && player.hasMac10){
-        DrawText(TextFormat("Ammo: %d", player.mac10BulletCount), screenWidth/2 + ammoX, ammoY, 20, WHITE); //screen space coordiantes
+        DrawText(TextFormat("Ammo: %d", player.mac10BulletCount), screenWidth/2 + ammoX, ammoY, 20, WHITE); 
         DrawText(TextFormat("9mm: %d", player.autoAmmo), screenWidth/2 + ammoX, ammoY+20, 20, WHITE);
     }
     
@@ -1470,7 +1529,7 @@ void DrawApartmentUI(GameResources& resources, GameCalendar&, Vector2& mousePosi
 }
 
 
-
+//Destinations Menu for car. Click on where you want to travel. 
 void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, GameState& gameState){
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
     Vector2 ui_pos = player_car.position;
@@ -1482,21 +1541,22 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, G
     Color work_tint = WHITE;
     Color cemetery_tint = WHITE;
     Color tavern_tint = WHITE;
-    Rectangle textureBounds = { //cemetery
+
+    Rectangle textureBounds = { //cemetery / street
         player_car.position.x,      
         player_car.position.y,      
         static_cast<float>(96),  
         static_cast<float>(16)  
     };
 
-    Rectangle textureBounds2 = { //work
+    Rectangle workBounds = { //work
         player_car.position.x,      
         player_car.position.y+16,      
         static_cast<float>(96),  
         static_cast<float>(16)  
     };
 
-    Rectangle textureBounds3 = { //Tavern
+    Rectangle ParkBounds = { //Park
         player_car.position.x,      
         player_car.position.y-16,      
         static_cast<float>(96),  
@@ -1510,18 +1570,18 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, G
         buttonCemetery = false;
     }
 
-    if (CheckCollisionPointRec(mouseWorldPos, textureBounds2) && !hasWorked && gameState == OUTSIDE){ //bottom
+    if (CheckCollisionPointRec(mouseWorldPos, workBounds) && !hasWorked && gameState == OUTSIDE){ //bottom Work
         work_tint = RED;
         buttonWork = true;
     }else{
         buttonWork = false;
     }
 
-    if (CheckCollisionPointRec(mouseWorldPos, textureBounds3)){ //top
+    if (CheckCollisionPointRec(mouseWorldPos, ParkBounds)){ //top Park
         tavern_tint = RED;
-        buttonTavern = true;
+        buttonPark = true;  
     }else{
-        buttonTavern = false;
+        buttonPark = false;
     }
 
 
@@ -1529,10 +1589,10 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, G
         DrawText("   Park", ui_pos.x, ui_pos.y-17, 16, tavern_tint);
         DrawText("   Cemetery", ui_pos.x, ui_pos.y, 16, cemetery_tint);
 
-        work_tint = hasWorked ? BLACK : work_tint;
+        work_tint = hasWorked ? BLACK : work_tint; //turn off work option if you have recently worked. Render button black. 
         DrawText("   Work", ui_pos.x, ui_pos.y+17, 16, work_tint);
 
-        if (NecroTech) DrawText("  NecroTech", ui_pos.x, ui_pos.y+32, 16, WHITE);
+        if (NecroTech) DrawText("  NecroTech", ui_pos.x, ui_pos.y+32, 16, WHITE); //TODO: implement final level.
 
 
         
@@ -1675,21 +1735,18 @@ void DrawUFO(GameResources& resources, UFO& ufo, Camera2D& camera, float& time, 
 }
 
 void DrawEarth(GameResources& resources, Earth& earth, Camera2D& camera){
-    // Calculate delta time
+    // Draw rotating pixel earth floating in the astral sky, accounting for parallax
     float deltaTime = GetFrameTime();
-    //printf("Camera Target X: %f\n", camera.target.x);
-    // Update animation timer
     earth.frameTimer += deltaTime;
 
-    // Check if it's time to move to the next frame
-    if (earth.frameTimer >= earth.frameTime)
+    while (earth.frameTimer >= earth.frameTime) //while loop handles cases where deltaTime > frameTime
     {
-        earth.frameTimer -= earth.frameTime;
+        earth.frameTimer -= earth.frameTime; //subtracting frameTime preserves the excess time for smoothing animations apparently
         earth.currentFrame++;
 
         if (earth.currentFrame >= earth.totalFrames)
         {
-            earth.currentFrame = 0; // Loop back to the first frame
+            earth.currentFrame = 0;
         }
     }
 
@@ -1770,91 +1827,6 @@ void DrawHealthBar(GameResources resources, Vector2 position, int maxHealth, int
     // Draw health bar (adjust width based on health percentage)
     DrawRectangle(position.x, position.y+50, (int)(barWidth * healthPercent), barHeight, barColor);
 }
-
-
-// DialogBoxProperties GetDialogBoxProperties(bool dealer, bool teller, bool overLiquor, int defaultBoxWidth, int defaultBoxHeight) {
-//     DialogBoxProperties props;
-
-//     if (dealer || teller || overLiquor) { //this is getting ridiculous
-//         props.boxWidth = (dealer) ? 256 : 300;
-//         props.boxHeight = 128;
-//         props.offsetY = -135;
-//         props.textOffsetX = 16;
-//         props.textOffsetY = -128;
-//     } else {
-//         props.boxWidth = defaultBoxWidth;
-//         props.boxHeight = defaultBoxHeight;
-//         props.offsetY = -64;
-//         props.textOffsetX = 16;
-//         props.textOffsetY = -55;
-//     }
-
-//     return props;
-// }
-
-// void DrawDialogBox(Player& player, Camera2D camera, int defaultBoxWidth, int defaultBoxHeight, int textSize) {
-//     // Update fortune timer
-//     if (fortuneTimer > 0) {
-//         fortuneTimer -= GetFrameTime();
-//     }
-
-//     // Get the screen position
-//     Vector2 screen_pos = GetWorldToScreen2D(dboxPosition, camera);
-//     Color tint = WHITE;
-
-//     // Get dialog box properties based on the conditions
-//     DialogBoxProperties dialogProps = GetDialogBoxProperties(dealer, teller, overLiquor, defaultBoxWidth, defaultBoxHeight);
-
-//     // Update phrase for fortune teller
-//     if (teller && buyFortune && fortuneTimer <= 0) {
-//         phrase = "Namaste";
-//     }
-
-//     // Draw the dialog box and text
-//     DrawRectangle(screen_pos.x, screen_pos.y + dialogProps.offsetY, dialogProps.boxWidth, dialogProps.boxHeight, customBackgroundColor);
-//     DrawText(phrase.c_str(), screen_pos.x + dialogProps.textOffsetX, screen_pos.y + dialogProps.textOffsetY, textSize, tint);
-
-//     // Define button properties
-//     const int buttonWidth = 64;
-//     const int buttonHeight = 48;
-//     const int buttonOffsetX = 16;
-//     const int buttonOffsetY = -64;
-
-//     Rectangle buttonRect = { screen_pos.x + buttonOffsetX, screen_pos.y + buttonOffsetY, buttonWidth, buttonHeight };
-
-//     // Handle interactions
-//     if (money >= 100) {
-//         if (dealer && GuiButton(buttonRect, "BUY")) {
-//             if (can_sell_drugs) {
-//                 can_sell_drugs = false;
-//                 addMoney(-100);
-//                 AddItemToInventory("Drugs", inventory, INVENTORY_SIZE);
-//                 for (NPC& npc : npcs)
-//                     if (npc.interacting) {
-//                         npc.interacting = false;
-//                         npc.idleTime = 1;
-//                     }
-//             }
-//         } else if (teller && !buyFortune && GuiButton(buttonRect, "BUY")) {
-//             if (canGiveFortune) {
-//                 canGiveFortune = false;
-//                 buyFortune = true;
-//                 fortuneTimer = 5;
-//                 addMoney(-100);
-//                 phrase = GetTellerPhrase();
-//                 for (NPC& npc : npcs)
-//                     if (npc.teller) {
-//                         npc.idleTime = 10;
-//                         npc.talkTimer = 10;
-//                     }
-//             }
-//         } else if (overLiquor && showLiquor && GuiButton(buttonRect, "BUY")) {
-//             addMoney(-100);
-//             AddItemToInventory("whiskey", inventory, INVENTORY_SIZE);
-//             player.hasWhiskey = true;
-//         }
-//     }
-// }
 
 
 
@@ -2138,11 +2110,15 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
         if (bat.health > 0) bat.isActive = true;
     }
 
+    DrawMac10Pickup(resources, player, mousePosition, camera);
+
     
     DrawBullets(); //draw bullets in cemetery after everything else. 
     
     
     EndMode2D();
+
+
     
     Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
     if (player.currentHealth < 100){
@@ -2203,13 +2179,15 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         minDistToPlayer = 50;
         maxDistToPlayer = 200;
     }
-    if (!player.enter_car && player.position.x > 3500 && !zombieWave2 && !firstHobo){ //walk too far right and zombies spawn again
-        zombieWave2 = true;
-        StartZombieSpawn(10);
 
-        minDistToPlayer = 50;
-        maxDistToPlayer = 200;
-    }
+    //too many zombie encounters not enough ammo, uncomment for more zombies on the right side of cemetery
+    // if (!player.enter_car && player.position.x > 3500 && !zombieWave2 && !firstHobo){ //walk too far right and zombies spawn again
+    //     zombieWave2 = true;
+    //     StartZombieSpawn(10);
+
+    //     minDistToPlayer = 50;
+    //     maxDistToPlayer = 200;
+    // }
 
     if (move_car){
         player_car.carSpeed = 100;
@@ -2320,71 +2298,13 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         DrawUFO(resources, ufo, camera, time, shaders);
     }
 
-    
-
-
-    //render shovel. Click the shovel to pick it up. 
-
-    Vector2 shovelPos = {1870, 700}; // render within 1900. where zombies trigger
-    Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
-    float distance_to_shovel = abs(shovelPos.x - player.position.x);
-    if (drawShovel){ //shovel pickup
-        DrawTexture(resources.shovelWorld, shovelPos.x, shovelPos.y, WHITE);
-        Rectangle shovelBounds = { //shovel button
-            shovelPos.x,      
-            shovelPos.y,     
-            static_cast<float>(32),  
-            static_cast<float>(64)  
-        };
-
-    
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)&& distance_to_shovel < 20){ //pickup shovel 
-            if (CheckCollisionPointRec(mouseWorldPos, shovelBounds)){
-                //add shovel in inventory
-                if (!player.hasShovel){
-                    drawShovel = false;
-                    AddItemToInventory("shovel", inventory, INVENTORY_SIZE);
-                    PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
-                    showInventory = true;
-                    player.hasShovel = true;
-                
-                }
-            
-            }
-
-
-        }
-        //Press up key or W to pickup shovel when close enough
-        if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
-            if (!player.hasShovel && distance_to_shovel < 20){
-                drawShovel = false;
-                AddItemToInventory("shovel", inventory, INVENTORY_SIZE);
-                PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
-                showInventory = true;
-                player.hasShovel = true;
-            
-            }
-        }
-    }
-
+    DrawShovelPickup(resources, player, mousePosition, camera);
 
     for (NPC& zombie : zombies){ //update and draw zombies in cemetery
         zombie.Update(player, gameState);
         zombie.Render(shaders);
 
     }
-
-    //cemetery bats
-    // if (hasCemeteryKey){
-    //     for (NPC& bat : bats){
-    //         bat.Update(player);
-    //         bat.Render(shaders);
-    //         bat.agro = true;
-    //         if (bat.health > 0) bat.isActive = true;
-    //     }
-
-    // }
-
 
     if (show_carUI && !move_car && player.enter_car){ //destination menu //draw UI inside mode2d
         DrawCarUI(player_car, mousePosition, camera, gameState);
@@ -2851,11 +2771,6 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
 
-    if (resTimer > 0){
-        resTimer -= GetFrameTime();
-    }
-
-
     if (player.isAiming && IsKeyDown(KEY_F)) {
         // Handle keyboard-only aiming (e.g., using arrow keys or player movement keys)
         if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
@@ -2977,26 +2892,22 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
         zombie.targetNPC = nullptr;
 
         for (NPC& npc : ParkNpcs) { //find the cloeset NPC and chase them. 
-            // Skip NPCs that are already targeted
-           //if (npc.isTargeted) continue;
             if (npc.isActive){
                 float dist = fabs(zombie.position.x - npc.position.x);
 
                 if (dist < minDist) {
                     minDist = dist;
                     closestNPCPositionX = npc.position.x;
-                    zombie.targetNPC = &npc;
-                    
+                    zombie.targetNPC = &npc;   
                 }
-
             }
-
         }
 
         if (zombie.targetNPC != nullptr) {
             zombie.hasTarget = true;
             zombie.destination = { closestNPCPositionX, zombie.position.y };
-            zombie.targetNPC->isTargeted = true;  // Mark NPC as targeted
+            //zombie.targetNPC->isTargeted = true;  // Mark NPC as targeted, not sure if we need this, we check for it on death, but do we need to?
+            //isTargeted was supposed to let zombies only attack NPCs that werent already targeted but thats dumb. they should be able to attack the same NPC. 
         } else {
             //zombie.hasTarget = false;
             // Optional behavior when no target is found
@@ -3022,7 +2933,8 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
     EndMode2D();
 
     DrawMoney(); //draw money after EndMode2d()
-    if (showInventory){
+
+    if (showInventory){ // this could be done globally, there is never a time when we don't want to show inventory
          
         RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
     }
@@ -3032,7 +2944,7 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
             PlaySound(SoundManager::getInstance().GetSound("CarDoorClose")); 
             player.enter_car = false;
             player_car.currentFrame = 0;
-            //player.position.x = player_car.position.x + 32;
+           
         }
     }
 
@@ -3051,7 +2963,7 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
     if (raiseParkZombies){
         raiseParkZombies = false;
         StartZombieSpawn(10);
-        minDistToPlayer = 200;
+        minDistToPlayer = 200; //zombies can spawn further away
         maxDistToPlayer = 400;
 
     }

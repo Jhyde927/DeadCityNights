@@ -457,8 +457,9 @@ void NPC::SetDestination(float minX, float maxX) {
 
 void NPC::HandleAnimationLogic(){
         // Update frame counter and animation logic
-    frameCounter += GetFrameTime() * frameSpeed;
-    if (frameCounter >= 1.0f) {
+    frameCounter += GetFrameTime() * frameSpeed; //Higher frameSpeed means frameCounter increases more each frame.
+    //If you think of the threshold 1.0f as one second, then frameSpeed represents the number of frames per second for the animation.
+    if (frameCounter >= 1.0f) { 
         frameCounter = 0.0f;
         currentFrame++;
 
@@ -889,7 +890,7 @@ void NPC::TakeDamage(int damage, Player& player) {
         SetAnimationState(DEATH2);
     }
 
-    if (health <= 0 && !isDying && isTargeted){ //NPC killed by zombie
+    if (health <= 0 && !isDying){ //NPC killed by zombie
 
         
         riseTimer = 0; //if killed while still rising set the risetimer back to 0 as to not play rise animation

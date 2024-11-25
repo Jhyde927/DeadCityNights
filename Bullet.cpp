@@ -38,7 +38,7 @@ void FireBullet(Player& player, bool spread, float damage) {
             bullets[i].direction = player.facingRight ? Vector2{1, 0} : Vector2{-1, 0};    // Set direction based on player facing
             bullets[i].damage = damage; //take different damage for different guns
             bullets[i].speed = 1000.0f;  // Set bullet speed
-            bullets[i].lifeTime = 2.0f;  // Bullet will last for 2 seconds
+            bullets[i].lifeTime = 1.0f;  // Bullet will last for 2 seconds
             bullets[i].isActive = true;
             player.bulletCount--;  // Decrease player's bullet count
             if (spread){

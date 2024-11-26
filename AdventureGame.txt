@@ -315,16 +315,56 @@ implemented multi pass rendering. BeginTextureMode(targetTexture) saves whatever
 
 Added old film shader. Could be used for a cut scene. Adds film grain, horizontal line glitches, sepia tone, and something else. It's added to the finalTexture pass, and only runs if film is true. film grain is cool looking. Maybe an underground area we could apply film grain because it looks good on black. implies darkness. Subway station? 
 
-Ghost is broken. Does not follow player once attacked. in graveyard. 
+Ghost is broken. Does not follow player once attacked. in graveyard. x
 
-zombie npc attack still buggy. 
+zombie npc attack still buggy. x
 
-put rainbow outline shader on magic door. 
+put rainbow outline shader on magic door. x
 
+if you die in astral gravity is not set back to normal on respawn. x
 
+background street light look muddied. from copying the image so may times? Just remove for now. x
 
+fixed full screen, add UI to renderTexture before drawing to screen that way their positions are baked into the image. x
 
+Add trees to the park. x
 
+Astral boss. 
+
+fix zombies, zombies occasionally flip left and right really fast for some reason. 
+
+if a NPC is killed by a zombie. Spawn a zombie at that position. Needed to wait for death animation before raising zombie. 
+
+NPCs should interact with each other some how. We would need more than one Dbox. We could make a dialog box class. It has a position, a std::string of what it says, font size, timer? This would be very complicated to deconstruct what I have now for something new. 
+
+multiple calls to draw dialog box would do what. make it jump between 2 positions each frame? show_dbox is global. test calling it twice. it would just draw it at the last position you call. 
+
+click on inventory to switch weapons? x inventory item select code is getting out of hand. 
+
+Added mac10 to the top of the astral plane. You needed a reward for getting to the top of the platforms, so this will do for now.
+Doesn't make much sense to find a gun on the astral plane. You can get the mac10 at the very beginning of the game. good.
+
+zombie spawn delay is too short. x
+
+drugs ware off when exiting astral. x
+
+fix car tires. 
+
+fix midground buildings x
+
+upkey on mac10 in astral not working. x 
+
+fall through platform gravity is borked. x Just had to apply gravity last. And flush excess velocity when landing on a platform, it kept it's downward velocity from falling, needed to reset to 0 when jumping and landing on platform. needs to only run once to prevent jumps being inconsistent. Platforming is very simple but more or less working. 
+
+if health < 100 show health bar x
+
+flying saucer didn't show. if (position.x < 64 && gameState == OUTSIDE) x
+
+if you were to make a save feature, what would you need to save? player.position, hasGun, hasShotgun, hasMac10, hasCemeteryKey, hasPills, hasWhiskey, basically save the state of the player class, gameState, money, date, it would be a nightmare basically.
+
+tried to refactor dialogBox. Reverted back to what I had. I tried making a dialog box class, got it all working and realized it was 10 times more complicated than doing it all in one function like I had been. Just clean up the offsets. 
+
+Need another NPC. dude with a gun. special forces, mercenaries, private contractors, pirates, 
 
 
 

@@ -4,6 +4,7 @@
 #include <ctime>    // For time
 #include "GameEnums.h"
 #include <raymath.h>
+#include <iostream>
 
 
 
@@ -116,6 +117,17 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
 
     int timeLocGlitch = GetShaderLocation(shaders.glitchShader, "time");
 
+    // Declare variables for resolution and intensity
+    //float resolution[2] = {screenWidth, screenHeight};
+    float intensity = 0.01f;
+
+    // Set shader uniforms
+    SetShaderValue(shaders.glitchShader, GetShaderLocation(shaders.glitchShader, "resolution"), resolution, SHADER_UNIFORM_VEC2);
+    SetShaderValue(shaders.glitchShader, GetShaderLocation(shaders.glitchShader, "intensity"), &intensity, SHADER_UNIFORM_FLOAT);
+
+
+
+
     //rainbowOutline
     int outlineColorLoc2 = GetShaderLocation(shaders.rainbowOutlineShader, "outlineColor");
     int thresholdLoc2 = GetShaderLocation(shaders.rainbowOutlineShader, "threshold");
@@ -200,7 +212,7 @@ void UnloadShaders(ShaderResources& shaders) {
 
 void UpdateShaders(ShaderResources& shaders, float deltaTime, bool fullscreen, GameState& gameState) {
     // Update time for glitch shader
-
+    float time_ = GetTime();
     float renderWidth = 1024.0f;
     shaders.totalTime += deltaTime;
     int timeLoc = GetShaderLocation(shaders.rainbowOutlineShader, "time");
@@ -210,7 +222,10 @@ void UpdateShaders(ShaderResources& shaders, float deltaTime, bool fullscreen, G
     //SetShaderValue(shaders.glitchShader, shaders.timeLoc, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.glitchVignetteShader, timeLoc3, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.rainbowOutlineShader, timeLoc, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
-    SetShaderValue(shaders.glitchShader, timeLoc4, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
+    //SetShaderValue(shaders.glitchShader, timeLoc4, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
+
+    SetShaderValue(shaders.glitchShader, GetShaderLocation(shaders.glitchShader, "time"), &time_, SHADER_UNIFORM_FLOAT);
+
     ///update glowShader
     float time = GetTime();  // Get the total elapsed time
     float minThreshold = 0.1f;

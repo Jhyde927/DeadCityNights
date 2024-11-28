@@ -207,6 +207,7 @@ void Player::HandleInput(float speed){
             if (IsKeyPressed(KEY_SPACE)){ //hold down and press space to drop through platform. 
                 isOnGround = false;
                 dropping = true;
+                jumping = true; //turn on jumping so we can turn it back off when hitting a platform. Needed to reset velocity.y
                 dropTimer = 1.0;
             }
 
@@ -344,16 +345,15 @@ bool Player::CheckIfOnPlatform(const std::vector<Platform>& platforms) {
                 // Moving down; landed on top of platform
                 position.y = platform.rect.y - size.y - 16;
                 //velocity.y = 0.0f;
-                if (!dropping){
-                    isOnGround = true;
+                if (jumping){
                     jumping = false;
-                    return true;
+                    velocity.y = 0; //flush excess velocity, only if jumping so it only runs once. 
+                } 
+                isOnGround = true; 
+                
+                return true;
 
-                }else{
-                    isOnGround = false;
-                    
-                    return false;
-                }
+                
             
             }
             // Handle horizontal collisions (optional)
@@ -365,9 +365,12 @@ bool Player::CheckIfOnPlatform(const std::vector<Platform>& platforms) {
 
 
 void Player::playerPhysics(float deltaTime, std::vector<Platform> platforms){
-
-    if (!isOnGround) {
-        velocity.y += gravity * deltaTime;
+    if (dropTimer > 0){ //drop through platforms for 1 second
+        dropTimer -= GetFrameTime();
+        
+    }else{
+        dropTimer = 0;
+        dropping = false;
     }
 
     // Clamp horizontal velocity
@@ -406,13 +409,12 @@ void Player::playerPhysics(float deltaTime, std::vector<Platform> platforms){
     if (!dropping){
         if (CheckIfOnPlatform(platforms)){
             isOnGround = true;
-        
+            
+            
+            
         }
 
-    }else{
-        isOnGround = false;
     }
-
 
     // Collision with the ground (assuming ground at y = groundLevel)
     float groundLevel = 700.0f + size.y;  // Adjust based on your game's ground position
@@ -422,6 +424,10 @@ void Player::playerPhysics(float deltaTime, std::vector<Platform> platforms){
         isOnGround = true;
         
         jumping = false;
+    }
+
+    if (!isOnGround) {
+        velocity.y += gravity * deltaTime;
     }
 
 }
@@ -499,13 +505,7 @@ void Player::updateAnimations(GameResources& resources){
 void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vector2& mousePosition, Camera2D& camera, std::vector<Platform> platforms) {
     isMoving = false; //reset is moving to false at the start of the frame. If it remains false all the way though to the next frame, we are not moving. 
 
-    if (dropTimer > 0){ //drop through platforms for 1 second
-        dropTimer -= GetFrameTime();
-        
-    }else{
-        dropTimer = 0;
-        dropping = false;
-    }
+
 
     float deltaTime = GetFrameTime();
 
@@ -575,14 +575,14 @@ void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vec
 
         }
     }else if (currentWeapon == MAC10 && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
-        if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && shotgunBulletCount <= 0){
+        if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && mac10BulletCount <= 0){
             //SoundManager::getInstance().GetSound("dryFire");
             PlaySound(SoundManager::getInstance().GetSound("dryFire"));
 
         }
 
-
-        if (hasMac10 && mac10BulletCount > 0 && isAiming && (IsKeyPressed(KEY_SPACE) || IsMouseButtonDown(MOUSE_BUTTON_LEFT)) && canShoot) {
+        //IsKeyDown for automatic fire. 
+        if (hasMac10 && mac10BulletCount > 0 && isAiming && (IsKeyDown(KEY_SPACE) || IsMouseButtonDown(MOUSE_BUTTON_LEFT)) && canShoot) {
             isShooting = true;
             canShoot = false;
             currentFrame = 0;
@@ -597,7 +597,7 @@ void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vec
         }
     }       
 
-    maxSpeedX = isRunning ? runSpeed : walkSpeed;
+    maxSpeedX = isRunning ? runSpeed : walkSpeed; //if running, maxspeed = runspeed else walkspeed
     frameSpeed = isRunning ? runFrameSpeed : walkFrameSpeed;
 
     //keep player in bounds
@@ -614,8 +614,9 @@ void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vec
         HandleInput(maxSpeedX); //check input before physics
     
     }
-
     playerPhysics(deltaTime, platforms);
+
+    
     updateAnimations(resources);
 }
 

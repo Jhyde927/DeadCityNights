@@ -84,6 +84,7 @@ struct GameResources {
     Texture2D shootSheetAuto;
     Texture2D reloadSheetAuto;
     Texture2D Mac10;
+    Texture2D Mac10pickup;
     
 
     Font defaultFont;

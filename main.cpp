@@ -314,6 +314,7 @@ void LoadGameResources(GameResources& resources) {
     resources.shootSheetAuto = LoadTexture("assets/shootSheetAuto.png");
     resources.reloadSheetAuto = LoadTexture("assets/reloadSheetAuto.png");
     resources.Mac10 = LoadTexture("assets/Mac10.png");
+    resources.Mac10pickup = LoadTexture("assets/Mac10pickup.png");
 }
 
 void UnloadGameResources(GameResources& resources){
@@ -391,6 +392,7 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.shootSheetAuto);
     UnloadTexture(resources.reloadSheetAuto);
     UnloadTexture(resources.Mac10);
+    UnloadTexture(resources.Mac10pickup);
 
    
 }
@@ -787,8 +789,10 @@ void UpdateZombieSpawning(GameResources& resources, Player& player){
  
             // Reset the spawn timer and set a new random delay
             spawnTimer = 0.0f;
-            nextSpawnDelay = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 1.0f));  // Random delay for the next zombie
-
+            float minDelay = 1.0f;
+            float maxDelay = 4.0f; //too slow?
+            nextSpawnDelay = minDelay + ((float)rand() / (float)RAND_MAX) * (maxDelay - minDelay);
+            
             // Decrease the number of zombies left to spawn
             remainingZombiesToSpawn--;
         }
@@ -801,19 +805,20 @@ void UpdateZombieSpawning(GameResources& resources, Player& player){
 
 void DrawMac10Pickup(GameResources& resources, Player& player, Vector2 mousePosition, Camera2D& camera){
     //Mac10 pickup in asteral plane
-    Vector2 macPos = {2445, -751}; // 
+    Vector2 macPos = {2445, -735}; // 
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
     float distance_to_mac = abs(macPos.x - player.position.x);
+    float distance_to_macY = abs(macPos.y - player.position.y);
     if (drawMac10){ //mac10 pickup
-        DrawTexture(resources.Mac10, macPos.x, macPos.y, WHITE);
+        DrawTexture(resources.Mac10pickup, macPos.x, macPos.y, WHITE);
         Rectangle macBounds = { //shovel button
             macPos.x,      
             macPos.y,     
-            static_cast<float>(32),  
+            static_cast<float>(64),  
             static_cast<float>(64)  
         };
-
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)&& distance_to_mac < 20){ //pickup shovel 
+        //pickup mac10
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && distance_to_mac < 20 && distance_to_macY < 20){ //check for Y distance as well because its on platform
             if (CheckCollisionPointRec(mouseWorldPos, macBounds)){
                 //add shovel in inventory
                 if (!player.hasMac10){
@@ -826,7 +831,7 @@ void DrawMac10Pickup(GameResources& resources, Player& player, Vector2 mousePosi
             }
         }
         if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
-            if (!player.hasShovel && distance_to_mac < 20){
+            if (!player.hasMac10 && distance_to_mac < 20 && distance_to_macY < 20){//check for Y distance as well because its on a platform
                 drawMac10 = false;
                 AddItemToInventory("mac10", inventory, INVENTORY_SIZE);
                 PlaySound(SoundManager::getInstance().GetSound("reload"));
@@ -1861,42 +1866,46 @@ void DrawDialogBox(Player& player, Camera2D camera, int boxWidth, int boxHeight,
     Vector2 screen_pos = GetWorldToScreen2D(dboxPosition, camera); // position to draw text and rectangle at. position is set to npc position
     //different NPCs have different sized Dialog boxes. Adjust size and offsets before drawing. 
     Color tint = WHITE;
-    if (dealer){
-        boxWidth = 256;
-        boxHeight = 128;
-        offset = -135;
-        screen_offsetX = 16;
-        screen_offsetY = -128;
+    if (gameState == OUTSIDE){
+        if (dealer){
+            boxWidth = 256;
+            boxHeight = 128;
+            offset = -135;
+            screen_offsetX = 16;
+            screen_offsetY = -128;
 
-    }
-    if (teller){
-        boxWidth = 300;
-        boxHeight = 128;
-        offset = -135;
-        screen_offsetX = 16;
-        screen_offsetY = -128;
-       
-    }
-
-    if (overLiquor){
+        }
+        if (teller){
+            boxWidth = 300;
+            boxHeight = 128;
+            offset = -135;
+            screen_offsetX = 16;
+            screen_offsetY = -128;
         
-        boxWidth = 300;
-        boxHeight = 128;
-        offset = -135;
-        screen_offsetX = 16;
-        screen_offsetY = -128;
+        }
+
+        if (overLiquor){
+            
+            boxWidth = 300;
+            boxHeight = 128;
+            offset = -135;
+            screen_offsetX = 16;
+            screen_offsetY = -128;
+        }
+
+        if (teller && buyFortune && fortuneTimer <= 0){
+            phrase = "Namaste";
+        }
+
     }
 
-    if (teller && buyFortune && fortuneTimer <= 0){
-        phrase = "Namaste";
-    }
 
     
     DrawRectangle(screen_pos.x, screen_pos.y + offset, boxWidth, boxHeight, customBackgroundColor);
     DrawText(phrase.c_str(), screen_pos.x+ screen_offsetX, screen_pos.y + screen_offsetY, textSize, tint); //Draw Phrase
     
     //GUI buttons for certain NPC interactions. 
-    if (money >= 100 && dealer && GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY")) //button pressed
+    if (money >= 100 && dealer && gameState == OUTSIDE && GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY") ) //button pressed
         {
             if (can_sell_drugs){ //can sell drugs gets reset once you take the drug
                 can_sell_drugs = false; // Dealer only has 1 drug for now. 
@@ -1910,7 +1919,7 @@ void DrawDialogBox(Player& player, Camera2D camera, int boxWidth, int boxHeight,
             }
         }
 
-    if (teller && !buyFortune && money >= 100 &&  GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY")){
+    if (teller && !buyFortune && money >= 100 && gameState == OUTSIDE &&  GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY") ){
 
         if (canGiveFortune){
             canGiveFortune = false;

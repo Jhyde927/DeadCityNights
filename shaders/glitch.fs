@@ -1,36 +1,26 @@
-// glitch.fs
+#version 330
 
-#ifdef GL_ES
-precision mediump float;
-#endif
+uniform float time;        // Current time, for animating the glitch effect
+uniform float intensity;   // Glitch intensity (controls how many lines are affected)
+uniform vec2 resolution;   // Screen resolution
 
-varying vec2 fragTexCoord;
-varying vec4 fragColor;
+in vec2 fragTexCoord;      // Texture coordinate
+out vec4 finalColor;       // Output fragment color
 
-uniform sampler2D texture0;
-uniform float time;
-
-float rand(vec2 co) {
-    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-}
+uniform sampler2D texture0; // The game's main screen texture
 
 void main() {
-    vec2 uv = fragTexCoord;
+    // Compute the current line in screen coordinates
+    float yCoord = fragTexCoord.y * resolution.y;
 
-    // Glitch strength and maximum offset
-    float strength = 0.1; //0.3;
-    float maxOffset = 0.01; //0.02;
+    // Generate a random value based on the line number and time
+    float glitchValue = fract(sin(yCoord * 0.1 + time) * 43758.5453123);
 
-    // Horizontal glitch offset
-    float yOffset = rand(vec2(uv.y, time)) * maxOffset * strength;
-    uv.x += yOffset;
+    // Discard some lines based on glitch intensity
+    if (glitchValue < intensity) {
+        discard;
+    }
 
-    // Sample the texture with the modified UVs
-    vec4 color = texture2D(texture0, uv);
-
-    // Randomly discard some lines to create a glitch effect
-    float glitch = step(0.02, rand(vec2(time, uv.y)));
-    color.rgb *= glitch;
-
-    gl_FragColor = color;
+    // Apply the texture color for unaffected pixels
+    finalColor = texture(texture0, fragTexCoord);
 }

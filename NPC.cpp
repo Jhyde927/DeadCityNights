@@ -729,6 +729,7 @@ void NPC::Render(ShaderResources& shaders) {
     Color tint = (hitTimer > 0) ? RED : WHITE;
     if (ghost) tint = ColorAlpha(WHITE, ghostAlpha);//use Color alpha to change alpha of ghost on hit
     if (bat) BeginShaderMode(shaders.rainbowOutlineShader); //raindbow bats
+    if (interacting) BeginShaderMode(shaders.highlightShader);
     DrawTextureRec(texture, sourceRec, position, tint);
     EndShaderMode();
 }

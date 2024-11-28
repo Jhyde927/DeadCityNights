@@ -24,6 +24,7 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     shaders.rainbowOutlineShader = LoadShader(0, "shaders/rainbowOutline.fs");
     shaders.oldFilmShader = LoadShader(0, "shaders/oldFilm.fs");
     shaders.redVignetteShader = LoadShader(0, "shaders/redVignette.fs");
+    shaders.highlightShader = LoadShader(0, "shaders/highlight.fs");
 
     
 
@@ -196,6 +197,17 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
 
     float tintColor[4] = { 20.0f, 2.0f, 2.0f, 0.3f }; // RGBA values
     SetShaderValue(shaders.redVignetteShader, tintColorLoc, tintColor, SHADER_UNIFORM_VEC4);
+
+
+    //highlight
+    // Set uniform values
+    float outlineColor3[4] = { 1.0f, 1.0f, 1.0f, 0.8f };  // red color
+    SetShaderValue(shaders.highlightShader, outlineColorLoc, outlineColor3, SHADER_UNIFORM_VEC4);
+
+    float Othreshold = 0.5f;
+    SetShaderValue(shaders.highlightShader, thresholdLoc, &Othreshold, SHADER_UNIFORM_FLOAT);
+
+
 
 
 }

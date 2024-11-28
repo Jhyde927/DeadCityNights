@@ -790,7 +790,7 @@ void UpdateZombieSpawning(GameResources& resources, Player& player){
             // Reset the spawn timer and set a new random delay
             spawnTimer = 0.0f;
             float minDelay = 1.0f;
-            float maxDelay = 4.0f; //too slow?
+            float maxDelay = 3.0f; 
             nextSpawnDelay = minDelay + ((float)rand() / (float)RAND_MAX) * (maxDelay - minDelay);
             
             // Decrease the number of zombies left to spawn

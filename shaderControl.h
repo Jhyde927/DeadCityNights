@@ -20,6 +20,7 @@ struct ShaderResources {
     Shader rainbowOutlineShader;
     Shader oldFilmShader;
     Shader redVignetteShader;
+    Shader highlightShader;
     
     int timeLoc;
     int glowThresholdLoc;

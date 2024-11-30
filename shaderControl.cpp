@@ -207,9 +207,6 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
     float Othreshold = 0.5f;
     SetShaderValue(shaders.highlightShader, thresholdLoc, &Othreshold, SHADER_UNIFORM_FLOAT);
 
-
-
-
 }
 
 void UnloadShaders(ShaderResources& shaders) {

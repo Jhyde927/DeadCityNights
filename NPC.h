@@ -65,6 +65,7 @@ public:
     bool isTargeted;
     float detectionRange; // Set detection range for zombies
     float detectionRangeBat;
+    bool highLight;
     NPC* targetNPC;
  
 

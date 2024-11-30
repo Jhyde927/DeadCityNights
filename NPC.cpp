@@ -61,6 +61,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     CanSpawnZombie = true; //everytime a NPC dies it spawns a zombie? //only in the park
     detectionRange = 300.0f;  // Set detection range for zombies
     detectionRangeBat = 150;
+    highLight = false;
  
 }
 
@@ -508,6 +509,10 @@ void NPC::Update(Player& player, GameState& gameState) {
     if (!isZombie) riseTimer = 0;
     float distance_to_player = abs(player.position.x - position.x);
 
+    if (distance_to_player >= 30){
+        highLight = false;//Turn off highlights on any interacting NPCs when far enough way. 
+        interacting = false; // maybe this is a good idea
+    }
 
     if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
         if (distance_to_player < 20 && !police && !isZombie){
@@ -724,12 +729,16 @@ void NPC::Render(ShaderResources& shaders) {
         sourceRec.width = -frameWidth;  // Flip horizontally
     }
 
+    if (interacting){
+        highLight = true;
+    }
+
     // Draw the texture at the NPC's position
     // Tint the NPC red if recently hit
     Color tint = (hitTimer > 0) ? RED : WHITE;
     if (ghost) tint = ColorAlpha(WHITE, ghostAlpha);//use Color alpha to change alpha of ghost on hit
     if (bat) BeginShaderMode(shaders.rainbowOutlineShader); //raindbow bats
-    if (interacting) BeginShaderMode(shaders.highlightShader);
+    if (highLight) BeginShaderMode(shaders.highlightShader);
     DrawTextureRec(texture, sourceRec, position, tint);
     EndShaderMode();
 }

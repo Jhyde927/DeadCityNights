@@ -356,7 +356,7 @@ upkey on mac10 in astral not working. x
 
 fall through platform gravity is borked. x Just had to apply gravity last. And flush excess velocity when landing on a platform, it kept it's downward velocity from falling, needed to reset to 0 when jumping and landing on platform. needs to only run once to prevent jumps being inconsistent. Platforming is very simple but more or less working. 
 
-if health < 100 show health bar x
+if health < 100 show health bar else show_healthbar = false x
 
 flying saucer didn't show. if (position.x < 64 && gameState == OUTSIDE) x
 
@@ -365,6 +365,10 @@ if you were to make a save feature, what would you need to save? player.position
 tried to refactor dialogBox. Reverted back to what I had. I tried making a dialog box class, got it all working and realized it was 10 times more complicated than doing it all in one function like I had been. Just clean up the offsets. 
 
 Need another NPC. dude with a gun. special forces, mercenaries, private contractors, pirates, 
+
+added highlight shader to NPCs. Draw a white outline around the NPCs if they are interacting. Looks a bit odd, because "interacting" is on a 5 second timer. So the highlight turns on and off while talking to the hobo for example. A solution may be to just draw the highlight when the players position is closer than 20 pixels or something. That would mean NPC would become highlighted while walking past. Maybe if interacting, turn on highlight, but don't turn it off until the player is a certain distance away? Clicking on the NPC would initiate highlight, can't think of a better way than distance to player to turn it off. Do it then. Need another boolean. highLight turns on when interacting and turns off when 30 pixels away. x
+
+Implemented. Works way better this way. Possibly don't need interacting timer. Maybe player could have a member variable interacting as well. To prevent interacting with multiple NPCs at once. 
 
 
 

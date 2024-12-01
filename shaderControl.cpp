@@ -201,7 +201,7 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
 
     //highlight
     // Set uniform values
-    float outlineColor3[4] = { 1.0f, 1.0f, 1.0f, 0.8f };  // red color
+    float outlineColor3[4] = { 1.0f, 1.0f, 1.0f, 1.0f };  // color
     SetShaderValue(shaders.highlightShader, outlineColorLoc, outlineColor3, SHADER_UNIFORM_VEC4);
 
     float Othreshold = 0.5f;

@@ -85,6 +85,10 @@ struct GameResources {
     Texture2D reloadSheetAuto;
     Texture2D Mac10;
     Texture2D Mac10pickup;
+    Texture2D subwayForeground;
+    Texture2D subwayBackground;
+    Texture2D subwayMidground;
+    Texture2D train;
     
 
     Font defaultFont;

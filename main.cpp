@@ -21,14 +21,6 @@
 
 //Remember: The Law is One. 
 
-//start_pos = 1922, 700
-//apartment_pos = 2256, 700
-//car_start = 1710, 700 - 32
-//Enter_car = 1738, 700
-//Enter_road = 1340, 700
-//key_pos 380, 666
-//street_light = 1913, 500?
-
 int apartmentX = 2256;
 int vacantLotX = 2753;
 int vacantExitX = 2762;
@@ -91,6 +83,7 @@ bool move_car = false;
 bool reverse_road = false;
 bool has_car_key = false;
 bool overLiquor = false;
+bool overSubway = false;
 bool npcWalk = false;
 bool openDrawer = false;
 bool raiseZombies = false;
@@ -137,12 +130,9 @@ std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", "", "", ""}
 const int GAME_SCREEN_WIDTH = 1024;
 const int GAME_SCREEN_HEIGHT = 1024;
 
-
-
-
 //possibly make it a vector and inventory size could grow over time. Or a backpack item 
 
-std::string phrase = "A and D or Arrows\n\nto move left and right"; //initial tutorial phrase
+std::string phrase = "A and D to move, hold shift to run"; //initial tutorial phrase
 
 const int screenWidth = 1024; //screen is square for gameplay reasons, we don't want to reveal to much of the screen at one time. 
 const int screenHeight = 1024; // is it crazy to keep the resolution square? Implement full screen that keeps sqaure rotation.
@@ -235,6 +225,11 @@ struct UFO {
     float bobOffsetY;      // Phase offset for up-and-down movement
 };
 
+struct Train {
+    Vector2 position; 
+    float trainSpeed;
+};
+
 // Function to initialize and load resources
 void LoadGameResources(GameResources& resources) {
     resources.background = LoadTexture("assets/Background.png");
@@ -315,6 +310,10 @@ void LoadGameResources(GameResources& resources) {
     resources.reloadSheetAuto = LoadTexture("assets/reloadSheetAuto.png");
     resources.Mac10 = LoadTexture("assets/Mac10.png");
     resources.Mac10pickup = LoadTexture("assets/Mac10pickup.png");
+    resources.subwayForeground = LoadTexture("assets/subwayForground.png");
+    resources.subwayBackground = LoadTexture("assets/subwayBackground.png");
+    resources.subwayMidground = LoadTexture("assets/subwayMidground.png");
+    resources.train = LoadTexture("assets/Train.png");
 }
 
 void UnloadGameResources(GameResources& resources){
@@ -393,12 +392,12 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.reloadSheetAuto);
     UnloadTexture(resources.Mac10);
     UnloadTexture(resources.Mac10pickup);
-
-   
+    UnloadTexture(resources.subwayBackground);
+    UnloadTexture(resources.subwayForeground);
+    UnloadTexture(resources.subwayMidground);
+    UnloadTexture(resources.train);
+  
 }
-
-
-
 
 void InitializePlayerCar(PlayerCar& player_car){
     player_car.position = {1710, 700-32};
@@ -442,13 +441,16 @@ void InitUFO(UFO& ufo){
     ufo.bobOffsetY = 0.0f;       // No initial phase offset
 }
 
+void InitTrain(Train& train){
+    train.position = {4000, 700};
+    train.trainSpeed = 300;
+}
 
 void InitPlatforms() {
     //initialize platforms before drawing them in astral
-
+    //emplace_back: Constructs the Platform object directly in the vector without creating a temporary object.
+    
     platforms.emplace_back(2300.0f, 675.0f, 200.0f, 20.0f, WHITE);
-
-    // Add more platforms as needed
     platforms.emplace_back(2500.0f, 600.0f, 150.0f, 20.0f, WHITE);
     platforms.emplace_back(2800.0f, 550.0f, 250.0f, 20.0f, WHITE);
     platforms.emplace_back(2600.0f, 450.0f, 150.0f, 20.0f, WHITE);
@@ -928,10 +930,9 @@ void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<
     } else if (over_lot) { // over_lot go to Vacant Lot
         gameState = LOT;
     }else if (openMagicDoor){ //over magic door, go to astral
-        gameState = ASTRAL;
-        
-        //player.position.x = 3000;
-        
+        gameState = ASTRAL;        
+    }else if (overSubway){
+        gameState = SUBWAY;
     }
 }
 
@@ -1083,6 +1084,9 @@ void PerformStateTransition(Player& player, PlayerCar& player_car, GameCalendar&
 
         case PARK:
             HandleParkTransition(gameState, player, player_car);
+            break;
+
+        case SUBWAY:
             break;
   
     }
@@ -1855,7 +1859,7 @@ void DrawHealthBar(GameResources resources, Vector2 position, int maxHealth, int
 
 void DrawDialogBox(Player& player, Camera2D camera, int boxWidth, int boxHeight,int textSize){
 
-    int offset = -64; //default offsets for regular NPCs
+    int offset = -63; //default offsets for regular NPCs
     int screen_offsetX = 16;
     int screen_offsetY = -55;
 
@@ -1898,10 +1902,14 @@ void DrawDialogBox(Player& player, Camera2D camera, int boxWidth, int boxHeight,
         }
 
     }
-
-
-    
-    DrawRectangle(screen_pos.x, screen_pos.y + offset, boxWidth, boxHeight, customBackgroundColor);
+    int textHeight = 32;
+    int padding = 20;
+    int textWidth = MeasureText(phrase.c_str(), textSize); //find the length of the string in pixels
+    if (phrase.find('\n') != std::string::npos) { //check for a \n character, if so, double the height of the box, there is never more than 2 lines
+            textHeight = 64;
+    }
+    DrawRectangle(screen_pos.x+5, screen_pos.y+offset, textWidth + padding, textHeight, Fade(BLACK, 0.3f));
+    DrawRectangle(screen_pos.x, screen_pos.y + offset, boxWidth, boxHeight, Fade(BLACK, 0.3f));
     DrawText(phrase.c_str(), screen_pos.x+ screen_offsetX, screen_pos.y + screen_offsetY, textSize, tint); //Draw Phrase
     
     //GUI buttons for certain NPC interactions. 
@@ -2038,6 +2046,95 @@ void playerOutsideInteraction(Player& player, PlayerCar& player_car){
         std::cout << "Moving UFO";
 
     }
+
+    if (player.position.x > 4579 && player.position.x < 4599){
+        overSubway = true;
+        if (!showLiquor && fortuneTimer <=0){
+            phrase = "PRESS UP TO ENTER SUBWAY";
+        }
+        dboxPosition = player.position;
+        show_dbox = true;
+    }
+
+}
+
+void drawTrain(GameResources& resources, Train& train){
+
+}
+
+void RenderSubway(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition,Train& train, ShaderResources& shaders){
+    SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
+    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
+    show_dbox = false;
+    HandleKeyboardAiming(player, mousePosition);
+    if (!IsKeyDown(KEY_F)){
+        if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
+    }
+    
+    float parallaxBackground = camera.target.x * 0.25f;  // Background moves even slower
+    float parallaxMidground = camera.target.x * 0.25f;
+    camera.target.x = player.position.x;
+
+    train.position.x -= train.trainSpeed * GetFrameTime();
+    if (train.position.x < 0){
+        train.position.x = 5500;
+    }
+    
+    
+
+    BeginMode2D(camera);  // Begin 2D mode with the camera
+    ClearBackground(customBackgroundColor);
+
+
+    if (drunk){
+        BeginShaderMode(shaders.glowShader2);
+
+    }
+
+
+    BeginMode2D(camera);
+    
+     // Draw the background (sky)
+    DrawTexturePro(resources.subwayBackground, {0, 0, static_cast<float>(resources.subwayBackground.width), static_cast<float>(resources.subwayBackground.height)},
+                    {parallaxBackground, 0, static_cast<float>(resources.subwayBackground.width), static_cast<float>(resources.subwayBackground.height)}, {0, 0}, 0.0f, WHITE);
+
+    DrawTexturePro(resources.subwayMidground, {0, 0, static_cast<float>(resources.subwayMidground.width), static_cast<float>(resources.subwayMidground.height)},
+                    {parallaxMidground, 0, static_cast<float>(resources.subwayMidground.width), static_cast<float>(resources.subwayMidground.height)}, {0, 0}, 0.0f, WHITE);
+
+    // Draw the foreground (main scene),   
+    DrawTexturePro(resources.subwayForeground, {0, 0, static_cast<float>(resources.subwayForeground.width), static_cast<float>(resources.subwayForeground.height)},
+                    {1024, 0, static_cast<float>(resources.subwayForeground.width), static_cast<float>(resources.subwayForeground.height)}, {0, 0}, 0.0f, WHITE);
+    
+    player.DrawPlayer(resources, gameState, camera, shaders);
+   
+    DrawTexture(resources.train, train.position.x, train.position.y-27, WHITE);
+   
+
+    EndMode2D();
+
+    //draw healthbar 
+    if (player.currentHealth < 100 &&  !player.enter_car){
+        Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
+        DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
+
+    }
+
+    if (showInventory){
+        RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+    }
+    if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
+        DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+    }else{
+        DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+    }
+
+    if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player);
+
+    if (show_dbox){
+        DrawDialogBox(player, camera, 0, 0, 20);
+    }
+
+
 
 }
 
@@ -3099,6 +3196,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     DrawTexture(resources.lightCone, 1884, 610, WHITE);
     DrawTexture(resources.lightCone, 3188, 610, WHITE);
     DrawTexture(resources.lightCone, 456, 610, WHITE);
+    DrawTexture(resources.lightCone, 4550, 610, WHITE);
     EndBlendMode();
     
     DrawBullets();
@@ -3149,6 +3247,8 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     }
 
 
+
+
     EndMode2D();  // End 2D mode 
 
     
@@ -3161,11 +3261,9 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
    
 
 
-
-
     if (show_dbox && !player.enter_car){
 
-        if (over_lot || over_apartment || over_car || start || overLiquor){
+        if (over_lot || over_apartment || over_car || start || overLiquor || overSubway){
             DrawDialogBox(player, camera, 0, 0, 20);
             
             
@@ -3174,6 +3272,8 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
         }
         
     }
+
+
 
     //DrawText("Paper Street", screenWidth/2 - 128, 60, 50, WHITE);
     DrawMoney(); //draw money after EndMode2d()
@@ -3207,7 +3307,7 @@ void spawnNPCs(GameResources& resources){
             npc.SetDestination(1000, 2100);
         }
         npcs.push_back(npc);  // Add the NPC to the vector
-        ParkNpcs.push_back(npc);
+        //ParkNpcs.push_back(npc);
     }
 
     //spawn businessMan
@@ -3219,6 +3319,7 @@ void spawnNPCs(GameResources& resources){
         Vector2 b_pos = { randomX, 700.0f };
         
         NPC business_npc = CreateNPC(resources.businessSheet, b_pos, speed, IDLE, true, false);
+
         if (gameState == OUTSIDE){
             business_npc.SetDestination(0, 4000.0f);
         }else if (gameState == PARK){
@@ -3379,7 +3480,7 @@ void handleCamera(Camera2D& camera, float& targetZoom){
         // Smoothly interpolate the current zoom towards the target zoom
         camera.zoom = Lerp(camera.zoom, targetZoom, 0.1f);
         float maxZoom = 2.5;
-        float minZoom = 1.0;
+        float minZoom = 0.1;
         // Apply boundary checks for the zoom level
         if (camera.zoom > maxZoom) camera.zoom = maxZoom;
         if (camera.zoom < minZoom) camera.zoom = minZoom;
@@ -3509,12 +3610,15 @@ void UptoEnter(Player& player, PlayerCar& player_car){
 
 
         }
-        if (over_lot && gameState == OUTSIDE){
-            transitionState = FADE_OUT;
+        if (over_lot && gameState == OUTSIDE){ //over_lot = true
+            transitionState = FADE_OUT;//transition to lot
         }
         if (over_gate && gameState == CEMETERY){
             transitionState = FADE_OUT;
             
+        }
+        if (overSubway && gameState == OUTSIDE){
+            transitionState = FADE_OUT;
         }
 
     }
@@ -3637,6 +3741,7 @@ int main() {
     Earth earth;
     MagicDoor magicDoor;
     UFO ufo;
+    Train train;
 
 
     InitializePlayerCar(player_car);
@@ -3645,6 +3750,7 @@ int main() {
     InitUFO(ufo);
     spawnNPCs(resources); //spawn NPCs before rendering them outside
     InitPlatforms();
+    InitTrain(train);
 
     //
     
@@ -3780,6 +3886,10 @@ int main() {
                 break;
             case PARK:
                 RenderPark(resources, player,player_car, camera, mousePosition, shaders);
+                break;
+
+            case SUBWAY:
+                RenderSubway(resources, player, camera, mousePosition, train, shaders);
                 break;
         }
 

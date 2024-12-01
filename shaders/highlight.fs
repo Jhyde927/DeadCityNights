@@ -45,7 +45,7 @@ void main() {
     // Combine interior pixels and edge pixels
     if (isEdge) {
         // Edge pixel: add the outline color on top
-        finalColor = vec4(outlineColor.rgb, 1.0); // Use full alpha for the outline
+        finalColor = vec4(outlineColor.rgb, 0.99); // Control outline alpha here
     } else {
         // Interior pixel: render normally
         finalColor = texColor;

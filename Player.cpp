@@ -18,7 +18,7 @@ WeaponType currentWeapon;  // To track the current weapon
 
 
 Player::Player() {
-    position = {1922.0, 700.0};
+    position = {4500.0, 700.0};//{1922.0, 700.0};
 
     velocity = {0.0f, 0.0f};
     size.x = 16;
@@ -132,6 +132,8 @@ float GetRightBoundary(GameState gameState){
         return 3550;
     }else if (gameState == PARK){
         return 2043;
+    }else if (gameState == SUBWAY){
+        return 4575;
     }
 }
 
@@ -153,6 +155,8 @@ float GetLeftBoundary(GameState gameState){
         return 1064;
     }else if (gameState == PARK){
         return 1064;
+    }else if (gameState == SUBWAY){
+        return 1554;
     }
 }
 

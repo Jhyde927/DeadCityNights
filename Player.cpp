@@ -133,7 +133,7 @@ float GetRightBoundary(GameState gameState){
     }else if (gameState == PARK){
         return 2043;
     }else if (gameState == SUBWAY){
-        return 4575;
+        return 4600;
     }
 }
 

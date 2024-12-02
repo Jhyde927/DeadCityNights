@@ -84,6 +84,7 @@ bool reverse_road = false;
 bool has_car_key = false;
 bool overLiquor = false;
 bool overSubway = false;
+bool subwayExit = false;
 bool npcWalk = false;
 bool openDrawer = false;
 bool raiseZombies = false;
@@ -225,9 +226,19 @@ struct UFO {
     float bobOffsetY;      // Phase offset for up-and-down movement
 };
 
+// Define the train structure
 struct Train {
-    Vector2 position; 
-    float trainSpeed;
+    Vector2 position;
+    float speed;
+    float maxSpeed;
+    float minSpeed;
+    float stopPosition;
+    float acceleration;
+    float deceleration;
+    float stopDuration;
+    float stopTimer;
+    float slowDownStartX;
+    TrainState state;
 };
 
 // Function to initialize and load resources
@@ -441,9 +452,24 @@ void InitUFO(UFO& ufo){
     ufo.bobOffsetY = 0.0f;       // No initial phase offset
 }
 
-void InitTrain(Train& train){
-    train.position = {4000, 700};
-    train.trainSpeed = 300;
+void InitializeTrain(Train &train) {
+    // Set train parameters
+    train.position = {7500.0f, 700};
+    train.maxSpeed = 400;
+    train.stopPosition = 2500.0f;
+    train.speed = train.maxSpeed;
+    train.minSpeed = 0.0f;
+    train.acceleration =  300;
+    train.deceleration = 300;
+    train.stopDuration = 5;
+    train.stopTimer = 0.0f;
+    train.state = MovingToStation;
+
+    // Calculate the distance needed to stop
+
+
+    float stoppingDistance = (train.maxSpeed * train.maxSpeed) / (2.0f * train.deceleration);
+    train.slowDownStartX = 2500.0f + stoppingDistance;
 }
 
 void InitPlatforms() {
@@ -805,6 +831,66 @@ void UpdateZombieSpawning(GameResources& resources, Player& player){
 
 }
 
+void UpdateTrain(Train &train, float deltaTime) {
+    switch (train.state) {
+        case MovingToStation:
+            train.position.x -= train.speed * deltaTime;
+            if (train.position.x <= train.slowDownStartX) {
+                train.state = SlowingDown;
+            }
+            break;
+
+        case SlowingDown:
+            train.speed -= train.deceleration * deltaTime;
+            if (train.speed <= train.minSpeed || train.position.x <= train.stopPosition) {
+                train.speed = train.minSpeed;
+                train.position.x = train.stopPosition; // Ensure exact stop position
+                train.state = StoppedAtStation;
+                train.stopTimer = 0.0f;
+            } else {
+                train.position.x -= train.speed * deltaTime;
+            }
+            break;
+
+        case StoppedAtStation:
+            train.stopTimer += deltaTime;
+            if (train.stopTimer >= train.stopDuration) {
+                train.state = SpeedingUp;
+            }
+            break;
+
+        case SpeedingUp:
+            train.speed += train.acceleration * deltaTime;
+            if (train.speed >= train.maxSpeed) {
+                train.speed = train.maxSpeed;
+                train.state = MovingFromStation;
+            }
+            train.position.x -= train.speed * deltaTime;
+            break;
+
+        case MovingFromStation:
+            train.position.x -= train.speed * deltaTime;
+            if (train.position.x <= 0.0f) {
+                // Loop the train back to the starting position
+                train.position.x = 7500.0f;  // Adjusted starting position
+                train.state = MovingToStation;
+                train.speed = train.maxSpeed;
+                train.stopTimer = 0.0f;
+
+                // Recalculate stopping distance
+                float stoppingDistance = (train.speed * train.speed) / (2.0f * train.deceleration);
+                train.slowDownStartX = train.stopPosition + stoppingDistance;
+            }
+            break;
+    }
+
+    // Optional: Debug output
+    //printf("State: %d, Position: %f, Speed: %f\n", train.state, train.position.x, train.speed);
+}
+
+
+
+
 void DrawMac10Pickup(GameResources& resources, Player& player, Vector2 mousePosition, Camera2D& camera){
     //Mac10 pickup in asteral plane
     Vector2 macPos = {2445, -735}; // 
@@ -1053,6 +1139,12 @@ void HandleParkTransition(GameState& gamestate, Player& player, PlayerCar player
 
 }
 
+void HandleSubwayTransition(GameState& gameState, Player& player){
+    if (subwayExit){
+        gameState = OUTSIDE;
+    }
+}
+
 void PerformStateTransition(Player& player, PlayerCar& player_car, GameCalendar& calendar, std::vector<NPC>& npcs) {
     //if we are fading out, we are transitioning, switch to the next area depending on the gameState. 
     switch (gameState) {
@@ -1087,6 +1179,7 @@ void PerformStateTransition(Player& player, PlayerCar& player_car, GameCalendar&
             break;
 
         case SUBWAY:
+            HandleSubwayTransition(gameState, player);
             break;
   
     }
@@ -2072,14 +2165,9 @@ void RenderSubway(GameResources& resources, Player& player, Camera2D& camera, Ve
     }
     
     float parallaxBackground = camera.target.x * 0.25f;  // Background moves even slower
-    float parallaxMidground = camera.target.x * 0.25f;
+    float parallaxMidground = camera.target.x * 0.25f;  // benches
     camera.target.x = player.position.x;
 
-    train.position.x -= train.trainSpeed * GetFrameTime();
-    if (train.position.x < 0){
-        train.position.x = 5500;
-    }
-    
     
 
     BeginMode2D(camera);  // Begin 2D mode with the camera
@@ -2106,8 +2194,57 @@ void RenderSubway(GameResources& resources, Player& player, Camera2D& camera, Ve
                     {1024, 0, static_cast<float>(resources.subwayForeground.width), static_cast<float>(resources.subwayForeground.height)}, {0, 0}, 0.0f, WHITE);
     
     player.DrawPlayer(resources, gameState, camera, shaders);
-   
-    DrawTexture(resources.train, train.position.x, train.position.y-27, WHITE);
+
+    for (NPC& npc : npcs){
+        npc.Update(player, gameState);
+        npc.Render(shaders);
+        npc.ClickNPC(mousePosition, camera, player, gameState);
+
+        if (npc.interacting){ //Take the first one you find. only one npc should be able to interact. If you click on multiple NPCs really fast
+        //the dialog box jumps around depending on the timer. Need a way to cancel all interaction except the last one. 
+            dboxPosition = npc.position;   
+            show_dbox = true;   //dialogBox
+            if (npc.dealer){
+                phrase = "I gOt wHat YoU NEEd\n\nDrugs: $100";
+                dealer = true;
+                showInventory = true;
+
+            }else if (npc.teller){
+                if (!buyFortune){
+                    phrase = "Fortune: $100";
+                    teller = true;
+
+                }else if (buyFortune){
+                    if (fortuneTimer <= 0){
+                        phrase = npc.speech;
+                    }
+                    
+                    teller = true;
+                }
+                
+
+            } else{
+                if (fortuneTimer <= 0 && !teller && !dealer){
+                    phrase = npc.speech; //randomized speech
+                    dealer = false;
+
+                }
+             
+            }
+        }else{
+            dealer = false;
+            teller = false;
+        
+        }
+        
+    }
+
+
+    float deltaTime = GetFrameTime();
+    UpdateTrain(train, deltaTime);
+    DrawTexture(resources.train, train.position.x, train.position.y-27, WHITE); //draw train in front of NPCs and player
+
+
    
 
     EndMode2D();
@@ -2129,6 +2266,16 @@ void RenderSubway(GameResources& resources, Player& player, Camera2D& camera, Ve
     }
 
     if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player);
+
+    subwayExit = false;
+    if (player.position.x > 4580 && gameState == SUBWAY){
+        phrase = "Up TO EXIT SUBWAY";
+        show_dbox = true;
+        subwayExit = true;
+        if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
+            transitionState = FADE_OUT;
+        }
+    }
 
     if (show_dbox){
         DrawDialogBox(player, camera, 0, 0, 20);
@@ -3474,7 +3621,7 @@ void handleCamera(Camera2D& camera, float& targetZoom){
         if (GetMouseWheelMove() > 0) {
             targetZoom += 0.2f;
         } else if (GetMouseWheelMove() < 0) {
-            targetZoom -= 0.2f;
+            targetZoom -= 0.05f;
         }
 
         // Smoothly interpolate the current zoom towards the target zoom
@@ -3750,7 +3897,7 @@ int main() {
     InitUFO(ufo);
     spawnNPCs(resources); //spawn NPCs before rendering them outside
     InitPlatforms();
-    InitTrain(train);
+    InitializeTrain(train);
 
     //
     

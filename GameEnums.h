@@ -16,6 +16,14 @@ enum GameState {
     SUBWAY,
 };
 
+enum TrainState {
+    MovingToStation,
+    SlowingDown,
+    StoppedAtStation,
+    SpeedingUp,
+    MovingFromStation
+};
+
 enum TransitionState {
     NONE,
     FADE_IN,

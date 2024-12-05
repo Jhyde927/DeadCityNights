@@ -21,7 +21,8 @@ enum TrainState {
     SlowingDown,
     StoppedAtStation,
     SpeedingUp,
-    MovingFromStation
+    MovingFromStation,
+    WaitingBeforeLoop
 };
 
 enum TransitionState {

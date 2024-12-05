@@ -59,6 +59,7 @@ Player::Player() {
     hasWhiskey = false;
     hasBadge = false;
     enter_car = false;
+    enter_train = false;
     can_take_damage = true;
     holdingDown = false;
     dropping = false;
@@ -66,7 +67,7 @@ Player::Player() {
     step = false;
     shells = 20;
     autoAmmo = 150;
-
+    arriving = false;
     LastTapTimeLeft = 0;
     LastTapTimeRight = 0;
     tapInterval = 0.3;
@@ -133,7 +134,7 @@ float GetRightBoundary(GameState gameState){
     }else if (gameState == PARK){
         return 2043;
     }else if (gameState == SUBWAY){
-        return 4600;
+        return 3900;
     }
 }
 
@@ -369,6 +370,7 @@ bool Player::CheckIfOnPlatform(const std::vector<Platform>& platforms) {
 
 
 void Player::playerPhysics(float deltaTime, std::vector<Platform> platforms){
+    if (enter_train) return;
     if (dropTimer > 0){ //drop through platforms for 1 second
         dropTimer -= GetFrameTime();
         
@@ -605,12 +607,15 @@ void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vec
     frameSpeed = isRunning ? runFrameSpeed : walkFrameSpeed;
 
     //keep player in bounds
+    if (!enter_train){ // player can leave boundaries on the train
+        if (position.x < GetLeftBoundary(gameState)){
+            position.x = GetLeftBoundary(gameState) + 1;
+        }else if (position.x > GetRightBoundary(gameState)){
+            position.x = GetRightBoundary(gameState)-1;
+        }
 
-    if (position.x < GetLeftBoundary(gameState)){
-        position.x = GetLeftBoundary(gameState) + 1;
-    }else if (position.x > GetRightBoundary(gameState)){
-        position.x = GetRightBoundary(gameState)-1;
     }
+
 
     
     if (!isAiming && !isShooting && !isReloading) {

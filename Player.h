@@ -60,6 +60,8 @@ public:
     bool dropping;
     float dropTimer;
     bool enter_car;
+    bool enter_train;
+    bool arriving;
     int bulletCount;
     int shells;
     int autoAmmo;

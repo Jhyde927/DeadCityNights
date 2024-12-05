@@ -56,6 +56,7 @@ bool buttonWork = false;
 bool hasPills = false;
 bool digSpot = false;
 bool NecroTech = false;
+bool playerOffsetX = 0;
 bool film = false;
 bool start = true;
 bool buttonPark = false;
@@ -71,6 +72,7 @@ bool can_talk = true;
 bool buyFortune = false;
 bool teller = false;
 bool dealer = false;
+
 bool showLiquor = false;
 bool can_sell_drugs = true;
 bool applyShader = false;
@@ -79,7 +81,7 @@ bool glitch = false;
 bool vignette = true; //start vignette
 bool openMagicDoor = false;
 bool move_car = false;
-
+bool trainAtStation = false;
 bool reverse_road = false;
 bool has_car_key = false;
 bool overLiquor = false;
@@ -226,16 +228,18 @@ struct UFO {
     float bobOffsetY;      // Phase offset for up-and-down movement
 };
 
-// Define the train structure
+
 struct Train {
     Vector2 position;
     float speed;
     float maxSpeed;
     float minSpeed;
-    float stopPosition;
+    float stopPosition; //middle of the subway 2500
     float acceleration;
     float deceleration;
     float stopDuration;
+    float postLoopWaitDuration;  // New
+    float postLoopWaitTimer;     // New
     float stopTimer;
     float slowDownStartX;
     TrainState state;
@@ -454,7 +458,7 @@ void InitUFO(UFO& ufo){
 
 void InitializeTrain(Train &train) {
     // Set train parameters
-    train.position = {7500.0f, 700};
+    train.position = {9500.0f, 700};
     train.maxSpeed = 400;
     train.stopPosition = 2500.0f;
     train.speed = train.maxSpeed;
@@ -463,6 +467,8 @@ void InitializeTrain(Train &train) {
     train.deceleration = 300;
     train.stopDuration = 5;
     train.stopTimer = 0.0f;
+    train.postLoopWaitDuration = 10.0f; // Time to wait after reaching x = 0
+    train.postLoopWaitTimer = 0.0f;
     train.state = MovingToStation;
 
     // Calculate the distance needed to stop
@@ -665,6 +671,10 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
             if (player.enter_car && buttonCemetery){ //street button in park
                 transitionState = FADE_OUT;
             }
+        }else if (gameState == SUBWAY){
+            if (buttonPark){
+                //do something
+            }
         } 
 
     }
@@ -831,9 +841,13 @@ void UpdateZombieSpawning(GameResources& resources, Player& player){
 
 }
 
-void UpdateTrain(Train &train, float deltaTime) {
+void UpdateTrain(Train &train,Player& player, float deltaTime) {
     switch (train.state) {
         case MovingToStation:
+            if (train.position.x < 5500 && gameState == SUBWAY){
+                PlayPositionalSound(SoundManager::getInstance().GetSound("TrainArriving"), train.position, {3011, 700}, 700);
+            }
+            
             train.position.x -= train.speed * deltaTime;
             if (train.position.x <= train.slowDownStartX) {
                 train.state = SlowingDown;
@@ -853,6 +867,12 @@ void UpdateTrain(Train &train, float deltaTime) {
             break;
 
         case StoppedAtStation:
+            if (player.enter_train && player.arriving){ //if arriving, kick out of train. 
+                player.enter_train = false;
+                player.arriving = false;
+                
+            } 
+            trainAtStation = true;
             train.stopTimer += deltaTime;
             if (train.stopTimer >= train.stopDuration) {
                 train.state = SpeedingUp;
@@ -860,6 +880,9 @@ void UpdateTrain(Train &train, float deltaTime) {
             break;
 
         case SpeedingUp:
+            
+            trainAtStation = false;
+            PlayPositionalSound(SoundManager::getInstance().GetSound("TrainLeaving"), train.position, player.position, 700);
             train.speed += train.acceleration * deltaTime;
             if (train.speed >= train.maxSpeed) {
                 train.speed = train.maxSpeed;
@@ -869,13 +892,36 @@ void UpdateTrain(Train &train, float deltaTime) {
             break;
 
         case MovingFromStation:
+            if (player.enter_train) transitionState = FADE_OUT; //leaving station with player onboard,
             train.position.x -= train.speed * deltaTime;
             if (train.position.x <= 0.0f) {
-                // Loop the train back to the starting position
-                train.position.x = 7500.0f;  // Adjusted starting position
+                train.position.x = 0.0f; // Ensure train stops exactly at x = 0
+                train.speed = 0.0f;      // Stop the train
+                train.state = WaitingBeforeLoop;
+                train.postLoopWaitTimer = 0.0f;
+            }
+            break;
+
+        case WaitingBeforeLoop:
+            if (player.enter_train){
+                train.position.x = 7500.0f;
                 train.state = MovingToStation;
-                train.speed = train.maxSpeed;
                 train.stopTimer = 0.0f;
+                train.postLoopWaitTimer = 0.0f;
+                train.speed = train.maxSpeed;
+                break;
+
+            }
+
+
+            train.postLoopWaitTimer += deltaTime;
+            if (train.postLoopWaitTimer >= train.postLoopWaitDuration) {
+                // Reset train to starting position
+                train.position.x = 7500.0f; // Starting position
+                train.speed = train.maxSpeed;
+                train.state = MovingToStation;
+                train.stopTimer = 0.0f;
+                train.postLoopWaitTimer = 0.0f;
 
                 // Recalculate stopping distance
                 float stoppingDistance = (train.speed * train.speed) / (2.0f * train.deceleration);
@@ -884,10 +930,15 @@ void UpdateTrain(Train &train, float deltaTime) {
             break;
     }
 
-    // Optional: Debug output
-    //printf("State: %d, Position: %f, Speed: %f\n", train.state, train.position.x, train.speed);
-}
 
+    if (player.enter_train){
+        player.position.x = train.position.x + 480;
+
+    }
+
+    // Optional: Debug output
+    // printf("State: %d, Position: %f, Speed: %f\n", train.state, train.position.x, train.speed);
+}
 
 
 
@@ -1019,6 +1070,7 @@ void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<
         gameState = ASTRAL;        
     }else if (overSubway){
         gameState = SUBWAY;
+        player.position.x = 3100;
     }
 }
 
@@ -1142,6 +1194,14 @@ void HandleParkTransition(GameState& gamestate, Player& player, PlayerCar player
 void HandleSubwayTransition(GameState& gameState, Player& player){
     if (subwayExit){
         gameState = OUTSIDE;
+        player.position.x = 4579;
+    }
+
+    if (player.enter_train){
+        //player.enter_train = false;
+        gameState = PARK;
+        //player.arriving = true;
+        //player.position.x = 3011;
     }
 }
 
@@ -1647,6 +1707,35 @@ void DrawApartmentUI(GameResources& resources, GameCalendar&, Vector2& mousePosi
     }
 }
 
+void DrawSubwayUI(Player& player, Vector2 mousePosition, Camera2D& camera, GameState& gameState){
+    Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
+    Vector2 ui_pos = {3011, 600};
+    int ui_width = 116;
+    int ui_height = 64;
+    int fontSize = 16;
+    //DrawRectangle(player_car.position.x, player_car.position.y, 200, 200, WHITE);
+    DrawRectangle(ui_pos.x, ui_pos.y, ui_width, ui_height, Fade(BLACK, .6));
+    Color parkTint = WHITE;
+
+
+    Rectangle parkBounds = { //cemetery / street
+        ui_pos.x,    
+        ui_pos.y,      
+        static_cast<float>(96),  
+        static_cast<float>(16)  
+    };
+
+    if (CheckCollisionPointRec(mouseWorldPos, parkBounds)){ //middle //cemetery/street
+        parkTint = RED;
+        buttonPark = true;
+    }else{
+        buttonPark = false;
+    }
+
+    DrawText("   Park", ui_pos.x, ui_pos.y, fontSize, parkTint);
+
+}
+
 
 //Destinations Menu for car. Click on where you want to travel. 
 void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, GameState& gameState){
@@ -1951,7 +2040,7 @@ void DrawHealthBar(GameResources resources, Vector2 position, int maxHealth, int
 
 
 void DrawDialogBox(Player& player, Camera2D camera, int boxWidth, int boxHeight,int textSize){
-
+    
     int offset = -63; //default offsets for regular NPCs
     int screen_offsetX = 16;
     int screen_offsetY = -55;
@@ -2151,9 +2240,7 @@ void playerOutsideInteraction(Player& player, PlayerCar& player_car){
 
 }
 
-void drawTrain(GameResources& resources, Train& train){
 
-}
 
 void RenderSubway(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition,Train& train, ShaderResources& shaders){
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
@@ -2164,11 +2251,13 @@ void RenderSubway(GameResources& resources, Player& player, Camera2D& camera, Ve
         if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
     }
     
-    float parallaxBackground = camera.target.x * 0.25f;  // Background moves even slower
-    float parallaxMidground = camera.target.x * 0.25f;  // benches
+    float parallaxBackground = camera.target.x * 0.5f;  // Background moves even slower
+    float parallaxMidground = camera.target.x * 0.25f;  // benches and poles
     camera.target.x = player.position.x;
-
-    
+    if (!SoundManager::getInstance().IsMusicPlaying("subwayAmbience")){
+        SoundManager::getInstance().PlayMusic("subwayAmbience");
+    }
+  
 
     BeginMode2D(camera);  // Begin 2D mode with the camera
     ClearBackground(customBackgroundColor);
@@ -2241,10 +2330,25 @@ void RenderSubway(GameResources& resources, Player& player, Camera2D& camera, Ve
 
 
     float deltaTime = GetFrameTime();
-    UpdateTrain(train, deltaTime);
+    UpdateTrain(train, player, deltaTime);
     DrawTexture(resources.train, train.position.x, train.position.y-27, WHITE); //draw train in front of NPCs and player
 
 
+
+    if (player.position.x > 3001 && player.position.x < 3021 && trainAtStation){
+        DrawSubwayUI(player, mousePosition, camera, gameState); // inside draw for whatever reason
+        train.stopTimer = 0;//hold the train
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+            if (buttonPark && !player.enter_train){ //hovering button
+                //player.ontrain = true
+                player.enter_train = true;
+                player.position.x = train.position.x + 480;
+                
+                
+            
+            }
+        }
+    }
    
 
     EndMode2D();
@@ -2268,12 +2372,15 @@ void RenderSubway(GameResources& resources, Player& player, Camera2D& camera, Ve
     if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player);
 
     subwayExit = false;
-    if (player.position.x > 4580 && gameState == SUBWAY){
+    if ((player.position.x > 3700 && player.position.x < 3720 || player.position.x > 1900 && player.position.x < 1920)&& gameState == SUBWAY){ //far right or far left of subway, both have exit
+
         phrase = "Up TO EXIT SUBWAY";
         show_dbox = true;
+        dboxPosition = player.position;
         subwayExit = true;
         if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
             transitionState = FADE_OUT;
+            
         }
     }
 
@@ -3619,15 +3726,15 @@ void DisplayDate(GameCalendar& calendar){
 void handleCamera(Camera2D& camera, float& targetZoom){
         // Handle zoom input
         if (GetMouseWheelMove() > 0) {
-            targetZoom += 0.2f;
+            targetZoom += 0.1f;
         } else if (GetMouseWheelMove() < 0) {
-            targetZoom -= 0.05f;
+            targetZoom -= 0.1f;
         }
 
         // Smoothly interpolate the current zoom towards the target zoom
         camera.zoom = Lerp(camera.zoom, targetZoom, 0.1f);
         float maxZoom = 2.5;
-        float minZoom = 0.1;
+        float minZoom = 1.0;
         // Apply boundary checks for the zoom level
         if (camera.zoom > maxZoom) camera.zoom = maxZoom;
         if (camera.zoom < minZoom) camera.zoom = minZoom;
@@ -3803,7 +3910,7 @@ void InitSounds(SoundManager& soundManager){
     SoundManager::getInstance().LoadMusic("CarRun", "assets/sounds/CarRun.ogg"); // load CarRun.ogg into music tracks with the name CarRun
     //music tracks automatically loop.The car running sound needs to loop, so we call it music.
     
-    
+    SoundManager::getInstance().LoadMusic("subwayAmbience", "assets/sounds/SubwayAmbience.ogg");
     
     SoundManager::getInstance().LoadMusic("StreetSounds", "assets/sounds/StreetSounds.ogg"); 
     //SoundManager::getInstance().LoadMusic("Jangwa", "assets/sounds/Jangwa.ogg");
@@ -3830,6 +3937,9 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadSound("energyHum", "assets/sounds/energyHum.ogg");
     soundManager.LoadSound("deathScream", "assets/sounds/deathScream.ogg");
     soundManager.LoadSound("Mac10", "assets/sounds/Mac10.ogg");
+    soundManager.LoadSound("TrainArriving", "assets/sounds/TrainArriving.ogg");
+    soundManager.LoadSound("TrainLeaving", "assets/sounds/TrainLeaving.ogg");
+    //soundManager.LoadSound("subwayAmbience", "assets/sounds/SubwayAmbience.ogg");
 
     soundManager.LoadSound("ShotGun", "assets/sounds/ShotGun.ogg");
     soundManager.LoadSound("ShotgunReload", "assets/sounds/ShotgunReload.ogg");
@@ -3852,10 +3962,13 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadSound("phit2", "assets/sounds/PlayerHit2.ogg");
 
     //Volume edits
+    
+    //music
     SoundManager::getInstance().SetMusicVolume("CarRun", 0.25f);
     SoundManager::getInstance().SetMusicVolume("Schumann", 0.25f);
     
-
+    //sounds
+    SoundManager::getInstance().SetSoundVolume("Mac10", .5);    
     SoundManager::getInstance().SetSoundVolume("CarStart", 0.5);
     SoundManager::getInstance().SetSoundVolume("BoneCrack", 0.3f);
     SoundManager::getInstance().SetSoundVolume("Owl", 0.5);
@@ -3934,9 +4047,13 @@ int main() {
         if (!player.enter_car) player.UpdateMovement(resources, gameState, mousePosition, camera, platforms);  // Update player position and animation
         UpdateInventoryPosition(camera, gameState);
         SoundManager::getInstance().UpdateMusic("NewNeon");
-       
+        SoundManager::getInstance().UpdateMusic("subwayAmbience");
         SoundManager::getInstance().UpdateMusic("CarRun");
-        
+        if (gameState != SUBWAY){
+            SoundManager::getInstance().ManagerStopSound("TrainArriving");
+            SoundManager::getInstance().ManagerStopSound("TrainLeaving");
+            SoundManager::getInstance().StopMusic("subwayAmbience");
+        }
 
         UpdateBullets();
         CheckBulletNPCCollisions(zombies, player); //check each enemy group for bullet collisions

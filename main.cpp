@@ -52,6 +52,7 @@ bool drawShovel = false;
 bool drawMac10 = true;
 bool drawShotgun = true;
 bool dealerButtonAdded = false;
+bool subwayToPark = false;
 bool buttonWork = false;
 bool hasPills = false;
 bool digSpot = false;
@@ -1066,11 +1067,15 @@ void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<
         gameState = APARTMENT;
     } else if (over_lot) { // over_lot go to Vacant Lot
         gameState = LOT;
+        
     }else if (openMagicDoor){ //over magic door, go to astral
-        gameState = ASTRAL;        
+
+        gameState = ASTRAL;
+        openMagicDoor = false; //we set it back to false here because it doesn't work any other way. 
     }else if (overSubway){
         gameState = SUBWAY;
         player.position.x = 3100;
+        
     }
 }
 
@@ -1163,6 +1168,7 @@ void HandleAstralTransition(Player& player, GameCalendar& calendar){
         }
     }else{ //call fade out in astral, presumably magic door exit
         gameState = OUTSIDE;
+        openMagicDoor = false; //We set it back to false when entering astral, we should set it false when leaving astral aswell
         player.gravity = 800; //reset gravity on leaving astral plane.
         player.outline = false; //set outline off when exiting astral
         applyShader = false; //drugs ware off when exiting astral. 
@@ -1181,7 +1187,12 @@ void HandleParkTransition(GameState& gamestate, Player& player, PlayerCar player
         player.currentHealth = player.maxHealth;
         applyShader = false; //if you die, you are no longer high when respawning
         
-    }else{ //call fade out in park, leaving by car to outside. 
+    }else if (overSubway){
+        gameState = SUBWAY;
+        player.position.x = 3011;
+       
+
+    } else{ //call fade out in park, leaving by car to outside. 
         gameState = OUTSIDE; //call fadeout in park, can you die in the park?
         player.position.x = player_car.position.x-64; //center of car
         gotoPark = false; //reset gotopark
@@ -1192,16 +1203,26 @@ void HandleParkTransition(GameState& gamestate, Player& player, PlayerCar player
 }
 
 void HandleSubwayTransition(GameState& gameState, Player& player){
-    if (subwayExit){
+    if (subwayExit && !subwayToPark){ //your at outside subway so exit to outside
         gameState = OUTSIDE;
         player.position.x = 4579;
     }
 
-    if (player.enter_train){
-        //player.enter_train = false;
+    if (subwayExit && subwayToPark){ //your at the parksubway so exit to park
         gameState = PARK;
-        //player.arriving = true;
-        //player.position.x = 3011;
+    }
+
+    if (player.enter_train && !subwayToPark){ //Riding train to park
+        player.enter_train = false;
+        subwayToPark = true; //travel to park from subway, you will need to take the subway back. 
+        gameState = PARK;
+        player.position.x = 3000;
+
+    }else if (player.enter_train && subwayToPark){ //Riding train to outside
+        player.enter_train = false;
+        subwayToPark = false;
+        gameState = OUTSIDE;
+        player.position.x = 4500;
     }
 }
 
@@ -1732,7 +1753,13 @@ void DrawSubwayUI(Player& player, Vector2 mousePosition, Camera2D& camera, GameS
         buttonPark = false;
     }
 
-    DrawText("   Park", ui_pos.x, ui_pos.y, fontSize, parkTint);
+    if (subwayToPark){
+        DrawText("   Street", ui_pos.x, ui_pos.y+16, fontSize, parkTint);
+    }else{
+        DrawText("   Park", ui_pos.x, ui_pos.y+16, fontSize, parkTint);
+    }
+
+    
 
 }
 
@@ -1820,9 +1847,10 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, G
 void DrawMagicDoor(GameResources& resources,Player& player, MagicDoor& magicDoor, ShaderResources& shaders){
         float doorFrame = 64.0;
         Rectangle sourceDoorRec = {static_cast<float>(magicDoor.currentFrame) * doorFrame, 0, static_cast<float>(doorFrame), static_cast<float>(doorFrame)};
-        BeginShaderMode(shaders.rainbowOutlineShader);
+        //BeginShaderMode(shaders.rainbowOutlineShader);
         DrawTextureRec(resources.magicDoorSheet, sourceDoorRec, magicDoor.position, WHITE);
-        EndShaderMode();
+        //EndShaderMode();
+         
         if (player.position.x > magicDoor.position.x -10 && player.position.x < magicDoor.position.x +10){ //over magic door
             if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
                 openMagicDoor = true;
@@ -2052,7 +2080,7 @@ void DrawDialogBox(Player& player, Camera2D camera, int boxWidth, int boxHeight,
     Vector2 screen_pos = GetWorldToScreen2D(dboxPosition, camera); // position to draw text and rectangle at. position is set to npc position
     //different NPCs have different sized Dialog boxes. Adjust size and offsets before drawing. 
     Color tint = WHITE;
-    if (gameState == OUTSIDE){
+    if (gameState == OUTSIDE || gameState == SUBWAY){
         if (dealer){
             boxWidth = 256;
             boxHeight = 128;
@@ -2095,7 +2123,7 @@ void DrawDialogBox(Player& player, Camera2D camera, int boxWidth, int boxHeight,
     DrawText(phrase.c_str(), screen_pos.x+ screen_offsetX, screen_pos.y + screen_offsetY, textSize, tint); //Draw Phrase
     
     //GUI buttons for certain NPC interactions. 
-    if (money >= 100 && dealer && gameState == OUTSIDE && GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY") ) //button pressed
+    if (money >= 100 && dealer && GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY") ) //button pressed
         {
             if (can_sell_drugs){ //can sell drugs gets reset once you take the drug
                 can_sell_drugs = false; // Dealer only has 1 drug for now. 
@@ -2109,7 +2137,7 @@ void DrawDialogBox(Player& player, Camera2D camera, int boxWidth, int boxHeight,
             }
         }
 
-    if (teller && !buyFortune && money >= 100 && gameState == OUTSIDE &&  GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY") ){
+    if (teller && !buyFortune && money >= 100 &&  GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY") ){
 
         if (canGiveFortune){
             canGiveFortune = false;
@@ -2181,6 +2209,9 @@ void playerOutsideInteraction(Player& player, PlayerCar& player_car){
     over_lot = false;
     over_car = false;
     overLiquor = false;
+    overSubway = false;
+
+    
 
     //consider abstracting this into a seperate function. is_interacting, return true if any of these checks 
     if (player.position.x > pc_min && player.position.x < pc_max && has_car_key){ //over_car with keys
@@ -2282,7 +2313,7 @@ void RenderSubway(GameResources& resources, Player& player, Camera2D& camera, Ve
     DrawTexturePro(resources.subwayForeground, {0, 0, static_cast<float>(resources.subwayForeground.width), static_cast<float>(resources.subwayForeground.height)},
                     {1024, 0, static_cast<float>(resources.subwayForeground.width), static_cast<float>(resources.subwayForeground.height)}, {0, 0}, 0.0f, WHITE);
     
-    player.DrawPlayer(resources, gameState, camera, shaders);
+    player.DrawPlayer(resources, gameState, camera, shaders); //draw player in front of background and behind train
 
     for (NPC& npc : npcs){
         npc.Update(player, gameState);
@@ -2339,7 +2370,7 @@ void RenderSubway(GameResources& resources, Player& player, Camera2D& camera, Ve
         DrawSubwayUI(player, mousePosition, camera, gameState); // inside draw for whatever reason
         train.stopTimer = 0;//hold the train
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-            if (buttonPark && !player.enter_train){ //hovering button
+            if (buttonPark && !player.enter_train){ //hovering button street or park
                 //player.ontrain = true
                 player.enter_train = true;
                 player.position.x = train.position.x + 480;
@@ -3127,7 +3158,7 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
     float ParallaxBuildings = camera.target.x * 0.7;
     float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
     over_car = false;
-    if (player.position.x > player_car.position.x && player.position.x < player_car.position.x +30){
+    if (player.position.x > player_car.position.x && player.position.x < player_car.position.x +30 && !subwayToPark){
         over_car = true;
     }
     
@@ -3161,9 +3192,13 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
 
 
     //DrawPlayerCar
-    float CarFrameWidth = 128.0;
-    Rectangle sourceRecCar = {player_car.currentFrame * CarFrameWidth, 0, CarFrameWidth, CarFrameWidth};
-    DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE); //draw player_car
+    if (!subwayToPark){
+        float CarFrameWidth = 128.0;
+        Rectangle sourceRecCar = {player_car.currentFrame * CarFrameWidth, 0, CarFrameWidth, CarFrameWidth};
+        DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE); //draw player_car
+
+    }
+
 
     if (player.enter_car == false){// if enter car is false, dont render player or update position. camera should stay focused on player pos. 
         SoundManager::getInstance().StopMusic("CarRun");
@@ -3248,15 +3283,12 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
         }
     }
 
-
-
-
     if (show_carUI && !move_car && player.enter_car){ //destination menu //Draw inside mode2d
         DrawCarUI(player_car, mousePosition, camera, gameState);
         //drawingCarUI
         
     }
-    DrawBullets(); //draw bullets in cemetery after everything else. 
+    DrawBullets(); 
     //DrawStreetLight
     BeginBlendMode(BLEND_ADDITIVE);
     DrawTexture(resources.lightCone, 1013, 610, WHITE);
@@ -3267,6 +3299,17 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
     EndMode2D();
 
     DrawMoney(); //draw money after EndMode2d()
+    overSubway = false;
+    if (player.position.x > 2025 && player.position.x < 2045 && gameState == PARK){
+        phrase = "Up TO ENTER SUBWAY";
+        show_dbox = true;
+        dboxPosition = player.position;
+        overSubway = true;
+        if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
+            transitionState = FADE_OUT;
+        }
+
+    }
 
     if (showInventory){ // this could be done globally, there is never a time when we don't want to show inventory
          
@@ -3513,8 +3556,6 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 
     }
    
-
-
     if (show_dbox && !player.enter_car){
 
         if (over_lot || over_apartment || over_car || start || overLiquor || overSubway){

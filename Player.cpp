@@ -18,7 +18,7 @@ WeaponType currentWeapon;  // To track the current weapon
 
 
 Player::Player() {
-    position = {4500.0, 700.0};//{1922.0, 700.0};
+    position = {1922.0, 700.0};
 
     velocity = {0.0f, 0.0f};
     size.x = 16;

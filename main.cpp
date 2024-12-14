@@ -1187,13 +1187,13 @@ void HandleParkTransition(GameState& gamestate, Player& player, PlayerCar player
         player.currentHealth = player.maxHealth;
         applyShader = false; //if you die, you are no longer high when respawning
         
-    }else if (overSubway){
+    }else if (overSubway){ //exit to subway
         gameState = SUBWAY;
         player.position.x = 3011;
        
 
     } else{ //call fade out in park, leaving by car to outside. 
-        gameState = OUTSIDE; //call fadeout in park, can you die in the park?
+        gameState = OUTSIDE; //call fadeout in park
         player.position.x = player_car.position.x-64; //center of car
         gotoPark = false; //reset gotopark
 
@@ -1267,7 +1267,7 @@ void PerformStateTransition(Player& player, PlayerCar& player_car, GameCalendar&
 }
 
 void DrawFadeMask() {
-    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, fadeAlpha));
+    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, fadeAlpha)); //fade to black
 }
 
 
@@ -1330,7 +1330,7 @@ void HandleTransition(Player& player, PlayerCar& player_car, GameCalendar& calen
 
 
 void Dig(Player& player){
-    //check if player is over dig spot. Then add item to inventory
+    //check if player is over dig spot, while clicking. Then add item to inventory
    if (player.position.x > 1860 && player.position.x < 1880 && !hasPills && gameState == CEMETERY){ //over dig spot
         hasPills = true; //if you dont have pill you can allways get more here. 
         AddItemToInventory("pills", inventory, INVENTORY_SIZE);
@@ -1754,12 +1754,10 @@ void DrawSubwayUI(Player& player, Vector2 mousePosition, Camera2D& camera, GameS
     }
 
     if (subwayToPark){
-        DrawText("   Street", ui_pos.x, ui_pos.y+16, fontSize, parkTint);
+        DrawText("   Street", ui_pos.x, ui_pos.y, fontSize, parkTint);
     }else{
-        DrawText("   Park", ui_pos.x, ui_pos.y+16, fontSize, parkTint);
+        DrawText("   Park", ui_pos.x, ui_pos.y, fontSize, parkTint);
     }
-
-    
 
 }
 
@@ -1772,7 +1770,7 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, G
     int ui_height = 64;
 
     //DrawRectangle(player_car.position.x, player_car.position.y, 200, 200, WHITE);
-    DrawRectangle(ui_pos.x, ui_pos.y - 17, ui_width, ui_height, customBackgroundColor);
+    DrawRectangle(ui_pos.x, ui_pos.y - 20, ui_width, ui_height, Fade(BLACK, .60));
     Color work_tint = WHITE;
     Color cemetery_tint = WHITE;
     Color tavern_tint = WHITE;
@@ -1827,7 +1825,8 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, G
         work_tint = hasWorked ? BLACK : work_tint; //turn off work option if you have recently worked. Render button black. 
         DrawText("   Work", ui_pos.x, ui_pos.y+17, 16, work_tint);
 
-        if (NecroTech) DrawText("  NecroTech", ui_pos.x, ui_pos.y+32, 16, WHITE); //TODO: implement final level.
+        if (NecroTech) DrawText("  NecroTech", ui_pos.x, ui_pos.y+32, 16, WHITE); //TODO: implement final level. I've been putting it off because
+        //i don't like it. Then change it. 
 
 
         
@@ -2165,19 +2164,19 @@ void DrawDialogBox(Player& player, Camera2D camera, int boxWidth, int boxHeight,
 void EnterCar(GameResources& resources, Player& player, PlayerCar& player_car){
         //render headlight/breaklight and show carUI
         
-        Vector2 breakLight_pos = {player_car.position.x + 88, player_car.position.y + 53};
-        Vector2 light_pos = {player_car.position.x - 225, player_car.position.y + 32};
-        BeginBlendMode(BLEND_ADDITIVE);
-        DrawTextureV(resources.breakLight, breakLight_pos, WHITE);
-        DrawTextureV(resources.lightBeam, light_pos, WHITE);
-        EndBlendMode();
-        show_carUI = true;    
+    Vector2 breakLight_pos = {player_car.position.x + 88, player_car.position.y + 53};
+    Vector2 light_pos = {player_car.position.x - 225, player_car.position.y + 32};
+    BeginBlendMode(BLEND_ADDITIVE);
+    DrawTextureV(resources.breakLight, breakLight_pos, WHITE);
+    DrawTextureV(resources.lightBeam, light_pos, WHITE);
+    EndBlendMode();
+    show_carUI = true;    
 
     
 }
 
 void playerOutsideInteraction(Player& player, PlayerCar& player_car){
-
+    //on main street there are lots of different interactable things. Handle them here. 
     int ap_min = 2246;//over apartment
     int ap_max = 2266;
     int pc_min = 1728; // over player_car

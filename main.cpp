@@ -53,6 +53,7 @@ bool drawMac10 = true;
 bool drawShotgun = true;
 bool dealerButtonAdded = false;
 bool subwayToPark = false;
+bool carToPark = false;
 bool buttonWork = false;
 bool hasPills = false;
 bool digSpot = false;
@@ -63,6 +64,7 @@ bool start = true;
 bool buttonPark = false;
 bool gotoWork = false;
 bool gotoPark = false;
+bool gotoStreet = false;
 bool debug = true; ///////////////////////////////////////DEBUG KEYS ON/OFF
 bool hasWorked = false;
 bool buttonSleep = false;
@@ -118,7 +120,7 @@ float blackoutTimer = 0.0f; // Timer to keep track of blackout period
 float minDistToPlayer = 50;
 float maxDistToPlayer = 200;
 
-Color customBackgroundColor = {32, 42, 63, 255};  //Same Color as street background image. 
+Color customBackgroundColor = {32, 42, 63, 255};  //Same Color as sky background image. 
 Color shovelTint = WHITE;
 
 int money = 100;
@@ -653,6 +655,7 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
                     hasWorked = true;
                 }else if (player.enter_car && buttonPark){
                     gotoPark = true;
+                    
                     move_car = true;
                     
                 }
@@ -1047,7 +1050,7 @@ void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<
         gameState = PARK;
         player_car.position.x = 1800;
         player.position.x = player_car.position.x;
-        
+        carToPark = true;
         move_car = false;
 
     } else if (player.isDead) {  // Died outside, go to apartment
@@ -1190,12 +1193,14 @@ void HandleParkTransition(GameState& gamestate, Player& player, PlayerCar player
     }else if (overSubway){ //exit to subway
         gameState = SUBWAY;
         player.position.x = 3011;
+        gotoStreet = true;
        
 
     } else{ //call fade out in park, leaving by car to outside. 
         gameState = OUTSIDE; //call fadeout in park
         player.position.x = player_car.position.x-64; //center of car
         gotoPark = false; //reset gotopark
+        carToPark = false; //take the car back from the park and render it outside. 
 
     }
 
@@ -1212,7 +1217,7 @@ void HandleSubwayTransition(GameState& gameState, Player& player){
         gameState = PARK;
     }
 
-    if (player.enter_train && !subwayToPark){ //Riding train to park
+    if (player.enter_train && !subwayToPark && !carToPark){ //Riding train to park
         player.enter_train = false;
         subwayToPark = true; //travel to park from subway, you will need to take the subway back. 
         gameState = PARK;
@@ -1222,6 +1227,15 @@ void HandleSubwayTransition(GameState& gameState, Player& player){
         player.enter_train = false;
         subwayToPark = false;
         gameState = OUTSIDE;
+        gotoPark = false;
+        gotoStreet = false;
+        player.position.x = 4500;
+
+    }else if (player.enter_train && carToPark){ //riding train to outside, leaving car at the park
+        player.enter_train = false;
+        carToPark = false;
+        gameState = OUTSIDE;
+        gotoStreet = false;
         player.position.x = 4500;
     }
 }
@@ -1753,11 +1767,21 @@ void DrawSubwayUI(Player& player, Vector2 mousePosition, Camera2D& camera, GameS
         buttonPark = false;
     }
 
-    if (subwayToPark){
+    if (gotoStreet){
         DrawText("   Street", ui_pos.x, ui_pos.y, fontSize, parkTint);
+
     }else{
         DrawText("   Park", ui_pos.x, ui_pos.y, fontSize, parkTint);
     }
+
+
+
+
+    // if (subwayToPark || carToPark){
+    //     DrawText("   Street", ui_pos.x, ui_pos.y, fontSize, parkTint);
+    // }else{
+    //     DrawText("   Park", ui_pos.x, ui_pos.y, fontSize, parkTint);
+    // }
 
 }
 
@@ -3498,9 +3522,13 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     DrawBullets();
 
     //DrawPlayerCar
-    float CarFrameWidth = 128;
-    Rectangle sourceRecCar = {player_car.currentFrame * CarFrameWidth, 0, CarFrameWidth, CarFrameWidth};
-    DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE); //draw player_car
+    if (!carToPark){ //you took the car to the park and the subway back, car is still at the park
+        float CarFrameWidth = 128;
+        Rectangle sourceRecCar = {player_car.currentFrame * CarFrameWidth, 0, CarFrameWidth, CarFrameWidth};
+        DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE); //draw player_car
+
+    }
+
 
     //Draw MagicDoor
     if (applyShader){

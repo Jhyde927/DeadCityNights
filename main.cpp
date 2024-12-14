@@ -459,7 +459,7 @@ void InitUFO(UFO& ufo){
 
 void InitializeTrain(Train &train) {
     // Set train parameters
-    train.position = {9500.0f, 700};
+    train.position = {5500.0f, 700};
     train.maxSpeed = 400;
     train.stopPosition = 2500.0f;
     train.speed = train.maxSpeed;
@@ -905,7 +905,7 @@ void UpdateTrain(Train &train,Player& player, float deltaTime) {
 
         case WaitingBeforeLoop:
             if (player.enter_train){
-                train.position.x = 7500.0f;
+                train.position.x = 5500.0f;
                 train.state = MovingToStation;
                 train.stopTimer = 0.0f;
                 train.postLoopWaitTimer = 0.0f;
@@ -918,7 +918,7 @@ void UpdateTrain(Train &train,Player& player, float deltaTime) {
             train.postLoopWaitTimer += deltaTime;
             if (train.postLoopWaitTimer >= train.postLoopWaitDuration) {
                 // Reset train to starting position
-                train.position.x = 7500.0f; // Starting position
+                train.position.x = 5500.0f; // Starting position
                 train.speed = train.maxSpeed;
                 train.state = MovingToStation;
                 train.stopTimer = 0.0f;

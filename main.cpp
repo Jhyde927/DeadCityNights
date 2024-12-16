@@ -994,6 +994,56 @@ void ghostFlocking(Player& player, ShaderResources& shaders){
     }
 }
 
+void batFlocking(Player& player, ShaderResources& shaders){
+    //prevent ghost overlap. 
+
+    // Check for overlapping with others
+    Vector2 separationForce = {0.0f, 0.0f};
+    for (size_t i = 0; i < astralBats.size(); i++) { // nested loop astral ghosts to check for neiboring ghosts, apply repuslion force if too close. 
+        NPC& batA = astralBats[i];
+
+        // Update and render this ghost
+        batA.Update(player, gameState);
+        batA.Render(shaders);
+
+        // Agro logic based on player's position
+        if (fabs(batA.position.y - player.position.y) < 50) {
+            batA.agro = true; // agro if on the same y-level
+        }
+        if (batA.health > 0) batA.isActive = true;
+
+        // Now check distances to all other ghosts
+        for (size_t j = 0; j < astralBats.size(); j++) {
+            if (j == i) continue; // skip comparing the same ghost
+            NPC& batB = astralBats[j];
+
+            // Calculate distance between ghostA and ghostB
+            float dx = batA.position.x - batB.position.x;
+            float dy = batA.position.y - batB.position.y;
+            float distance = sqrt(dx * dx + dy * dy);
+
+            if (distance < 30.0f && distance > 0.0f) {
+            // Compute a normalized vector to repel ghostA away from ghostB
+                float force = 1.0f - (distance / 30.0f); 
+                // force reduces as distance approaches 30, stronger when distance is very small
+
+                float nx = dx / distance;
+                float ny = dy / distance;
+
+                // Add to separationForce
+                separationForce.x += nx * force; 
+                separationForce.y += ny * force;
+            }
+
+            float separationStrength = 50.0f; 
+            batA.position.x += separationForce.x * separationStrength * GetFrameTime();
+            batA.position.y += separationForce.y * separationStrength * GetFrameTime();
+
+ 
+        }
+    }
+}
+
 
 
 void DrawMac10Pickup(GameResources& resources, Player& player, Vector2 mousePosition, Camera2D& camera){
@@ -2569,15 +2619,15 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
 
 
     ghostFlocking(player, shaders); // handle astral ghost movement and repuslion force to prevent ghosts overlapping one another. 
+    batFlocking(player, shaders); //same for bats
 
 
-
-    for (NPC& bat : astralBats){
-        bat.Update(player, gameState);
-        bat.Render(shaders);
-        //bat.agro = true;
-        if (bat.health > 0) bat.isActive = true;
-    }
+    // for (NPC& bat : astralBats){
+    //     bat.Update(player, gameState);
+    //     bat.Render(shaders);
+    //     //bat.agro = true;
+    //     if (bat.health > 0) bat.isActive = true;
+    // }
 
     DrawMac10Pickup(resources, player, mousePosition, camera);
 

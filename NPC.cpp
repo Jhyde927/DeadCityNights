@@ -61,6 +61,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     CanSpawnZombie = true; //everytime a NPC dies it spawns a zombie? //only in the park
     detectionRange = 300.0f;  // Set detection range for zombies
     detectionRangeBat = 150;
+    overlapping = false;
     highLight = false;
  
 }
@@ -195,12 +196,12 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){
 
                     case 9:
                         speech = "...";
-                        interactions = 1;
-                        clickCount = 0;
+                        interactions = 1; //load second interaction
+                        clickCount = 0; //reset click count for another round
                         break;
 
                 } 
-            }else if (interactions == 1 && player.hasShovel){
+            }else if (interactions == 1 && player.hasShovel){ //youve seen all of the first interaction text, and you have the shuffle. 
                 clickCount += 1;
                 switch(clickCount){
                     
@@ -233,13 +234,13 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){
                         break;
 
                     case 9:
-                        speech = "WE ARE DOOMED!";
-                        interactions = 2;
-                        clickCount = 0;
+                        speech = "WE ARE DOOMED!"; // repeats we are dooomed.
+                        interactions = 2; //load 3rd interaction
+                        clickCount = 0; //reset click count for another round
                         break;
 
                 }
-            }else if (interactions == 2 && player.hasBadge){
+            }else if (interactions == 2 && player.hasBadge){ //youve seen all of the second interaction text and you have the badge. 
                 clickCount += 1;
                 switch(clickCount){
                     case 1:
@@ -263,7 +264,7 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){
                         break;
 
                     case 6:
-                        speech = "Find NecroTech HQ\n\nPut a stop to their evil plans";
+                        speech = "Find NecroTech HQ\n\nPut a stop to their evil plans"; //repeats
                         break;
                     
 
@@ -273,7 +274,7 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){
             }      
         }
 
-        if (!talked && !hobo && !police && !teller){
+        if (!talked && !hobo && !police && !teller){ //all other NPCs
             talked = true;
             speech = GetRandomPhrase(); // NPC greets player
             talkTimer = 3; //limit talking. 

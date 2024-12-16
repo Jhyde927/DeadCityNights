@@ -944,6 +944,56 @@ void UpdateTrain(Train &train,Player& player, float deltaTime) {
     // printf("State: %d, Position: %f, Speed: %f\n", train.state, train.position.x, train.speed);
 }
 
+void ghostFlocking(Player& player, ShaderResources& shaders){
+    //prevent ghost overlap. 
+
+    // Check for overlapping with others
+    Vector2 separationForce = {0.0f, 0.0f};
+    for (size_t i = 0; i < astralGhosts.size(); i++) { // nested loop astral ghosts to check for neiboring ghosts, apply repuslion force if too close. 
+        NPC& ghostA = astralGhosts[i];
+
+        // Update and render this ghost
+        ghostA.Update(player, gameState);
+        ghostA.Render(shaders);
+
+        // Agro logic based on player's position
+        if (fabs(ghostA.position.y - player.position.y) < 50) {
+            ghostA.agro = true; // agro if on the same y-level
+        }
+        if (ghostA.health > 0) ghostA.isActive = true;
+
+        // Now check distances to all other ghosts
+        for (size_t j = 0; j < astralGhosts.size(); j++) {
+            if (j == i) continue; // skip comparing the same ghost
+            NPC& ghostB = astralGhosts[j];
+
+            // Calculate distance between ghostA and ghostB
+            float dx = ghostA.position.x - ghostB.position.x;
+            float dy = ghostA.position.y - ghostB.position.y;
+            float distance = sqrt(dx * dx + dy * dy);
+
+            if (distance < 30.0f && distance > 0.0f) {
+            // Compute a normalized vector to repel ghostA away from ghostB
+                float force = 1.0f - (distance / 30.0f); 
+                // force reduces as distance approaches 30, stronger when distance is very small
+
+                float nx = dx / distance;
+                float ny = dy / distance;
+
+                // Add to separationForce
+                separationForce.x += nx * force; 
+                separationForce.y += ny * force;
+            }
+
+            float separationStrength = 50.0f; 
+            ghostA.position.x += separationForce.x * separationStrength * GetFrameTime();
+            ghostA.position.y += separationForce.y * separationStrength * GetFrameTime();
+
+ 
+        }
+    }
+}
+
 
 
 void DrawMac10Pickup(GameResources& resources, Player& player, Vector2 mousePosition, Camera2D& camera){
@@ -1208,6 +1258,8 @@ void HandleParkTransition(GameState& gamestate, Player& player, PlayerCar player
 }
 
 void HandleSubwayTransition(GameState& gameState, Player& player){
+    //the car magically teleports back to the street if you take the car to the park and take the subway back. 
+
     if (subwayExit && !subwayToPark){ //your at outside subway so exit to outside
         gameState = OUTSIDE;
         player.position.x = 4579;
@@ -1231,9 +1283,9 @@ void HandleSubwayTransition(GameState& gameState, Player& player){
         gotoStreet = false;
         player.position.x = 4500;
 
-    }else if (player.enter_train && carToPark){ //riding train to outside, leaving car at the park
+    }else if (player.enter_train && carToPark){ //riding train to outside
         player.enter_train = false;
-        carToPark = false;
+        carToPark = false; //car magically teleports back to to the street following the player, simplifying things drastically
         gameState = OUTSIDE;
         gotoStreet = false;
         player.position.x = 4500;
@@ -2446,6 +2498,9 @@ void RenderSubway(GameResources& resources, Player& player, Camera2D& camera, Ve
 
 }
 
+
+
+
 void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoor& magicDoor, ShaderResources& shaders){
     player.gravity = 200;
     player.outline = true;//turn on outline shader in asteral plane
@@ -2512,13 +2567,10 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
         
     }
 
-    for (NPC& ghost: astralGhosts){
-        ghost.Update(player, gameState);
-        ghost.Render(shaders);
-        
-        if (ghost.health > 0) ghost.isActive = true;
 
-    }
+    ghostFlocking(player, shaders); // handle astral ghost movement and repuslion force to prevent ghosts overlapping one another. 
+
+
 
     for (NPC& bat : astralBats){
         bat.Update(player, gameState);
@@ -3728,15 +3780,15 @@ void spawnNPCs(GameResources& resources){
     ghosts.push_back(ghost_npc);
 
     //spawn astral ghosts
-    int ap = 0;
+    int ap = 2;
     for (int i = 0; i < ap; i++){
-        Vector2 ag_pos = {static_cast<float>(2220 + i * 100), 700};;
+        Vector2 ag_pos = {static_cast<float>(2220 + i * 100), -751};
         NPC astralGhost = CreateNPC(resources.ghostSheet, ag_pos, speed, IDLE, false, false);
         ghost_npc.SetDestination(2000, 2200);
         astralGhost.ghost = true;
         astralGhost.maxHealth = 500;
         astralGhost.health = 500;
-        astralGhost.agro = true;
+        astralGhost.agro = false;
         astralGhosts.push_back(astralGhost);
 
     }

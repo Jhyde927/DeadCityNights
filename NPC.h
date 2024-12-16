@@ -66,6 +66,7 @@ public:
     float detectionRange; // Set detection range for zombies
     float detectionRangeBat;
     bool highLight;
+    bool overlapping;
     NPC* targetNPC;
  
 

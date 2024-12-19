@@ -61,7 +61,6 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     CanSpawnZombie = true; //everytime a NPC dies it spawns a zombie? //only in the park
     detectionRange = 300.0f;  // Set detection range for zombies
     detectionRangeBat = 150;
-    overlapping = false;
     highLight = false;
  
 }

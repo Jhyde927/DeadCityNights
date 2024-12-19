@@ -21,6 +21,7 @@
 
 //Remember: The Law is One. 
 
+
 int apartmentX = 2256;
 int vacantLotX = 2753;
 int vacantExitX = 2762;
@@ -28,6 +29,7 @@ bool over_lot = false;
 bool over_exit = false;
 //cemetery_start 1743, 700
 bool runOnce = true;
+bool quitRequested = false;
 bool streetSounds = false;
 bool over_apartment = false;
 bool over_car = false;
@@ -75,7 +77,7 @@ bool can_talk = true;
 bool buyFortune = false;
 bool teller = false;
 bool dealer = false;
-
+bool menuOpen = false;
 bool showLiquor = false;
 bool can_sell_drugs = true;
 bool applyShader = false;
@@ -966,78 +968,79 @@ void ghostFlocking(Player& player, ShaderResources& shaders){
         for (size_t j = 0; j < astralGhosts.size(); j++) {
             if (j == i) continue; // skip comparing the same ghost
             NPC& ghostB = astralGhosts[j];
+            if (ghostA.isActive && ghostB.isActive){ //dont avoid inactive ghosts. 
+                    // Calculate distance between ghostA and ghostB
+                float dx = ghostA.position.x - ghostB.position.x;
+                float dy = ghostA.position.y - ghostB.position.y;
+                float distance = sqrt(dx * dx + dy * dy);
 
-            // Calculate distance between ghostA and ghostB
-            float dx = ghostA.position.x - ghostB.position.x;
-            float dy = ghostA.position.y - ghostB.position.y;
-            float distance = sqrt(dx * dx + dy * dy);
+                if (distance < 30.0f && distance > 0.0f) {
+                // Compute a normalized vector to repel ghostA away from ghostB
+                    float force = 1.0f - (distance / 30.0f); 
+                    // force reduces as distance approaches 30, stronger when distance is very small
 
-            if (distance < 30.0f && distance > 0.0f) {
-            // Compute a normalized vector to repel ghostA away from ghostB
-                float force = 1.0f - (distance / 30.0f); 
-                // force reduces as distance approaches 30, stronger when distance is very small
+                    float nx = dx / distance;
+                    float ny = dy / distance;
 
-                float nx = dx / distance;
-                float ny = dy / distance;
+                    // Add to separationForce
+                    separationForce.x += nx * force; 
+                    separationForce.y += ny * force;
+                }
 
-                // Add to separationForce
-                separationForce.x += nx * force; 
-                separationForce.y += ny * force;
+                float separationStrength = 50.0f; 
+                ghostA.position.x += separationForce.x * separationStrength * GetFrameTime();
+                ghostA.position.y += separationForce.y * separationStrength * GetFrameTime();
+
+    
             }
 
-            float separationStrength = 50.0f; 
-            ghostA.position.x += separationForce.x * separationStrength * GetFrameTime();
-            ghostA.position.y += separationForce.y * separationStrength * GetFrameTime();
-
- 
         }
+
     }
 }
 
 void batFlocking(Player& player, ShaderResources& shaders){
-    //prevent ghost overlap. 
+    //prevent bat overlap, by adding a repulsion force if bats get too close. 
 
-    // Check for overlapping with others
     Vector2 separationForce = {0.0f, 0.0f};
-    for (size_t i = 0; i < astralBats.size(); i++) { // nested loop astral ghosts to check for neiboring ghosts, apply repuslion force if too close. 
+    for (size_t i = 0; i < astralBats.size(); i++) { // nested loop astral bats to check for neiboring bats, apply repuslion force if too close. 
         NPC& batA = astralBats[i];
 
         // Update and render this ghost
         batA.Update(player, gameState);
         batA.Render(shaders);
 
-        // Agro logic based on player's position
-        if (fabs(batA.position.y - player.position.y) < 50) {
-            batA.agro = true; // agro if on the same y-level
-        }
         if (batA.health > 0) batA.isActive = true;
 
-        // Now check distances to all other ghosts
+        // Now check distances to all other bats
         for (size_t j = 0; j < astralBats.size(); j++) {
-            if (j == i) continue; // skip comparing the same ghost
+            if (j == i) continue; // skip comparing the same bat
             NPC& batB = astralBats[j];
+            if (batA.isActive && batB.isActive){ //don't avoid dead bats
+                // Calculate distance between batA and batB
+                float dx = batA.position.x - batB.position.x;
+                float dy = batA.position.y - batB.position.y;
+                float distance = sqrt(dx * dx + dy * dy);
 
-            // Calculate distance between ghostA and ghostB
-            float dx = batA.position.x - batB.position.x;
-            float dy = batA.position.y - batB.position.y;
-            float distance = sqrt(dx * dx + dy * dy);
+                if (distance < 30.0f && distance > 0.0f) {
+                // Compute a normalized vector to repel batA away from batB
+                    float force = 1.0f - (distance / 30.0f); 
+                    // force reduces as distance approaches 30, stronger when distance is very small
 
-            if (distance < 30.0f && distance > 0.0f) {
-            // Compute a normalized vector to repel ghostA away from ghostB
-                float force = 1.0f - (distance / 30.0f); 
-                // force reduces as distance approaches 30, stronger when distance is very small
+                    float nx = dx / distance;
+                    float ny = dy / distance;
 
-                float nx = dx / distance;
-                float ny = dy / distance;
+                    // Add to separationForce
+                    separationForce.x += nx * force; 
+                    separationForce.y += ny * force;
+                }
 
-                // Add to separationForce
-                separationForce.x += nx * force; 
-                separationForce.y += ny * force;
-            }
+                float separationStrength = 50.0f; 
+                batA.position.x += separationForce.x * separationStrength * GetFrameTime();
+                batA.position.y += separationForce.y * separationStrength * GetFrameTime();
 
-            float separationStrength = 50.0f; 
-            batA.position.x += separationForce.x * separationStrength * GetFrameTime();
-            batA.position.y += separationForce.y * separationStrength * GetFrameTime();
+                }
+
 
  
         }
@@ -2622,13 +2625,6 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
     batFlocking(player, shaders); //same for bats
 
 
-    // for (NPC& bat : astralBats){
-    //     bat.Update(player, gameState);
-    //     bat.Render(shaders);
-    //     //bat.agro = true;
-    //     if (bat.health > 0) bat.isActive = true;
-    // }
-
     DrawMac10Pickup(resources, player, mousePosition, camera);
 
     
@@ -3130,7 +3126,7 @@ void RenderApartment(GameResources& resources, Player player, Vector2 mousePosit
     }
 
     //UP DOWN OR ESCAPE TO EXIT APARTMENT
-    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S) || IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W) || IsKeyPressed(KEY_ESCAPE)){
+    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S) || IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
         transitionState = FADE_OUT;
         showInventory = false;
         PlaySound(SoundManager::getInstance().GetSound("mainDoor"));
@@ -3143,10 +3139,12 @@ void RenderApartment(GameResources& resources, Player player, Vector2 mousePosit
 
 void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition,ShaderResources& shaders){
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
-    
+    show_dbox = false; //turn off dbox if no one is interacting
     int digPos = 2600;
     if (player.position.x < 2782 && player.position.x > 2742){
         over_exit = true;
+        phrase = "UP TO EXIT";
+        show_dbox = true;
     }else{
         over_exit = false;
     }
@@ -3211,7 +3209,7 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
     DrawTexturePro(resources.vacantLot, {0, 0, static_cast<float>(resources.vacantLot.width), static_cast<float>(resources.vacantLot.height)},
                     {705+1024, 0, static_cast<float>(resources.vacantLot.width), static_cast<float>(resources.vacantLot.height)}, {0, 0}, 0.0f, WHITE);
 
-    show_dbox = false; //turn off dbox if no one is interacting
+    
     for (NPC& hobo : hobos){
         hobo.Update(player, gameState);
         hobo.Render(shaders);
@@ -3818,6 +3816,15 @@ void spawnNPCs(GameResources& resources){
         astralBats.push_back(bat);
     }
 
+    int ab = 5; //second row of bats higher up
+    for (int i = 0; i < ab; i++){
+        Vector2 b_pos = {static_cast<float>(1800 + i * 200), -500};
+        NPC bat = CreateNPC(resources.batSheet, b_pos, speed, IDLE, false, false);
+        bat.SetDestination(1500, 3000);
+        bat.bat = true;
+        astralBats.push_back(bat);
+    }
+
 
 
     //create ghost // call update on ghost where ever needed like graveyard or cemetery
@@ -3829,10 +3836,10 @@ void spawnNPCs(GameResources& resources){
     ghost_npc.health = 500;
     ghosts.push_back(ghost_npc);
 
-    //spawn astral ghosts
+    //spawn astral ghosts, bosses of astral realm for now. 
     int ap = 2;
     for (int i = 0; i < ap; i++){
-        Vector2 ag_pos = {static_cast<float>(2220 + i * 100), -751};
+        Vector2 ag_pos = {static_cast<float>(2220 + i * 100), -751}; // spawn at the top of the atral plane. 
         NPC astralGhost = CreateNPC(resources.ghostSheet, ag_pos, speed, IDLE, false, false);
         ghost_npc.SetDestination(2000, 2200);
         astralGhost.ghost = true;
@@ -3936,12 +3943,14 @@ void debugKeys(Player& player){
 
     }
 
-    if (IsKeyPressed(KEY_ESCAPE)){ //press escape to exit full screen
-        if (borderlessWindow){
-            borderlessWindow = false;
-            ToggleBorderlessWindowed();
-            windowStateChanged = true;
+    if (IsKeyPressed(KEY_ESCAPE)){ 
+        if (!menuOpen){
+            menuOpen = true;
+
+        }else{
+            menuOpen = false;
         }
+        
     }
 
     if (IsKeyPressed(KEY_O)){
@@ -4073,6 +4082,69 @@ void UpdateDrawRectangle(Rectangle* destRect) {
     }
 }
 
+void MainMenu(GameResources& resources, Vector2 mousePosition){
+    // Draw semi-transparent background overlay
+        if (menuOpen) {
+
+        
+            // Draw semi-transparent background overlay
+            DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, 0.3f));
+
+            // Calculate positions for buttons
+            // Let's center them vertically and place them near the center of the screen
+            float btnWidth = 200;
+            float btnHeight = 40;
+            float spacing = 20;
+            int totalButtons = 3;
+
+            // Total vertical space needed = totalButtons * btnHeight + (totalButtons - 1) * spacing
+            float totalHeight = totalButtons * btnHeight + (totalButtons - 1) * spacing;
+            float startY = (screenHeight - totalHeight) / 2.0f;
+            float centerX = (screenWidth - btnWidth) / 2.0f;
+
+
+
+            // Button rectangles
+            Rectangle btnPlayRec = { centerX, startY, btnWidth, btnHeight };
+            Rectangle btnFullRec = { centerX, startY + (btnHeight + spacing), btnWidth, btnHeight };
+            Rectangle btnQuitRec = { centerX, startY + 2*(btnHeight + spacing), btnWidth, btnHeight };
+            Color LightBlue = {85, 160, 255, 255};//   218 55 100
+            GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(BLACK));
+            GuiSetStyle(BUTTON, TEXT_COLOR_FOCUSED, ColorToInt(WHITE));
+            GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(Fade(LightBlue, .90)));
+            GuiSetStyle(BUTTON, BORDER_COLOR_NORMAL, ColorToInt(LightBlue));
+            GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(LightBlue));
+            GuiSetStyle(BUTTON, BORDER_COLOR_FOCUSED, ColorToInt(LightBlue));
+            GuiSetStyle(BUTTON, BASE_COLOR_PRESSED, ColorToInt(LightBlue));
+            // Draw buttons
+            if (GuiButton(btnPlayRec, "Play")) {
+                // Close menu, resume game
+                menuOpen = false;
+            }
+
+            if (GuiButton(btnFullRec, "FullScreen")) {
+                if (!borderlessWindow){
+                    borderlessWindow = true;
+                    ToggleBorderlessWindowed();
+                    windowStateChanged = true;
+                
+
+                }else{
+                    borderlessWindow = false;
+                    windowStateChanged = true;
+                    ToggleBorderlessWindowed();
+                }
+            }
+
+            if (GuiButton(btnQuitRec, "Quit")) {
+                // Close the window
+                quitRequested = true;
+            }
+
+            DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+        }
+}
+
 void InitSounds(SoundManager& soundManager){
     //We use our own custom sound manager. We have an array of sounds, and an array of musticTracks.
     SetMasterVolume(1.0f);  // Sets the master volume to maximum
@@ -4147,13 +4219,16 @@ void InitSounds(SoundManager& soundManager){
 
 int main() {
     InitWindow(screenWidth, screenHeight, "Adventure Game");
-    
     //PUT NOTHING ABOVE THIS ^^ CAN CAUSE SEG FAULT
+    //SetWindowState(FLAG_WINDOW_RESIZABLE);
     InitAudioDevice();
     SoundManager& soundManager = SoundManager::getInstance();
     InitSounds(soundManager);
     HideCursor();
     SetExitKey(0);  // Disable escape key from closing the window
+    // Set global text size for buttons
+    GuiSetStyle(DEFAULT, TEXT_SIZE, 25); 
+
     srand(static_cast<unsigned>(time(0))); //randomize seed based on time
     
     // Initialize game resources
@@ -4181,8 +4256,6 @@ int main() {
     spawnNPCs(resources); //spawn NPCs before rendering them outside
     InitPlatforms();
     InitializeTrain(train);
-
-    //
     
 
     // Initialize the camer
@@ -4198,7 +4271,10 @@ int main() {
     dboxPosition = player.position;
 
     //AddItemToInventory("Drugs", inventory, INVENTORY_SIZE);
+    // Font RubicBold = LoadFontEx("assets/fonts/Rubik-Bold.ttf", 32, NULL, 0);
+    // Font Righteous = LoadFontEx("assets/fonts/Righteous-Regular.ttf", 32, NULL, 0);
 
+    //GuiSetFont(RubicBold); // Set the loaded font as the default GUI font
 
     //PlayMusicStream(SoundManager::getInstance().GetMusic("Jangwa"));
     PlayMusicStream(SoundManager::getInstance().GetMusic("NewNeon"));
@@ -4212,7 +4288,7 @@ int main() {
     
     float totalTime = 0.0f; // time elapsed from start of game //glitch shader/ufo
     // Main game loop
-    while (!WindowShouldClose()) {
+    while (!WindowShouldClose() && !quitRequested) {
         Vector2 mousePosition = GetMousePosition();
         if (!player.enter_car) player.UpdateMovement(resources, gameState, mousePosition, camera, platforms);  // Update player position and animation
         UpdateInventoryPosition(camera, gameState);
@@ -4225,6 +4301,8 @@ int main() {
             SoundManager::getInstance().StopMusic("subwayAmbience");
         }
 
+        
+
         UpdateBullets();
         CheckBulletNPCCollisions(zombies, player); //check each enemy group for bullet collisions
         CheckBulletNPCCollisions(ghosts, player);
@@ -4235,6 +4313,8 @@ int main() {
         MonitorMouseClicks(player, calendar);
         UpdateZombieSpawning(resources, player);
         //glowEffect(glowShader, gameState); //update glow shader
+
+       
         
         float deltaTime = GetFrameTime();
         totalTime += deltaTime; // used for UFO sine wave
@@ -4326,7 +4406,7 @@ int main() {
                 RenderSubway(resources, player, camera, mousePosition, train, shaders);
                 break;
         }
-
+        MainMenu(resources, mousePosition);
         HandleTransition(player, player_car, calendar, npcs); //Check everyframe for gamestate transitions, inside draw to handle fadeouts
         EndTextureMode();  
 
@@ -4366,6 +4446,7 @@ int main() {
         // Draw the target texture //////FINAL PASS: Draw finalTexture to screen. 
         BeginDrawing();
             ClearBackground(BLACK);
+            
             //drunk shader is set inside render functions      
             if (applyShader) BeginShaderMode(shaders.glowShader);     //Apply various shaders before rendering to screen
             if (glitch) BeginShaderMode(shaders.glitchShader);

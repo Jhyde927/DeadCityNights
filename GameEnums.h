@@ -32,4 +32,9 @@ enum TransitionState {
     
 };
 
+enum PauseState {
+    GAME_RUNNING,
+    GAME_PAUSED
+};
+
 #endif // GAME_ENUMS_H

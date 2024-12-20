@@ -78,6 +78,7 @@ bool buyFortune = false;
 bool teller = false;
 bool dealer = false;
 bool menuOpen = false;
+bool controlsMenu = false;
 bool showLiquor = false;
 bool can_sell_drugs = true;
 bool applyShader = false;
@@ -1261,6 +1262,7 @@ void HandleAstralTransition(Player& player, GameCalendar& calendar){
     if (player.isDead){ //player dies on the astral plane, reset back to apartment.
         gameState = APARTMENT;//wake up back at your apartment with full health.
         player.position.x = apartmentX;
+        player.position.y = 700; //incase player dies on a platform. reset to ground level
         player.isDead = false;
         player.gravity = 800; //reset gravity to normal. 
         player.outline = false; //set outline off when exiting astral
@@ -1279,7 +1281,7 @@ void HandleAstralTransition(Player& player, GameCalendar& calendar){
         player.outline = false; //set outline off when exiting astral
         applyShader = false; //drugs ware off when exiting astral. 
         for (NPC& ghost : astralGhosts){
-            ghost.agro = false; //ghost lose agro after leaving the plane. 
+            ghost.agro = false; //ghost lose agro after leaving the plane. regain agro when inside detection radius
         }
     }
 
@@ -3947,6 +3949,7 @@ void debugKeys(Player& player){
         if (!menuOpen){
             menuOpen = true;
 
+
         }else{
             menuOpen = false;
         }
@@ -4082,7 +4085,27 @@ void UpdateDrawRectangle(Rectangle* destRect) {
     }
 }
 
-void MainMenu(GameResources& resources, Vector2 mousePosition){
+void setButtonColors(){
+    Color LightBlue = {85, 160, 255, 255};//   
+    GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(BLACK));
+    GuiSetStyle(BUTTON, TEXT_COLOR_FOCUSED, ColorToInt(WHITE));
+    GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(Fade(LightBlue, .90)));
+    GuiSetStyle(BUTTON, BORDER_COLOR_NORMAL, ColorToInt(LightBlue));
+    GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(LightBlue));
+    GuiSetStyle(BUTTON, BORDER_COLOR_FOCUSED, ColorToInt(LightBlue));
+    GuiSetStyle(BUTTON, BASE_COLOR_PRESSED, ColorToInt(LightBlue));
+}
+
+void ShowControls(){
+    Vector2 controlsRectPos = { 664, 212 };
+    Vector2 controlsRectSize = { 300, 600 };
+    DrawRectangle(controlsRectPos.x, controlsRectPos.y, controlsRectSize.x, controlsRectSize.y, Fade(BLACK, 0.7f)); // Semi-transparent background
+    DrawText("\nControls:\n\n\nEsc - Menu\n\nD - Move Right\n\nA - Move Left\n\nShift - Run\n\nW - Interact\n\nS - Exit Car/Apartment\n\nSpace - Jump\n\nI - Open Inventory\n\nRighClick - Aim\n\nLeftClick - Fire\n\nM - Mute Music\n\n\n\nDebug Keys:\n\nK - Give Keys\n\nG - Give Guns\n\nH - Give Shovel\n\nP - Give Drugs", 
+            controlsRectPos.x + 32, controlsRectPos.y, 20, WHITE); // Adjust text offset and size as needed
+
+}
+
+void MainMenu(GameResources& resources, Vector2 mousePosition, PauseState& currentPauseState){
     // Draw semi-transparent background overlay
         if (menuOpen) {
 
@@ -4095,31 +4118,33 @@ void MainMenu(GameResources& resources, Vector2 mousePosition){
             float btnWidth = 200;
             float btnHeight = 40;
             float spacing = 20;
-            int totalButtons = 3;
+            int totalButtons = 4;
 
             // Total vertical space needed = totalButtons * btnHeight + (totalButtons - 1) * spacing
             float totalHeight = totalButtons * btnHeight + (totalButtons - 1) * spacing;
             float startY = (screenHeight - totalHeight) / 2.0f;
             float centerX = (screenWidth - btnWidth) / 2.0f;
 
-
-
             // Button rectangles
             Rectangle btnPlayRec = { centerX, startY, btnWidth, btnHeight };
-            Rectangle btnFullRec = { centerX, startY + (btnHeight + spacing), btnWidth, btnHeight };
-            Rectangle btnQuitRec = { centerX, startY + 2*(btnHeight + spacing), btnWidth, btnHeight };
-            Color LightBlue = {85, 160, 255, 255};//   218 55 100
-            GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(BLACK));
-            GuiSetStyle(BUTTON, TEXT_COLOR_FOCUSED, ColorToInt(WHITE));
-            GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(Fade(LightBlue, .90)));
-            GuiSetStyle(BUTTON, BORDER_COLOR_NORMAL, ColorToInt(LightBlue));
-            GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(LightBlue));
-            GuiSetStyle(BUTTON, BORDER_COLOR_FOCUSED, ColorToInt(LightBlue));
-            GuiSetStyle(BUTTON, BASE_COLOR_PRESSED, ColorToInt(LightBlue));
+            Rectangle btnControlsRec = { centerX,startY + (btnHeight + spacing), btnWidth, btnHeight };
+            Rectangle btnFullRec = { centerX, startY + 2*(btnHeight + spacing), btnWidth, btnHeight };
+            Rectangle btnQuitRec = { centerX, startY + 3*(btnHeight + spacing), btnWidth, btnHeight };
+
             // Draw buttons
             if (GuiButton(btnPlayRec, "Play")) {
                 // Close menu, resume game
                 menuOpen = false;
+                currentPauseState = GAME_RUNNING;
+            }
+
+            if (GuiButton(btnControlsRec, "Controls")){
+                if (!controlsMenu){
+                    controlsMenu = true;
+                }else{
+                    controlsMenu = false;
+                }
+
             }
 
             if (GuiButton(btnFullRec, "FullScreen")) {
@@ -4141,8 +4166,57 @@ void MainMenu(GameResources& resources, Vector2 mousePosition){
                 quitRequested = true;
             }
 
-            DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+            DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); //draw cursor again overtop of buttons. 
         }
+}
+
+void pauseLogic(PauseState& currentPauseState, RenderTexture2D& pauseTexture, RenderTexture2D& finalTexture){
+    if (IsKeyPressed(KEY_ESCAPE)){
+        if (currentPauseState == GAME_RUNNING){
+            // Save the current frame
+            BeginTextureMode(pauseTexture);
+            ClearBackground(BLACK);
+            DrawTexturePro(
+                finalTexture.texture,
+                (Rectangle){0, 0, (float)finalTexture.texture.width, -(float)finalTexture.texture.height},
+                (Rectangle){0, 0, (float)screenWidth, (float)screenHeight},
+                (Vector2){0, 0},
+                0.0f,
+                WHITE
+            );
+            EndTextureMode();
+            
+            currentPauseState = GAME_PAUSED;
+
+        }else{
+            currentPauseState = GAME_RUNNING;
+        }
+    }
+}
+
+Vector2 clampMouseCursor(Vector2& mousePosition){
+    int winWidth = GetScreenWidth(); 
+    int winHeight = GetScreenHeight();
+    int mouseX = GetMouseX();
+    int mouseY = GetMouseY();
+
+    // Clamp to window dimensions
+    if (mouseX < 0) mouseX = 0;
+    if (mouseX > winWidth - 1) mouseX = winWidth - 1;
+
+    if (borderlessWindow){ //lock the cursor to the window only when in fullscreen AKA borderless window. 
+        if (mouseX > screenWidth){
+            mouseX = screenWidth-1;
+            SetMousePosition(mouseX, mouseY); //SetMousePosition overrides the mouse, keeping the cursor inside the screen. 
+        }
+    }
+
+    if (mouseY < 0) mouseY = 0;
+    if (mouseY > winHeight - 1) mouseY = winHeight - 1;
+
+    // If we changed anything, set the mouse position:
+    mousePosition = Vector2 {static_cast<float>(mouseX),static_cast<float>(mouseY)};
+    return mousePosition;
 }
 
 void InitSounds(SoundManager& soundManager){
@@ -4257,6 +4331,7 @@ int main() {
     InitPlatforms();
     InitializeTrain(train);
     
+    setButtonColors(); //main menu button colors, sets globally for all rayGUI buttons
 
     // Initialize the camer
     Camera2D camera = { 0 };
@@ -4282,20 +4357,31 @@ int main() {
     RenderTexture2D targetTexture = LoadRenderTexture(GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT); //render target. Draw to rendertexture2d first
     RenderTexture2D vignetteTexture = LoadRenderTexture(GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT);
     RenderTexture2D finalTexture = LoadRenderTexture(GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT);
+    RenderTexture2D pauseTexture = LoadRenderTexture(screenWidth, screenHeight);
+
     Rectangle destRect = { 0, 0, (float)GetScreenWidth(), (float)GetScreenHeight() };
-    UpdateDrawRectangle(&destRect);
+    //UpdateDrawRectangle(&destRect);
+
+    PauseState currentPauseState = GAME_RUNNING;
 
     
     float totalTime = 0.0f; // time elapsed from start of game //glitch shader/ufo
     // Main game loop
     while (!WindowShouldClose() && !quitRequested) {
+        pauseLogic(currentPauseState, pauseTexture, finalTexture);
+
         Vector2 mousePosition = GetMousePosition();
+
+        mousePosition = clampMouseCursor(mousePosition); //stop mouse from going offscreen when in fullscreen. 
+
+
         if (!player.enter_car) player.UpdateMovement(resources, gameState, mousePosition, camera, platforms);  // Update player position and animation
         UpdateInventoryPosition(camera, gameState);
         SoundManager::getInstance().UpdateMusic("NewNeon");
         SoundManager::getInstance().UpdateMusic("subwayAmbience");
         SoundManager::getInstance().UpdateMusic("CarRun");
-        if (gameState != SUBWAY){
+
+        if (gameState != SUBWAY){//stop subway sounds outside subway
             SoundManager::getInstance().ManagerStopSound("TrainArriving");
             SoundManager::getInstance().ManagerStopSound("TrainLeaving");
             SoundManager::getInstance().StopMusic("subwayAmbience");
@@ -4370,45 +4456,71 @@ int main() {
         UptoEnter(player, player_car);//enter different areas by pressing up
         handleCamera(camera, targetZoom);
 
-        //MULTIPASS RENDERING. Everything inside BeginTextureMode is saved to a RenderTexture2D. This makes it possible to stack shaders.   
-        BeginTextureMode(targetTexture); //Render to targetTexture. First Pass/////////////////////////////
-        
-        switch (gameState){
-            case OUTSIDE:
-                RenderOutside(resources, camera, player, player_car, magicDoor, totalTime, npcs, ufo, mousePosition, shaders); 
-                break;
-            case APARTMENT:
-                RenderApartment(resources, player, mousePosition, calendar, camera, shaders);
-                break;
-            case ROAD:
-                RenderRoad(resources, player_car, player, camera, mousePosition, shaders);
-                break;
-            case CEMETERY:
-                RenderCemetery(resources, player, player_car, ufo, totalTime, camera,mousePosition, shaders);
-                break;
-            case WORK:
-                ClearBackground(BLACK);//do nothing at the moment
-                break;
-            case LOT:
-                RenderLot(resources, player, camera, mousePosition, shaders);
-                break;
-            case GRAVEYARD:
-                RenderGraveyard(resources, player, camera, mousePosition, shaders);
-                break;
-            case ASTRAL:
-                RenderAstral(resources, player, camera, mousePosition, earth, magicDoor, shaders);
-                break;
-            case PARK:
-                RenderPark(resources, player,player_car, camera, mousePosition, shaders);
-                break;
+        if (currentPauseState == GAME_PAUSED){ //if game is paused, save the last frame of the game running
+            BeginDrawing();
+            ClearBackground(BLACK);
 
-            case SUBWAY:
-                RenderSubway(resources, player, camera, mousePosition, train, shaders);
-                break;
+            // Draw the saved frame
+            DrawTexturePro(
+                pauseTexture.texture,
+                (Rectangle){0, 0, (float)pauseTexture.texture.width, -(float)pauseTexture.texture.height},
+                (Rectangle){0, 0, (float)screenWidth, (float)screenHeight},
+                (Vector2){0, 0},
+                0.0f,
+                WHITE
+            );
+
+            // Draw the pause menu
+            MainMenu(resources, mousePosition, currentPauseState); //draw main menu over the saved frame. 
+            if (controlsMenu) ShowControls();
+            EndDrawing();
+            continue;  // Skip the rest of the loop, dont update or render the game. 
+
+        }else if (currentPauseState == GAME_RUNNING){ //only update the game if it's not paused
+
+            //MULTIPASS RENDERING. Everything inside BeginTextureMode is saved to a RenderTexture2D. This makes it possible to stack shaders.   
+            BeginTextureMode(targetTexture); //Render to targetTexture. First Pass/////////////////////////////
+            
+            switch (gameState){
+                case OUTSIDE:
+                    RenderOutside(resources, camera, player, player_car, magicDoor, totalTime, npcs, ufo, mousePosition, shaders); 
+                    break;
+                case APARTMENT:
+                    RenderApartment(resources, player, mousePosition, calendar, camera, shaders);
+                    break;
+                case ROAD:
+                    RenderRoad(resources, player_car, player, camera, mousePosition, shaders);
+                    break;
+                case CEMETERY:
+                    RenderCemetery(resources, player, player_car, ufo, totalTime, camera,mousePosition, shaders);
+                    break;
+                case WORK:
+                    ClearBackground(BLACK);//do nothing at the moment
+                    break;
+                case LOT:
+                    RenderLot(resources, player, camera, mousePosition, shaders);
+                    break;
+                case GRAVEYARD:
+                    RenderGraveyard(resources, player, camera, mousePosition, shaders);
+                    break;
+                case ASTRAL:
+                    RenderAstral(resources, player, camera, mousePosition, earth, magicDoor, shaders);
+                    break;
+                case PARK:
+                    RenderPark(resources, player,player_car, camera, mousePosition, shaders);
+                    break;
+
+                case SUBWAY:
+                    RenderSubway(resources, player, camera, mousePosition, train, shaders);
+                    break;
+            }
+
+            MainMenu(resources, mousePosition, currentPauseState); //render menu over top
+            if (controlsMenu) ShowControls(); //render list of controls
+            HandleTransition(player, player_car, calendar, npcs); //Check everyframe for gamestate transitions, inside draw to handle fadeouts
+            EndTextureMode(); 
+
         }
-        MainMenu(resources, mousePosition);
-        HandleTransition(player, player_car, calendar, npcs); //Check everyframe for gamestate transitions, inside draw to handle fadeouts
-        EndTextureMode();  
 
         //Render to texture //////////////////////////// Second Pass: Apply vignette shader seperate so we can stack effects. 
         BeginTextureMode(vignetteTexture);

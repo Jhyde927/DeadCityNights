@@ -123,6 +123,13 @@ float blackoutTimer = 0.0f; // Timer to keep track of blackout period
 float minDistToPlayer = 50;
 float maxDistToPlayer = 200;
 
+int gameWidth = 1024; // Your game resolution width
+int gameHeight = 1024; // Your game resolution height
+
+// Calculate offsets
+
+
+
 Color customBackgroundColor = {32, 42, 63, 255};  //Same Color as sky background image. 
 Color shovelTint = WHITE;
 
@@ -146,7 +153,7 @@ std::string phrase = "A and D to move, hold shift to run"; //initial tutorial ph
 const int screenWidth = 1024; //screen is square for gameplay reasons, we don't want to reveal to much of the screen at one time. 
 const int screenHeight = 1024; // is it crazy to keep the resolution square? Implement full screen that keeps sqaure rotation.
 
-
+int offsetX = (screenWidth - gameWidth) / 2;
 Color purplishGrey = {128, 96, 128, 255};  // RGBA format: (R, G, B, A)
 
 Vector2 carKeysPos = {(screenWidth/2) - 100, 655}; // remember positions need to based on screenwidth incase of resolution change. 
@@ -4086,32 +4093,41 @@ void UpdateDrawRectangle(Rectangle* destRect) {
 }
 
 void setButtonColors(){
-    Color LightBlue = {85, 160, 255, 255};//   
+    //GuiSetStyle is global for all buttons, this could be an issue for future buttons.
+    Color LightBlue = {85, 160, 255, 255};//
+
+    GuiSetStyle(DEFAULT, TEXT_SIZE, 32);
     GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(BLACK));
     GuiSetStyle(BUTTON, TEXT_COLOR_FOCUSED, ColorToInt(WHITE));
-    GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(Fade(LightBlue, .90)));
+    GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(Fade(LightBlue, .80)));
     GuiSetStyle(BUTTON, BORDER_COLOR_NORMAL, ColorToInt(LightBlue));
     GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(LightBlue));
     GuiSetStyle(BUTTON, BORDER_COLOR_FOCUSED, ColorToInt(LightBlue));
     GuiSetStyle(BUTTON, BASE_COLOR_PRESSED, ColorToInt(LightBlue));
+
+    
+
 }
 
 void ShowControls(){
-    Vector2 controlsRectPos = { 664, 212 };
+    float offsetX = 664 - (1024.0f / 2.0f); // Offset relative to the center of the 1024x1024 window
+    Vector2 controlsRectPos = { (GetScreenWidth() / 2.0f) + offsetX, 212 };
+    //Vector2 controlsRectPos = { 664, 212 };
     Vector2 controlsRectSize = { 300, 600 };
     DrawRectangle(controlsRectPos.x, controlsRectPos.y, controlsRectSize.x, controlsRectSize.y, Fade(BLACK, 0.7f)); // Semi-transparent background
-    DrawText("\nControls:\n\n\nEsc - Menu\n\nD - Move Right\n\nA - Move Left\n\nShift - Run\n\nW - Interact\n\nS - Exit Car/Apartment\n\nSpace - Jump\n\nI - Open Inventory\n\nRighClick - Aim\n\nLeftClick - Fire\n\nM - Mute Music\n\n\n\nDebug Keys:\n\nK - Give Keys\n\nG - Give Guns\n\nH - Give Shovel\n\nP - Give Drugs", 
-            controlsRectPos.x + 32, controlsRectPos.y, 20, WHITE); // Adjust text offset and size as needed
+    DrawText("\nControls:\n\n\nEsc - Menu\n\nD - Move Right\n\nA - Move Left\n\nShift - Run\n\nW - Interact\n\nS - Exit Car/Apartment\n\nSpace - Jump\n\nI - Open Inventory\n\nRightClick - Aim\n\nLeftClick - Fire\n\nM - Mute Music\n\n\n\nDebug Keys:\n\nK - Give Keys\n\nG - Give Guns\n\nH - Give Shovel\n\nP - Give Drugs", 
+            controlsRectPos.x + 32, controlsRectPos.y, 20, WHITE); 
 
 }
 
-void MainMenu(GameResources& resources, Vector2 mousePosition, PauseState& currentPauseState){
+void MainMenu(GameResources& resources, Vector2 mousePosition, PauseState& currentPauseState, Rectangle& destRect){
     // Draw semi-transparent background overlay
         if (menuOpen) {
-
+            float offset_x = 0;
+            if (borderlessWindow) offset_x = (screenWidth - GAME_SCREEN_WIDTH)/2;
         
             // Draw semi-transparent background overlay
-            DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, 0.3f));
+            DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, 0.3f));
 
             // Calculate positions for buttons
             // Let's center them vertically and place them near the center of the screen
@@ -4123,7 +4139,7 @@ void MainMenu(GameResources& resources, Vector2 mousePosition, PauseState& curre
             // Total vertical space needed = totalButtons * btnHeight + (totalButtons - 1) * spacing
             float totalHeight = totalButtons * btnHeight + (totalButtons - 1) * spacing;
             float startY = (screenHeight - totalHeight) / 2.0f;
-            float centerX = (screenWidth - btnWidth) / 2.0f;
+            float centerX = (GetScreenWidth() - btnWidth) / 2.0f;
 
             // Button rectangles
             Rectangle btnPlayRec = { centerX, startY, btnWidth, btnHeight };
@@ -4136,6 +4152,7 @@ void MainMenu(GameResources& resources, Vector2 mousePosition, PauseState& curre
                 // Close menu, resume game
                 menuOpen = false;
                 currentPauseState = GAME_RUNNING;
+                controlsMenu = false; //disable controls menu, maybe leave it up and have a x button to close controls page
             }
 
             if (GuiButton(btnControlsRec, "Controls")){
@@ -4150,6 +4167,7 @@ void MainMenu(GameResources& resources, Vector2 mousePosition, PauseState& curre
             if (GuiButton(btnFullRec, "FullScreen")) {
                 if (!borderlessWindow){
                     borderlessWindow = true;
+                    offsetX = 1024;
                     ToggleBorderlessWindowed();
                     windowStateChanged = true;
                 
@@ -4174,6 +4192,7 @@ void pauseLogic(PauseState& currentPauseState, RenderTexture2D& pauseTexture, Re
     if (IsKeyPressed(KEY_ESCAPE)){
         if (currentPauseState == GAME_RUNNING){
             // Save the current frame
+            //capture and display the last frame when the game enters the pause state.
             BeginTextureMode(pauseTexture);
             ClearBackground(BLACK);
             DrawTexturePro(
@@ -4205,8 +4224,8 @@ Vector2 clampMouseCursor(Vector2& mousePosition){
     if (mouseX > winWidth - 1) mouseX = winWidth - 1;
 
     if (borderlessWindow){ //lock the cursor to the window only when in fullscreen AKA borderless window. 
-        if (mouseX > screenWidth){
-            mouseX = screenWidth-1;
+        if (mouseX > winWidth){
+            mouseX = winWidth - 1;
             SetMousePosition(mouseX, mouseY); //SetMousePosition overrides the mouse, keeping the cursor inside the screen. 
         }
     }
@@ -4360,7 +4379,7 @@ int main() {
     RenderTexture2D pauseTexture = LoadRenderTexture(screenWidth, screenHeight);
 
     Rectangle destRect = { 0, 0, (float)GetScreenWidth(), (float)GetScreenHeight() };
-    //UpdateDrawRectangle(&destRect);
+    UpdateDrawRectangle(&destRect);
 
     PauseState currentPauseState = GAME_RUNNING;
 
@@ -4373,7 +4392,7 @@ int main() {
         Vector2 mousePosition = GetMousePosition();
 
         mousePosition = clampMouseCursor(mousePosition); //stop mouse from going offscreen when in fullscreen. 
-
+        
 
         if (!player.enter_car) player.UpdateMovement(resources, gameState, mousePosition, camera, platforms);  // Update player position and animation
         UpdateInventoryPosition(camera, gameState);
@@ -4454,30 +4473,32 @@ int main() {
         }
        
         UptoEnter(player, player_car);//enter different areas by pressing up
-        handleCamera(camera, targetZoom);
+        
 
-        if (currentPauseState == GAME_PAUSED){ //if game is paused, save the last frame of the game running
+        if (currentPauseState == GAME_PAUSED){ //if game is paused, save the last frame of the game running, and draw it behind the menus
             BeginDrawing();
             ClearBackground(BLACK);
-
+            UpdateDrawRectangle(&destRect);
             // Draw the saved frame
             DrawTexturePro(
                 pauseTexture.texture,
                 (Rectangle){0, 0, (float)pauseTexture.texture.width, -(float)pauseTexture.texture.height},
-                (Rectangle){0, 0, (float)screenWidth, (float)screenHeight},
+                destRect,
                 (Vector2){0, 0},
                 0.0f,
                 WHITE
             );
-
+            setButtonColors(); //set menu button color and text size. 
             // Draw the pause menu
-            MainMenu(resources, mousePosition, currentPauseState); //draw main menu over the saved frame. 
+            MainMenu(resources, mousePosition, currentPauseState, destRect); //draw main menu over the saved frame.
+
             if (controlsMenu) ShowControls();
             EndDrawing();
             continue;  // Skip the rest of the loop, dont update or render the game. 
 
         }else if (currentPauseState == GAME_RUNNING){ //only update the game if it's not paused
-
+            handleCamera(camera, targetZoom); //Can't update zoom when paused. So handle camera only when game is running. 
+            GuiSetStyle(DEFAULT, TEXT_SIZE, 20); //set text size smaller for dealer and teller buttons. 
             //MULTIPASS RENDERING. Everything inside BeginTextureMode is saved to a RenderTexture2D. This makes it possible to stack shaders.   
             BeginTextureMode(targetTexture); //Render to targetTexture. First Pass/////////////////////////////
             
@@ -4515,8 +4536,6 @@ int main() {
                     break;
             }
 
-            MainMenu(resources, mousePosition, currentPauseState); //render menu over top
-            if (controlsMenu) ShowControls(); //render list of controls
             HandleTransition(player, player_car, calendar, npcs); //Check everyframe for gamestate transitions, inside draw to handle fadeouts
             EndTextureMode(); 
 
@@ -4558,7 +4577,7 @@ int main() {
         // Draw the target texture //////FINAL PASS: Draw finalTexture to screen. 
         BeginDrawing();
             ClearBackground(BLACK);
-            
+
             //drunk shader is set inside render functions      
             if (applyShader) BeginShaderMode(shaders.glowShader);     //Apply various shaders before rendering to screen
             if (glitch) BeginShaderMode(shaders.glitchShader);

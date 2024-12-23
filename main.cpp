@@ -4292,6 +4292,14 @@ void InitSounds(SoundManager& soundManager){
 
     soundManager.LoadSound("zombieDeath", "assets/sounds/zombieDeath.ogg");
 
+    soundManager.LoadVoice("voice1", "assets/sounds/voice1.ogg");
+    soundManager.LoadVoice("voice2", "assets/sounds/voice2.ogg");
+    soundManager.LoadVoice("voice3", "assets/sounds/voice3.ogg");
+    soundManager.LoadVoice("voice4", "assets/sounds/voice4.ogg");
+    soundManager.LoadVoice("voice5", "assets/sounds/voice5.ogg");
+    soundManager.LoadVoice("voice6", "assets/sounds/voice6.ogg");
+    soundManager.LoadVoice("voice7", "assets/sounds/voice7.ogg");
+    
 
     soundManager.LoadSound("phit1", "assets/sounds/PlayerHit1.ogg"); //player VA hits
     soundManager.LoadSound("phit2", "assets/sounds/PlayerHit2.ogg");
@@ -4396,6 +4404,8 @@ int main() {
 
         if (!player.enter_car) player.UpdateMovement(resources, gameState, mousePosition, camera, platforms);  // Update player position and animation
         UpdateInventoryPosition(camera, gameState);
+
+        
         SoundManager::getInstance().UpdateMusic("NewNeon");
         SoundManager::getInstance().UpdateMusic("subwayAmbience");
         SoundManager::getInstance().UpdateMusic("CarRun");
@@ -4426,6 +4436,7 @@ int main() {
         if (totalTime > 10000.0f) totalTime -= 10000.0f; //reset total time just in case. 
             
         UpdateShaders(shaders, deltaTime, borderlessWindow,  gameState);
+        SoundManager::getInstance().UpdateRandomVoices(deltaTime);
 
         if (windowStateChanged) { //toggle full screen    
             UpdateDrawRectangle(&destRect); 
@@ -4502,7 +4513,7 @@ int main() {
             //MULTIPASS RENDERING. Everything inside BeginTextureMode is saved to a RenderTexture2D. This makes it possible to stack shaders.   
             BeginTextureMode(targetTexture); //Render to targetTexture. First Pass/////////////////////////////
             
-            switch (gameState){
+            switch (gameState){//Depending on the gameState, render the scene. 
                 case OUTSIDE:
                     RenderOutside(resources, camera, player, player_car, magicDoor, totalTime, npcs, ufo, mousePosition, shaders); 
                     break;
@@ -4556,7 +4567,7 @@ int main() {
 
         BeginTextureMode(finalTexture);
             ClearBackground(BLACK);
-            if (player.hitTimer > 0) BeginShaderMode(shaders.redVignetteShader);
+            if (player.hitTimer > 0) BeginShaderMode(shaders.redVignetteShader); //apply hurt shader if hit
             
                 DrawTextureRec( 
                     vignetteTexture.texture, 

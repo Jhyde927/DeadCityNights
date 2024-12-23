@@ -19,6 +19,13 @@ public:
         return instance;
     }
 
+    void LoadVoice(const std::string& name, std::string filePath) {
+        if (voices.find(name) == voices.end()) {
+            Sound sound = ::LoadSound(filePath.c_str());
+            voices[name] = sound; //store voice in array
+        }
+    }
+
     // Load a sound and store it in the manager
     void LoadSound(const std::string& name, const std::string& filePath) {
         if (sounds.find(name) == sounds.end()) {
@@ -35,6 +42,8 @@ public:
         }
     }
 
+
+
     // Retrieve a sound by name
     Sound& GetSound(const std::string& name) {
         return sounds[name];
@@ -44,6 +53,65 @@ public:
     Music& GetMusic(const std::string& name) {
         return musicTracks[name];
     }
+
+    //Retrieve a voice by name
+    Sound& GetVoice(const std::string& name) {
+        return voices[name];
+    }
+
+    void PlayNextVoice() {
+        if (voices.empty()) return;
+
+        // Select a random voice
+        int randomIndex = rand() % voices.size();
+        auto it = voices.begin();
+        std::advance(it, randomIndex);
+
+        // Set current voice and play it
+        currentVoice = it->second;
+        ::PlaySound(currentVoice);
+        voicePlaying = true;
+    }
+
+
+    void PlayRandomVoice() {
+        if (voices.empty()) return; // Ensure there are voices loaded
+
+        // Generate a random index
+        int randomIndex = rand() % voices.size();
+
+        // Iterate through the map to get the voice at the random index
+        auto it = voices.begin();
+        std::advance(it, randomIndex);
+
+        // Play the sound
+        ::PlaySound(it->second);
+    }
+
+    void StartRandomVoices(float duration) {
+        if (voices.empty()) return;
+
+        voiceTimer = duration;
+        PlayNextVoice();
+    }
+
+    void UpdateRandomVoices(float deltaTime) {
+        if (voiceTimer <= 0.0f) {
+            voicePlaying = false;
+            return; // Stop if timer is up
+        }
+
+        voiceTimer -= deltaTime;
+
+        // Check if the current voice is finished
+        if (voicePlaying && !::IsSoundPlaying(currentVoice)) {
+            voicePlaying = false;
+            PlayNextVoice(); // Play the next random voice
+        }
+    }
+
+
+
 
 
     // Play music with looping enabled
@@ -175,10 +243,14 @@ public:
     }
 
 private:
+    Sound currentVoice;        // The currently playing voice
+    bool voicePlaying = false; // Track if a voice is currently playing
+    float voiceTimer = 0.0f;   // Timer for the voice-playing sequence
 
     std::vector<ActiveSound> activeSounds;
     std::map<std::string, Sound> sounds; //array of sounds 
     std::map<std::string, Music> musicTracks;  // array of music tracks
+    std::map<std::string, Sound> voices; //array of voices
 
     // Make constructor private to enforce Singleton pattern
     SoundManager() = default;

@@ -20,7 +20,7 @@ public:
     }
 
     void LoadVoice(const std::string& name, std::string filePath) {
-        if (voices.find(name) == voices.end()) {
+        if (voices.find(name) == voices.end()) { //if name not in map, add it. If find(name) can't find it, it returns .end()
             Sound sound = ::LoadSound(filePath.c_str());
             voices[name] = sound; //store voice in array
         }
@@ -28,7 +28,7 @@ public:
 
     // Load a sound and store it in the manager
     void LoadSound(const std::string& name, const std::string& filePath) {
-        if (sounds.find(name) == sounds.end()) {
+        if (sounds.find(name) == sounds.end()) {//key doesn't exist in the map, so add it. 
             Sound sound = ::LoadSound(filePath.c_str());  // Load the sound
             sounds[name] = sound;  // Store in the map
         }
@@ -64,11 +64,11 @@ public:
 
         // Select a random voice
         int randomIndex = rand() % voices.size();
-        auto it = voices.begin();
-        std::advance(it, randomIndex);
-
+        auto it = voices.begin(); //asign the first sound
+        std::advance(it, randomIndex); 
+        std::cout << randomIndex << " \n";
         // Set current voice and play it
-        currentVoice = it->second;
+        currentVoice = it->second; //second means the value, in a key val pair. 
         ::PlaySound(currentVoice);
         voicePlaying = true;
     }
@@ -79,7 +79,7 @@ public:
 
         // Generate a random index
         int randomIndex = rand() % voices.size();
-
+        
         // Iterate through the map to get the voice at the random index
         auto it = voices.begin();
         std::advance(it, randomIndex);

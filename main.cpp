@@ -4292,14 +4292,32 @@ void InitSounds(SoundManager& soundManager){
 
     soundManager.LoadSound("zombieDeath", "assets/sounds/zombieDeath.ogg");
 
-    soundManager.LoadVoice("voice1", "assets/sounds/voice1.ogg");
-    soundManager.LoadVoice("voice2", "assets/sounds/voice2.ogg");
-    soundManager.LoadVoice("voice3", "assets/sounds/voice3.ogg");
-    soundManager.LoadVoice("voice4", "assets/sounds/voice4.ogg");
-    soundManager.LoadVoice("voice5", "assets/sounds/voice5.ogg");
-    soundManager.LoadVoice("voice6", "assets/sounds/voice6.ogg");
-    soundManager.LoadVoice("voice7", "assets/sounds/voice7.ogg");
-    
+    // soundManager.LoadVoice("voice1", "assets/sounds/voice1.ogg"); //need a better, longer clip to cut up
+    // soundManager.LoadVoice("voice2", "assets/sounds/voice2.ogg");
+    // soundManager.LoadVoice("voice3", "assets/sounds/voice3.ogg");
+    // soundManager.LoadVoice("voice4", "assets/sounds/voice4.ogg");
+    // soundManager.LoadVoice("voice5", "assets/sounds/voice5.ogg");
+    // soundManager.LoadVoice("voice6", "assets/sounds/voice6.ogg");
+    // soundManager.LoadVoice("voice7", "assets/sounds/voice7.ogg");
+
+    soundManager.LoadVoice("voice8", "assets/sounds/v1.ogg");
+    soundManager.LoadVoice("voice9", "assets/sounds/v2.ogg");
+    soundManager.LoadVoice("voice10", "assets/sounds/v3.ogg");
+    soundManager.LoadVoice("voice11", "assets/sounds/v4.ogg");
+    soundManager.LoadVoice("voice12", "assets/sounds/v5.ogg");
+    soundManager.LoadVoice("voice13", "assets/sounds/v6.ogg");
+    soundManager.LoadVoice("voice14", "assets/sounds/v7.ogg");
+    soundManager.LoadVoice("voice15", "assets/sounds/v8.ogg");
+    soundManager.LoadVoice("voice16", "assets/sounds/v9.ogg");
+    soundManager.LoadVoice("voice17", "assets/sounds/v10.ogg");
+    soundManager.LoadVoice("voice18", "assets/sounds/v11.ogg");
+    soundManager.LoadVoice("voice19", "assets/sounds/v12.ogg");
+    soundManager.LoadVoice("voice20", "assets/sounds/v13.ogg");
+    soundManager.LoadVoice("voice21", "assets/sounds/v14.ogg");
+    soundManager.LoadVoice("voice22", "assets/sounds/v15.ogg");
+    soundManager.LoadVoice("voice23", "assets/sounds/v16.ogg");
+    soundManager.LoadVoice("voice24", "assets/sounds/v17.ogg");
+    soundManager.LoadVoice("voice25", "assets/sounds/v18.ogg");
 
     soundManager.LoadSound("phit1", "assets/sounds/PlayerHit1.ogg"); //player VA hits
     soundManager.LoadSound("phit2", "assets/sounds/PlayerHit2.ogg");

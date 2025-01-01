@@ -6,7 +6,7 @@
 #include <raylib.h>
 #include <raymath.h>
 
-struct ActiveSound {
+struct ActiveSound { //for positional audio
     Sound sound;
     Vector2 position;
     float maxDistance;
@@ -59,22 +59,7 @@ public:
         return voices[name];
     }
 
-    void PlayNextVoice() {
-        if (voices.empty()) return;
-
-        // Select a random voice
-        int randomIndex = rand() % voices.size();
-        auto it = voices.begin(); //asign the first sound
-        std::advance(it, randomIndex); 
-        std::cout << randomIndex << " \n";
-        // Set current voice and play it
-        currentVoice = it->second; //second means the value, in a key val pair. 
-        ::PlaySound(currentVoice);
-        voicePlaying = true;
-    }
-
-
-    void PlayRandomVoice() {
+    void PlayRandomVoice() { //Play a single random clip
         if (voices.empty()) return; // Ensure there are voices loaded
 
         // Generate a random index
@@ -88,7 +73,25 @@ public:
         ::PlaySound(it->second);
     }
 
-    void StartRandomVoices(float duration) {
+    void PlayNextVoice() { //play a randomized series of clips. 
+        if (voices.empty()) return;
+
+        // Select a random voice
+        int randomIndex = rand() % voices.size();
+        auto it = voices.begin(); //asign the first sound.
+
+        std::advance(it, randomIndex); //advance to random index 
+        
+        // Set current voice and play it
+        currentVoice = it->second; //second means the value, in a key value pair. 
+        ::PlaySound(currentVoice);
+        voicePlaying = true;
+    }
+
+
+
+
+    void StartRandomVoices(float duration) { // start playing a randomized series of clips
         if (voices.empty()) return;
 
         voiceTimer = duration;
@@ -104,14 +107,11 @@ public:
         voiceTimer -= deltaTime;
 
         // Check if the current voice is finished
-        if (voicePlaying && !::IsSoundPlaying(currentVoice)) {
-            voicePlaying = false;
+        if (voicePlaying && !::IsSoundPlaying(currentVoice)) { //check every frame until current voice ended, play next voice
+            voicePlaying = false; //stop playing before playing next voice. 
             PlayNextVoice(); // Play the next random voice
         }
     }
-
-
-
 
 
     // Play music with looping enabled

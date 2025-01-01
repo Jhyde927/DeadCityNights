@@ -123,11 +123,8 @@ float blackoutTimer = 0.0f; // Timer to keep track of blackout period
 float minDistToPlayer = 50;
 float maxDistToPlayer = 200;
 
-int gameWidth = 1024; // Your game resolution width
-int gameHeight = 1024; // Your game resolution height
-
-// Calculate offsets
-
+int gameWidth = 1024; // game resolution width
+int gameHeight = 1024; // game resolution height
 
 
 Color customBackgroundColor = {32, 42, 63, 255};  //Same Color as sky background image. 
@@ -2676,10 +2673,10 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
     int carMin = 2765;
 
     //UFO shows up in the begining at the far left outside, and once you have the cemetery key in the cemetery. 
-    if (hasCemeteryKey){
-        //playe UFO hum when ufo is present.
+    if (hasCemeteryKey) {
+        //playe UFO hum when ufo is present. Use UFO.baseposition not position
 
-        PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.position, player.position, 800.0f);
+        PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.basePosition, player.position, 800.0f);
         
     }
     
@@ -3497,7 +3494,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 
     SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide or in vacant lot
     SoundManager::getInstance().PlayMusic("StreetSounds");
-    PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.position, player.position, 800);
+    PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.basePosition, player.position, 800);
 
     playerOutsideInteraction(player, player_car);
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
@@ -4292,14 +4289,7 @@ void InitSounds(SoundManager& soundManager){
 
     soundManager.LoadSound("zombieDeath", "assets/sounds/zombieDeath.ogg");
 
-    // soundManager.LoadVoice("voice1", "assets/sounds/voice1.ogg"); //need a better, longer clip to cut up
-    // soundManager.LoadVoice("voice2", "assets/sounds/voice2.ogg");
-    // soundManager.LoadVoice("voice3", "assets/sounds/voice3.ogg");
-    // soundManager.LoadVoice("voice4", "assets/sounds/voice4.ogg");
-    // soundManager.LoadVoice("voice5", "assets/sounds/voice5.ogg");
-    // soundManager.LoadVoice("voice6", "assets/sounds/voice6.ogg");
-    // soundManager.LoadVoice("voice7", "assets/sounds/voice7.ogg");
-
+    //random gibberish clips - removed voice 1-7
     soundManager.LoadVoice("voice8", "assets/sounds/v1.ogg");
     soundManager.LoadVoice("voice9", "assets/sounds/v2.ogg");
     soundManager.LoadVoice("voice10", "assets/sounds/v3.ogg");

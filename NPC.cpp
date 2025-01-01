@@ -296,7 +296,7 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){
         }
 
         if (!talked && !hobo && !police && !teller){ //all other NPCs
-            SoundManager::getInstance().StartRandomVoices(1);
+            SoundManager::getInstance().StartRandomVoices(.5);
             talked = true;
             speech = GetRandomPhrase(); // NPC greets player
             talkTimer = 3; //limit talking. 
@@ -316,7 +316,7 @@ void NPC::HandleGhost(Player& player, float& distanceToPlayer){
 
         if (agro){
             destination = player.position;
-        }   
+        }  
 
     }
 

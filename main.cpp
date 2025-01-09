@@ -136,14 +136,9 @@ bool showInventory = false;
 const int INVENTORY_SIZE = 10;  // Define the size of the inventory
 std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", "", "", ""}; //Inventory is a fixed array for no particular reason.
 
-//const int INVENTORY_SIZE = 10;
-//std::vector<std::string> inventory(INVENTORY_SIZE, "");  // Vector of size 10, filled with empty strings
-// During initialization
-
 const int GAME_SCREEN_WIDTH = 1024;
 const int GAME_SCREEN_HEIGHT = 1024;
 
-//possibly make it a vector and inventory size could grow over time. Or a backpack item 
 
 std::string phrase = "A and D to move, hold shift to run"; //initial tutorial phrase
 
@@ -2726,6 +2721,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
 
     show_dbox = false;
     over_gate = false;
+    over_car = false;
     //Cemetery Gate
     if (player.position.x > 3069 && player.position.x < 3089 && !hasCemeteryKey){
         phrase = "Locked";
@@ -2749,8 +2745,6 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
    if (player.position.x > carMin && player.position.x < carMax){
         over_car = true;
         
-   }else{
-        over_car = false; 
    }
 
     BeginMode2D(camera);
@@ -2929,7 +2923,7 @@ void RenderRoad(const GameResources& resources, PlayerCar& player_car,Player& pl
         float light_scale = 1.0f; // Default scale
 
         if (!reverse_road){
-            // Positions when not reversing
+            //light positions when not reversing
             breakLight_pos = {player_car.position.x + 88, player_car.position.y + 53};
             light_pos = {player_car.position.x - 225, player_car.position.y + 32};
             light_scale = 1.0f; // Normal scale
@@ -3150,6 +3144,7 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
     if (player.position.x < 2782 && player.position.x > 2742){
         over_exit = true;
         phrase = "UP TO EXIT";
+        dboxPosition = player.position;
         show_dbox = true;
     }else{
         over_exit = false;

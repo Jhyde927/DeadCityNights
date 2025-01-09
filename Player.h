@@ -1,8 +1,8 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include <raylib.h>  // Assuming Vector2 is used from raylib
-#include "GameResources.h" // Include resources for the method
+#include <raylib.h>
+#include "GameResources.h"
 #include "GameEnums.h"
 #include "platform.h"
 #include <vector>
@@ -96,14 +96,6 @@ public:
         void playerPhysics(float deltaTime, std::vector<Platform> platforms);
         void updateAnimations(GameResources& resources);
         bool CheckIfOnPlatform(const std::vector<Platform>& platforms);
-        void stunPlayer(float& time);
-
-
-        
-
-            
-
-
 
 
 

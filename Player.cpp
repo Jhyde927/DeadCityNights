@@ -42,7 +42,6 @@ Player::Player() {
     currentFrame = 0;
     frameCounter = 0.0f;
     frameSpeed = 12.0f;
-    stunTimer = 0.0;
     isDead = false;
     isMoving = false;
     facingRight = true;
@@ -405,9 +404,9 @@ void Player::playerPhysics(float deltaTime, std::vector<Platform> platforms){
     }
 
 
-    if (stunTimer <= 0){
-        position.x += velocity.x * deltaTime;
-    }
+
+    position.x += velocity.x * deltaTime;
+    
     
     position.y += velocity.y * deltaTime;
     isOnGround = false;
@@ -438,11 +437,7 @@ void Player::playerPhysics(float deltaTime, std::vector<Platform> platforms){
 
 }
 
-void Player::stunPlayer(float& time){
-    if (can_take_damage){
-        velocity.x = 0;
-    }
-}
+
 
 void Player::updateAnimations(GameResources& resources){
     if (isShooting) {

@@ -316,7 +316,7 @@ void NPC::HandleGhost(Player& player, float& distanceToPlayer){
 
         if (agro){
             destination = player.position;
-        }  
+        }   
 
     }
 
@@ -442,12 +442,8 @@ void NPC::HandlePolice(Player& player, float& distanceToPlayer){
     }
 
     if (police && distanceToPlayer < 10.0f && hasTarget && agro && !player.isDead){
-        float t = 0.5;
-        if (player.stunTimer <= 0){
-            player.stunPlayer(t);
-            
-
-        }
+        //player.take_damage(10);
+        //Police brutality is broken. 
         
     }
 
@@ -621,7 +617,7 @@ void NPC::Update(Player& player, GameState& gameState) {
     directionToPlayer = Vector2Normalize(directionToPlayer);
 
 
-    //NPCs choose a random position called destination. they move toward destination until they arrive then repeat. 
+    //NPCs choose a random position called destination. they move toward destination until they arrive then wait a random amount of time and repeat 
     if (!isDying && riseTimer <= 0 && !attacking) { //MOVE NPCs and Police and Zombies and Ghosts. 
         // Move towards the destination
 

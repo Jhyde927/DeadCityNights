@@ -97,7 +97,7 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){
             talkTimer = 0; //If you click while the hobo is talking, skip the dialog by seting talk timer to 0
         } 
 
-        SetAnimationState(IDLE);
+        if (!attacking) SetAnimationState(IDLE);
 
         if (!talked && teller){
             talked = true;
@@ -147,7 +147,7 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){
         if (police && !talked){
             talked = true;
             speech = (rand() % 2 == 0) ? "Freeze!" : "Halt!";
-            talkTimer = 3;
+            talkTimer = 1;
             idleTime = 1;
             agro = true;
         }
@@ -320,8 +320,13 @@ void NPC::HandleGhost(Player& player, float& distanceToPlayer){
 
     }
 
-    frameSpeed = 8;
-    attacking = false;
+    if (ghost){
+        frameSpeed = 8;
+        attacking = false;
+
+    }
+
+
 
     if ((bat || ghost) && distanceToPlayer <= 25 && distanceY < 25 && !isDying && agro){ //check distanceY as well
         
@@ -340,9 +345,9 @@ void NPC::HandleGhost(Player& player, float& distanceToPlayer){
 
 void NPC::HandleZombie(Player& player, float& distanceToPlayer){
     if (!isActive) return; 
-    hasTarget = false;
+    if (isZombie) hasTarget = false; //was setting hasTarget to false for police
     float distToDest = fabs(position.x - destination.x);
-    attacking = false;
+    if (isZombie) attacking = false;
 
     if (isZombie && distanceToPlayer < detectionRange && riseTimer <= 0) {
         hasTarget = true; //if hasTarget dont go idle
@@ -425,14 +430,16 @@ void NPC::HandleMiB(Player& player, float& distanceToPlayer){
 }
 
 void NPC::HandlePolice(Player& player, float& distanceToPlayer){
-    if (police && distanceToPlayer < detectionRange && agro && !attacking){ //police chase player
+    attacking = false;
+    if (police && distanceToPlayer < detectionRange && agro){ //police chase player
         hasTarget = true;
         destination = player.position;
         speed = 75;
         frameSpeed = 14; //speed up animation for attacking and chasing. 
         
 
-    }else if (police && distanceToPlayer >= detectionRange && agro && !attacking){ //police loose player
+    }
+    if (police && distanceToPlayer >= detectionRange && agro && !attacking){ //police loose player
         agro = false;
         speed = 50;
         hasTarget = false;
@@ -441,18 +448,13 @@ void NPC::HandlePolice(Player& player, float& distanceToPlayer){
         frameSpeed = 8.0; //reset animation speed
     }
 
-    if (police && distanceToPlayer < 10.0f && hasTarget && agro && !player.isDead){
-        //player.take_damage(10);
-        //Police brutality is broken. 
-        
-    }
 
 
     if (police && distanceToPlayer < 20.0f && hasTarget && agro && !player.isDead){ // police attack player
         idleTime = 0.0f; //transition to idle before attacking so it doesn't flicker. 
         destination = position;
         attacking = true;
-        frameSpeed = 24;
+        frameSpeed = 12;
         if (player.can_take_damage && currentFrame == 5){ //only hit on frame 5. 
             player.take_damage(10);
             
@@ -460,9 +462,7 @@ void NPC::HandlePolice(Player& player, float& distanceToPlayer){
         }
 
         SetAnimationState(ATTACKING);
-    }else if (police && distanceToPlayer >= 20.0f && hasTarget){ //player leaves attack area
         
-        attacking = false;
     }
 }
 
@@ -604,10 +604,10 @@ void NPC::Update(Player& player, GameState& gameState) {
     hasTarget = false; //reset hasTarget incase we loose
     attacking = false;
 
-    HandleMiB(player, distance_to_player);
-    HandlePolice(player, distance_to_player); //handle distance checks and attack logic. 
-    HandleZombie(player, distance_to_player);
-    HandleGhost(player, distance_to_player); //also bats
+    if (MiB) HandleMiB(player, distance_to_player);
+    if (police) HandlePolice(player, distance_to_player); //handle distance checks and attack logic. 
+    if (isZombie) HandleZombie(player, distance_to_player);
+    if (ghost) HandleGhost(player, distance_to_player); //also bats
 
     Vector2 directionToPlayer = {
     player.position.x - position.x,
@@ -669,11 +669,12 @@ void NPC::Update(Player& player, GameState& gameState) {
 
         // Check if destination is reached
 
-        if (fabs(position.x - destination.x) < 5.0f && !hasTarget && !isZombie) { //Pedestrians
+        if (fabs(position.x - destination.x) < 5.0f && !hasTarget && !isZombie && !attacking) { //Pedestrians
             // Reached destination, go idle for a moment, then set a new destination
             idleTime = 3.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 2.0f));  // 3-6 seconds of idle time
 
             SetAnimationState(IDLE);
+            
             
             if (hobo){
                 SetDestination(2550, 2600); // hobo stays near middle

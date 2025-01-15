@@ -305,7 +305,7 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){
         
     }
 
-void NPC::HandleGhost(Player& player, float& distanceToPlayer){
+void NPC::HandleGhost(Player& player, float& distanceToPlayer){ //Also Bats. should probably rename or make it a seperate func handleBats()
 
     float distanceY = abs(player.position.y - position.y); //flying enemies need a Y axis
     //float distanceToBat = Vector2Distance(position, player.position);
@@ -313,7 +313,7 @@ void NPC::HandleGhost(Player& player, float& distanceToPlayer){
     if ((ghost || bat) && distanceToPlayer < 400){
         hasTarget = true;
         if (bat) agro = true; //bats are always angry
-
+        
         if (agro){
             destination = player.position;
         }   
@@ -454,7 +454,7 @@ void NPC::HandlePolice(Player& player, float& distanceToPlayer){
         idleTime = 0.0f; //transition to idle before attacking so it doesn't flicker. 
         destination = position;
         attacking = true;
-        frameSpeed = 12;
+        frameSpeed = 12; //faster swing.
         if (player.can_take_damage && currentFrame == 5){ //only hit on frame 5. 
             player.take_damage(10);
             
@@ -478,7 +478,7 @@ void NPC::SetDestination(float minX, float maxX) {
 void NPC::HandleAnimationLogic(){
         // Update frame counter and animation logic
     frameCounter += GetFrameTime() * frameSpeed; //Higher frameSpeed means frameCounter increases more each frame.
-    //If you think of the threshold 1.0f as one second, then frameSpeed represents the number of frames per second for the animation.
+    
     if (frameCounter >= 1.0f) { 
         frameCounter = 0.0f;
         currentFrame++;
@@ -607,7 +607,7 @@ void NPC::Update(Player& player, GameState& gameState) {
     if (MiB) HandleMiB(player, distance_to_player);
     if (police) HandlePolice(player, distance_to_player); //handle distance checks and attack logic. 
     if (isZombie) HandleZombie(player, distance_to_player);
-    if (ghost) HandleGhost(player, distance_to_player); //also bats
+    if (ghost || bat) HandleGhost(player, distance_to_player); //also bats
 
     Vector2 directionToPlayer = {
     player.position.x - position.x,
@@ -737,7 +737,8 @@ void NPC::Render(ShaderResources& shaders) {
 
     }
 
-    Rectangle sourceRec = { //
+    Rectangle sourceRec = { //currentFrame gets cycled in handleAnimationLogic. 0-row.size()
+    //we are looping through frames in a certain row depending on the gamestate
         static_cast<float>(currentFrame * frameWidth),  // x position in the sprite sheet
         static_cast<float>(row * frameHeight),          // y position in the sprite sheet
         static_cast<float>(frameWidth),                 // Width of the frame
@@ -787,14 +788,15 @@ void NPC::ClickNPC(Vector2 mousePosition, Camera2D& camera, Player& player, Game
     float hitboxWidth = 16.0f;   
     float hitboxHeight = 32.0f;  //Tall rectange to cover the sprite. 
     
-    Rectangle npcHitbox = {// Hit box for mouse clicks
-        position.x+24,   // Center horizontally
-        position.y+16,  //Center vertically
-        hitboxWidth,  // Width of hitbox
+    Rectangle npcHitbox = { // Hit box for mouse clicks
+        position.x+24,      // Center horizontally
+        position.y+16,      //Center vertically
+        hitboxWidth,  
         hitboxHeight                    
     };
 
-     //DrawRectangleLines(position.x+24, position.y+16, hitboxWidth, hitboxHeight, RED); // debug show hitbox
+    //DrawRectangleLines(position.x+24, position.y+16, hitboxWidth, hitboxHeight, RED); // debug show hitbox
+    //this looks cool. could we use it in game for something? instead of current highlight just draw a red box around interacting NPC, nah.
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){ // it seems dumb to get input inside the NPC class, but here we are.  
         if (CheckCollisionPointRec(mouseWorldPos, npcHitbox)){
@@ -811,8 +813,8 @@ void NPC::ClickNPC(Vector2 mousePosition, Camera2D& camera, Player& player, Game
 bool NPC::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition, Vector2 bulletSize) { 
     //raycasting for better collision detection
     // Define a hitbox around the NPC (centered on the NPC's position)
-    float hitboxWidth = 8.0f;   // Width of the hitbox (adjust as needed)
-    float hitboxHeight = 32.0f; // Height of the hitbox (adjust as needed)
+    float hitboxWidth = 8.0f;   // Width of the hitbox 
+    float hitboxHeight = 32.0f; // Height of the hitbox 
 
     // Offset the hitbox so it's centered on the zombie's position
     Rectangle npcHitbox = {
@@ -922,13 +924,12 @@ void NPC::TakeDamage(int damage, Player& player) {
 
     if (health <= 0 && !isDying){ //NPC killed by zombie
 
-        
-        riseTimer = 0; //if killed while still rising set the risetimer back to 0 as to not play rise animation
+        riseTimer = 0; 
         isDying = true;           // Start dying process   
         SetAnimationState(DEATH);  // Set to death animation
         SoundManager::getInstance().PlayPositionalSound("deathScream", position, player.position, 500);
         deathTimer = 0.85f;        // Set death animation duration // needs to be exact
-        destination = position; //zombie is at it's destination on death as to not play walk animation
+        destination = position; 
         
     }
 

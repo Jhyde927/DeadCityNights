@@ -150,7 +150,6 @@ float GetLeftBoundary(GameState gameState){
         return 1064;
     }else if (gameState == WORK){
         return 1064;
-
     }else if (gameState == ASTRAL){
         return 1064;
     }else if (gameState == PARK){
@@ -237,7 +236,7 @@ void Player::HandleInput(float speed){
             isRunning = false;  // Stop running if no movement keys are pressed
         }
 
-        //change facing direction while stopped. 
+        //change facing direction while stopped, and aiming. 
         if (isAiming && !isReloading) {
             if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
                 facingRight = true;
@@ -298,7 +297,7 @@ void Player::Reload(){
             }
 
             isReloading = true;
-            shotgunReloadTime = 0.7f;
+            shotgunReloadTime = 0.7f; //start the reload timer
 
             //shotgunBulletCount = 2;
             bulletCount = MAX_BULLETS;//shotgun uses same bullets array
@@ -331,12 +330,14 @@ void Player::Reload(){
 
 
 bool Player::CheckIfOnPlatform(const std::vector<Platform>& platforms) {
+    float hitboxWidth = 7.0;
+    float hitboxHeight = 24.0f;
     // Create the player's collision rectangle
     Rectangle playerRect = {
         position.x + 30,
         position.y + 24,
-        7,
-        24 //magic numbers to size hitbox smaller than texture
+        hitboxWidth,
+        hitboxHeight //magic numbers to size hitbox smaller than texture
     };
 
     

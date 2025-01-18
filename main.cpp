@@ -11,8 +11,8 @@
 #include "GameCalendar.h"
 #include "Platform.h"
 #include <string>
-#include <cstdlib>  // For rand and srand
-#include <ctime>    // For seeding rand
+#include <cstdlib>  
+#include <ctime>
 #include "shaderControl.h"
 #include <random>
 
@@ -38,6 +38,7 @@ bool over_shotgun = false;
 bool show_carUI = false;
 bool leave_apartment = false;
 bool leave_cemetery = false;
+bool buttonNecro = false;
 bool buttonCemetery = false;
 bool buttonInternet = false;
 bool hasCemeteryKey = false;
@@ -67,6 +68,7 @@ bool buttonPark = false;
 bool gotoWork = false;
 bool gotoPark = false;
 bool gotoStreet = false;
+bool gotoNecro = false;
 bool debug = true; ///////////////////////////////////////DEBUG KEYS ON/OFF
 bool hasWorked = false;
 bool buttonSleep = false;
@@ -334,6 +336,7 @@ void LoadGameResources(GameResources& resources) {
     resources.subwayBackground = LoadTexture("assets/subwayBackground.png");
     resources.subwayMidground = LoadTexture("assets/subwayMidground.png");
     resources.train = LoadTexture("assets/Train.png");
+    resources.ntForeground = LoadTexture("assets/NTforeground.png");
 }
 
 void UnloadGameResources(GameResources& resources){
@@ -416,6 +419,7 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.subwayForeground);
     UnloadTexture(resources.subwayMidground);
     UnloadTexture(resources.train);
+    UnloadTexture(resources.ntForeground);
   
 }
 
@@ -655,11 +659,14 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
                     gotoWork = true;
                     move_car = true;
                     hasWorked = true;
-                }else if (player.enter_car && buttonPark){
+                }else if (player.enter_car && buttonPark){ //button press Park
                     gotoPark = true;
                     
                     move_car = true;
                     
+                }else if (player.enter_car && buttonNecro){ //button press NecroTech
+                    move_car = true;
+                    gotoNecro = true;
                 }
             }
 
@@ -681,7 +688,11 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
             if (buttonPark){
                 //do something
             }
-        } 
+        }else if (gameState == NECROTECH){
+            if (buttonCemetery){
+                transitionState = FADE_OUT;
+            }
+        }
 
     }
 
@@ -1137,10 +1148,16 @@ void DrawShovelPickup(GameResources& resources, Player& player, Vector2 mousePos
     }
 }
 
+void HandleNecroTransition(Player& player, PlayerCar& player_car){
+    gameState = OUTSIDE;
+    player_car.position.x = 1710;
+    player.position.x = player_car.position.x; //center of car
+}
+
 
 
 void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<NPC>& npcs, GameCalendar calendar) {
-    if (move_car && !gotoWork && !gotoPark) {  // Car is moving, go to road
+    if (move_car && !gotoWork && !gotoPark && !gotoNecro) {  // Car is moving, go to road
         gameState = ROAD;
         player_car.facingLeft = true;  // Leaving outside = face left
         if (!reverse_road) {
@@ -1153,8 +1170,16 @@ void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<
         gameState = PARK;
         player_car.position.x = 1800;
         player.position.x = player_car.position.x;
-        carToPark = true;
+        carToPark = true; //true?
         move_car = false;
+
+    }else if (gotoNecro && move_car){
+        gameState = NECROTECH;
+        move_car = false;
+        player_car.position.x = 1623;
+        player.position.x = player_car.position.x;
+        
+        //gotoNecro = false;
 
     } else if (player.isDead) {  // Died outside, go to apartment
         gameState = APARTMENT;
@@ -1381,6 +1406,10 @@ void PerformStateTransition(Player& player, PlayerCar& player_car, GameCalendar&
 
         case SUBWAY:
             HandleSubwayTransition(gameState, player);
+            break;
+
+        case NECROTECH:
+            HandleNecroTransition(player, player_car);
             break;
   
     }
@@ -1904,6 +1933,7 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, G
     Color work_tint = WHITE;
     Color cemetery_tint = WHITE;
     Color tavern_tint = WHITE;
+    Color necro_tint = WHITE;
 
     Rectangle textureBounds = { //cemetery / street
         player_car.position.x,      
@@ -1922,6 +1952,13 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, G
     Rectangle ParkBounds = { //Park
         player_car.position.x,      
         player_car.position.y-16,      
+        static_cast<float>(96),  
+        static_cast<float>(16)  
+    };
+
+    Rectangle NecroBounds = { //Park
+        player_car.position.x,      
+        player_car.position.y+32,      
         static_cast<float>(96),  
         static_cast<float>(16)  
     };
@@ -1947,6 +1984,13 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, G
         buttonPark = false;
     }
 
+    if (CheckCollisionPointRec(mouseWorldPos, NecroBounds)){ //very bottom NecroTech
+        necro_tint = RED;
+        buttonNecro = true;  
+    }else{
+        buttonNecro = false;
+    }
+
 
     if (gameState == OUTSIDE){
         DrawText("   Park", ui_pos.x, ui_pos.y-17, 16, tavern_tint);
@@ -1955,7 +1999,7 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, G
         work_tint = hasWorked ? BLACK : work_tint; //turn off work option if you have recently worked. Render button black. 
         DrawText("   Work", ui_pos.x, ui_pos.y+17, 16, work_tint);
 
-        if (NecroTech) DrawText("  NecroTech", ui_pos.x, ui_pos.y+32, 16, WHITE); //TODO: implement final level. I've been putting it off because
+        if (NecroTech) DrawText("  NecroTech", ui_pos.x, ui_pos.y+32, 16, necro_tint); //TODO: implement final level. I've been putting it off because
         //i don't like it. Then change it. 
 
 
@@ -1969,6 +2013,8 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, G
     }else if (gameState == PARK){
         DrawText("    Street", ui_pos.x, ui_pos.y, 16, cemetery_tint);
         
+    }else if (gameState == NECROTECH){
+        DrawText("    Street", ui_pos.x, ui_pos.y, 16, cemetery_tint);
     }
 
 }
@@ -3483,6 +3529,92 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
 
 }
 
+//NecroTech
+void RenderNecroTech(GameResources resources, Camera2D camera, Player& player, PlayerCar& player_car, Vector2 mousePosition, ShaderResources& shaders){
+    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
+
+    HandleKeyboardAiming(player, mousePosition);
+    if (!IsKeyDown(KEY_F)){
+        if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
+    }
+
+    camera.target = player.position;
+    float parallaxMidBuildings = camera.target.x * 0.4;
+    float parallaxMidground = camera.target.x * 0.6f;  // Midground moves slower
+    float parallaxBackground = camera.target.x * 0.8f;  // Background moves even slower
+
+    over_car = false;
+    if (player.position.x > player_car.position.x && player.position.x < player_car.position.x +30){
+        over_car = true;
+    }
+    
+    BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
+    //Outside of Mode2D is screen space coords. 
+    ClearBackground(customBackgroundColor);
+    
+    if (drunk){
+        BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
+        //player.outline = true;
+
+    }
+
+    //background/midground width = 6400
+
+     // Draw the background (sky)
+    DrawTexturePro(resources.background, {0, 0, static_cast<float>(resources.background.width), static_cast<float>(resources.background.height)},
+                    {-1000 + parallaxBackground, 0, static_cast<float>(resources.background.width), static_cast<float>(resources.background.height)}, {0, 0}, 0.0f, WHITE);
+
+    // Draw the midground (silhouettes)
+    DrawTexturePro(resources.midground, {0, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)},
+                    {-3000 + parallaxMidground, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)}, {0, 0}, 0.0f, WHITE);
+
+    DrawTexturePro(resources.MidBuildings, {0, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)},
+                    {-3050 + parallaxMidBuildings, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)}, {0, 0}, 0.0f, WHITE);
+
+    // Draw the foreground (main scene),  offset by 1024 to center relative to midground. 
+    DrawTexturePro(resources.ntForeground, {0, 0, static_cast<float>(resources.foreground.width), static_cast<float>(resources.foreground.height)},
+                    {-3000, 0, static_cast<float>(resources.foreground.width), static_cast<float>(resources.foreground.height)}, {0, 0}, 0.0f, WHITE);
+
+
+
+
+    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)){
+        if (player.enter_car && !move_car){ // dont exit car if it's still moving.
+            PlaySound(SoundManager::getInstance().GetSound("CarDoorClose")); 
+            player.enter_car = false;
+            player_car.currentFrame = 0;
+        }
+    }
+
+    float CarFrameWidth = 128;
+    Rectangle sourceRecCar = {player_car.currentFrame * CarFrameWidth, 0, CarFrameWidth, CarFrameWidth};
+    DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE); //draw player_car
+    if (player.enter_car) EnterCar(resources, player, player_car);
+
+    if (player.enter_car == false){// if enter car is false, dont render player or update position. camera should stay focused on player pos. 
+        SoundManager::getInstance().StopMusic("CarRun");
+        //DRAW PLAYER
+        player.DrawPlayer(resources, gameState, camera, shaders);
+    }
+
+    if (show_carUI && !move_car && player.enter_car){ //destination menu //draw UI inside mode2d
+        DrawCarUI(player_car, mousePosition, camera, gameState);
+    }
+    DrawBullets();
+    EndShaderMode(); ////////////////////////////SHADER OFF
+    EndMode2D();
+
+    DrawMoney(); //draw money after EndMode2d()
+    if (showInventory){
+         
+        RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+    }
+    //Draw cursor last so it's on top
+    DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
+}
+      
+
+
 
 //Main Street
 void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, PlayerCar& player_car,MagicDoor& magicDoor, float& totalTime,  std::vector<NPC>& npcs, UFO& ufo, Vector2 mousePosition, ShaderResources& shaders) {
@@ -3979,7 +4111,11 @@ void debugKeys(Player& player){
             PlaySound(SoundManager::getInstance().GetSound("Keys"));
 
         }
-
+    }
+    if (IsKeyPressed(KEY_N)){
+        if (!NecroTech){
+            NecroTech = true;
+        }
     }
 
     if (IsKeyPressed(KEY_H)){
@@ -4548,6 +4684,11 @@ int main() {
                 case SUBWAY:
                     RenderSubway(resources, player, camera, mousePosition, train, shaders);
                     break;
+
+                case NECROTECH:
+                    RenderNecroTech(resources, camera, player, player_car, mousePosition, shaders);
+                    break;
+                    
             }
 
             HandleTransition(player, player_car, calendar, npcs); //Check everyframe for gamestate transitions, inside draw to handle fadeouts

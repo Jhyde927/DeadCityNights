@@ -171,6 +171,7 @@ std::vector<NPC>mibs;
 std::vector<NPC>astralGhosts;
 std::vector<NPC>astralBats;
 std::vector<NPC>ParkNpcs;
+std::vector<NPC>robots;
 
 
 std::vector<Platform> platforms;
@@ -337,6 +338,7 @@ void LoadGameResources(GameResources& resources) {
     resources.subwayMidground = LoadTexture("assets/subwayMidground.png");
     resources.train = LoadTexture("assets/Train.png");
     resources.ntForeground = LoadTexture("assets/NTforeground.png");
+    resources.robotSheet = LoadTexture("assets/robotSheet.png");
 }
 
 void UnloadGameResources(GameResources& resources){
@@ -420,6 +422,7 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.subwayMidground);
     UnloadTexture(resources.train);
     UnloadTexture(resources.ntForeground);
+    UnloadTexture(resources.robotSheet);
   
 }
 
@@ -709,7 +712,7 @@ void HandleKeyboardAiming(Player& player, Vector2 mousePosition){
         }
     }else if (player.isAiming && !IsKeyDown(KEY_F)) {// If the player is not aiming with keyboard, allow mouse control to set the facing direction
         // Set facing direction based on mouse position
-        player.facingRight = mousePosition.x > player.position.x; //facing right is true if mousepos.x > playerPos.x
+        //player.facingRight = mousePosition.x > player.position.x; //facing right is true if mousepos.x > playerPos.x
     }
 }
 
@@ -2453,9 +2456,6 @@ void RenderSubway(GameResources& resources, Player& player, Camera2D& camera, Ve
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
     show_dbox = false;
     HandleKeyboardAiming(player, mousePosition);
-    if (!IsKeyDown(KEY_F)){
-        if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
-    }
     
     float parallaxBackground = camera.target.x * 0.5f;  // Background moves even slower
     float parallaxMidground = camera.target.x * 0.25f;  // benches and poles
@@ -3531,12 +3531,10 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
 
 //NecroTech
 void RenderNecroTech(GameResources resources, Camera2D camera, Player& player, PlayerCar& player_car, Vector2 mousePosition, ShaderResources& shaders){
-    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
-
+    //Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
+    show_dbox = false;
     HandleKeyboardAiming(player, mousePosition);
-    if (!IsKeyDown(KEY_F)){
-        if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
-    }
+
 
     camera.target = player.position;
     float parallaxMidBuildings = camera.target.x * 0.4;
@@ -3600,17 +3598,39 @@ void RenderNecroTech(GameResources resources, Camera2D camera, Player& player, P
     if (show_carUI && !move_car && player.enter_car){ //destination menu //draw UI inside mode2d
         DrawCarUI(player_car, mousePosition, camera, gameState);
     }
+
+    for (NPC& robot : robots){
+        robot.Update(player, gameState);
+        robot.Render(shaders);
+        robot.ClickNPC(mousePosition, camera, player, gameState);
+    }
+
     DrawBullets();
     EndShaderMode(); ////////////////////////////SHADER OFF
     EndMode2D();
+
+    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
+    if (!IsKeyDown(KEY_F)){
+        if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
+    }
 
     DrawMoney(); //draw money after EndMode2d()
     if (showInventory){
          
         RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
     }
-    //Draw cursor last so it's on top
-    DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
+
+    if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
+        DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+    }else{
+        DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+    }
+
+    if (show_dbox){
+        DrawDialogBox(player, camera, 0, 0, 20);
+
+    }
+
 }
       
 
@@ -3630,7 +3650,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 
 
     HandleKeyboardAiming(player, mousePosition);
-    if (!IsKeyDown(KEY_F)){
+    if (!IsKeyDown(KEY_F)){ //not holding F
         if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
     }
 
@@ -4022,6 +4042,16 @@ void spawnNPCs(GameResources& resources){
         dealer_npc.SetDestination(0, 4000);
         dealer_npc.dealer = true;
         npcs.push_back(dealer_npc);
+    }
+
+    int rs = 1;
+    for (int i = 0; i < rs; i++){
+        Vector2 r_pos = {static_cast<float>(2200 + i * 100), 700};
+        NPC robot_npc = CreateNPC(resources.robotSheet, r_pos, speed, IDLE, true, false);
+        robot_npc.SetDestination(2000, 3000);
+        robot_npc.robot = true;
+        //robot_npc.agro = true;
+        robots.push_back(robot_npc);
     }
 
 }

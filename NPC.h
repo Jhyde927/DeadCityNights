@@ -66,6 +66,7 @@ public:
     float detectionRange; // Set detection range for zombies
     float detectionRangeBat;
     bool highLight;
+    bool robot;
 
     NPC* targetNPC;
  
@@ -84,9 +85,10 @@ public:
     void HandleZombie(Player& player, float& distanceToPlayer);
     void HandleGhost(Player& player, float& distanceToPlayer);
     void HandleMiB(Player& player, float& distanceToPlayer);
+    void HandleRobot(Player& player, float& distanceToPlayer);
     void TakeDamage(int damage, Player& player);
     void HandleAnimationLogic();
-    void MoveNPC(Player& player, GameState& gameState);
+    //void MoveNPC(Player& player, GameState& gameState);
 };
 
 #endif

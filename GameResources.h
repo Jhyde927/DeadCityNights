@@ -90,6 +90,7 @@ struct GameResources {
     Texture2D subwayMidground;
     Texture2D train;
     Texture2D ntForeground;
+    Texture2D robotSheet;
     
 
     Font defaultFont;

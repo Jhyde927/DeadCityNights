@@ -62,6 +62,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     detectionRange = 300.0f;  // Set detection range for zombies
     detectionRangeBat = 150;
     highLight = false;
+    robot = false;
  
 }
 
@@ -429,6 +430,17 @@ void NPC::HandleMiB(Player& player, float& distanceToPlayer){
     }
 }
 
+void NPC::HandleRobot(Player& player, float& distanceToPlayer){
+    attacking = false;
+    if (robot && distanceToPlayer < detectionRange && agro){
+        hasTarget = true;
+        destination = player.position;
+        speed = 75;
+
+    }
+
+}
+
 void NPC::HandlePolice(Player& player, float& distanceToPlayer){
     attacking = false;
     if (police && distanceToPlayer < detectionRange && agro){ //police chase player
@@ -488,7 +500,7 @@ void NPC::HandleAnimationLogic(){
         switch (currentAnimation) {
             case IDLE:
                 numFrames = 1; // 1 frame for idle
-                if (ghost || bat) numFrames = 7; //ghost idle is 7 frames
+                if (ghost || bat || robot) numFrames = 7; //ghost idle is 7 frames
                 break;
             case WALK:
                 numFrames = 7;  // 7 frames for walking
@@ -608,6 +620,7 @@ void NPC::Update(Player& player, GameState& gameState) {
     if (police) HandlePolice(player, distance_to_player); //handle distance checks and attack logic. 
     if (isZombie) HandleZombie(player, distance_to_player);
     if (ghost || bat) HandleGhost(player, distance_to_player); //also bats
+    if (robot) HandleRobot(player, distance_to_player);
 
     Vector2 directionToPlayer = {
     player.position.x - position.x,
@@ -622,14 +635,18 @@ void NPC::Update(Player& player, GameState& gameState) {
         // Move towards the destination
 
         if (!ghost && !bat){ //pedestrians on the street/zombies
+           
             if (position.x < destination.x) {
                 position.x += speed * GetFrameTime();
                 facingRight = true;
                 SetAnimationState(WALK);
+               
             } else if (position.x > destination.x) {
                 position.x -= speed * GetFrameTime();
                 facingRight = false;
                 SetAnimationState(WALK);
+                
+            
             }
         }else if (bat || ghost) {
             if (agro && hasTarget) {
@@ -680,8 +697,11 @@ void NPC::Update(Player& player, GameState& gameState) {
                 SetDestination(2550, 2600); // hobo stays near middle
             }else if (ghost){
                 SetDestination(1024, 1800); //ghost stays on far left of cemetery
-            }else{
-                SetDestination(1000, 3500);  //Pedestrians Outside 
+            }else if (robot){
+                SetDestination(1600, 2631);
+            } else{
+                SetDestination(1000, 3500);  //Pedestrians Outside
+                
             }
 
         

@@ -135,7 +135,7 @@ float GetRightBoundary(GameState gameState){
     }else if (gameState == SUBWAY){
         return 3900;
     }else if (gameState == NECROTECH){
-        return 3000;
+        return 2631;
     }
 }
 

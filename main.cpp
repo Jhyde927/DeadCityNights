@@ -702,6 +702,7 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
 }
 
 void HandleKeyboardAiming(Player& player, Vector2 mousePosition){
+    //mousePosition is screen2world(mousePosition)
     if (player.isAiming && IsKeyDown(KEY_F)) {
         // Handle keyboard-only aiming (e.g., using arrow keys or player movement keys)
         if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
@@ -711,8 +712,9 @@ void HandleKeyboardAiming(Player& player, Vector2 mousePosition){
             player.facingRight = false;
         }
     }else if (player.isAiming && !IsKeyDown(KEY_F)) {// If the player is not aiming with keyboard, allow mouse control to set the facing direction
-        // Set facing direction based on mouse position
-        //player.facingRight = mousePosition.x > player.position.x; //facing right is true if mousepos.x > playerPos.x
+        // Set facing direction based on world mouse position
+        player.facingRight = mousePosition.x > player.position.x; //facing right is true if mousepos.x > playerPos.x
+
     }
 }
 
@@ -1155,6 +1157,7 @@ void HandleNecroTransition(Player& player, PlayerCar& player_car){
     gameState = OUTSIDE;
     player_car.position.x = 1710;
     player.position.x = player_car.position.x; //center of car
+    gotoNecro = false;
 }
 
 
@@ -2453,9 +2456,9 @@ void playerOutsideInteraction(Player& player, PlayerCar& player_car){
 
 void RenderSubway(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition,Train& train, ShaderResources& shaders){
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
-    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
+
     show_dbox = false;
-    HandleKeyboardAiming(player, mousePosition);
+
     
     float parallaxBackground = camera.target.x * 0.5f;  // Background moves even slower
     float parallaxMidground = camera.target.x * 0.25f;  // benches and poles
@@ -2467,6 +2470,10 @@ void RenderSubway(GameResources& resources, Player& player, Camera2D& camera, Ve
 
     BeginMode2D(camera);  // Begin 2D mode with the camera
     ClearBackground(customBackgroundColor);
+
+    Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
+
+    HandleKeyboardAiming(player, mouseWorldPos);
 
 
     if (drunk){
@@ -2604,7 +2611,7 @@ void RenderSubway(GameResources& resources, Player& player, Camera2D& camera, Ve
 void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoor& magicDoor, ShaderResources& shaders){
     player.gravity = 200;
     player.outline = true;//turn on outline shader in asteral plane
-    HandleKeyboardAiming(player, mousePosition);
+
 
     magicDoor.position.x = 2089;
     camera.target = player.position;
@@ -2618,10 +2625,9 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
     BeginMode2D(camera);
     
     ClearBackground(customBackgroundColor);
-    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
-    if (!IsKeyDown(KEY_F)){
-        if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
-    } 
+
+    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
+    HandleKeyboardAiming(player, worldMousePosition);
 
 
     if (drunk){
@@ -2723,7 +2729,6 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
     
     playOwl = false; //reset owl
 
-    HandleKeyboardAiming(player, mousePosition);
     
     //dont spawn unless raise zombies is true. raise zombies is set to true by talking to the hobo, and finding the gun
     if (!player.enter_car && player.position.x < 1900 && !zombieWave3 && !firstHobo){ // walk to far left and zombies spawn again
@@ -2794,10 +2799,13 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
    }
 
     BeginMode2D(camera);
+
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
-    if (!IsKeyDown(KEY_F)){
-        if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
-    }
+    HandleKeyboardAiming(player, worldMousePosition);
+    
+    // if (!IsKeyDown(KEY_F)){
+    //     if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
+    // }
     
     
     ClearBackground(customBackgroundColor);
@@ -2996,7 +3004,7 @@ void RenderRoad(const GameResources& resources, PlayerCar& player_car,Player& pl
 }
 
 void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vector2 mousePosition, ShaderResources& shaders){
-    HandleKeyboardAiming(player, mousePosition);
+    
 
 
     if (player.position.x > 3437 and raiseZombies){
@@ -3006,15 +3014,15 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
         maxDistToPlayer = 200;
     }
 
-    Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
-
 
     BeginMode2D(camera);
     camera.target = player.position;
     //Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
-    if (!IsKeyDown(KEY_F)){
-        if (player.isAiming) player.facingRight = mouseWorldPos.x > player.position.x;//Hack to make aiming work both ways
-    }
+
+    Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
+
+    HandleKeyboardAiming(player, mouseWorldPos);
+
     float parallaxforeground = camera.target.x * 0.4;
     float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
     float parallaxTrees = camera.target.x * 0.8;
@@ -3184,7 +3192,7 @@ void RenderApartment(GameResources& resources, Player player, Vector2 mousePosit
 }
 
 void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition,ShaderResources& shaders){
-    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
+
     show_dbox = false; //turn off dbox if no one is interacting
     int digPos = 2600;
     if (player.position.x < 2782 && player.position.x > 2742){
@@ -3202,10 +3210,8 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
         digSpot = false;
     }
 
-    HandleKeyboardAiming(player, mousePosition);
-    if (!IsKeyDown(KEY_F)){
-        if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
-    }
+
+
     over_lot = false;
     if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
         if (over_exit){
@@ -3232,14 +3238,18 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
     }
     
 
+    BeginMode2D(camera);
 
+
+    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
+    HandleKeyboardAiming(player, worldMousePosition);
     if (drunk){
         BeginShaderMode(shaders.glowShader2);
 
     }
     
 
-    BeginMode2D(camera);
+
      // Draw the background (sky)
     DrawTexturePro(resources.background, {0, 0, static_cast<float>(resources.background.width), static_cast<float>(resources.background.height)},
                     {parallaxBackground, 0, static_cast<float>(resources.background.width), static_cast<float>(resources.background.height)}, {0, 0}, 0.0f, WHITE);
@@ -3316,13 +3326,6 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
     BeginMode2D(camera);  // Begin 2D mode with the camera
     ClearBackground(customBackgroundColor);
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
-    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
-
-    HandleKeyboardAiming(player, mousePosition);
-    if (!IsKeyDown(KEY_F)){
-        if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
-    }
-
 
     float parallaxBackground = camera.target.x * 0.9f;  // Background moves even slower
     float ParallaxBuildings = camera.target.x * 0.7;
@@ -3343,6 +3346,10 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
 
 
     BeginMode2D(camera);
+
+
+    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
+    HandleKeyboardAiming(player, worldMousePosition);
     
      // Draw the background (sky)
     DrawTexturePro(resources.background, {0, 0, static_cast<float>(resources.background.width), static_cast<float>(resources.background.height)},
@@ -3530,11 +3537,15 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
 }
 
 //NecroTech
-void RenderNecroTech(GameResources resources, Camera2D camera, Player& player, PlayerCar& player_car, Vector2 mousePosition, ShaderResources& shaders){
+void RenderNecroTech(GameResources resources, Camera2D camera, Player& player, PlayerCar& player_car, Vector2& mousePosition, ShaderResources& shaders){
     //Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
     show_dbox = false;
-    HandleKeyboardAiming(player, mousePosition);
-
+    
+    
+    
+    // if (!IsKeyDown(KEY_F)){
+    //     if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
+    // }
 
     camera.target = player.position;
     float parallaxMidBuildings = camera.target.x * 0.4;
@@ -3548,6 +3559,7 @@ void RenderNecroTech(GameResources resources, Camera2D camera, Player& player, P
     
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
     //Outside of Mode2D is screen space coords. 
+   
     ClearBackground(customBackgroundColor);
     
     if (drunk){
@@ -3607,12 +3619,12 @@ void RenderNecroTech(GameResources resources, Camera2D camera, Player& player, P
 
     DrawBullets();
     EndShaderMode(); ////////////////////////////SHADER OFF
+    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
+    HandleKeyboardAiming(player, worldMousePosition);
     EndMode2D();
 
-    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
-    if (!IsKeyDown(KEY_F)){
-        if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
-    }
+    
+
 
     DrawMoney(); //draw money after EndMode2d()
     if (showInventory){
@@ -3644,15 +3656,8 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.basePosition, player.position, 800);
 
     playerOutsideInteraction(player, player_car);
-    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
-    
 
 
-
-    HandleKeyboardAiming(player, mousePosition);
-    if (!IsKeyDown(KEY_F)){ //not holding F
-        if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
-    }
 
     camera.target = player.position;
     float parallaxMidBuildings = camera.target.x * 0.4;
@@ -3662,6 +3667,9 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
     //Outside of Mode2D is screen space coords. 
     ClearBackground(customBackgroundColor);
+
+    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
+    HandleKeyboardAiming(player, worldMousePosition);
     
     if (drunk){
         BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.

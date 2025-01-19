@@ -1,5 +1,6 @@
 #include "Bullet.h"
 #include "Player.h"
+#include "NPC.h"
 #include <raylib.h>
 #include <cstdlib>
 #include <raymath.h>
@@ -31,7 +32,7 @@ Vector2 ApplySpread(Vector2 direction, float spreadAngle) {
 }
 
 
-void FireBullet(Player& player, bool spread, float damage) {
+void FireBullet(Player& player, bool spread, float damage, bool laser) {
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (!bullets[i].isActive) {
             bullets[i].position = Vector2{player.position.x + 32, player.position.y + 23};  // Adjust bullet position to match player
@@ -40,7 +41,28 @@ void FireBullet(Player& player, bool spread, float damage) {
             bullets[i].speed = 1000.0f;  // Set bullet speed
             bullets[i].lifeTime = 1.0f;  // Bullet will last for 2 seconds
             bullets[i].isActive = true;
+            bullets[i].laser = laser;
             player.bulletCount--;  // Decrease player's bullet count
+            if (spread){
+                bullets[i].direction = ApplySpread(bullets[i].direction, 2);
+                bullets[i].position.y += rand() % 4;
+            }
+            break;  // Use the first available (inactive) bullet
+        }
+    }
+}
+
+void NPCfireBullet(NPC& npc, bool spread, float damage, bool laser) { //robots and shoot lasers
+    for (int i = 0; i < MAX_BULLETS; i++) {
+        if (!bullets[i].isActive) {
+            bullets[i].position = Vector2{npc.position.x + 32, npc.position.y + 26}; //center bullet on Robot gun
+            bullets[i].direction = npc.facingRight ? Vector2{1, 0} : Vector2{-1, 0};    
+            bullets[i].damage = damage; //take different damage for different guns
+            bullets[i].speed = 1000.0f;  // Set bullet speed
+            bullets[i].lifeTime = 1.0f;  // Bullet will last for 2 seconds
+            bullets[i].isActive = true;
+            bullets[i].laser = laser;
+            //player.bulletCount--;  // Decrease player's bullet count //robots have infinite ammo
             if (spread){
                 bullets[i].direction = ApplySpread(bullets[i].direction, 2);
                 bullets[i].position.y += rand() % 4;
@@ -69,7 +91,13 @@ void UpdateBullets() {
 void DrawBullets() {
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (bullets[i].isActive) {
-            DrawCircleV(bullets[i].position, 1, WHITE);  // Draw each bullet as a small circle
+            if (bullets[i].laser){
+                DrawRectangleV(bullets[i].position, Vector2 {5, 2}, RED); // Draw laser as a wide rectangle
+            }else{
+                DrawCircleV(bullets[i].position, 1, WHITE);  // Draw each bullet as a small circle
+
+            }
+            
         }
     }
 }

@@ -3,6 +3,7 @@
 
 #include <raylib.h>
 #include "Player.h"  // Include Player.h to declare FireBullet correctly
+#include "NPC.h"
 
 struct Bullet {
     Vector2 position;
@@ -12,6 +13,7 @@ struct Bullet {
     bool isActive;
     float lifeTime;
     float damage;
+    bool laser;
     
 };
 
@@ -21,7 +23,8 @@ const int MAX_BULLETS = 50;  // Max number of bullets // bullets are used for bo
 
 extern Bullet bullets[MAX_BULLETS];  // Declare the global bullets array
 
-void FireBullet(Player& player, bool spread, float damage);  // Declare the FireBullet function
+void FireBullet(Player& player, bool spread, float damage, bool laser);  // Declare the FireBullet function
+void NPCfireBullet(NPC& npc, bool spread, float damage, bool laser);
 void UpdateBullets();             // Function to update bullet positions
 void DrawBullets();               // Function to draw bullets
 

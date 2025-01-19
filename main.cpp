@@ -1770,13 +1770,24 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
     
 }
 
+void CheckBulletPlayerCollisions(Player& player) {
+    Vector2 bulletSize = {5, 2};
+    for (int i = 0; i < MAX_BULLETS; i++){
+        if (bullets[i].isActive){
+            if (player.CheckHit(bullets[i].previousPosition, bullets[i].position, bulletSize)){
+                if (bullets[i].laser) player.take_damage(bullets[i].damage);       
+            }
 
+
+        }
+    }
+}
 
 void CheckBulletNPCCollisions(std::vector<NPC>& npcs, Player& player) { //Bullet collision with zombies, bats, and ghosts
     Vector2 bulletSize = {1, 1};  // Size of the bullet hitbox
 
     for (int i = 0; i < MAX_BULLETS; i++) {
-        if (bullets[i].isActive) {  // Only check active bullets
+        if (bullets[i].isActive && !bullets[i].laser) {  // Only check active bullets and not lasers
             for (NPC& npc : npcs) { //zombies vector is passed to this func which calls them npcs
                 if (npc.isActive && npc.CheckHit(bullets[i].previousPosition, bullets[i].position, bulletSize)) { //
                     // Collision detected
@@ -3623,8 +3634,12 @@ void RenderNecroTech(GameResources resources, Camera2D camera, Player& player, P
     HandleKeyboardAiming(player, worldMousePosition);
     EndMode2D();
 
-    
+    //draw healthbar 
+    if (player.currentHealth < 100 &&  !player.enter_car){
+        Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
+        DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
 
+    }
 
     DrawMoney(); //draw money after EndMode2d()
     if (showInventory){
@@ -4601,6 +4616,8 @@ int main() {
         CheckBulletNPCCollisions(astralGhosts, player);
         CheckBulletNPCCollisions(bats, player);
         CheckBulletNPCCollisions(astralBats, player);
+        CheckBulletPlayerCollisions(player);
+        CheckBulletNPCCollisions(robots, player);
 
         MonitorMouseClicks(player, calendar);
         UpdateZombieSpawning(resources, player);

@@ -96,6 +96,7 @@ public:
         void playerPhysics(float deltaTime, std::vector<Platform> platforms);
         void updateAnimations(GameResources& resources);
         bool CheckIfOnPlatform(const std::vector<Platform>& platforms);
+        bool CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition, Vector2 bulletSize);
 
 
 

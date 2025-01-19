@@ -1,6 +1,7 @@
 // NPC.cpp
 #include "NPC.h"
 #include "Player.h"
+#include "Bullet.h"
 #include <raylib.h>
 #include <iostream>
 #include <ctime>
@@ -63,6 +64,8 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     detectionRangeBat = 150;
     highLight = false;
     robot = false;
+    can_shoot = true;
+    shootTimer = 0.0f;
  
 }
 
@@ -432,11 +435,31 @@ void NPC::HandleMiB(Player& player, float& distanceToPlayer){
 
 void NPC::HandleRobot(Player& player, float& distanceToPlayer){
     attacking = false;
+    agro = true;
     if (robot && distanceToPlayer < detectionRange && agro){
         hasTarget = true;
         destination = player.position;
         speed = 75;
 
+    }
+
+    if (distanceToPlayer < 150 && agro){
+        destination = position;
+        //shoot
+        if (can_shoot){
+            //play laser sound
+            can_shoot = false;
+            NPCfireBullet(*this, false, 10, true);
+            shootTimer = 1.0f;
+
+        }
+        
+    }
+
+    if (shootTimer > 0){
+        shootTimer -= GetFrameTime();
+    }else{
+        can_shoot = true;
     }
 
 }
@@ -942,7 +965,17 @@ void NPC::TakeDamage(int damage, Player& player) {
         SetAnimationState(DEATH2);
     }
 
-    if (health <= 0 && !isDying){ //NPC killed by zombie
+    if (health <= 0 && robot){
+        riseTimer = 0;
+        isDying = true;
+        SetAnimationState(DEATH);
+        //play robot death sound
+        destination = position;
+        deathTimer = .85f;
+
+    }
+
+    if (health <= 0 && !isDying && !robot){ //NPC killed by zombie
 
         riseTimer = 0; 
         isDying = true;           // Start dying process   

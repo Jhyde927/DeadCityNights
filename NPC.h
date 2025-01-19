@@ -67,6 +67,8 @@ public:
     float detectionRangeBat;
     bool highLight;
     bool robot;
+    bool can_shoot;
+    float shootTimer;
 
     NPC* targetNPC;
  

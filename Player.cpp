@@ -163,6 +163,53 @@ float GetLeftBoundary(GameState gameState){
     }
 }
 
+bool Player::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition, Vector2 bulletSize) { 
+    //raycasting for better collision detection
+    // Define a hitbox around the NPC (centered on the NPC's position)
+    float hitboxWidth = 8.0f;   // Width of the hitbox 
+    float hitboxHeight = 32.0f; // Height of the hitbox 
+
+    // Offset the hitbox so it's centered on the zombie's position
+    Rectangle npcHitbox = {
+        position.x + 32,   // Center horizontally
+        position.y,  // Center vertically
+        hitboxWidth,                    // Width of hitbox
+        hitboxHeight                    // Height of hitbox
+    };
+
+    // Check if the current or previous bullet position is inside the hitbox (normal check)
+    Rectangle bulletRect = {
+        currentBulletPosition.x,  // Bullet's x position
+        currentBulletPosition.y,  // Bullet's y position
+        bulletSize.x,             // Bullet's width
+        bulletSize.y              // Bullet's height
+    };
+
+    if (CheckCollisionRecs(npcHitbox, bulletRect)) {
+        return true;  // Return true indicating a hit
+    }
+
+    // Check if the bullet's path (line from previous to current position) intersects with the hitbox
+    if (CheckCollisionPointRec(previousBulletPosition, npcHitbox) || CheckCollisionPointRec(currentBulletPosition, npcHitbox)) {
+        return true;
+    }
+
+    // Use raycasting to check for collisions between the previous and current bullet positions
+    Vector2 bulletPath = Vector2Subtract(currentBulletPosition, previousBulletPosition);
+    int steps = ceil(Vector2Length(bulletPath) / bulletSize.x);  // Steps depend on bullet size
+
+    // Check along the bullet's path for a collision
+    for (int i = 0; i < steps; i++) {
+        Vector2 interpolatedPosition = Vector2Lerp(previousBulletPosition, currentBulletPosition, i / (float)steps);
+        if (CheckCollisionPointRec(interpolatedPosition, npcHitbox)) {
+            return true;  // A hit is detected
+        }
+    }
+
+    return false;  // Return false if no hit occurred
+}
+
+
 void Player::HandleInput(float speed){
         double currentTime = GetTime();
         float deltaTime = GetFrameTime();
@@ -553,7 +600,7 @@ void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vec
             //SoundManager::getInstance().GetSound("gunShot");  // Access the sound directly
             PlaySound(SoundManager::getInstance().GetSound("gunShot")); 
 
-            FireBullet(*this, false, 25);
+            FireBullet(*this, false, 25, false);
             
         }
 
@@ -575,7 +622,7 @@ void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vec
             PlaySound(SoundManager::getInstance().GetSound("ShotGun"));
             // Shotgun fires multiple bullets (spread effect)
             for (int i = 0; i < 3; i++) {  // Simulate shotgun spread with 3 bullets
-                FireBullet(*this, true, 25);  // Modify FireBullet to allow spread by adjusting directions
+                FireBullet(*this, true, 25, false);  // Modify FireBullet to allow spread by adjusting directions
 
             }
 
@@ -597,7 +644,7 @@ void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vec
 
             PlaySound(SoundManager::getInstance().GetSound("Mac10"));
                 
-            FireBullet(*this, true, 20);  //mac10 does less damage. 10 instead of 25. it's a 9mm bullet instead of a 44 revolver, or shotgun pellet
+            FireBullet(*this, true, 20, false);  //mac10 does less damage. 10 instead of 25. it's a 9mm bullet instead of a 44 revolver, or shotgun pellet
             
 
         }

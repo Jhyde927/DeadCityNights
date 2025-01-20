@@ -118,6 +118,13 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){
 
         }
 
+        if (!talked && robot){
+            talked = true;
+            speech = "Password?";
+            talkTimer = 5;
+            idleTime = 5;
+        }
+
         if (!talked && ghost){
             talked = true;
             idleTime = 4;
@@ -299,7 +306,7 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){
             }      
         }
 
-        if (!talked && !hobo && !police && !teller){ //all other NPCs
+        if (!talked && !hobo && !police && !teller and !robot){ //all other NPCs
             SoundManager::getInstance().StartRandomVoices(.5);
             talked = true;
             speech = GetRandomPhrase(); // NPC greets player
@@ -435,7 +442,7 @@ void NPC::HandleMiB(Player& player, float& distanceToPlayer){
 
 void NPC::HandleRobot(Player& player, float& distanceToPlayer){
     attacking = false;
-    agro = true;
+    //agro = true;
     if (robot && distanceToPlayer < detectionRange && agro){
         hasTarget = true;
         destination = player.position;
@@ -446,8 +453,8 @@ void NPC::HandleRobot(Player& player, float& distanceToPlayer){
     if (distanceToPlayer < 150 && agro){
         destination = position;
         //shoot
-        if (can_shoot){
-            //play laser sound
+        if (can_shoot && !isDying){
+            SoundManager::getInstance().PlayPositionalSound("laser", position, player.position, 500);
             can_shoot = false;
             NPCfireBullet(*this, false, 10, true);
             shootTimer = 1.0f;
@@ -901,15 +908,28 @@ bool NPC::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition
 
 
 void NPC::TakeDamage(int damage, Player& player) {
-    health -= damage;
-    hitTimer = 0.3f; // Tint the sprite red for 0.3 seconds
+    if (!isDying){
+        health -= damage;
+        hitTimer = 0.3f; // Tint the sprite red for 0.3 seconds
+
+    }
+
     int soundIndex = rand() % 4; //returns 0, 1, 2 or 3
     
     if (ghost || bat) agro = true;
-    if (!isZombie && !bat && !ghost){
+    if (!isZombie && !bat && !ghost && !robot){
         destination = position; //if your an NPC, stop when you take damage so we can play the death animation. 
         
     }
+
+    if (robot && !agro){ //Robot agros on hit
+        agro = true;
+        destination = player.position;//move toward player
+        idleTime = 0; //stop being idle 
+        facingRight = (player.position.x > position.x); //face the player
+
+    }
+
     if (isZombie){
         switch (soundIndex){ //zombie hits
             case 0:
@@ -965,11 +985,12 @@ void NPC::TakeDamage(int damage, Player& player) {
         SetAnimationState(DEATH2);
     }
 
-    if (health <= 0 && robot){
+    if (health <= 0 && !isDying && robot){
         riseTimer = 0;
         isDying = true;
         SetAnimationState(DEATH);
         //play robot death sound
+        SoundManager::getInstance().PlayPositionalSound("explosion", position, player.position, 500);
         destination = position;
         deathTimer = .85f;
 

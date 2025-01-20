@@ -1773,9 +1773,10 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
 void CheckBulletPlayerCollisions(Player& player) {
     Vector2 bulletSize = {5, 2};
     for (int i = 0; i < MAX_BULLETS; i++){
-        if (bullets[i].isActive){
+        if (bullets[i].isActive && bullets[i].laser){ //only lasers hurt player
             if (player.CheckHit(bullets[i].previousPosition, bullets[i].position, bulletSize)){
-                if (bullets[i].laser) player.take_damage(bullets[i].damage);       
+                player.take_damage(bullets[i].damage);
+                bullets[i].isActive = false; //desteroy the bullet on hit
             }
 
 
@@ -3549,14 +3550,10 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
 
 //NecroTech
 void RenderNecroTech(GameResources resources, Camera2D camera, Player& player, PlayerCar& player_car, Vector2& mousePosition, ShaderResources& shaders){
-    //Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
+
     show_dbox = false;
     
-    
-    
-    // if (!IsKeyDown(KEY_F)){
-    //     if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
-    // }
+    SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide or in vacant lot
 
     camera.target = player.position;
     float parallaxMidBuildings = camera.target.x * 0.4;
@@ -3593,8 +3590,8 @@ void RenderNecroTech(GameResources resources, Camera2D camera, Player& player, P
                     {-3050 + parallaxMidBuildings, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)}, {0, 0}, 0.0f, WHITE);
 
     // Draw the foreground (main scene),  offset by 1024 to center relative to midground. 
-    DrawTexturePro(resources.ntForeground, {0, 0, static_cast<float>(resources.foreground.width), static_cast<float>(resources.foreground.height)},
-                    {-3000, 0, static_cast<float>(resources.foreground.width), static_cast<float>(resources.foreground.height)}, {0, 0}, 0.0f, WHITE);
+    DrawTexturePro(resources.ntForeground, {0, 0, static_cast<float>(resources.ntForeground.width), static_cast<float>(resources.ntForeground.height)},
+                    {1064, 0, static_cast<float>(resources.ntForeground.width), static_cast<float>(resources.ntForeground.height)}, {0, 0}, 0.0f, WHITE);
 
 
 
@@ -3626,6 +3623,12 @@ void RenderNecroTech(GameResources resources, Camera2D camera, Player& player, P
         robot.Update(player, gameState);
         robot.Render(shaders);
         robot.ClickNPC(mousePosition, camera, player, gameState);
+        if (robot.interacting){
+            phrase = robot.speech;
+            show_dbox = true;
+            dboxPosition = robot.position;
+
+        }
     }
 
     DrawBullets();
@@ -4073,6 +4076,8 @@ void spawnNPCs(GameResources& resources){
         NPC robot_npc = CreateNPC(resources.robotSheet, r_pos, speed, IDLE, true, false);
         robot_npc.SetDestination(2000, 3000);
         robot_npc.robot = true;
+        robot_npc.maxHealth = 300;
+        robot_npc.health = 300;
         //robot_npc.agro = true;
         robots.push_back(robot_npc);
     }
@@ -4459,6 +4464,8 @@ void InitSounds(SoundManager& soundManager){
 
     soundManager.LoadSound("ShotGun", "assets/sounds/ShotGun.ogg");
     soundManager.LoadSound("ShotgunReload", "assets/sounds/ShotgunReload.ogg");
+    soundManager.LoadSound("laser", "assets/sounds/laser.ogg");
+    soundManager.LoadSound("explosion", "assets/sounds/explosion27.ogg");
 
     soundManager.LoadSound("Step1", "assets/sounds/Step1.ogg");
     soundManager.LoadSound("Step2", "assets/sounds/Step2.ogg");

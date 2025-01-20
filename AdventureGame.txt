@@ -329,7 +329,7 @@ fixed full screen, add UI to renderTexture before drawing to screen that way the
 
 Add trees to the park. x
 
-Astral boss. 
+Astral boss. x 2 ghosts are the boss of astral until I can think of something. 
 
 fix zombies, zombies occasionally flip left and right really fast for some reason. 
 
@@ -370,10 +370,118 @@ added highlight shader to NPCs. Draw a white outline around the NPCs if they are
 
 Implemented. Works way better this way. Possibly don't need interacting timer. Maybe player could have a member variable interacting as well. To prevent interacting with multiple NPCs at once. 
 
+abandoned underground subway station. Filled with mutated rat people with guns. murder your way through tunnels until you find the king of the rats. He's an NPC that you talk to about something or other. There are rats with dynamite that blow themselves up. 
+
+Added subway level. How to incorporate it into the game? Maybe once you trigger zombies in the park, they are triggered everywhere. the subway then becomes another place to fight enemies. Still needs a reason for the first half of the game. You can take the subway to yet another area. or to the park. ditch the car? subway costs money? Just hook it up to the park for now. Need a subway station in the park. 
+
+We have one subway station that you can exit into different areas. enter subway, pick destination, animate train with player on it, camera follows train. fadeout. fade back in to the same subway with character outside of train. train menu displays different destinations, exiting station takes you to park or whatever the destination was.
+
+Need boolean again. exitToPark, exitToOutside, 
+
+You have a limited time to catch the train. If you miss it you have to wait for another one. The menu pops up automatically when you stand near the door of the train car.
+
+some how make the player board the train. stand by train door. UI comes up. Hit park, player.position = train.position, trainTimer = maxtime so train leaves immediatly FADEOUT as the train is moving. 
+
+ghost is too transparent. x
+
+change Car UI to look like the rest of the UI x
+
+change train timing, it's too long of a wait. 17 seconds. 7500 start change to 5500
+
+you can drive to the park, then take the subway, and it will bring you to the park and the car will be gone. Need to resolve this somehow. If you take the car to the park, exitToSubay or whatever = true, but then we don't draw the car, we would need yet another boolean. carToPark
+
+The car magically teleports home if you take the car to the park and the subway back. 
+
+Need something new to work on. Boss fight in astral. Just put a ghost there for now and have it agro some how when play gets close. 
+
+it should say up to exit above exit in the lot. 
+
+bat are bugging out. flying erratically. Are they comparing against themselves?
+
+Make a Main Menu. raygui? or text that highlights when hovered. or both. rayGUI can probably do that, color text. 
+
+				PLAY - exits menu
+				FULLSCREEN
+				QUIT 
+
+implement pause using enum state
+
+move up to exit position to center in Lot
+
+fix car wheels
+
+UFO in cemetery makes sounds on main street. 
+
+
+in lot, up to exit position needs to be set when player is over exit. 
 
 
 
+New plan:
 
+	Test the game. x
+	Fix the bugs. x
+	Make a release. x
+	Post about it.  x
+
+1/10/2025
+New new plan. Where was I. Pick up where you last left off. Necro Tech. Finish drawing NT headquarters. Take the road to hq?
+It supposed to be an office building in the city. Maybe you need to take the subway there, but that makes no sense. It's already set up to take the car to nt hq so go with that for now. Draw a barbed wire fence that blocks off the rest of the area except for the entrance to the building. Once in the building then what? 
+
+Entering Necro Tech HQ, you are met by security guards. It then turns into the lobby scene from the Matrix. Maybe You are just met by zombies. The zombies have already taken over the lower levels of the building. Once you visit Necro Tech is when zombies start invading other areas of the game. like outside and the subway.
+
+The interior of the building is a bunch of platforms and elevators. There are scientists being chased around by zombies, and security guards with guns. Security is hostile towards everyone, like half-life. 
+
+Platforms and elevators would be a pretty big job. Maybe just corridors and elevators. Would we render each corridor with an elevator at the end that transitions to the next. Lobby, Level 1, level 2, penthouse. Cause if we do platforms we would need to deal with zombies on platforms and gravity. Elevator scene between each level. 
+
+Maybe just outside, lobby, elevator, penthouse boss battle. 
+
+Necro tech hq oustide, the camera is locked zoomed way out. To give you a sense of scale for how big the building is. That means the image needs to be wide enough for the camera. Will need to start with just a 1024 square image then adjust once it's halfway implemented. 1024 x 4. 4096
+
+Is there a secret third option? 
+
+renderHeadquarters(GameResources& resources, player, player_car, shaders){
+	drawBackground
+	outside security? 
+}
+
+new new new plan:
+	Make astral plane better, boss or another enemy, turrets? slow moving projectiles. 
+
+
+changing player_car texture doesn't change it in game. Maybe because we are rendering it at a lower resolution. The up res doesn't work. it can't be this because we changed the color and it didn't change in game. Do I need to push to github or something for changes to stick. 
+
+
+Puzzles:
+
+	moveable boxes. pressure pads. shootable switches. lasers. timing puzzle with moving lasers.
+
+necrotech lobby is guarded by a laser grid. The lasers blink on and off in a pattern and possibly move. The player must navigate the lasers to enter the building. 
+
+enemy robots, AI controls necrotech. 
+
+The necrotech building goes off screen it's so tall. we don't need to zoom out. Just get it in game, fuck the resolution.
+
+render the same background as street just change the foreground. 
+
+ok, necro tech hq is implemented. Now what. There needs to be something that happens to justify this screen's existence. 
+
+You are met by 2 robots. They banter back and forth with each other on whether to let you inside. They decide they will kill you instead and shoot you with lasers. What do the robots look like? Humanoid? tank tracks, floating, a floating eyeball drone. We could use ufo code to make it wobble. draw it then. 
+
+forgot to get NPC by reference, was stuck for like 2 hours. for (NPC& robot : robots) forgot the &.
+
+robot can patrol around what next. if agro he chases player up to a point then shoots. add bob to robots
+
+if you interact with the door to the building robots get agro. 
+
+worldToScreen(mousePosition) needed to be calculated inside beginMode2d() to get the proper coordinates based on the camera.
+I was getting the worldMousePosition before setting up the camera, but it just happens to work for the first 9 scenes, but not the new one. Strange but we caught a bug that could have caused future issues. 
+
+in handleRobot make robot stop 100 pixels away from player when chasing. Then draw shoot animation/bullet? bullets can look different? We should use existing bullet code just add a way to change the appearance. x
+
+robots shoot lasers, only lasers hurt player, laser is a member var of bullet class. eventually we may need to have bullets hit player as well as lasers. just make another member variable enemy_bullet. then check if laser || enemy_bullet. 
+
+Next make the robot able to talk. HandleNPCInteraction -> if robot: talk timer = ...ect...
 
 
 

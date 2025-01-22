@@ -69,6 +69,7 @@ public:
     bool robot;
     bool can_shoot;
     float shootTimer;
+    bool validPassword;
 
     NPC* targetNPC;
  

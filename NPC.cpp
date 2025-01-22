@@ -66,6 +66,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     robot = false;
     can_shoot = true;
     shootTimer = 0.0f;
+    validPassword = false;
  
 }
 
@@ -90,7 +91,8 @@ std::string GetRandomPhrase() {
     return phrases[randomIndex];
 }
 
-void NPC::HandleNPCInteraction(Player& player, GameState& gameState){
+void NPC::HandleNPCInteraction(Player& player, GameState& gameState){ //Click or KEY_UP on NPC
+
         destination = position;//Stop NPC
         interacting = true;
         //idleTime = 5;
@@ -107,10 +109,11 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){
             talked = true;
             speech = "Fortune: $100";
             talkTimer = 5;
-            idleTime = 5;
+            idleTime = 5; //do we really need both talktimer and idletime, talkTimer is the time the dialog is displayed before erasing. 
+            //Idle time is how long the NPC stays stationary before picking a new destination. 
         }
 
-        if (!talked && MiB && gameState == PARK){
+        if (!talked && MiB && gameState == PARK){ //trigger zombies elsewhere? in renderpark, might make more sense here. 
             talked = true;
             speech = "We are Watching You";
             talkTimer = 5;
@@ -118,18 +121,52 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){
 
         }
 
-        if (!talked && robot){
+        if (!talked && robot && !agro){ //dont talk to angry robots
             talked = true;
-            speech = "Password?";
+            speech = "Beep Boop";
             talkTimer = 5;
-            idleTime = 5;
+            idleTime = 10;
+
+            
+
+            if (interactions == 0 && !validPassword){ //an interaction is a series of sentences said by the NPC, once all the dialog is displayed we increment interactions
+            //then wait to trigger the next set of dialogs. 
+                clickCount += 1;
+                switch (clickCount){
+                    case 1:
+                        speech = "Password?";
+                        break;
+                    case 2:
+
+                        speech = "Invalid Password";
+                        break;
+                    case 3:
+                        speech = "Intruder Detected!";
+                        break;
+                    case 4:
+                        if (!validPassword){
+                            speech = "Terminate Intruder";
+                            agro = true;
+                            idleTime = 2;
+                            
+                            facingRight = (player.position.x > position.x); //turn toward player
+                            break;
+
+
+                        }else{
+                            interactions += 1;
+                        }
+                    
+                }
+                
+            }
         }
 
         if (!talked && ghost){
             talked = true;
             idleTime = 4;
             talkTimer = 4;
-            if (interactions == 0){
+            if (interactions == 0){ 
                 clickCount += 1;
                 switch (clickCount){
                     case 1:
@@ -409,10 +446,9 @@ void NPC::HandleZombie(Player& player, float& distanceToPlayer){
             }
 
         if (targetNPC->health <= 0){
-            //hasTarget = false;
-            //targetNPC->isActive = false;
+
             targetNPC = nullptr;
-            //attacking = false;
+
             SetAnimationState(IDLE);
             
             return; //Needed return here to stop seg fault. because code continues to run if health <= 0.

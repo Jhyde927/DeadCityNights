@@ -141,6 +141,11 @@ std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", "", "", ""}
 const int GAME_SCREEN_WIDTH = 1024;
 const int GAME_SCREEN_HEIGHT = 1024;
 
+// Variables for password input
+std::string enteredPassword = "";
+const std::string correctPassword = "666";
+bool passwordValidated = false;
+bool showPasswordInterface = false;
 
 std::string phrase = "A and D to move, hold shift to run"; //initial tutorial phrase
 
@@ -541,6 +546,54 @@ std::string GetTellerPhrase() {
 
     int randomIndex = rand() % tellerPhrases.size();
     return tellerPhrases[randomIndex];
+}
+
+// Render and update logic
+void RenderPasswordInterface() {
+    // Draw three rectangles for the password slots
+    int slotWidth = 50, slotHeight = 70;
+    int startX = 512, startY = 512; // Adjust based on screen size
+    for (int i = 0; i < 3; i++) {
+        int x = startX + i * (slotWidth + 10);
+        DrawRectangle(x, startY, slotWidth, slotHeight, BLACK);
+        if (i < enteredPassword.size()) {
+            DrawText(std::string(1, enteredPassword[i]).c_str(), x + 15, startY + 15, 40, WHITE);
+        }
+    }
+
+    // Prompt message
+    if (!passwordValidated) {
+        DrawText("Enter 3-digit password:", startX, startY - 40, 20, WHITE);
+    } else {
+        DrawText("Access Granted!", startX, startY - 40, 20, GREEN);
+    }
+}
+
+void UpdatePasswordInterface() {
+    // Handle digit input (main number keys and numpad keys)
+    int key = GetKeyPressed();
+    if ((key >= KEY_ZERO && key <= KEY_NINE) || (key >= KEY_KP_0 && key <= KEY_KP_9)) {
+        if (enteredPassword.size() < 3) {
+            // Normalize input: for numpad keys, subtract `KEY_KP_0` to get the digit
+            int digit = (key >= KEY_KP_0 && key <= KEY_KP_9) ? key - KEY_KP_0 : key - KEY_ZERO;
+            enteredPassword += std::to_string(digit);
+        }
+    }
+
+    // Handle backspace for correction
+    if (IsKeyPressed(KEY_BACKSPACE) && !enteredPassword.empty()) {
+        enteredPassword.pop_back();
+    }
+
+    // Validate password once all 3 digits are entered
+    if (enteredPassword.size() == 3) {
+        if (enteredPassword == correctPassword) {
+            passwordValidated = true;
+            robots[0].validPassword = true;
+        } else {
+            enteredPassword = ""; // Reset on incorrect password
+        }
+    }
 }
 
 
@@ -3589,13 +3642,13 @@ void RenderNecroTech(GameResources resources, Camera2D camera, Player& player, P
     DrawTexturePro(resources.MidBuildings, {0, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)},
                     {-3050 + parallaxMidBuildings, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)}, {0, 0}, 0.0f, WHITE);
 
-    // Draw the foreground (main scene),  offset by 1024 to center relative to midground. 
+  
     DrawTexturePro(resources.ntForeground, {0, 0, static_cast<float>(resources.ntForeground.width), static_cast<float>(resources.ntForeground.height)},
                     {1064, 0, static_cast<float>(resources.ntForeground.width), static_cast<float>(resources.ntForeground.height)}, {0, 0}, 0.0f, WHITE);
 
 
 
-
+    //EXIT CAR
     if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)){
         if (player.enter_car && !move_car){ // dont exit car if it's still moving.
             PlaySound(SoundManager::getInstance().GetSound("CarDoorClose")); 
@@ -3604,6 +3657,7 @@ void RenderNecroTech(GameResources resources, Camera2D camera, Player& player, P
         }
     }
 
+    //Draw player_car
     float CarFrameWidth = 128;
     Rectangle sourceRecCar = {player_car.currentFrame * CarFrameWidth, 0, CarFrameWidth, CarFrameWidth};
     DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE); //draw player_car
@@ -3611,7 +3665,7 @@ void RenderNecroTech(GameResources resources, Camera2D camera, Player& player, P
 
     if (player.enter_car == false){// if enter car is false, dont render player or update position. camera should stay focused on player pos. 
         SoundManager::getInstance().StopMusic("CarRun");
-        //DRAW PLAYER
+    //DRAW PLAYER
         player.DrawPlayer(resources, gameState, camera, shaders);
     }
 
@@ -3627,6 +3681,11 @@ void RenderNecroTech(GameResources resources, Camera2D camera, Player& player, P
             phrase = robot.speech;
             show_dbox = true;
             dboxPosition = robot.position;
+            showPasswordInterface = true;
+            if (robot.agro){
+                showPasswordInterface = false;
+            }
+
 
         }
     }
@@ -3661,9 +3720,16 @@ void RenderNecroTech(GameResources resources, Camera2D camera, Player& player, P
 
     }
 
-}
-      
+    if (!passwordValidated && showPasswordInterface){
+        UpdatePasswordInterface(); //show password interface
+        RenderPasswordInterface();
 
+    }
+
+
+
+}
+    
 
 
 //Main Street

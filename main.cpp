@@ -110,6 +110,7 @@ float inventoryPositionX = 0.0f;
 float inventoryPositionY = 0.0f;
 float inventoryTargetX = 0.0f;
 float inventoryTargetY = 0.0f;
+float passwordTimer = 0.0;
 float DoorframeTimer = 0.0f;
 float astralThreshold = 0.5f;
 float DoorframeTime = 0.1f;
@@ -570,6 +571,9 @@ void RenderPasswordInterface() {
 }
 
 void UpdatePasswordInterface() {
+
+
+
     // Handle digit input (main number keys and numpad keys)
     int key = GetKeyPressed();
     if ((key >= KEY_ZERO && key <= KEY_NINE) || (key >= KEY_KP_0 && key <= KEY_KP_9)) {
@@ -587,9 +591,13 @@ void UpdatePasswordInterface() {
 
     // Validate password once all 3 digits are entered
     if (enteredPassword.size() == 3) {
-        if (enteredPassword == correctPassword) {
+        if (enteredPassword == correctPassword && !passwordValidated) {
             passwordValidated = true;
+            
             robots[0].validPassword = true;
+
+            passwordTimer = 2.0f;
+            
         } else {
             enteredPassword = ""; // Reset on incorrect password
         }
@@ -3673,6 +3681,9 @@ void RenderNecroTech(GameResources resources, Camera2D camera, Player& player, P
         DrawCarUI(player_car, mousePosition, camera, gameState);
     }
 
+    if (robots[0].agro) showPasswordInterface = false; //hide interface on shots fired. 
+
+    showPasswordInterface = false; //dont show interface if not interacting. 
     for (NPC& robot : robots){
         robot.Update(player, gameState);
         robot.Render(shaders);
@@ -3682,9 +3693,7 @@ void RenderNecroTech(GameResources resources, Camera2D camera, Player& player, P
             show_dbox = true;
             dboxPosition = robot.position;
             showPasswordInterface = true;
-            if (robot.agro){
-                showPasswordInterface = false;
-            }
+
 
 
         }
@@ -3720,10 +3729,21 @@ void RenderNecroTech(GameResources resources, Camera2D camera, Player& player, P
 
     }
 
-    if (!passwordValidated && showPasswordInterface){
+    if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player); //always show ammo when outside of car in the cemetery or NecroT
+
+    if (passwordTimer > 0){
+        passwordTimer -= GetFrameTime();
+    }
+
+    //This delays turning off password interface so player has time to read the message. Make this logic better. 
+    if (!passwordValidated && showPasswordInterface && passwordTimer <= 0){
         UpdatePasswordInterface(); //show password interface
         RenderPasswordInterface();
 
+    }else if (passwordValidated && showPasswordInterface && passwordTimer > 0){
+        RenderPasswordInterface();
+    }else{
+        //don't render nothin
     }
 
 
@@ -3741,8 +3761,6 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 
     playerOutsideInteraction(player, player_car);
 
-
-
     camera.target = player.position;
     float parallaxMidBuildings = camera.target.x * 0.4;
     float parallaxMidground = camera.target.x * 0.6f;  // Midground moves slower
@@ -3756,7 +3774,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     HandleKeyboardAiming(player, worldMousePosition);
     
     if (drunk){
-        BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
+        BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason. TODO: fix drunk shader, make it global and look good.
         //player.outline = true;
 
     }
@@ -4136,15 +4154,16 @@ void spawnNPCs(GameResources& resources){
         npcs.push_back(dealer_npc);
     }
 
+    //spawn robots
     int rs = 1;
     for (int i = 0; i < rs; i++){
         Vector2 r_pos = {static_cast<float>(2200 + i * 100), 700};
         NPC robot_npc = CreateNPC(resources.robotSheet, r_pos, speed, IDLE, true, false);
-        robot_npc.SetDestination(2000, 3000);
+        robot_npc.SetDestination(2100, 2600);
         robot_npc.robot = true;
         robot_npc.maxHealth = 300;
         robot_npc.health = 300;
-        //robot_npc.agro = true;
+        
         robots.push_back(robot_npc);
     }
 

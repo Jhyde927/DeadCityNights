@@ -687,18 +687,18 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
     // Prioritize drawing states: Shooting > Reloading > Aiming > Moving > Idle
     if (currentWeapon == REVOLVER){
     
-        if (hasGun && isShooting && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)) { //need a way to allow guns outside cemetery at a certain point in the game. 
+        if (hasGun && isShooting && (AllowGuns)) { //need a way to allow guns outside cemetery at a certain point in the game. 
             currentSheet = resources.shootSheet;
             sourceRec = { static_cast<float>(currentFrame * frameWidth), 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
         }
-        else if (hasGun && isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
+        else if (hasGun && isReloading && (AllowGuns)){
         
             currentSheet = resources.reloadSheet;
             sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
         }
-        else if (hasGun && isAiming && !isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)) {
+        else if (hasGun && isAiming && !isReloading && (AllowGuns)) {
             // Aiming but not shooting: use the first frame of the shootSheet
             currentSheet = resources.shootSheet;
             sourceRec = { 0, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };  // First frame for aiming
@@ -726,17 +726,17 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
     }
     else if (currentWeapon == SHOTGUN){/////////////////shotgun//////////////
         
-         if (hasShotgun && isShooting && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
+         if (hasShotgun && isShooting && (AllowGuns)){
             currentSheet = resources.ShotGunSheet;
             sourceRec = {static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
         }
-        else if (hasShotgun && isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
+        else if (hasShotgun && isReloading && (AllowGuns)){
             currentSheet = resources.ShotgunReload;
             sourceRec = {static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
         }
-        else if (hasShotgun && isAiming && !isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)) {
+        else if (hasShotgun && isAiming && !isReloading && (AllowGuns)) {
             // Aiming but not shooting: use the first frame of the shootSheet
             currentSheet = resources.ShotGunSheet;
             sourceRec = { 0, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth)};  // First frame for aiming
@@ -756,18 +756,18 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
     }
     else if (currentWeapon == MAC10){
     
-        if (hasMac10 && isShooting && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)) { //need a way to allow guns outside cemetery at a certain point in the game. 
+        if (hasMac10 && isShooting && (AllowGuns)) { //need a way to allow guns outside cemetery at a certain point in the game. 
             currentSheet = resources.shootSheetAuto;
             sourceRec = { static_cast<float>(currentFrame * frameWidth), 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
         }
-        else if (hasMac10 && isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
+        else if (hasMac10 && isReloading && (AllowGuns)){
         
             currentSheet = resources.reloadSheetAuto;
             sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
         }
-        else if (hasMac10 && isAiming && !isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)) {
+        else if (hasMac10 && isAiming && !isReloading && (AllowGuns)) {
             // Aiming but not shooting: use the first frame of the shootSheet
             currentSheet = resources.shootSheetAuto;
             sourceRec = { 0, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };  // First frame for aiming

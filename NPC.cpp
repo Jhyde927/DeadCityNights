@@ -127,10 +127,12 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){ //Click or
             talkTimer = 5;
             idleTime = 10;
 
-            
+           
 
             if (interactions == 0 && !validPassword){ //an interaction is a series of sentences said by the NPC, once all the dialog is displayed we increment interactions
             //then wait to trigger the next set of dialogs. 
+
+
                 clickCount += 1;
                 switch (clickCount){
                     case 1:
@@ -675,7 +677,7 @@ void NPC::Update(Player& player, GameState& gameState) {
     }
     if (idleTime <= 0) interacting = false; // NPCs stop interacting when IdleTime is up. 
 
-
+  
 
     // Check if the player is within a certain range to chase
     float distanceToPlayer = Vector2Distance(position, player.position);

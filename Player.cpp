@@ -795,8 +795,9 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
         sourceRec.width = -frameWidth;  // Flip the texture if facing left
     }
 
-    if (hitTimer > 0){
+    if (hitTimer > 0){ //tint player when taking damage for hitTimer number of seconds
         hitTimer -= GetFrameTime();
+        //can_take_damage = false? must be done else where 
        
     }else{
         can_take_damage = true;

@@ -50,6 +50,7 @@ bool fullscreen = false;
 bool move_ufo = false;
 bool canMoveUfo = true;
 bool firstHobo = true;
+bool can_spawn_robots = true;
 bool firstBlood = false;
 bool drawShovel = false;
 bool drawMac10 = true;
@@ -600,6 +601,8 @@ void UpdatePasswordInterface() {
             
         } else {
             enteredPassword = ""; // Reset on incorrect password
+            robots[0].idleTime = 0;
+            //play a sound
         }
     }
 }
@@ -853,6 +856,15 @@ void StartZombieSpawn(int zombie_count){
     nextSpawnDelay = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 3.0f));  // Random delay between 1-4 seconds
     //film = true;
     glitch = true; //Activate glitch shader to make things more dramatic
+}
+
+void spawnRobot(GameResources& resources, Player& player, Vector2 position){
+    int speed = 50;
+    NPC robot_npc = CreateNPC(resources.robotSheet, position, speed, RISING, true, false);
+    robot_npc.robot = true;
+    robot_npc.agro = true;
+    robot_npc.SetDestination(player.position.x, player.position.x + 100);
+    robots.push_back(robot_npc);
 }
 
 void spawnZombiePark(GameResources& resources, Vector2 position){
@@ -1752,7 +1764,7 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
                 if (CheckCollisionPointRec(mousePosition, whiskeyBounds)){
                     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
                         if (player.hasWhiskey){
-                            inventory[i] = std::string("");  // erase pills from the string
+                            inventory[i] = std::string("");  // erase whiskey from the string
                             player.currentHealth = player.maxHealth;
                             player.hasWhiskey = false;
                             drunk = true;
@@ -1799,7 +1811,7 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
                 if (CheckCollisionPointRec(mousePosition, shovelBounds)){ //dig
                     
                     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-                        Dig(player);
+                        Dig(player); //click shovel icon to dig
                      
                     }
                 }
@@ -1897,6 +1909,7 @@ void MoveTraffic(GameResources resources){
 }
 
 void DrawApartmentUI(GameResources& resources, GameCalendar&, Vector2& mousePosition, Camera2D& camera){
+    //laptop computer interface
     Vector2 ui_pos = {screenWidth/2-100, 440};
     DrawTexture(resources.ComputerScreen, ui_pos.x, ui_pos.y, WHITE);
     Color tint = WHITE;
@@ -3693,9 +3706,10 @@ void RenderNecroTech(GameResources resources, Camera2D camera, Player& player, P
             show_dbox = true;
             dboxPosition = robot.position;
             showPasswordInterface = true;
-
-
-
+        }
+        if (robot.trigger and can_spawn_robots){ //robot rising animation looks dumb and it makes it too hard. save for future use though.
+            can_spawn_robots = false;
+            //spawnRobot(resources,player, robot.position + Vector2 {-100, 0});
         }
     }
 
@@ -3741,7 +3755,7 @@ void RenderNecroTech(GameResources resources, Camera2D camera, Player& player, P
         RenderPasswordInterface();
 
     }else if (passwordValidated && showPasswordInterface && passwordTimer > 0){
-        RenderPasswordInterface();
+        RenderPasswordInterface(); //show interface for a few seconds before not rendering it. 
     }else{
         //don't render nothin
     }

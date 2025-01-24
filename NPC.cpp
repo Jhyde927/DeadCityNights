@@ -67,6 +67,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     can_shoot = true;
     shootTimer = 0.0f;
     validPassword = false;
+    trigger = false;
  
 }
 
@@ -132,7 +133,6 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){ //Click or
             if (interactions == 0 && !validPassword){ //an interaction is a series of sentences said by the NPC, once all the dialog is displayed we increment interactions
             //then wait to trigger the next set of dialogs. 
 
-
                 clickCount += 1;
                 switch (clickCount){
                     case 1:
@@ -150,7 +150,7 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){ //Click or
                             speech = "Terminate Intruder";
                             agro = true;
                             idleTime = 2;
-                            
+                            trigger = true;
                             facingRight = (player.position.x > position.x); //turn toward player
                             break;
 
@@ -488,12 +488,13 @@ void NPC::HandleRobot(Player& player, float& distanceToPlayer){
 
     }
 
-    if (distanceToPlayer < 150 && agro){
+    if (distanceToPlayer < 100 && agro){
         destination = position;
         //shoot
         if (can_shoot && !isDying){
             SoundManager::getInstance().PlayPositionalSound("laser", position, player.position, 500);
             can_shoot = false;
+            SetAnimationState(ATTACKING);
             NPCfireBullet(*this, false, 10, true);
             shootTimer = 1.0f;
 
@@ -605,7 +606,7 @@ void NPC::HandleAnimationLogic(){
 
 void NPC::Update(Player& player, GameState& gameState) {
     if (!isActive) return;  // Skip update if the NPC is not active
-    if (!isZombie) riseTimer = 0;
+    if (!isZombie && !robot) riseTimer = 0;
     float distance_to_player = abs(player.position.x - position.x);
 
     if (distance_to_player >= 30){
@@ -632,9 +633,9 @@ void NPC::Update(Player& player, GameState& gameState) {
             currentFrame++;
 
             // 7 frames in the RISING animation
-            if (currentFrame >= 7) {
-                currentFrame = 0;  // Loop back to the first frame of the rising animation
-            }
+            // if (currentFrame >= 7) {
+            //     currentFrame = 0;  // Loop back to the first frame of the rising animation
+            // } //rising doesn't loop
         }
 
         return;  // Skip further logic until the zombie finishes rising

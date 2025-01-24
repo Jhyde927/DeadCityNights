@@ -70,6 +70,7 @@ public:
     bool can_shoot;
     float shootTimer;
     bool validPassword;
+    bool trigger;
 
     NPC* targetNPC;
  

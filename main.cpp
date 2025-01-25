@@ -33,6 +33,7 @@ bool quitRequested = false;
 bool streetSounds = false;
 bool over_apartment = false;
 bool over_car = false;
+bool over_necro = false;
 bool over_gate = false;
 bool over_shotgun = false;
 bool show_carUI = false;
@@ -346,6 +347,8 @@ void LoadGameResources(GameResources& resources) {
     resources.train = LoadTexture("assets/Train.png");
     resources.ntForeground = LoadTexture("assets/NTforeground.png");
     resources.robotSheet = LoadTexture("assets/robotSheet.png");
+    resources.LobbyForeground = LoadTexture("assets/LobbyForeground.png");
+
 }
 
 void UnloadGameResources(GameResources& resources){
@@ -430,6 +433,8 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.train);
     UnloadTexture(resources.ntForeground);
     UnloadTexture(resources.robotSheet);
+    UnloadTexture(resources.LobbyForeground); 
+
   
 }
 
@@ -1227,10 +1232,19 @@ void DrawShovelPickup(GameResources& resources, Player& player, Vector2 mousePos
 }
 
 void HandleNecroTransition(Player& player, PlayerCar& player_car){
-    gameState = OUTSIDE;
-    player_car.position.x = 1710;
-    player.position.x = player_car.position.x; //center of car
-    gotoNecro = false;
+
+    if (over_necro and passwordValidated){
+        gameState = LOBBY; //over enterance goto lobby
+
+    }else{
+        gameState = OUTSIDE;
+        player_car.position.x = 1710;
+        player.position.x = player_car.position.x; //center of car
+        gotoNecro = false;
+
+    }
+
+ 
 }
 
 
@@ -3622,8 +3636,72 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
 
 }
 
+//Lobby
+void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Vector2& mousePosition, ShaderResources shaders){
+    show_dbox = false;
+    camera.target = player.position;
+    //float parallaxMidBuildings = camera.target.x * 0.4;
+    //float parallaxMidground = camera.target.x * 0.6f;  // Midground moves slower
+    float parallaxBackground = camera.target.x * 0.8f;  // Background moves even slower
+    BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
+    //Outside of Mode2D is screen space coords. 
+   
+    ClearBackground(customBackgroundColor);
+    
+    if (drunk){
+        BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
+        //player.outline = true;
+
+
+    }
+
+    //No paralax for lobby
+    DrawTexturePro(resources.subwayBackground, {0, 0, static_cast<float>(resources.subwayBackground.width), static_cast<float>(resources.subwayBackground.height)},
+                    {0, 0, static_cast<float>(resources.subwayBackground.width), static_cast<float>(resources.subwayBackground.height)}, {0, 0}, 0.0f, WHITE);
+
+  
+    DrawTexturePro(resources.LobbyForeground, {0, 0, static_cast<float>(resources.LobbyForeground.width), static_cast<float>(resources.LobbyForeground.height)},
+                    {1064, 0, static_cast<float>(resources.LobbyForeground.width), static_cast<float>(resources.LobbyForeground.height)}, {0, 0}, 0.0f, WHITE);
+
+    //DRAW PLAYER
+    player.DrawPlayer(resources, gameState, camera, shaders);
+    DrawBullets();
+    EndShaderMode(); ////////////////////////////SHADER OFF
+    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
+    HandleKeyboardAiming(player, worldMousePosition);
+    EndMode2D();
+
+    //draw healthbar 
+    if (player.currentHealth < 100 &&  !player.enter_car){
+        Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
+        DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
+
+    }
+
+    DrawMoney(); //draw money after EndMode2d()
+    if (showInventory){
+         
+        RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+    }
+
+    if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
+        DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+    }else{
+        DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+    }
+
+    if (show_dbox){
+        DrawDialogBox(player, camera, 0, 0, 20);
+
+    }
+
+    if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player); //always show ammo when outside of car in the cemetery or NecroT
+
+
+}
+
 //NecroTech
-void RenderNecroTech(GameResources resources, Camera2D camera, Player& player, PlayerCar& player_car, Vector2& mousePosition, ShaderResources& shaders){
+void RenderNecroTech(GameResources& resources, Camera2D& camera, Player& player, PlayerCar& player_car, Vector2& mousePosition, ShaderResources& shaders){
 
     show_dbox = false;
     
@@ -3632,12 +3710,21 @@ void RenderNecroTech(GameResources resources, Camera2D camera, Player& player, P
     camera.target = player.position;
     float parallaxMidBuildings = camera.target.x * 0.4;
     float parallaxMidground = camera.target.x * 0.6f;  // Midground moves slower
-    float parallaxBackground = camera.target.x * 0.8f;  // Background moves even slower
+    float parallaxBackground = camera.target.x * 1.0f;  // Background moves even slower
 
     over_car = false;
     if (player.position.x > player_car.position.x && player.position.x < player_car.position.x +30){
         over_car = true;
     }
+    //2134
+    over_necro = false;
+    if (player.position.x < 2144 && player.position.x > 2124){
+        over_necro = true;
+        phrase = "UP TO ENTER";
+        show_dbox = true;
+        dboxPosition = player.position;
+    }
+
     
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
     //Outside of Mode2D is screen space coords. 
@@ -4348,6 +4435,9 @@ void UptoEnter(Player& player, PlayerCar& player_car){
         if (overSubway && gameState == OUTSIDE){
             transitionState = FADE_OUT;
         }
+        if (over_necro and gameState == NECROTECH){
+            transitionState = FADE_OUT;
+        }
 
     }
 }
@@ -4848,6 +4938,10 @@ int main() {
 
                 case NECROTECH:
                     RenderNecroTech(resources, camera, player, player_car, mousePosition, shaders);
+                    break;
+
+                case LOBBY:
+                    RenderLobby(resources, camera, player, mousePosition, shaders);
                     break;
                     
             }

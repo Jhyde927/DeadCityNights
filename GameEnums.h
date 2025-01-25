@@ -14,7 +14,8 @@ enum GameState {
     ASTRAL,
     PARK,
     SUBWAY,
-    NECROTECH
+    NECROTECH,
+    LOBBY,
 };
 
 enum TrainState {

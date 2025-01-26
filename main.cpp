@@ -180,6 +180,7 @@ std::vector<NPC>astralGhosts;
 std::vector<NPC>astralBats;
 std::vector<NPC>ParkNpcs;
 std::vector<NPC>robots;
+std::vector<NPC>lobbyRobots;
 
 
 std::vector<Platform> platforms;
@@ -615,6 +616,8 @@ void UpdatePasswordInterface() {
 
 void MonitorMouseClicks(Player& player, GameCalendar& calendar){
 
+    //monitors mouse clicks for all scenes. Consider moving item pickup left clicks here. 
+
     //Debug mousePosition
     // if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
     //     Vector2 mousePosition = GetMousePosition();
@@ -722,7 +725,7 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
 
 
         }else if (gameState == OUTSIDE){
-            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){ //we are already checking for mouseclick
                 if (player.enter_car && buttonCemetery){ //press buttons cemetery
                     move_car = true;
                     show_carUI = false;
@@ -1881,6 +1884,7 @@ void CheckBulletNPCCollisions(std::vector<NPC>& npcs, Player& player) { //Bullet
                     // Collision detected
                     bullets[i].isActive = false;  // Deactivate the bullet
                     npc.TakeDamage(bullets[i].damage, player);  // Bullets can do more or less damage, use the bullet's damage, it's set when firing
+                    std::cout << "bullet hit npc: " << npc.isActive;
                     break;  // Exit loop since the bullet is deactivated
                 }
             }
@@ -3640,20 +3644,13 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
 void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Vector2& mousePosition, ShaderResources shaders){
     show_dbox = false;
     camera.target = player.position;
-    //float parallaxMidBuildings = camera.target.x * 0.4;
-    //float parallaxMidground = camera.target.x * 0.6f;  // Midground moves slower
-    float parallaxBackground = camera.target.x * 0.8f;  // Background moves even slower
+
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
-    //Outside of Mode2D is screen space coords. 
-   
     ClearBackground(customBackgroundColor);
     
-    if (drunk){
-        BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
-        //player.outline = true;
-
-
-    }
+    if (drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
+        
+    
 
     //No paralax for lobby
     DrawTexturePro(resources.subwayBackground, {0, 0, static_cast<float>(resources.subwayBackground.width), static_cast<float>(resources.subwayBackground.height)},
@@ -3665,11 +3662,34 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Vec
 
     //DRAW PLAYER
     player.DrawPlayer(resources, gameState, camera, shaders);
+
+    //DRAW ROBOTS
+    for (NPC& robot : lobbyRobots){
+        if (robot.isActive){
+            robot.Update(player, gameState);
+            robot.Render(shaders);
+            robot.ClickNPC(mousePosition, camera, player, gameState);
+
+            if (robot.interacting){
+                phrase = robot.speech;
+                show_dbox = true;
+            
+        }
+
+        }
+
+
+ 
+    }
+
     DrawBullets();
     EndShaderMode(); ////////////////////////////SHADER OFF
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
     HandleKeyboardAiming(player, worldMousePosition);
     EndMode2D();
+
+
+
 
     //draw healthbar 
     if (player.currentHealth < 100 &&  !player.enter_car){
@@ -3716,13 +3736,23 @@ void RenderNecroTech(GameResources& resources, Camera2D& camera, Player& player,
     if (player.position.x > player_car.position.x && player.position.x < player_car.position.x +30){
         over_car = true;
     }
-    //2134
+
+
+    //Over building entrance
     over_necro = false;
     if (player.position.x < 2144 && player.position.x > 2124){
-        over_necro = true;
-        phrase = "UP TO ENTER";
-        show_dbox = true;
-        dboxPosition = player.position;
+        if (passwordValidated){
+            over_necro = true;
+            phrase = "UP TO ENTER";
+            show_dbox = true;
+            dboxPosition = player.position;
+
+        }else{
+            phrase = "LOCKED";
+            show_dbox = true;
+            dboxPosition = player.position;
+        }
+
     }
 
     
@@ -3785,19 +3815,23 @@ void RenderNecroTech(GameResources& resources, Camera2D& camera, Player& player,
 
     showPasswordInterface = false; //dont show interface if not interacting. 
     for (NPC& robot : robots){
-        robot.Update(player, gameState);
-        robot.Render(shaders);
-        robot.ClickNPC(mousePosition, camera, player, gameState);
-        if (robot.interacting){
-            phrase = robot.speech;
-            show_dbox = true;
-            dboxPosition = robot.position;
-            showPasswordInterface = true;
+        if (robot.isActive){
+            robot.Update(player, gameState);
+            robot.Render(shaders);
+            robot.ClickNPC(mousePosition, camera, player, gameState);
+            if (robot.interacting){
+                phrase = robot.speech;
+                show_dbox = true;
+                dboxPosition = robot.position;
+                showPasswordInterface = true;
         }
         if (robot.trigger and can_spawn_robots){ //robot rising animation looks dumb and it makes it too hard. save for future use though.
             can_spawn_robots = false;
             //spawnRobot(resources,player, robot.position + Vector2 {-100, 0});
         }
+
+        }
+  
     }
 
     DrawBullets();
@@ -4267,6 +4301,21 @@ void spawnNPCs(GameResources& resources){
         
         robots.push_back(robot_npc);
     }
+
+    //spawn lobby robots
+    int lr = 2;
+    for (int i = 0; i < lr; i++){
+        Vector2 r_pos = {static_cast<float>(2200 + i * 100), 700};
+        NPC robot_npc = CreateNPC(resources.robotSheet, r_pos, speed, IDLE, true, false);
+        robot_npc.SetDestination(2100, 2600);
+        robot_npc.robot = true;
+        robot_npc.maxHealth = 300;
+        robot_npc.health = 300;
+
+        lobbyRobots.push_back(robot_npc);
+
+    }
+
 
 }
 
@@ -4803,19 +4852,48 @@ int main() {
             SoundManager::getInstance().ManagerStopSound("TrainLeaving");
             SoundManager::getInstance().StopMusic("subwayAmbience");
         }
+        ///robots were still active when not rendering the scene they are in. How come this wasn't a problem with zombies in the graveyard and cemetery.
 
-        
+        //zombies in cemetery transfer over to graveyard because they are in the same vector, 
+        //we should probably make a second zombie vector fro graveyard. 
+
+        //This asserts that robots are not active when not being rendered. Do we need to do this for all NPC? 
+        for (NPC& robot : robots){
+            if (gameState == NECROTECH && robot.health > 0) robot.isActive = true;
+
+            if (robot.health <= 0 && !robot.isDying){
+                robot.isActive = false;
+            }
+
+            if (gameState != NECROTECH){
+                robot.isActive = false;
+            }
+        }
+
+        for (NPC& robot : lobbyRobots){
+            if (gameState == LOBBY && robot.health > 0) robot.isActive = true;
+            
+            if (robot.health <= 0 && !robot.isDying){
+                robot.isActive = false;
+            }
+
+            if (gameState != LOBBY){
+                robot.isActive = false;
+            }
+        }
 
         UpdateBullets();
-        CheckBulletNPCCollisions(zombies, player); //check each enemy group for bullet collisions
+        //check each enemy group for bullet collisions
+        CheckBulletNPCCollisions(zombies, player);
         CheckBulletNPCCollisions(ghosts, player);
         CheckBulletNPCCollisions(astralGhosts, player);
         CheckBulletNPCCollisions(bats, player);
         CheckBulletNPCCollisions(astralBats, player);
         CheckBulletPlayerCollisions(player);
         CheckBulletNPCCollisions(robots, player);
+        CheckBulletNPCCollisions(lobbyRobots, player);
 
-        MonitorMouseClicks(player, calendar);
+        MonitorMouseClicks(player, calendar); // should refactor this into something saner
         UpdateZombieSpawning(resources, player);
         //glowEffect(glowShader, gameState); //update glow shader
 

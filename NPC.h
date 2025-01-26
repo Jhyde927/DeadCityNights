@@ -71,6 +71,7 @@ public:
     float shootTimer;
     bool validPassword;
     bool trigger;
+    bool lobbyNPC;
 
     NPC* targetNPC;
  

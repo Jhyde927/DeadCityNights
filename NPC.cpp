@@ -68,6 +68,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     shootTimer = 0.0f;
     validPassword = false;
     trigger = false;
+    lobbyNPC = false;
  
 }
 
@@ -128,7 +129,9 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){ //Click or
             talkTimer = 5;
             idleTime = 10;
 
-           
+           if (interactions == 0 && validPassword){
+                speech = "Beep Boop";
+           }
 
             if (interactions == 0 && !validPassword){ //an interaction is a series of sentences said by the NPC, once all the dialog is displayed we increment interactions
             //then wait to trigger the next set of dialogs. 
@@ -466,15 +469,39 @@ void NPC::HandleZombie(Player& player, float& distanceToPlayer){
 }
 
 void NPC::HandleMiB(Player& player, float& distanceToPlayer){
+
     //MIB follow player up to a point then stops and waits. 
-    if (MiB && distanceToPlayer < 1000 && !hasTarget){
+    if (MiB && distanceToPlayer < 1000 && !hasTarget && !attacking){
         destination = player.position; //move toward player
         hasTarget = true; //dont go idle
     }
-    if (MiB && distanceToPlayer <= 125 && hasTarget){
+
+
+    if (MiB && agro && distanceToPlayer < 150){
+       destination = position;
+       //shoot
+       if (can_shoot && !isDying){
+            can_shoot = false;
+            attacking = true;
+            SoundManager::getInstance().PlayPositionalSound("gunShot", position, player.position, 500); //mibs shoot lasers, but sound like guns. 
+            SetAnimationState(ATTACKING);
+            NPCfireBullet(*this, false, 20, true);
+            shootTimer = 1.0f;
+       }
+
+    }
+
+    if (MiB && distanceToPlayer <= 160 && hasTarget && !agro){
        
         destination = position; //stop a ways away
-        SetAnimationState(IDLE);
+        if (!attacking) SetAnimationState(IDLE);
+    }
+
+    if (shootTimer > 0){
+        shootTimer -= GetFrameTime();
+    }else{
+        can_shoot = true;
+        attacking = false;
     }
 }
 
@@ -495,7 +522,7 @@ void NPC::HandleRobot(Player& player, float& distanceToPlayer){
             SoundManager::getInstance().PlayPositionalSound("laser", position, player.position, 500);
             can_shoot = false;
             SetAnimationState(ATTACKING);
-            NPCfireBullet(*this, false, 10, true);
+            NPCfireBullet(*this, false, 10, true); //laser = true
             shootTimer = 1.0f;
 
         }
@@ -769,9 +796,11 @@ void NPC::Update(Player& player, GameState& gameState) {
             }else if (ghost){
                 SetDestination(1024, 1800); //ghost stays on far left of cemetery
             }else if (robot){
-                SetDestination(1600, 2631);
+                SetDestination(1600, 2500); //robots necrotech, and lobby.
+            }else if (lobbyNPC){
+                SetDestination(1600, 2500); //lobby npc
             } else{
-                SetDestination(1000, 3500);  //Pedestrians Outside
+                SetDestination(1000, 3500);  //Pedestrians Outside, and park
                 
             }
 
@@ -969,6 +998,13 @@ void NPC::TakeDamage(int damage, Player& player) {
         idleTime = 0; //stop being idle 
         facingRight = (player.position.x > position.x); //face the player
 
+    }
+
+    if (MiB && !agro){
+        agro = true;
+        destination = player.position;
+        idleTime = 0;
+        facingRight = (player.position.x > position.x);
     }
 
     if (isZombie){

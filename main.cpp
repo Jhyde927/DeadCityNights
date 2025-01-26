@@ -182,6 +182,7 @@ std::vector<NPC>ParkNpcs;
 std::vector<NPC>robots;
 std::vector<NPC>lobbyRobots;
 std::vector<NPC>lobbyNPCs;
+std::vector<NPC>lobbyMibs;
 
 
 std::vector<Platform> platforms;
@@ -602,7 +603,13 @@ void UpdatePasswordInterface() {
         if (enteredPassword == correctPassword && !passwordValidated) {
             passwordValidated = true;
             
-            robots[0].validPassword = true;
+            for (NPC& robot : robots){ //set validPassword to true for all robots. once password is entered. 
+                robot.validPassword = true;
+            }
+
+            for (NPC& robot : lobbyRobots){ 
+                robot.validPassword = true;
+            }
 
             passwordTimer = 2.0f;
             
@@ -1149,13 +1156,62 @@ void batFlocking(Player& player, ShaderResources& shaders){
     }
 }
 
+
+void robotFlocking(Player& player){
+    //prevent robot overlap, by adding a repulsion force if robots get too close. 
+
+    Vector2 separationForce = {0.0f, 0.0f};
+    for (size_t i = 0; i < lobbyRobots.size(); i++) { // nested loop astral bats to check for neiboring bats, apply repuslion force if too close. 
+        NPC& robotA = lobbyRobots[i];
+
+        // Update and render this ghost
+        // robotA.Update(player, gameState);
+        // robotA.Render(shaders);
+
+        if (robotA.health > 0) robotA.isActive = true;
+
+        // Now check distances to all other bats
+        for (size_t j = 0; j < astralBats.size(); j++) {
+            if (j == i) continue; // skip comparing the same bat
+            NPC& robotB = lobbyRobots[j];
+            if (robotA.isActive && robotB.isActive){ //don't avoid dead bats
+                // Calculate distance between batA and batB
+                float dx = robotA.position.x - robotB.position.x;
+                float dy = robotA.position.y - robotB.position.y;
+                float distance = sqrt(dx * dx + dy * dy);
+
+                if (distance < 30.0f && distance > 0.0f) {
+                // Compute a normalized vector to repel batA away from batB
+                    float force = 1.0f - (distance / 30.0f); 
+                    // force reduces as distance approaches 30, stronger when distance is very small
+
+                    float nx = dx / distance;
+                    float ny = dy / distance;
+
+                    // Add to separationForce
+                    separationForce.x += nx * force; 
+                    separationForce.y += ny * force;
+                }
+
+                float separationStrength = 50.0f; 
+                robotA.position.x += separationForce.x * separationStrength * GetFrameTime();
+                robotA.position.y += separationForce.y * separationStrength * GetFrameTime();
+
+                }
+
+
+ 
+        }
+    }
+}
+
 void HandleActiveNPC(){
     //ensure NPCs are only active if they are being rendered. 
 
     ///robots were still active when not rendering the scene they are in. How come this wasn't a problem with zombies in the graveyard and cemetery.
 
     //zombies in cemetery transfer over to graveyard because they are in the same vector, 
-    //we should probably make a second zombie vector fro graveyard. 
+    //we should probably make a second zombie vector for graveyard. 
 
     //This asserts that robots are not active when not being rendered. Do we need to do this for all NPC? 
     for (NPC& robot : robots){
@@ -1201,6 +1257,20 @@ void HandleActiveNPC(){
 
         if (gameState != LOBBY){
             npc.isActive = false;
+        }
+    }
+
+    for (NPC& mib : lobbyMibs){
+        if (mib.health > 0 && gameState == LOBBY){
+            mib.isActive = true;
+        }
+
+        if (mib.health <= 0 && !mib.isDying){
+            mib.isActive = false;
+        }
+
+        if (gameState != LOBBY){
+            mib.isActive = false;
         }
     }
 
@@ -1968,7 +2038,7 @@ void CheckBulletPlayerCollisions(Player& player) {
 
 void CheckLaserNPCCollisions(std::vector<NPC>& npcs, Player& player){
     Vector2 laserSize = {5, 2};
-    int laserDamage = 30; //lasers do more damage to NPCs
+    int laserDamage = 50; //lasers do more damage to NPCs
 
     for (int i = 0; i < MAX_BULLETS; i++){//check for laser non robot NPC collision
         if (bullets[i].isActive && bullets[i].laser){ 
@@ -1986,7 +2056,7 @@ void CheckLaserNPCCollisions(std::vector<NPC>& npcs, Player& player){
 
 void CheckBulletNPCCollisions(std::vector<NPC>& npcs, Player& player) { //Bullet collision with zombies, bats, and ghosts
     Vector2 bulletSize = {1, 1};  // Size of the bullet hitbox
-    Vector2 laserSize = {5, 2};
+
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (bullets[i].isActive && !bullets[i].laser) {  // Only check active bullets and not lasers
             for (NPC& npc : npcs) { //zombies vector is passed to this func which calls them npcs
@@ -3772,7 +3842,7 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Vec
         
     
 
-    //No paralax for lobby
+    //No parallax for lobby
     DrawTexturePro(resources.subwayBackground, {0, 0, static_cast<float>(resources.subwayBackground.width), static_cast<float>(resources.subwayBackground.height)},
                     {0, 0, static_cast<float>(resources.subwayBackground.width), static_cast<float>(resources.subwayBackground.height)}, {0, 0}, 0.0f, WHITE);
 
@@ -3783,21 +3853,22 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Vec
     //DRAW PLAYER
     player.DrawPlayer(resources, gameState, camera, shaders);
 
-    if (!lobbyRobots[0].isActive && can_spawn_robots){ //if first robot in vector dies, spawn 3 more robots in lobby. 
+    if (!lobbyRobots[0].isActive && can_spawn_robots){ //if first robot in vector dies, spawn 2 more robots in lobby. 
         can_spawn_robots = false;
-        spawnRobot(resources,player, player.position + Vector2 {-200, 0});
-        spawnRobot(resources,player, player.position + Vector2 {200, 0});
-        spawnRobot(resources,player, player.position + Vector2 {300, 0});
-
-                 
+        //spawnRobot(resources,player, player.position + Vector2 {-200, 0}); //spawn robots left and right of player position.
+        //spawnRobot(resources,player, player.position + Vector2 {200, 0});
+        
     }
-
+    
     //DRAW ROBOTS
     for (NPC& robot : lobbyRobots){
         if (robot.isActive){
             robot.Update(player, gameState);
             robot.Render(shaders);
             robot.ClickNPC(mousePosition, camera, player, gameState);
+            if (robot.agro){
+                robotFlocking(player); //only flock if agro
+            }
 
             if (robot.interacting){
                 phrase = robot.speech;
@@ -3806,7 +3877,21 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Vec
             
             }
 
+        }
+    }
+    //DRAW MIBS
+    for (NPC& mib : lobbyMibs){
+        if (mib.isActive){
+            mib.Update(player, gameState);
+            mib.Render(shaders);
+            mib.ClickNPC(mousePosition, camera, player, gameState);
 
+            if (mib.agro){ //if mib is agro, robots are too. 
+                for (NPC& robot : lobbyRobots){
+                    robot.agro = true;
+                    robot.destination = player.position;
+                }
+            }
 
         }
     }
@@ -4445,7 +4530,7 @@ void spawnNPCs(GameResources& resources){
     //spawn lobby robots
     int lr = 2;
     for (int i = 0; i < lr; i++){
-        Vector2 r_pos = {static_cast<float>(2200 + i * 100), 700};
+        Vector2 r_pos = {static_cast<float>(2000 + i * 300), 700};
         NPC robot_npc = CreateNPC(resources.robotSheet, r_pos, speed, IDLE, true, false);
         robot_npc.SetDestination(2000, 2500);
         robot_npc.robot = true;
@@ -4462,6 +4547,7 @@ void spawnNPCs(GameResources& resources){
         Vector2 b_pos = {static_cast<float>(2200 + i * 100), 700};
         NPC businessman = CreateNPC(resources.businessSheet, b_pos, speed, IDLE, true, false);
         businessman.SetDestination(2000, 2500);
+        businessman.lobbyNPC = true;
         
         lobbyNPCs.push_back(businessman);
     }
@@ -4471,8 +4557,18 @@ void spawnNPCs(GameResources& resources){
         Vector2 w_pos = {static_cast<float>(2200 + i * 100), 700};
         NPC woman = CreateNPC(resources.woman2Sheet, w_pos, speed, IDLE, true, false);
         woman.SetDestination(2000, 2500);
-        
+        woman.lobbyNPC = true;
         lobbyNPCs.push_back(woman);
+    }
+
+    //spawn lobby MiBs
+    int mb = 1;
+    for (int i = 0; i < mb; i++){
+        Vector2 m_pos = {static_cast<float>(2200 + i * 100), 700}; 
+        NPC mib_npc = CreateNPC(resources.mibSheet, m_pos, speed, IDLE, true, false);
+        mib_npc.MiB = true;
+        
+        lobbyMibs.push_back(mib_npc);
     }
 
 
@@ -5027,7 +5123,7 @@ int main() {
         CheckBulletPlayerCollisions(player);
         CheckBulletNPCCollisions(robots, player);
         CheckBulletNPCCollisions(lobbyRobots, player);
-
+        CheckBulletNPCCollisions(lobbyMibs, player);
         CheckLaserNPCCollisions(lobbyNPCs, player); //robots can shoot regular NPCs if they happen to be in the way
 
         MonitorMouseClicks(player, calendar); 

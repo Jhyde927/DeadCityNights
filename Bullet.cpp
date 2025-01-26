@@ -10,9 +10,9 @@ Bullet bullets[MAX_BULLETS];  // Define the global bullets array
 
 
 // Function to generate a random float between 0 and 1
-float randf() {
-    return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-}
+// float randf() {
+//     return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+// }
 
 // Function to add spread to a bullet's direction
 Vector2 ApplySpread(Vector2 direction, float spreadAngle) {
@@ -52,7 +52,7 @@ void FireBullet(Player& player, bool spread, float damage, bool laser) {
     }
 }
 
-void NPCfireBullet(NPC& npc, bool spread, float damage, bool laser) { //robots and shoot lasers
+void NPCfireBullet(NPC& npc, bool spread, float damage, bool laser) { //robots shoot lasers
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (!bullets[i].isActive) {
             bullets[i].position = Vector2{npc.position.x + 32, npc.position.y + 26}; //center bullet on Robot gun

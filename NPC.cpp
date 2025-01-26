@@ -150,7 +150,7 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){ //Click or
                             speech = "Terminate Intruder";
                             agro = true;
                             idleTime = 2;
-                            trigger = true;
+                            //trigger = true;
                             facingRight = (player.position.x > position.x); //turn toward player
                             break;
 
@@ -488,7 +488,7 @@ void NPC::HandleRobot(Player& player, float& distanceToPlayer){
 
     }
 
-    if (distanceToPlayer < 100 && agro){
+    if (distanceToPlayer < 150 && agro){ //150 for longer distance, more of a chance for NPCs to get in the way
         destination = position;
         //shoot
         if (can_shoot && !isDying){
@@ -501,6 +501,8 @@ void NPC::HandleRobot(Player& player, float& distanceToPlayer){
         }
         
     }
+
+    
 
     if (shootTimer > 0){
         shootTimer -= GetFrameTime();
@@ -1029,6 +1031,7 @@ void NPC::TakeDamage(int damage, Player& player) {
         isDying = true;
         SetAnimationState(DEATH);
         //play robot death sound
+        //trigger = true; //summon more robots on death in lobby
         SoundManager::getInstance().PlayPositionalSound("explosion", position, player.position, 500);
         destination = position;
         deathTimer = .85f;

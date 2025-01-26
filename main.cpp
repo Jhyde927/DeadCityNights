@@ -181,6 +181,7 @@ std::vector<NPC>astralBats;
 std::vector<NPC>ParkNpcs;
 std::vector<NPC>robots;
 std::vector<NPC>lobbyRobots;
+std::vector<NPC>lobbyNPCs;
 
 
 std::vector<Platform> platforms;
@@ -867,12 +868,16 @@ void StartZombieSpawn(int zombie_count){
 }
 
 void spawnRobot(GameResources& resources, Player& player, Vector2 position){
+    //spawn more robots in the lobby on first robot death
     int speed = 50;
     NPC robot_npc = CreateNPC(resources.robotSheet, position, speed, RISING, true, false);
     robot_npc.robot = true;
-    robot_npc.agro = true;
+    robot_npc.maxHealth = 300;
+    robot_npc.health = 300;
+    robot_npc.agro = true; //robots spawn angry
     robot_npc.SetDestination(player.position.x, player.position.x + 100);
-    robots.push_back(robot_npc);
+    lobbyRobots.push_back(robot_npc);
+    std::cout << "Spawning Robots";
 }
 
 void spawnZombiePark(GameResources& resources, Vector2 position){
@@ -1144,6 +1149,65 @@ void batFlocking(Player& player, ShaderResources& shaders){
     }
 }
 
+void HandleActiveNPC(){
+    //ensure NPCs are only active if they are being rendered. 
+
+    ///robots were still active when not rendering the scene they are in. How come this wasn't a problem with zombies in the graveyard and cemetery.
+
+    //zombies in cemetery transfer over to graveyard because they are in the same vector, 
+    //we should probably make a second zombie vector fro graveyard. 
+
+    //This asserts that robots are not active when not being rendered. Do we need to do this for all NPC? 
+    for (NPC& robot : robots){
+        if (gameState == NECROTECH && robot.health > 0) robot.isActive = true;
+
+        if (robot.health <= 0 && !robot.isDying){
+            robot.isActive = false;
+        }
+
+        if (gameState != NECROTECH){
+            robot.isActive = false; //deactivate if outside proper scene
+        }
+    }
+
+    for (NPC& robot : lobbyRobots){
+        if (gameState == LOBBY && robot.health > 0) robot.isActive = true;
+        
+        if (robot.health <= 0 && !robot.isDying){
+            robot.isActive = false;
+        }
+
+        if (gameState != LOBBY){
+            robot.isActive = false;
+        }
+
+        if (robot.agro){ // if one robot gets angry, they all do. 
+            for (NPC& r : lobbyRobots){
+                if (!r.agro){
+                    r.agro = true;
+                }
+            }
+        }
+    }
+
+    for (NPC& npc : lobbyNPCs){
+        if (npc.health > 0 && gameState == LOBBY){
+            npc.isActive = true;
+        }
+
+        if (npc.health <= 0 && !npc.isDying){
+            npc.isActive = false;
+        }
+
+        if (gameState != LOBBY){
+            npc.isActive = false;
+        }
+    }
+
+
+
+}
+
 
 
 void DrawMac10Pickup(GameResources& resources, Player& player, Vector2 mousePosition, Camera2D& camera){
@@ -1234,12 +1298,36 @@ void DrawShovelPickup(GameResources& resources, Player& player, Vector2 mousePos
     }
 }
 
-void HandleNecroTransition(Player& player, PlayerCar& player_car){
+void HandleLobbyTransition(Player& player, GameCalendar& calendar){
+    if (over_exit){
+        gameState = NECROTECH;
+        over_exit = false;
+    }else{
+        //death in lobby, goto apartment
+        gameState = APARTMENT;
+        player.position.x = apartmentX;
+        player.isDead = false;
+        player.currentHealth = player.maxHealth;
 
-    if (over_necro and passwordValidated){
+        calendar.AdvanceDay();
+
+    }
+}
+
+void HandleNecroTransition(Player& player, PlayerCar& player_car, GameCalendar calendar){
+    //faded out
+    if (over_necro and passwordValidated && !player.isDead){
         gameState = LOBBY; //over enterance goto lobby
 
-    }else{
+    }else if (player.isDead){
+        gameState = APARTMENT;
+        player.position.x = apartmentX;
+        player.isDead = false;
+        player.currentHealth = player.maxHealth;
+        calendar.AdvanceDay();
+
+
+    } else{ //leave by car back to street. 
         gameState = OUTSIDE;
         player_car.position.x = 1710;
         player.position.x = player_car.position.x; //center of car
@@ -1505,7 +1593,11 @@ void PerformStateTransition(Player& player, PlayerCar& player_car, GameCalendar&
             break;
 
         case NECROTECH:
-            HandleNecroTransition(player, player_car);
+            HandleNecroTransition(player, player_car, calendar);
+            break;
+
+        case LOBBY:
+            HandleLobbyTransition(player, calendar);
             break;
   
     }
@@ -1874,9 +1966,27 @@ void CheckBulletPlayerCollisions(Player& player) {
     }
 }
 
+void CheckLaserNPCCollisions(std::vector<NPC>& npcs, Player& player){
+    Vector2 laserSize = {5, 2};
+    int laserDamage = 30; //lasers do more damage to NPCs
+
+    for (int i = 0; i < MAX_BULLETS; i++){//check for laser non robot NPC collision
+        if (bullets[i].isActive && bullets[i].laser){ 
+            for (NPC& npc : npcs){
+                if (npc.isActive && !npc.robot && npc.CheckHit(bullets[i].previousPosition, bullets[i].position, laserSize)) {
+                    bullets[i].isActive = false;
+                    npc.TakeDamage(laserDamage, player);
+                    break;
+                }
+            }
+
+        }
+    }
+}
+
 void CheckBulletNPCCollisions(std::vector<NPC>& npcs, Player& player) { //Bullet collision with zombies, bats, and ghosts
     Vector2 bulletSize = {1, 1};  // Size of the bullet hitbox
-
+    Vector2 laserSize = {5, 2};
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (bullets[i].isActive && !bullets[i].laser) {  // Only check active bullets and not lasers
             for (NPC& npc : npcs) { //zombies vector is passed to this func which calls them npcs
@@ -1884,12 +1994,14 @@ void CheckBulletNPCCollisions(std::vector<NPC>& npcs, Player& player) { //Bullet
                     // Collision detected
                     bullets[i].isActive = false;  // Deactivate the bullet
                     npc.TakeDamage(bullets[i].damage, player);  // Bullets can do more or less damage, use the bullet's damage, it's set when firing
-                    std::cout << "bullet hit npc: " << npc.isActive;
+                    
                     break;  // Exit loop since the bullet is deactivated
                 }
             }
         }
     }
+
+
 }
 
 
@@ -3643,8 +3755,16 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
 //Lobby
 void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Vector2& mousePosition, ShaderResources shaders){
     show_dbox = false;
-    camera.target = player.position;
+    
+    over_exit = false;
+    if (player.position.x < 2126 && player.position.x > 2106){ //exit lobby to necrotech exterior, triggered in uptoEnter()
+        over_exit = true;
+        phrase = "UP TO EXIT";
+        show_dbox = true;
+        dboxPosition = player.position;
+    }
 
+    camera.target = player.position;
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
     ClearBackground(customBackgroundColor);
     
@@ -3663,6 +3783,15 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Vec
     //DRAW PLAYER
     player.DrawPlayer(resources, gameState, camera, shaders);
 
+    if (!lobbyRobots[0].isActive && can_spawn_robots){ //if first robot in vector dies, spawn 3 more robots in lobby. 
+        can_spawn_robots = false;
+        spawnRobot(resources,player, player.position + Vector2 {-200, 0});
+        spawnRobot(resources,player, player.position + Vector2 {200, 0});
+        spawnRobot(resources,player, player.position + Vector2 {300, 0});
+
+                 
+    }
+
     //DRAW ROBOTS
     for (NPC& robot : lobbyRobots){
         if (robot.isActive){
@@ -3673,14 +3802,29 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Vec
             if (robot.interacting){
                 phrase = robot.speech;
                 show_dbox = true;
+                dboxPosition = player.position;
             
-        }
+            }
+
+
 
         }
-
-
- 
     }
+
+    for (NPC& npc : lobbyNPCs){
+        if (npc.isActive){
+            npc.Update(player, gameState);
+            npc.Render(shaders);
+            npc.ClickNPC(mousePosition, camera, player, gameState);
+
+            if (npc.interacting){
+                phrase = npc.speech;
+                show_dbox = true;
+                dboxPosition = npc.position;
+            }
+        }
+    }
+
 
     DrawBullets();
     EndShaderMode(); ////////////////////////////SHADER OFF
@@ -3740,6 +3884,7 @@ void RenderNecroTech(GameResources& resources, Camera2D& camera, Player& player,
 
     //Over building entrance
     over_necro = false;
+    showPasswordInterface = false; //you can interact with either the door or the robot outside, to enter password. 
     if (player.position.x < 2144 && player.position.x > 2124){
         if (passwordValidated){
             over_necro = true;
@@ -3751,6 +3896,7 @@ void RenderNecroTech(GameResources& resources, Camera2D& camera, Player& player,
             phrase = "LOCKED";
             show_dbox = true;
             dboxPosition = player.position;
+            showPasswordInterface = true; //show password UI when over door
         }
 
     }
@@ -3811,9 +3957,9 @@ void RenderNecroTech(GameResources& resources, Camera2D& camera, Player& player,
         DrawCarUI(player_car, mousePosition, camera, gameState);
     }
 
-    if (robots[0].agro) showPasswordInterface = false; //hide interface on shots fired. 
+    if (robots[0].agro && robots[0].isActive) showPasswordInterface = false; //hide interface on shots fired. 
 
-    showPasswordInterface = false; //dont show interface if not interacting. 
+    //showPasswordInterface = false; //dont show interface if not interacting. 
     for (NPC& robot : robots){
         if (robot.isActive){
             robot.Update(player, gameState);
@@ -3824,13 +3970,11 @@ void RenderNecroTech(GameResources& resources, Camera2D& camera, Player& player,
                 show_dbox = true;
                 dboxPosition = robot.position;
                 showPasswordInterface = true;
-        }
-        if (robot.trigger and can_spawn_robots){ //robot rising animation looks dumb and it makes it too hard. save for future use though.
-            can_spawn_robots = false;
-            //spawnRobot(resources,player, robot.position + Vector2 {-100, 0});
-        }
 
+
+            }
         }
+        
   
     }
 
@@ -4106,14 +4250,10 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 }
 
 
-
-
-// Factory function to create an NPC with default properties
-
 void spawnNPCs(GameResources& resources){
-    // Create NPCs outside and set there starting desitnations. 
+    // Create NPCs and set there starting desitnations. 
 
-    float speed = 50.0f;
+    float speed = 50.0f; //normal NPC speed
 
     //spawn generic NPCs
     int generic = 10;
@@ -4127,7 +4267,7 @@ void spawnNPCs(GameResources& resources){
             npc.SetDestination(1000, 2100);
         }
         npcs.push_back(npc);  // Add the NPC to the vector
-        //ParkNpcs.push_back(npc);
+        //ParkNpcs.push_back(npc); //no generic NPCs in park, too many people
     }
 
     //spawn businessMan
@@ -4294,7 +4434,7 @@ void spawnNPCs(GameResources& resources){
     for (int i = 0; i < rs; i++){
         Vector2 r_pos = {static_cast<float>(2200 + i * 100), 700};
         NPC robot_npc = CreateNPC(resources.robotSheet, r_pos, speed, IDLE, true, false);
-        robot_npc.SetDestination(2100, 2600);
+        robot_npc.SetDestination(2100, 2300);
         robot_npc.robot = true;
         robot_npc.maxHealth = 300;
         robot_npc.health = 300;
@@ -4307,13 +4447,32 @@ void spawnNPCs(GameResources& resources){
     for (int i = 0; i < lr; i++){
         Vector2 r_pos = {static_cast<float>(2200 + i * 100), 700};
         NPC robot_npc = CreateNPC(resources.robotSheet, r_pos, speed, IDLE, true, false);
-        robot_npc.SetDestination(2100, 2600);
+        robot_npc.SetDestination(2000, 2500);
         robot_npc.robot = true;
         robot_npc.maxHealth = 300;
         robot_npc.health = 300;
 
         lobbyRobots.push_back(robot_npc);
 
+    }
+
+    //spawn lobby NPCs
+    int bmen = 3;
+    for (int i = 0; i < bmen; i++){
+        Vector2 b_pos = {static_cast<float>(2200 + i * 100), 700};
+        NPC businessman = CreateNPC(resources.businessSheet, b_pos, speed, IDLE, true, false);
+        businessman.SetDestination(2000, 2500);
+        
+        lobbyNPCs.push_back(businessman);
+    }
+
+    int wm = 3;
+    for (int i = 0; i < wm; i++){
+        Vector2 w_pos = {static_cast<float>(2200 + i * 100), 700};
+        NPC woman = CreateNPC(resources.woman2Sheet, w_pos, speed, IDLE, true, false);
+        woman.SetDestination(2000, 2500);
+        
+        lobbyNPCs.push_back(woman);
     }
 
 
@@ -4484,7 +4643,10 @@ void UptoEnter(Player& player, PlayerCar& player_car){
         if (overSubway && gameState == OUTSIDE){
             transitionState = FADE_OUT;
         }
-        if (over_necro and gameState == NECROTECH){
+        if (over_necro && gameState == NECROTECH){
+            transitionState = FADE_OUT;
+        }
+        if (over_exit && gameState == LOBBY){
             transitionState = FADE_OUT;
         }
 
@@ -4852,35 +5014,8 @@ int main() {
             SoundManager::getInstance().ManagerStopSound("TrainLeaving");
             SoundManager::getInstance().StopMusic("subwayAmbience");
         }
-        ///robots were still active when not rendering the scene they are in. How come this wasn't a problem with zombies in the graveyard and cemetery.
-
-        //zombies in cemetery transfer over to graveyard because they are in the same vector, 
-        //we should probably make a second zombie vector fro graveyard. 
-
-        //This asserts that robots are not active when not being rendered. Do we need to do this for all NPC? 
-        for (NPC& robot : robots){
-            if (gameState == NECROTECH && robot.health > 0) robot.isActive = true;
-
-            if (robot.health <= 0 && !robot.isDying){
-                robot.isActive = false;
-            }
-
-            if (gameState != NECROTECH){
-                robot.isActive = false;
-            }
-        }
-
-        for (NPC& robot : lobbyRobots){
-            if (gameState == LOBBY && robot.health > 0) robot.isActive = true;
-            
-            if (robot.health <= 0 && !robot.isDying){
-                robot.isActive = false;
-            }
-
-            if (gameState != LOBBY){
-                robot.isActive = false;
-            }
-        }
+  
+        HandleActiveNPC();
 
         UpdateBullets();
         //check each enemy group for bullet collisions
@@ -4893,7 +5028,9 @@ int main() {
         CheckBulletNPCCollisions(robots, player);
         CheckBulletNPCCollisions(lobbyRobots, player);
 
-        MonitorMouseClicks(player, calendar); // should refactor this into something saner
+        CheckLaserNPCCollisions(lobbyNPCs, player); //robots can shoot regular NPCs if they happen to be in the way
+
+        MonitorMouseClicks(player, calendar); 
         UpdateZombieSpawning(resources, player);
         //glowEffect(glowShader, gameState); //update glow shader
 

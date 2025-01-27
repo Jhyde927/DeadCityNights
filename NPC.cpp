@@ -123,6 +123,36 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){ //Click or
 
         }
 
+        if (!talked && MiB && gameState == LOBBY){
+            talked = true;
+            talkTimer = 3;
+            idleTime = 3;
+            
+            if (interactions == 0 && !agro){
+                clickCount += 1;
+                switch (clickCount)
+                {
+                case 1:
+                    speech = "You Fool!";
+                    break;
+
+                case 2:
+                    speech = "You should have\n\nNever come here!";
+                    break;
+
+                case 3:
+                    speech = "DIE!!!";
+                    break;
+
+                case 4:
+                    speech = "";
+                    agro = true;
+                    break;
+                
+                }
+            }
+        }
+
         if (!talked && robot && !agro){ //dont talk to angry robots
             talked = true;
             speech = "Beep Boop";

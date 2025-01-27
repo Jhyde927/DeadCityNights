@@ -51,6 +51,7 @@ bool windowStateChanged = false;
 bool fullscreen = false;
 bool move_ufo = false;
 bool canMoveUfo = true;
+bool globalAgro = false;
 bool firstHobo = true;
 bool can_spawn_robots = true;
 bool can_spawn_mibs = true;
@@ -2893,12 +2894,10 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
         bat.Update(player, gameState);
         bat.Render(shaders);
         if (bat.agro){
-            Flocking(player,astralGhosts);
+            Flocking(player,astralBats);
         }
     }
     
-    
-    Flocking(player,astralBats);
 
 
     DrawMac10Pickup(resources, player, mousePosition, camera);
@@ -3761,8 +3760,7 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
 
 //Lobby
 void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Vector2& mousePosition, ShaderResources shaders){
-    show_dbox = false;
-    
+    show_dbox = false;   
     over_exit = false;
     if (player.position.x < 2126 && player.position.x > 2106){ //exit lobby to necrotech exterior, triggered in uptoEnter()
         over_exit = true;
@@ -3790,31 +3788,37 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Vec
     //DRAW PLAYER
     player.DrawPlayer(resources, gameState, camera, shaders);
 
-    // if (!lobbyRobots[0].isActive && can_spawn_robots){ //if first robot in vector dies, spawn 2 more robots in lobby. 
-    //     can_spawn_robots = false;
-    //     //spawnRobot(resources,player, player.position + Vector2 {-200, 0}); //spawn robots left and right of player position.
-    //     //spawnRobot(resources,player, player.position + Vector2 {200, 0});
-        
-    // }
 
-    if (AreAllNPCsDeactivated(lobbyMibs) && can_spawn_robots){
+
+    if (AreAllNPCsDeactivated(lobbyMibs) && can_spawn_robots){ //if all the lobby mibs are dead, spawn robots
         can_spawn_robots = false;
         spawnRobot(resources, player, player.position + Vector2 {300, 0});
-        spawnRobot(resources, player, player.position + Vector2 {300, 0});
+        spawnRobot(resources, player, player.position + Vector2 {-300, 0});
 
+    }
+
+    if (globalAgro && can_spawn_mibs){
+        can_spawn_mibs = false;
+        spawnMib(resources, player, player.position + Vector2 {300, 0});
+        spawnMib(resources, player, player.position + Vector2 {-300, 0});
+        
     }
     
     //DRAW ROBOTS
-    for (NPC& robot : lobbyRobots){ //No lobby robots at the moment. 
+    for (NPC& robot : lobbyRobots){ //No lobby robots at the moment. robots are spawned in later though so keep this. 
         if (robot.isActive){
             robot.Update(player, gameState);
             robot.Render(shaders);
             robot.ClickNPC(mousePosition, camera, player, gameState);
+
+            if (globalAgro) robot.agro = true;
+
             if (robot.agro){
-                Flocking(player, lobbyRobots);
+                robot.destination = player.position;
+                Flocking(player, lobbyRobots); //repulsion force if NPCs get too close. 
             }
 
-            if (robot.interacting){
+            if (robot.interacting && !robot.agro){
                 phrase = robot.speech;
                 show_dbox = true;
                 dboxPosition = player.position;
@@ -3832,40 +3836,43 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Vec
             mib.Render(shaders);
             mib.ClickNPC(mousePosition, camera, player, gameState);
 
+            if (globalAgro) mib.agro = true;
+
+            if (mib.interacting && !mib.agro){
+                phrase = mib.speech;
+                show_dbox = true;
+                dboxPosition = mib.position;
+
+            }
+
             if (mib.agro){ //if mib is agro, robots are too.
+                mib.destination = player.position;
+                mib.facingRight = player.position.x > mib.position.x;
                 Flocking(player, lobbyMibs); //only flock if agro. flocking = repulsion force. 
+                globalAgro = true;
 
-                if (can_spawn_mibs){ //spawn more mibs on first agro. 
-                    can_spawn_mibs = false;
-                    spawnMib(resources, player, player.position + Vector2 {-300, 0});
-                    spawnMib(resources, player, player.position + Vector2 {300, 0});
-                }
 
-                for (NPC& robot : lobbyRobots){ //alert robots
-                    robot.agro = true;
-                    robot.destination = player.position;
-                }
-
-                for (NPC& m : lobbyMibs){ //alert other mibs. 
-                    m.agro = true;
-                    m.destination = player.position;
-                }
+            
             }
 
         }
     }
 
+    //Draw lobby NPC
     for (NPC& npc : lobbyNPCs){
         if (npc.isActive){
             npc.Update(player, gameState);
             npc.Render(shaders);
-            npc.ClickNPC(mousePosition, camera, player, gameState);
 
-            if (npc.interacting){
-                phrase = npc.speech;
-                show_dbox = true;
-                dboxPosition = npc.position;
-            }
+            //Lobby NPCs can't talk, it interferes with Mib Convo
+
+            // npc.ClickNPC(mousePosition, camera, player, gameState);
+
+            // if (npc.interacting){
+            //     phrase = npc.speech;
+            //     show_dbox = true;
+            //     dboxPosition = npc.position;
+            // }
         }
     }
 
@@ -3875,8 +3882,6 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Vec
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
     HandleKeyboardAiming(player, worldMousePosition);
     EndMode2D();
-
-
 
 
     //draw healthbar 

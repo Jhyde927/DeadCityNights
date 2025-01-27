@@ -485,7 +485,7 @@ void NPC::HandleMiB(Player& player, float& distanceToPlayer){
             attacking = true;
             SoundManager::getInstance().PlayPositionalSound("gunShot", position, player.position, 500); //mibs shoot lasers, but sound like guns. 
             SetAnimationState(ATTACKING);
-            NPCfireBullet(*this, false, 20, true);
+            NPCfireBullet(*this, false, 10, true);
             shootTimer = 1.0f;
        }
 

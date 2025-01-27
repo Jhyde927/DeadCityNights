@@ -15,6 +15,7 @@
 #include <ctime>
 #include "shaderControl.h"
 #include <random>
+#include <algorithm>
 
 #include "raygui.h"
 
@@ -52,6 +53,7 @@ bool move_ufo = false;
 bool canMoveUfo = true;
 bool firstHobo = true;
 bool can_spawn_robots = true;
+bool can_spawn_mibs = true;
 bool firstBlood = false;
 bool drawShovel = false;
 bool drawMac10 = true;
@@ -621,6 +623,12 @@ void UpdatePasswordInterface() {
     }
 }
 
+bool AreAllNPCsDeactivated(const std::vector<NPC>& npcs) {
+    return std::all_of(npcs.begin(), npcs.end(), [](const NPC& npc) {
+        return !npc.isActive; // Return true if isActive is false
+    });
+}
+
 
 void MonitorMouseClicks(Player& player, GameCalendar& calendar){
 
@@ -884,7 +892,20 @@ void spawnRobot(GameResources& resources, Player& player, Vector2 position){
     robot_npc.agro = true; //robots spawn angry
     robot_npc.SetDestination(player.position.x, player.position.x + 100);
     lobbyRobots.push_back(robot_npc);
-    std::cout << "Spawning Robots";
+
+}
+
+void spawnMib(GameResources& resources, Player& player, Vector2 position){
+    //spawn more mibsin the lobby on first agro
+    int speed = 50;
+    NPC mib_npc = CreateNPC(resources.mibSheet, position, speed, IDLE, true, false);
+    mib_npc.MiB = true;
+    mib_npc.maxHealth = 100;
+    mib_npc.health = 100;
+    mib_npc.agro = true; //robots mibs angry
+    mib_npc.SetDestination(player.position.x, player.position.x + 100);
+    lobbyMibs.push_back(mib_npc);
+
 }
 
 void spawnZombiePark(GameResources& resources, Vector2 position){
@@ -1055,155 +1076,54 @@ void UpdateTrain(Train &train,Player& player, float deltaTime) {
     // printf("State: %d, Position: %f, Speed: %f\n", train.state, train.position.x, train.speed);
 }
 
-void ghostFlocking(Player& player, ShaderResources& shaders){
-    //prevent ghost overlap. 
-
-    // Check for overlapping with others
+void Flocking(Player& player, std::vector<NPC>& npcs) {
     Vector2 separationForce = {0.0f, 0.0f};
-    for (size_t i = 0; i < astralGhosts.size(); i++) { // nested loop astral ghosts to check for neiboring ghosts, apply repuslion force if too close. 
-        NPC& ghostA = astralGhosts[i];
 
-        // Update and render this ghost
-        ghostA.Update(player, gameState);
-        ghostA.Render(shaders);
+    for (size_t i = 0; i < npcs.size(); i++) {
+        NPC& npcA = npcs[i];
 
-        // Agro logic based on player's position
-        if (fabs(ghostA.position.y - player.position.y) < 50) {
-            ghostA.agro = true; // agro if on the same y-level
-        }
-        if (ghostA.health > 0) ghostA.isActive = true;
+        // Update and render the current NPC
+        //npcA.Update(player, gameState);
+        //npcA.Render(shaders);
 
-        // Now check distances to all other ghosts
-        for (size_t j = 0; j < astralGhosts.size(); j++) {
-            if (j == i) continue; // skip comparing the same ghost
-            NPC& ghostB = astralGhosts[j];
-            if (ghostA.isActive && ghostB.isActive){ //dont avoid inactive ghosts. 
-                    // Calculate distance between ghostA and ghostB
-                float dx = ghostA.position.x - ghostB.position.x;
-                float dy = ghostA.position.y - ghostB.position.y;
+        // Check if NPC is active
+        if (npcA.health > 0) npcA.isActive = true;
+
+        
+
+        // Check distances to all other NPCs in the same vector
+        for (size_t j = 0; j < npcs.size(); j++) {
+            if (j == i) continue; // Skip self-comparison
+
+            NPC& npcB = npcs[j];
+            if (npcA.isActive && npcB.isActive) { // Only consider active NPCs
+                float dx = npcA.position.x - npcB.position.x;
+                float dy = npcA.position.y - npcB.position.y;
                 float distance = sqrt(dx * dx + dy * dy);
 
                 if (distance < 30.0f && distance > 0.0f) {
-                // Compute a normalized vector to repel ghostA away from ghostB
+                    // Compute repulsion force
                     float force = 1.0f - (distance / 30.0f); 
-                    // force reduces as distance approaches 30, stronger when distance is very small
-
                     float nx = dx / distance;
                     float ny = dy / distance;
 
                     // Add to separationForce
-                    separationForce.x += nx * force; 
+                    separationForce.x += nx * force;
                     separationForce.y += ny * force;
                 }
-
-                float separationStrength = 50.0f; 
-                ghostA.position.x += separationForce.x * separationStrength * GetFrameTime();
-                ghostA.position.y += separationForce.y * separationStrength * GetFrameTime();
-
-    
             }
-
         }
 
+        // Apply separation force to the current NPC
+        float separationStrength = 50.0f;
+        npcA.position.x += separationForce.x * separationStrength * GetFrameTime();
+        npcA.position.y += separationForce.y * separationStrength * GetFrameTime();
+
+        // Reset separationForce for the next NPC
+        separationForce = {0.0f, 0.0f};
     }
 }
 
-void batFlocking(Player& player, ShaderResources& shaders){
-    //prevent bat overlap, by adding a repulsion force if bats get too close. 
-
-    Vector2 separationForce = {0.0f, 0.0f};
-    for (size_t i = 0; i < astralBats.size(); i++) { // nested loop astral bats to check for neiboring bats, apply repuslion force if too close. 
-        NPC& batA = astralBats[i];
-
-        // Update and render this ghost
-        batA.Update(player, gameState);
-        batA.Render(shaders);
-
-        if (batA.health > 0) batA.isActive = true;
-
-        // Now check distances to all other bats
-        for (size_t j = 0; j < astralBats.size(); j++) {
-            if (j == i) continue; // skip comparing the same bat
-            NPC& batB = astralBats[j];
-            if (batA.isActive && batB.isActive){ //don't avoid dead bats
-                // Calculate distance between batA and batB
-                float dx = batA.position.x - batB.position.x;
-                float dy = batA.position.y - batB.position.y;
-                float distance = sqrt(dx * dx + dy * dy);
-
-                if (distance < 30.0f && distance > 0.0f) {
-                // Compute a normalized vector to repel batA away from batB
-                    float force = 1.0f - (distance / 30.0f); 
-                    // force reduces as distance approaches 30, stronger when distance is very small
-
-                    float nx = dx / distance;
-                    float ny = dy / distance;
-
-                    // Add to separationForce
-                    separationForce.x += nx * force; 
-                    separationForce.y += ny * force;
-                }
-
-                float separationStrength = 50.0f; 
-                batA.position.x += separationForce.x * separationStrength * GetFrameTime();
-                batA.position.y += separationForce.y * separationStrength * GetFrameTime();
-
-                }
-
-
- 
-        }
-    }
-}
-
-
-void robotFlocking(Player& player){
-    //prevent robot overlap, by adding a repulsion force if robots get too close. 
-
-    Vector2 separationForce = {0.0f, 0.0f};
-    for (size_t i = 0; i < lobbyRobots.size(); i++) { // nested loop astral bats to check for neiboring bats, apply repuslion force if too close. 
-        NPC& robotA = lobbyRobots[i];
-
-        // Update and render this ghost
-        // robotA.Update(player, gameState);
-        // robotA.Render(shaders);
-
-        if (robotA.health > 0) robotA.isActive = true;
-
-        // Now check distances to all other bats
-        for (size_t j = 0; j < astralBats.size(); j++) {
-            if (j == i) continue; // skip comparing the same bat
-            NPC& robotB = lobbyRobots[j];
-            if (robotA.isActive && robotB.isActive){ //don't avoid dead bats
-                // Calculate distance between batA and batB
-                float dx = robotA.position.x - robotB.position.x;
-                float dy = robotA.position.y - robotB.position.y;
-                float distance = sqrt(dx * dx + dy * dy);
-
-                if (distance < 30.0f && distance > 0.0f) {
-                // Compute a normalized vector to repel batA away from batB
-                    float force = 1.0f - (distance / 30.0f); 
-                    // force reduces as distance approaches 30, stronger when distance is very small
-
-                    float nx = dx / distance;
-                    float ny = dy / distance;
-
-                    // Add to separationForce
-                    separationForce.x += nx * force; 
-                    separationForce.y += ny * force;
-                }
-
-                float separationStrength = 50.0f; 
-                robotA.position.x += separationForce.x * separationStrength * GetFrameTime();
-                robotA.position.y += separationForce.y * separationStrength * GetFrameTime();
-
-                }
-
-
- 
-        }
-    }
-}
 
 void HandleActiveNPC(){
     //ensure NPCs are only active if they are being rendered. 
@@ -1420,7 +1340,7 @@ void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<
     } else if (move_car && gotoWork) {  // Move car and go to work
         gameState = WORK;
         // Additional logic if needed
-    }else if (move_car && gotoPark){ //move car and go to park
+    }else if (move_car && gotoPark && !gotoWork){ //move car and go to park
         gameState = PARK;
         player_car.position.x = 1800;
         player.position.x = player_car.position.x;
@@ -2960,8 +2880,25 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
     }
 
 
-    ghostFlocking(player, shaders); // handle astral ghost movement and repuslion force to prevent ghosts overlapping one another. 
-    batFlocking(player, shaders); //same for bats
+    //MOVE ENEMIES 
+    for (NPC& ghost : astralGhosts){
+        ghost.Update(player, gameState);
+        ghost.Render(shaders);
+        if (ghost.agro){
+            Flocking(player, astralGhosts);
+        }
+    }
+
+    for (NPC& bat : astralBats){
+        bat.Update(player, gameState);
+        bat.Render(shaders);
+        if (bat.agro){
+            Flocking(player,astralGhosts);
+        }
+    }
+    
+    
+    Flocking(player,astralBats);
 
 
     DrawMac10Pickup(resources, player, mousePosition, camera);
@@ -3853,21 +3790,28 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Vec
     //DRAW PLAYER
     player.DrawPlayer(resources, gameState, camera, shaders);
 
-    if (!lobbyRobots[0].isActive && can_spawn_robots){ //if first robot in vector dies, spawn 2 more robots in lobby. 
-        can_spawn_robots = false;
-        //spawnRobot(resources,player, player.position + Vector2 {-200, 0}); //spawn robots left and right of player position.
-        //spawnRobot(resources,player, player.position + Vector2 {200, 0});
+    // if (!lobbyRobots[0].isActive && can_spawn_robots){ //if first robot in vector dies, spawn 2 more robots in lobby. 
+    //     can_spawn_robots = false;
+    //     //spawnRobot(resources,player, player.position + Vector2 {-200, 0}); //spawn robots left and right of player position.
+    //     //spawnRobot(resources,player, player.position + Vector2 {200, 0});
         
+    // }
+
+    if (AreAllNPCsDeactivated(lobbyMibs) && can_spawn_robots){
+        can_spawn_robots = false;
+        spawnRobot(resources, player, player.position + Vector2 {300, 0});
+        spawnRobot(resources, player, player.position + Vector2 {300, 0});
+
     }
     
     //DRAW ROBOTS
-    for (NPC& robot : lobbyRobots){
+    for (NPC& robot : lobbyRobots){ //No lobby robots at the moment. 
         if (robot.isActive){
             robot.Update(player, gameState);
             robot.Render(shaders);
             robot.ClickNPC(mousePosition, camera, player, gameState);
             if (robot.agro){
-                robotFlocking(player); //only flock if agro
+                Flocking(player, lobbyRobots);
             }
 
             if (robot.interacting){
@@ -3879,17 +3823,32 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Vec
 
         }
     }
+
     //DRAW MIBS
+
     for (NPC& mib : lobbyMibs){
         if (mib.isActive){
-            mib.Update(player, gameState);
+            mib.Update(player, gameState); 
             mib.Render(shaders);
             mib.ClickNPC(mousePosition, camera, player, gameState);
 
-            if (mib.agro){ //if mib is agro, robots are too. 
-                for (NPC& robot : lobbyRobots){
+            if (mib.agro){ //if mib is agro, robots are too.
+                Flocking(player, lobbyMibs); //only flock if agro. flocking = repulsion force. 
+
+                if (can_spawn_mibs){ //spawn more mibs on first agro. 
+                    can_spawn_mibs = false;
+                    spawnMib(resources, player, player.position + Vector2 {-300, 0});
+                    spawnMib(resources, player, player.position + Vector2 {300, 0});
+                }
+
+                for (NPC& robot : lobbyRobots){ //alert robots
                     robot.agro = true;
                     robot.destination = player.position;
+                }
+
+                for (NPC& m : lobbyMibs){ //alert other mibs. 
+                    m.agro = true;
+                    m.destination = player.position;
                 }
             }
 
@@ -4528,7 +4487,7 @@ void spawnNPCs(GameResources& resources){
     }
 
     //spawn lobby robots
-    int lr = 2;
+    int lr = 0;
     for (int i = 0; i < lr; i++){
         Vector2 r_pos = {static_cast<float>(2000 + i * 300), 700};
         NPC robot_npc = CreateNPC(resources.robotSheet, r_pos, speed, IDLE, true, false);
@@ -4562,9 +4521,9 @@ void spawnNPCs(GameResources& resources){
     }
 
     //spawn lobby MiBs
-    int mb = 1;
+    int mb = 3;
     for (int i = 0; i < mb; i++){
-        Vector2 m_pos = {static_cast<float>(2200 + i * 100), 700}; 
+        Vector2 m_pos = {static_cast<float>(2000 + i * 200), 700}; 
         NPC mib_npc = CreateNPC(resources.mibSheet, m_pos, speed, IDLE, true, false);
         mib_npc.MiB = true;
         
@@ -5120,10 +5079,10 @@ int main() {
         CheckBulletNPCCollisions(astralGhosts, player);
         CheckBulletNPCCollisions(bats, player);
         CheckBulletNPCCollisions(astralBats, player);
-        CheckBulletPlayerCollisions(player);
-        CheckBulletNPCCollisions(robots, player);
-        CheckBulletNPCCollisions(lobbyRobots, player);
-        CheckBulletNPCCollisions(lobbyMibs, player);
+        CheckBulletPlayerCollisions(player); //NPCs shoot player
+        CheckBulletNPCCollisions(robots, player); //player shoots necroTech robot
+        CheckBulletNPCCollisions(lobbyRobots, player); //player shoots lobby robots
+        CheckBulletNPCCollisions(lobbyMibs, player); // player shoots mibs
         CheckLaserNPCCollisions(lobbyNPCs, player); //robots can shoot regular NPCs if they happen to be in the way
 
         MonitorMouseClicks(player, calendar); 

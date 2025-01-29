@@ -75,6 +75,8 @@ public:
     double tapInterval;
     bool AllowGuns;
     float shotgunReloadTime;
+    bool validatedPassword;
+    bool necroTechSearched;
 
     bool step = false;
 

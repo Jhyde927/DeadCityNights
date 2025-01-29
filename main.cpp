@@ -34,6 +34,8 @@ bool quitRequested = false;
 bool streetSounds = false;
 bool over_apartment = false;
 bool over_car = false;
+bool over_elevator = false;
+bool over_Ebutton = false;
 bool over_necro = false;
 bool over_gate = false;
 bool over_shotgun = false;
@@ -232,6 +234,20 @@ struct Earth {
     float frameTimer;
 };
 
+struct Elevator {
+    Vector2 position;      // Position of the elevator
+    int currentFrame;      // Current frame for animation
+    float frameTimer;      // Timer for frame updates
+    float frameTime;       // Duration of each frame
+    bool isOpen;           // Tracks if the elevator is open
+    bool isOccupied;       // Tracks if the player is on the elevator
+    int totalFrames;       // Total number of animation frames
+    int currentFloorFrame;
+    float floorFrameTimer;
+    float floorFrameTime;
+    Vector2 floorOffset;
+};
+
 struct UFO {
     Vector2 position = {3500, 400};
     int frameWidth;
@@ -354,6 +370,8 @@ void LoadGameResources(GameResources& resources) {
     resources.ntForeground = LoadTexture("assets/NTforeground.png");
     resources.robotSheet = LoadTexture("assets/robotSheet.png");
     resources.LobbyForeground = LoadTexture("assets/LobbyForeground.png");
+    resources.elevatorSheet = LoadTexture("assets/elevatorSheet.png");
+    resources.floorNumberSheet = LoadTexture("assets/floorNumberSheet.png");
 
 }
 
@@ -440,6 +458,8 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.ntForeground);
     UnloadTexture(resources.robotSheet);
     UnloadTexture(resources.LobbyForeground); 
+    UnloadTexture(resources.elevatorSheet);
+    UnloadTexture(resources.floorNumberSheet);
 
   
 }
@@ -464,6 +484,23 @@ void InitEarth(Earth& earth){
     earth.frameTimer = 0.0;
     earth.frameTime = .1;
 }
+
+void InitElevator(Elevator& elevator){
+    elevator.position = {2446, 648};
+    elevator.currentFrame = 0;
+    elevator.frameTimer = 0.0;
+    elevator.frameTime = 0.05;
+    elevator.isOpen = false;
+    elevator.isOccupied = false;
+    elevator.totalFrames = 7;
+
+    elevator.currentFloorFrame = 0;
+    elevator.floorFrameTimer = 0.0;
+    elevator.floorFrameTime= 0.5;
+    elevator.floorOffset = Vector2 {32, -10};
+}
+
+
 
 void InitUFO(UFO& ufo){
     //animation perameters
@@ -582,7 +619,7 @@ void RenderPasswordInterface() {
     }
 }
 
-void UpdatePasswordInterface() {
+void UpdatePasswordInterface(Player& player) {
 
 
 
@@ -605,6 +642,7 @@ void UpdatePasswordInterface() {
     if (enteredPassword.size() == 3) {
         if (enteredPassword == correctPassword && !passwordValidated) {
             passwordValidated = true;
+            player.validatedPassword = true;
             
             for (NPC& robot : robots){ //set validPassword to true for all robots. once password is entered. 
                 robot.validPassword = true;
@@ -631,6 +669,67 @@ bool AreAllNPCsDeactivated(const std::vector<NPC>& npcs) {
 }
 
 
+
+void DrawElevator(Elevator& elevator, Texture2D elevatorTexture, Texture2D floorTexture, int frameWidth, int frameHeight, float deltaTime) {
+    // Update animation only if the elevator is opening or closing
+
+
+    if (elevator.isOccupied && !elevator.isOpen){
+        elevator.floorFrameTimer += deltaTime;
+        if (elevator.floorFrameTimer >= elevator.floorFrameTime){
+            elevator.floorFrameTimer -= elevator.floorFrameTime;
+            elevator.currentFloorFrame++;
+        }
+
+    }
+    if (elevator.isOpen && elevator.currentFrame < elevator.totalFrames - 1) {
+        elevator.frameTimer += deltaTime;
+        if (elevator.frameTimer >= elevator.frameTime) {
+            elevator.frameTimer -= elevator.frameTime;
+            elevator.currentFrame++;  // Play forward
+        }
+    } 
+    else if (!elevator.isOpen && elevator.currentFrame > 0) {
+        elevator.frameTimer += deltaTime;
+        if (elevator.frameTimer >= elevator.frameTime) {
+            elevator.frameTimer -= elevator.frameTime;
+            elevator.currentFrame--;  // Play backward
+        }
+    }
+
+    // Source rectangle for sprite animation
+    Rectangle sourceRectFloor = {
+        static_cast<float>(elevator.currentFloorFrame * 64.0f), 0.0f,
+        static_cast<float>(64), static_cast<float>(64)
+    };
+
+    // Destination rectangle
+    Rectangle destRectFloor = {
+        elevator.position.x + elevator.floorOffset.x, elevator.position.y + elevator.floorOffset.y, //add offset to elevator position to get floor number pos
+        static_cast<float>(64), static_cast<float>(64)
+    };
+
+
+    // Source rectangle for sprite animation
+    Rectangle sourceRect = {
+        static_cast<float>(elevator.currentFrame * frameWidth), 0.0f,
+        static_cast<float>(frameWidth), static_cast<float>(frameHeight)
+    };
+
+    // Destination rectangle
+    Rectangle destRect = {
+        elevator.position.x, elevator.position.y,
+        static_cast<float>(frameWidth), static_cast<float>(frameHeight)
+    };
+
+    DrawTexturePro(floorTexture, sourceRectFloor, destRectFloor, {0.0f, 0.0f}, 0.0f, WHITE);
+
+    DrawTexturePro(elevatorTexture, sourceRect, destRect, {0.0f, 0.0f}, 0.0f, WHITE);
+}
+
+
+
+
 void MonitorMouseClicks(Player& player, GameCalendar& calendar){
 
     //monitors mouse clicks for all scenes. Consider moving item pickup left clicks here. 
@@ -652,6 +751,7 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
                 showInternet = true;
                 NecroTech = true;
                 internetTimer = 5.0f;
+                player.necroTechSearched = true;
             }else{
                 showInternet = false;
             }
@@ -3759,14 +3859,36 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
 }
 
 //Lobby
-void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Vector2& mousePosition, ShaderResources shaders){
+void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Elevator& elevator, Vector2& mousePosition, ShaderResources shaders){
     show_dbox = false;   
     over_exit = false;
+    over_Ebutton = false;
+    over_elevator = false;
+    float deltaTime = GetFrameTime();
     if (player.position.x < 2126 && player.position.x > 2106){ //exit lobby to necrotech exterior, triggered in uptoEnter()
         over_exit = true;
         phrase = "UP TO EXIT";
         show_dbox = true;
         dboxPosition = player.position;
+    }
+
+    if (player.position.x < 2539 && player.position.x > 2519){
+        over_Ebutton = true;
+        phrase = "Call Elevator";
+        show_dbox = true;
+        dboxPosition = player.position;
+
+    }
+
+    if (player.position.x < 2488 && player.position.x > 2468){
+        if (elevator.isOpen){
+            over_elevator = true;
+            phrase = "Up to Enter";
+            show_dbox = true;
+            dboxPosition = player.position;
+
+        } 
+
     }
 
     camera.target = player.position;
@@ -3785,8 +3907,12 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Vec
     DrawTexturePro(resources.LobbyForeground, {0, 0, static_cast<float>(resources.LobbyForeground.width), static_cast<float>(resources.LobbyForeground.height)},
                     {1064, 0, static_cast<float>(resources.LobbyForeground.width), static_cast<float>(resources.LobbyForeground.height)}, {0, 0}, 0.0f, WHITE);
 
+    DrawElevator(elevator, resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
+
+
+
     //DRAW PLAYER
-    player.DrawPlayer(resources, gameState, camera, shaders);
+    if (!elevator.isOccupied) player.DrawPlayer(resources, gameState, camera, shaders);
 
 
 
@@ -3811,7 +3937,7 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Vec
             robot.Render(shaders);
             robot.ClickNPC(mousePosition, camera, player, gameState);
 
-            if (globalAgro) robot.agro = true;
+            if (globalAgro) robot.agro = true; //if one robot is angry they all are
 
             if (robot.agro){
                 robot.destination = player.position;
@@ -3836,7 +3962,7 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Vec
             mib.Render(shaders);
             mib.ClickNPC(mousePosition, camera, player, gameState);
 
-            if (globalAgro) mib.agro = true;
+            if (globalAgro) mib.agro = true; //set other mibs to agro 
 
             if (mib.interacting && !mib.agro){
                 phrase = mib.speech;
@@ -3845,11 +3971,11 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Vec
 
             }
 
-            if (mib.agro){ //if mib is agro, robots are too.
+            if (mib.agro){ 
                 mib.destination = player.position;
                 mib.facingRight = player.position.x > mib.position.x;
                 Flocking(player, lobbyMibs); //only flock if agro. flocking = repulsion force. 
-                globalAgro = true;
+                globalAgro = true; //if 1 mib is agro, alert everyone else. 
 
 
             
@@ -4065,7 +4191,7 @@ void RenderNecroTech(GameResources& resources, Camera2D& camera, Player& player,
 
     //This delays turning off password interface so player has time to read the message. Make this logic better. 
     if (!passwordValidated && showPasswordInterface && passwordTimer <= 0){
-        UpdatePasswordInterface(); //show password interface
+        UpdatePasswordInterface(player); //show password interface
         RenderPasswordInterface();
 
     }else if (passwordValidated && showPasswordInterface && passwordTimer > 0){
@@ -4627,6 +4753,13 @@ void debugKeys(Player& player){
     if (IsKeyPressed(KEY_N)){
         if (!NecroTech){
             NecroTech = true;
+            player.necroTechSearched = true;
+        }
+    }
+
+    if (IsKeyPressed(KEY_B)){
+        if (!player.hasBadge){
+            player.hasBadge = true;
         }
     }
 
@@ -4661,7 +4794,7 @@ void debugKeys(Player& player){
 
 
 
-void UptoEnter(Player& player, PlayerCar& player_car){
+void UptoEnter(Player& player, PlayerCar& player_car, Elevator& elevator){
     //enter places by pressing up 
     if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
 
@@ -4708,6 +4841,23 @@ void UptoEnter(Player& player, PlayerCar& player_car){
         }
         if (over_exit && gameState == LOBBY){
             transitionState = FADE_OUT;
+        }
+        if (over_Ebutton && gameState == LOBBY){
+            if (elevator.isOpen){
+                elevator.isOpen = false;
+            }else{
+                elevator.isOpen = true;
+            }
+            
+        }
+        if (over_elevator && gameState == LOBBY){
+            if (elevator.isOpen){
+                 elevator.isOccupied = true; //Enter elevator
+                 elevator.isOpen = false;    //close the door and fade out. 
+                 transitionState = FADE_OUT; //goes to apartment right now because next scene doesn't exist yet. 
+
+            } 
+
         }
 
     }
@@ -5007,11 +5157,13 @@ int main() {
     MagicDoor magicDoor;
     UFO ufo;
     Train train;
+    Elevator elevator;
 
 
     InitializePlayerCar(player_car);
     InitializeMagicDoor(magicDoor);
     InitEarth(earth);
+    InitElevator(elevator);
     InitUFO(ufo);
     spawnNPCs(resources); //spawn NPCs before rendering them outside
     InitPlatforms();
@@ -5148,7 +5300,7 @@ int main() {
             
         }
        
-        UptoEnter(player, player_car);//enter different areas by pressing up
+        UptoEnter(player, player_car, elevator);//enter different areas by pressing up
         
 
         if (currentPauseState == GAME_PAUSED){ //if game is paused, save the last frame of the game running, and draw it behind the menus
@@ -5216,7 +5368,7 @@ int main() {
                     break;
 
                 case LOBBY:
-                    RenderLobby(resources, camera, player, mousePosition, shaders);
+                    RenderLobby(resources, camera, player, elevator, mousePosition, shaders);
                     break;
                     
             }

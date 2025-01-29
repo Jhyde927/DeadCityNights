@@ -50,6 +50,7 @@ Player::Player() {
     isShooting = false;
     isReloading = false;
     canShoot = true;
+
     hasGun = false;
     hasShotgun = false;
     hasMac10 = false;
@@ -70,7 +71,6 @@ Player::Player() {
     LastTapTimeLeft = 0;
     LastTapTimeRight = 0;
     tapInterval = 0.3;
-    
     runFrameSpeed = 1.5;
     walkFrameSpeed = 1;
     bulletCount = 6;
@@ -80,11 +80,11 @@ Player::Player() {
     shotgunReloadTime = 0.7f;  // Reload time for Shotgun
     currentWeapon = REVOLVER;  // Start with Revolver
     AllowGuns = true;
-    
+
+    validatedPassword = false;
+    necroTechSearched = false;  
 
 }
-
-
 
 void Player::take_damage(int damage) {
     

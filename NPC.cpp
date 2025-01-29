@@ -115,15 +115,16 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){ //Click or
             //Idle time is how long the NPC stays stationary before picking a new destination. 
         }
 
-        if (!talked && MiB && gameState == PARK){ //trigger zombies elsewhere? in renderpark, might make more sense here. 
+        if (!talked && MiB && gameState == PARK){ 
             talked = true;
             speech = "We are Watching You";
             talkTimer = 5;
             idleTime = 5;
+            //zombies triggered elsewhere
 
         }
 
-        if (!talked && MiB && gameState == LOBBY){
+        if (!talked && MiB && !agro && gameState == LOBBY){ //talk to a mib in the lobby before fight
             talked = true;
             talkTimer = 3;
             idleTime = 3;
@@ -147,6 +148,8 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){ //Click or
                 case 4:
                     speech = "";
                     agro = true;
+                    idleTime = 0;
+                    talkTimer = 0;
                     break;
                 
                 }
@@ -260,7 +263,7 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){ //Click or
 
                     case 4:
                         SoundManager::getInstance().StartRandomVoices(2.5);
-                        speech = "I was in the graveyard last night\n\nI saw something...";
+                        speech = "I was in the graveyard last night\n\nI...saw something";
                         break;
 
                     case 5:
@@ -290,7 +293,7 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){ //Click or
                         break;
 
                 } 
-            }else if (interactions == 1 && player.hasShovel){ //youve seen all of the first interaction text, and you have the shuffle. 
+            }else if (interactions == 1 && player.hasShovel){ //youve seen all of the first interaction text, and you have the shovel. 
                 clickCount += 1;
                 switch(clickCount){
                     
@@ -362,20 +365,43 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){ //Click or
                         break;
 
                     case 5:
-                        speech = "You got a computer?";
+                        speech = "You got a computer?\n\nSearch the internet";
                         SoundManager::getInstance().StartRandomVoices(1);
                         break;
 
                     case 6:
-                        speech = "Find NecroTech HQ\n\nPut a stop to their evil plans"; //repeats
+                        speech = "Find NecroTech HQ\n\nPut a stop to their evil plans"; 
                         SoundManager::getInstance().StartRandomVoices(2.5);
+                        interactions = 3; //load the fourth interaction
+                        clickCount = 0; //reset clickCount for another round. 
                         break;
                     
 
                 }
 
 
-            }      
+            }else if (interactions == 3 && !player.validatedPassword && player.necroTechSearched){ //seen all of the 3rd interaction and have searched the internet. 
+                clickCount += 1;
+                switch (clickCount)
+                {
+                case 1:
+                    speech = "A 3 digit code you say?";
+                    break;
+                
+                case 2:
+                    speech = "What's the most evil\n\nthree digit number";
+                    break;
+
+                case 3:
+                    speech = "You know...\n\nThe mark of the beast?";
+                    break;
+
+                case 4:
+                    speech = "...the password is\n\n666"; //repeats
+                    break;
+                }
+
+            }    
         }
 
         if (!talked && !hobo && !police && !teller and !robot){ //all other NPCs
@@ -498,10 +524,10 @@ void NPC::HandleZombie(Player& player, float& distanceToPlayer){
 
 }
 
-void NPC::HandleMiB(Player& player, float& distanceToPlayer){
+void NPC::HandleMiB(Player& player, float& distanceToPlayer, GameState& gameState){
 
     //MIB follow player up to a point then stops and waits. 
-    if (MiB && distanceToPlayer < 1000 && !hasTarget && !attacking){
+    if (gameState != LOBBY && MiB && distanceToPlayer < 1000 && !hasTarget && !attacking){
         destination = player.position; //move toward player
         hasTarget = true; //dont go idle
     }
@@ -744,7 +770,7 @@ void NPC::Update(Player& player, GameState& gameState) {
     hasTarget = false; //reset hasTarget incase we loose
     attacking = false;
 
-    if (MiB) HandleMiB(player, distance_to_player);
+    if (MiB) HandleMiB(player, distance_to_player, gameState);
     if (police) HandlePolice(player, distance_to_player); //handle distance checks and attack logic. 
     if (isZombie) HandleZombie(player, distance_to_player);
     if (ghost || bat) HandleGhost(player, distance_to_player); //also bats

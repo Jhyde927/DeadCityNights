@@ -89,7 +89,7 @@ public:
     void HandlePolice(Player& player, float& distanceToPlayer);
     void HandleZombie(Player& player, float& distanceToPlayer);
     void HandleGhost(Player& player, float& distanceToPlayer);
-    void HandleMiB(Player& player, float& distanceToPlayer);
+    void HandleMiB(Player& player, float& distanceToPlayer, GameState& gameState);
     void HandleRobot(Player& player, float& distanceToPlayer);
     void TakeDamage(int damage, Player& player);
     void HandleAnimationLogic();

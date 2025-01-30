@@ -175,16 +175,16 @@ Vector2 dboxPosition;
 Color ApartmentBgColor {41, 48, 63, 255};
 
 
-std::vector<NPC> npcs;
-std::vector<NPC> zombies;
-std::vector<NPC>hobos;
-std::vector<NPC>ghosts;
-std::vector<NPC>bats;
-std::vector<NPC>mibs;
+std::vector<NPC> npcs; //outside // subway
+std::vector<NPC> zombies; //cemetery/graveyard
+std::vector<NPC>hobos; //lot
+std::vector<NPC>ghosts; //graveyard friendly ghost
+std::vector<NPC>bats; //not used
+std::vector<NPC>mibs; //outside
 std::vector<NPC>astralGhosts;
 std::vector<NPC>astralBats;
 std::vector<NPC>ParkNpcs;
-std::vector<NPC>robots;
+std::vector<NPC>robots; //necrotech
 std::vector<NPC>lobbyRobots;
 std::vector<NPC>lobbyNPCs;
 std::vector<NPC>lobbyMibs;
@@ -1225,79 +1225,171 @@ void Flocking(Player& player, std::vector<NPC>& npcs) {
     }
 }
 
+void HandleActiveNPC() {
+    // Map game states to their corresponding NPC groups
 
-void HandleActiveNPC(){
-    //ensure NPCs are only active if they are being rendered. 
-
-    ///robots were still active when not rendering the scene they are in. How come this wasn't a problem with zombies in the graveyard and cemetery.
-
-    //zombies in cemetery transfer over to graveyard because they are in the same vector, 
-    //we should probably make a second zombie vector for graveyard. 
-
-    //This asserts that robots are not active when not being rendered. Do we need to do this for all NPC? 
-    for (NPC& robot : robots){
-        if (gameState == NECROTECH && robot.health > 0) robot.isActive = true;
-
-        if (robot.health <= 0 && !robot.isDying){
-            robot.isActive = false;
-        }
-
-        if (gameState != NECROTECH){
-            robot.isActive = false; //deactivate if outside proper scene
-        }
-    }
-
-    for (NPC& robot : lobbyRobots){
-        if (gameState == LOBBY && robot.health > 0) robot.isActive = true;
+    //normal outside NPCs are not a part of this, neither are normal cemetery/graveyard zombies. 
+    std::map<GameState, std::vector<NPC>*> npcGroups = {
+        { NECROTECH, &robots },
+        { LOBBY, &lobbyRobots },
+        { LOBBY, &lobbyNPCs },
+        { LOBBY, &lobbyMibs },
+        { ASTRAL, &astralBats },
+        { ASTRAL, &astralGhosts },
+        { GRAVEYARD, &ghosts },
+        { PARK, &ParkNpcs },
         
-        if (robot.health <= 0 && !robot.isDying){
-            robot.isActive = false;
-        }
+    };
 
-        if (gameState != LOBBY){
-            robot.isActive = false;
-        }
-
-        if (robot.agro){ // if one robot gets angry, they all do. 
-            for (NPC& r : lobbyRobots){
-                if (!r.agro){
-                    r.agro = true;
-                }
+    // Iterate through all NPC groups and set active status
+    for (auto& [state, npcList] : npcGroups) {
+        for (NPC& npc : *npcList) {
+            if (gameState == state && npc.health > 0) {
+                npc.isActive = true;
+            } else if (npc.health <= 0 && !npc.isDying) {
+                npc.isActive = false;
+            } else if (gameState != state) {
+                npc.isActive = false;
             }
         }
     }
 
-    for (NPC& npc : lobbyNPCs){
-        if (npc.health > 0 && gameState == LOBBY){
-            npc.isActive = true;
-        }
-
-        if (npc.health <= 0 && !npc.isDying){
-            npc.isActive = false;
-        }
-
-        if (gameState != LOBBY){
-            npc.isActive = false;
+    // Handle lobby robots agro behavior separately
+    if (gameState == LOBBY) {
+        for (NPC& robot : lobbyRobots) {
+            if (robot.agro) {
+                for (NPC& r : lobbyRobots) {
+                    r.agro = true;
+                }
+                break; // Only need to check once
+            }
         }
     }
-
-    for (NPC& mib : lobbyMibs){
-        if (mib.health > 0 && gameState == LOBBY){
-            mib.isActive = true;
-        }
-
-        if (mib.health <= 0 && !mib.isDying){
-            mib.isActive = false;
-        }
-
-        if (gameState != LOBBY){
-            mib.isActive = false;
-        }
-    }
-
-
-
 }
+
+
+
+// void HandleActiveNPC(){
+//     //ensure NPCs are only active if they are being rendered. 
+
+//     ///robots were still active when not rendering the scene they are in. How come this wasn't a problem with zombies in the graveyard and cemetery.
+
+//     //zombies in cemetery transfer over to graveyard because they are in the same vector, 
+//     //we should probably make a second zombie vector for graveyard. 
+
+//     //This asserts that robots are not active when not being rendered. Do we need to do this for all NPC? 
+
+
+//     for (NPC& robot : robots){
+//         if (gameState == NECROTECH && robot.health > 0) robot.isActive = true;
+
+//         if (robot.health <= 0 && !robot.isDying){
+//             robot.isActive = false;
+//         }
+
+//         if (gameState != NECROTECH){
+//             robot.isActive = false; //deactivate if outside proper scene
+//         }
+//     }
+
+//     for (NPC& robot : lobbyRobots){
+//         if (gameState == LOBBY && robot.health > 0) robot.isActive = true;
+        
+//         if (robot.health <= 0 && !robot.isDying){
+//             robot.isActive = false;
+//         }
+
+//         if (gameState != LOBBY){
+//             robot.isActive = false;
+//         }
+
+//         if (robot.agro){ // if one robot gets angry, they all do. 
+//             for (NPC& r : lobbyRobots){
+//                 if (!r.agro){
+//                     r.agro = true;
+//                 }
+//             }
+//         }
+//     }
+
+//     for (NPC& npc : lobbyNPCs){
+//         if (npc.health > 0 && gameState == LOBBY){
+//             npc.isActive = true;
+//         }
+
+//         if (npc.health <= 0 && !npc.isDying){
+//             npc.isActive = false;
+//         }
+
+//         if (gameState != LOBBY){
+//             npc.isActive = false;
+//         }
+//     }
+
+//     for (NPC& mib : lobbyMibs){
+//         if (mib.health > 0 && gameState == LOBBY){
+//             mib.isActive = true;
+//         }
+
+//         if (mib.health <= 0 && !mib.isDying){
+//             mib.isActive = false;
+//         }
+
+//         if (gameState != LOBBY){
+//             mib.isActive = false;
+//         }
+//     }
+
+//     for (NPC& astralbat : astralBats){
+//         if (astralbat.health > 0 && gameState == ASTRAL){
+//                 astralbat.isActive = true;
+//             }
+
+//             if (astralbat.health <= 0 && !astralbat.isDying){
+//                 astralbat.isActive = false;
+//             }
+
+//             if (gameState != ASTRAL){
+//                 astralbat.isActive = false;
+//             }
+
+//     }
+
+//     for (NPC& ghost : astralGhosts){ //there must be a better way
+//         if (ghost.health > 0 && gameState == ASTRAL){
+//                 ghost.isActive = true;
+//             }
+
+//             if (ghost.health <= 0 && !ghost.isDying){
+//                 ghost.isActive = false;
+//             }
+
+//             if (gameState != ASTRAL){
+//                 ghost.isActive = false;
+//             }
+
+//     }
+
+//     for (NPC& ghost : ghosts){ //make sure friendly ghost is only active in graveyard. 
+//         if (ghost.health > 0 && gameState == GRAVEYARD){
+//                 ghost.isActive = true;
+//             }
+
+//             if (ghost.health <= 0 && !ghost.isDying){
+//                 ghost.isActive = false;
+//             }
+
+//             if (gameState != GRAVEYARD){
+//                 ghost.isActive = false;
+//             }
+
+//     }
+
+    
+
+
+
+// }
 
 
 
@@ -2985,6 +3077,7 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
     for (NPC& ghost : astralGhosts){
         ghost.Update(player, gameState);
         ghost.Render(shaders);
+        
         if (ghost.agro){
             Flocking(player, astralGhosts);
         }
@@ -2993,6 +3086,7 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
     for (NPC& bat : astralBats){
         bat.Update(player, gameState);
         bat.Render(shaders);
+        
         if (bat.agro){
             Flocking(player,astralBats);
         }
@@ -3972,6 +4066,8 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Ele
             }
 
             if (mib.agro){ 
+                //mib.idleTime = 0;
+                mib.hasTarget = true;
                 mib.destination = player.position;
                 mib.facingRight = player.position.x > mib.position.x;
                 Flocking(player, lobbyMibs); //only flock if agro. flocking = repulsion force. 
@@ -4523,7 +4619,7 @@ void spawnNPCs(GameResources& resources){
     int ba = 5;
     for (int i = 0; i < ba; i++){
         Vector2 b_pos = {static_cast<float>(1800 + i * 200), 100};
-        NPC bat = CreateNPC(resources.batSheet, b_pos, speed, IDLE, false, false);
+        NPC bat = CreateNPC(resources.batSheet, b_pos, speed, IDLE, true, false);
         bat.SetDestination(1500, 3000);
         bat.bat = true;
         astralBats.push_back(bat);
@@ -4532,9 +4628,10 @@ void spawnNPCs(GameResources& resources){
     int ab = 5; //second row of bats higher up
     for (int i = 0; i < ab; i++){
         Vector2 b_pos = {static_cast<float>(1800 + i * 200), -500};
-        NPC bat = CreateNPC(resources.batSheet, b_pos, speed, IDLE, false, false);
+        NPC bat = CreateNPC(resources.batSheet, b_pos, speed, IDLE, true, false);
         bat.SetDestination(1500, 3000);
         bat.bat = true;
+        
         astralBats.push_back(bat);
     }
 
@@ -4542,7 +4639,7 @@ void spawnNPCs(GameResources& resources){
 
     //create ghost // call update on ghost where ever needed like graveyard or cemetery
     Vector2 g_pos = {2100, 700};
-    NPC ghost_npc = CreateNPC(resources.ghostSheet, g_pos, speed, IDLE, false, false);
+    NPC ghost_npc = CreateNPC(resources.ghostSheet, g_pos, speed, IDLE, true, false);
     ghost_npc.SetDestination(2100, 2200);
     ghost_npc.ghost = true;
     ghost_npc.maxHealth = 500;
@@ -4553,7 +4650,7 @@ void spawnNPCs(GameResources& resources){
     int ap = 2;
     for (int i = 0; i < ap; i++){
         Vector2 ag_pos = {static_cast<float>(2220 + i * 100), -751}; // spawn at the top of the atral plane. 
-        NPC astralGhost = CreateNPC(resources.ghostSheet, ag_pos, speed, IDLE, false, false);
+        NPC astralGhost = CreateNPC(resources.ghostSheet, ag_pos, speed, IDLE, true, false);
         ghost_npc.SetDestination(2000, 2200);
         astralGhost.ghost = true;
         astralGhost.maxHealth = 500;

@@ -532,9 +532,16 @@ void NPC::HandleMiB(Player& player, float& distanceToPlayer, GameState& gameStat
         hasTarget = true; //dont go idle
     }
 
+    if (gameState == LOBBY && MiB && distanceToPlayer < 1000 && !hasTarget && agro){
+        hasTarget = true;
+        destination = player.position;
+    }
+
 
     if (MiB && agro && distanceToPlayer < 150){
        destination = position;
+       hasTarget = true;
+
        //shoot
        if (can_shoot && !isDying){
             can_shoot = false;
@@ -547,17 +554,20 @@ void NPC::HandleMiB(Player& player, float& distanceToPlayer, GameState& gameStat
 
     }
 
-    if (MiB && distanceToPlayer <= 160 && hasTarget && !agro){
+
+    if (MiB && distanceToPlayer <= 160 && hasTarget && !agro && gameState != LOBBY){
        
         destination = position; //stop a ways away
         if (!attacking) SetAnimationState(IDLE);
     }
 
+
+
     if (shootTimer > 0){
         shootTimer -= GetFrameTime();
     }else{
         can_shoot = true;
-        attacking = false;
+        //attacking = false;
     }
 }
 
@@ -1113,7 +1123,7 @@ void NPC::TakeDamage(int damage, Player& player) {
     if (health <= 0 && bat && !isDying){
         isDying = true;
         frameSpeed = 14;
-        deathTimer = 0.9;
+        deathTimer = 0.5;
         destination = position;
         SetAnimationState(DEATH2);
     }

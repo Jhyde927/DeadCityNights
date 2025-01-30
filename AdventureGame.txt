@@ -483,5 +483,95 @@ robots shoot lasers, only lasers hurt player, laser is a member var of bullet cl
 
 Next make the robot able to talk. HandleNPCInteraction -> if robot: talk timer = ...ect...
 
+could we implement a password interface? 
+
+clamp robot to door area.
+
+2 more robots spawn in when you kill the first? Maybe too difficult. -implement robot spawn in, it's own "rise" animation. 
+
+implemented password interface where you need to type in the password: 666. Where could we hint the password? in the apartment, in the red book. on the laptop when you lookup necrotech. When you click on the book. it brings up another interface. theres a crudely drawn picture of a women. it says RIP. To give some background to the character implying he has a dead wife. That's why the cemetery is there. The ghost in the cemetery is your dead wife? 
+
+Game decision at the end: Use necro tech's technology to bring you dead wife back to life, or don't and destroy the infernal machine.  
+
+if you kill the robot and don't put in the password, you can't get into the building. What is another way in? The badge can get you in somehow? If you click the badge it tells you the password. Yeah but what if you kill the robot. You can enter the password on the door. if (not passwordValidated) draw PasswordInterface
+
+NecroTech Interior:
+	Lobby:
+		find references for pixel art office building lobbies. Pillars, fire extinguisher, elevators, front desk. 
+		Very tall ceilings, a desk with pillars on either side. There is a robot if front of the desk.
+		interaction = 1. Another interface? Nah just dialog where it becomes obvious it's a trap. then a big fight begins. Like lobby scene in matrix. zombies and robots start spawning in. robots vs zombies vs player. A three way battle. 
+
+		civilians? A 4 way battle. normal NPCs are in the lobby when all this goes down. Maybe it works like an arena.
+
+		Draw the lobby x
+		NPCs in the lobby? just business men and women. x
+		robots in the lobby x
+		zombies in the lobby
+
+		once all the first robot is dead spawn zombies as well. 
+
+
+
+		robot sound effects
+
+		bullets colliding with unactive robots somehow. Bug I overlooked. NPCs are still active when not being rendered.
+		they just aren't being updated, but can still interact with bullets. Added a temporary solution where we assert that 
+		robots are inactive when outside of proper scene. Need to do this for all NPC vectors.  
+
+
+
+
+	Elevator:
+		Old school elevator level. Like battle toads. Double Dragon ect...
+
+		or.. elevator is a cutscene. first implement interactive elevator. 
+
+
+	penthouse:
+		Top floor Where the CEO hangs out. 
+
+
+	fortune tell gives a full tarot card reading. Make a mini game that can be built seperateley. It can be a stand alone randomized tarot dealer machine. It deals out in the usual way and click on the card shows it's definition. Why has no one done this yet?
+
+	what triggers lobby robots? Another conversation? Front desk robot, interacting with elevators. Lobby NPCs have different speech. They are all assholes. Need to animate elevator. elevator struct rendered in lobby replacing one of the background elevators. Needs to be telegraphed that it's usable. 
+
+	There is a MiB in the lobby. talk to him to trigger the fight. Many MiBs? MiBs with guns? 
+
+	Park mib doesn't disappear he pulls a gun and starts shooting. Need mib death animation, shooting, aiming?
+
+	Maybe it's just mibs in the lobby. mib flocking? How can you make only lobby mibs interact differently? mib.speech
+	what do they say? getem' boys. something about walking into their trap. "You fool\n" "You should have\n never come here" 
+	then agro = true, spawn mibs behind player, gonna need mib flocking. start by making the lobby full of mibs. 
+
+	...spawnMiBs();
+
+	leaving graveyard retuned to apartment not cemetery. Must have been dying, maybe health was zero but didn't trigger death cause i took pills? remains a mystery. 
+
+	first aid kit in lobby. contains pills. 
+
+	refactored NPC repulsion force into one general purpose flocking function. It takes the player and the vector of NPCs and applies a repulsion force if the NPCs get too close. This works for bats, ghosts, robots, and MiBs. Enemy NPCs only flock if agro = true. 
+
+	Is there a better way to keep enemies seperated? because now it looks kinda dumb when they run into each other. They could attack then retreat. Fire once then retreat and let the other guys shoot. or Lessen the repulsion force. Maybe less would look better. We just don't want them to overlap completely with the same animation. 
+
+	how do other games handle it?
+
+	Maybe civilians getting killed in the lobby is too much. At least one person thinks so. I'm making art. It's a piece of art. It doesn't have to please every one. 
+
+	Struct Elevator{
+		Vec2 position,
+		texture2d animation,
+		float frameTimer, 
+		bool open,
+
+	}
+
+
+	if lobby mibs don't follow player
+
+
+
+
+
+
 
 

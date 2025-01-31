@@ -1225,10 +1225,8 @@ void Flocking(Player& player, std::vector<NPC>& npcs) {
     }
 }
 
-void HandleActiveNPC() {
+void UpdateNPCActivity(GameState previousState, GameState newState) {
     // Map game states to their corresponding NPC groups
-
-    //normal outside NPCs are not a part of this, neither are normal cemetery/graveyard zombies. 
     std::map<GameState, std::vector<NPC>*> npcGroups = {
         { NECROTECH, &robots },
         { LOBBY, &lobbyRobots },
@@ -1237,35 +1235,74 @@ void HandleActiveNPC() {
         { ASTRAL, &astralBats },
         { ASTRAL, &astralGhosts },
         { GRAVEYARD, &ghosts },
-        { PARK, &ParkNpcs },
-        
+        { OUTSIDE, &npcs },
+        { SUBWAY, &npcs },
+        { CEMETERY, &zombies },
+        { GRAVEYARD, &zombies },
+
     };
 
-    // Iterate through all NPC groups and set active status
-    for (auto& [state, npcList] : npcGroups) {
-        for (NPC& npc : *npcList) {
-            if (gameState == state && npc.health > 0) {
-                npc.isActive = true;
-            } else if (npc.health <= 0 && !npc.isDying) {
-                npc.isActive = false;
-            } else if (gameState != state) {
-                npc.isActive = false;
-            }
+    
+
+    // Deactivate NPCs from previous scene
+    if (npcGroups.find(previousState) != npcGroups.end()) {
+        for (NPC& npc : *npcGroups[previousState]) {
+            npc.isActive = false;
         }
     }
 
-    // Handle lobby robots agro behavior separately
-    if (gameState == LOBBY) {
-        for (NPC& robot : lobbyRobots) {
-            if (robot.agro) {
-                for (NPC& r : lobbyRobots) {
-                    r.agro = true;
-                }
-                break; // Only need to check once
+    // Activate NPCs in the new scene
+    if (npcGroups.find(newState) != npcGroups.end()) {
+        for (NPC& npc : *npcGroups[newState]) {
+            if (npc.health > 0) {
+                npc.isActive = true;
             }
         }
     }
 }
+
+
+// void HandleActiveNPC() {
+//     // Map game states to their corresponding NPC groups
+
+//     //normal outside NPCs are not a part of this, neither are normal cemetery/graveyard zombies. 
+//     std::map<GameState, std::vector<NPC>*> npcGroups = {
+//         { NECROTECH, &robots },
+//         { LOBBY, &lobbyRobots },
+//         { LOBBY, &lobbyNPCs },
+//         { LOBBY, &lobbyMibs },
+//         { ASTRAL, &astralBats },
+//         { ASTRAL, &astralGhosts },
+//         { GRAVEYARD, &ghosts },
+//         { PARK, &ParkNpcs },
+        
+//     };
+
+//     // Iterate through all NPC groups and set active status
+//     for (auto& [state, npcList] : npcGroups) {
+//         for (NPC& npc : *npcList) {
+//             if (gameState == state && npc.health > 0) {
+//                 npc.isActive = true;
+//             } else if (npc.health <= 0 && !npc.isDying) {
+//                 npc.isActive = false;
+//             } else if (gameState != state) {
+//                 npc.isActive = false;
+//             }
+//         }
+//     }
+
+//     // Handle lobby robots agro behavior separately
+//     if (gameState == LOBBY) {
+//         for (NPC& robot : lobbyRobots) {
+//             if (robot.agro) {
+//                 for (NPC& r : lobbyRobots) {
+//                     r.agro = true;
+//                 }
+//                 break; // Only need to check once
+//             }
+//         }
+//     }
+// }
 
 
 
@@ -1526,15 +1563,18 @@ void HandleNecroTransition(Player& player, PlayerCar& player_car, GameCalendar c
 void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<NPC>& npcs, GameCalendar calendar) {
     if (move_car && !gotoWork && !gotoPark && !gotoNecro) {  // Car is moving, go to road
         gameState = ROAD;
+        UpdateNPCActivity(OUTSIDE, ROAD);
         player_car.facingLeft = true;  // Leaving outside = face left
         if (!reverse_road) {
             player_car.position.x = 900;
         }
     } else if (move_car && gotoWork) {  // Move car and go to work
         gameState = WORK;
+        UpdateNPCActivity(OUTSIDE, WORK);
         // Additional logic if needed
     }else if (move_car && gotoPark && !gotoWork){ //move car and go to park
         gameState = PARK;
+        UpdateNPCActivity(OUTSIDE, PARK);
         player_car.position.x = 1800;
         player.position.x = player_car.position.x;
         carToPark = true; //true?
@@ -1545,11 +1585,13 @@ void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<
         move_car = false;
         player_car.position.x = 1623;
         player.position.x = player_car.position.x;
+        UpdateNPCActivity(OUTSIDE, NECROTECH);
         
         //gotoNecro = false;
 
     } else if (player.isDead) {  // Died outside, go to apartment
         gameState = APARTMENT;
+        UpdateNPCActivity(OUTSIDE, APARTMENT);
         player.position.x = apartmentX;
         player.currentHealth = player.maxHealth;
 
@@ -1563,14 +1605,17 @@ void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<
         }
     } else if (over_apartment) {  // Over apartment, go to apartment
         gameState = APARTMENT;
+        UpdateNPCActivity(OUTSIDE, APARTMENT);
     } else if (over_lot) { // over_lot go to Vacant Lot
+        UpdateNPCActivity(OUTSIDE, LOT);
         gameState = LOT;
         
     }else if (openMagicDoor){ //over magic door, go to astral
-
+        UpdateNPCActivity(OUTSIDE, ASTRAL);
         gameState = ASTRAL;
         openMagicDoor = false; //we set it back to false here because it doesn't work any other way. 
     }else if (overSubway){
+        UpdateNPCActivity(OUTSIDE, SUBWAY);
         gameState = SUBWAY;
         player.position.x = 3100;
         
@@ -1579,14 +1624,17 @@ void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<
 
 void HandleApartmentTransition(Player& player) {
     gameState = OUTSIDE;  // Go back outside
+    UpdateNPCActivity(APARTMENT, OUTSIDE);
 }
 
 void HandleRoadTransition(Player& player, PlayerCar& player_car) {
     if (!reverse_road) {
         gameState = CEMETERY;
         player_car.position.x = 3000;
+        UpdateNPCActivity(ROAD, CEMETERY);
     } else {
         gameState = OUTSIDE;
+        UpdateNPCActivity(ROAD, OUTSIDE);
         player_car.position.x = pc_start_pos.x;
         player.position.x = 1738;
         reverse_road = false;
@@ -1603,10 +1651,13 @@ void HandleCemeteryTransition(Player& player, PlayerCar& player_car, GameCalenda
     if (!player.isDead && player.enter_car) {
         gameState = ROAD;
         player_car.position.x = 100;
+        UpdateNPCActivity(CEMETERY, ROAD);
     } else if (!player.enter_car && over_gate) {
+        UpdateNPCActivity(CEMETERY, GRAVEYARD);
         gameState = GRAVEYARD;
         raiseZombies = true;  // Queue up more zombies for graveyard
     } else if (player.isDead) {
+        UpdateNPCActivity(CEMETERY, APARTMENT);
         gameState = APARTMENT;//wake up back at your apartment with full health. 
         player.position.x = apartmentX;
         player.isDead = false;
@@ -1621,12 +1672,13 @@ void HandleGraveyardTransition(Player& player, GameCalendar& calendar, std::vect
         gameState = APARTMENT;//wake up back at your apartment with full health.
         player.position.x = apartmentX;
         player.isDead = false;
-
+        UpdateNPCActivity(GRAVEYARD, APARTMENT);
         player.currentHealth = player.maxHealth;
         calendar.AdvanceDay();
 
     }else{ //presumably over gate and fading out
         gameState = CEMETERY;
+        UpdateNPCActivity(GRAVEYARD, CEMETERY);
         for (NPC& ghost : ghosts)
             if (ghost.agro){
                 ghost.agro = false; //ghost looses agro when you leave graveyard. 
@@ -1642,11 +1694,13 @@ void HandleWorkTransition(Player& player) {
     gameState = OUTSIDE;
     player.position.x = pstart_by_car.x;
     addMoney(100);
+    UpdateNPCActivity(WORK, OUTSIDE);
 }
 
 void HandleLotTransition(Player& player) {
     gameState = OUTSIDE;
     player.position.x = vacantLotX;
+    UpdateNPCActivity(LOT, OUTSIDE);
 }
 
 void HandleAstralTransition(Player& player, GameCalendar& calendar){
@@ -1659,6 +1713,7 @@ void HandleAstralTransition(Player& player, GameCalendar& calendar){
         player.outline = false; //set outline off when exiting astral
         applyShader = false; //drugs ware off if you advanced the day
         player.currentHealth = player.maxHealth;
+        UpdateNPCActivity(ASTRAL, APARTMENT);
 
         calendar.AdvanceDay();
         for (NPC& ghost : astralGhosts){
@@ -1667,6 +1722,7 @@ void HandleAstralTransition(Player& player, GameCalendar& calendar){
         }
     }else{ //call fade out in astral, presumably magic door exit
         gameState = OUTSIDE;
+        UpdateNPCActivity(ASTRAL, OUTSIDE);
         openMagicDoor = false; //We set it back to false when entering astral, we should set it false when leaving astral aswell
         player.gravity = 800; //reset gravity on leaving astral plane.
         player.outline = false; //set outline off when exiting astral
@@ -1685,11 +1741,13 @@ void HandleParkTransition(GameState& gamestate, Player& player, PlayerCar player
         player.isDead = false;
         player.currentHealth = player.maxHealth;
         applyShader = false; //if you die, you are no longer high when respawning
-        
+        UpdateNPCActivity(PARK, APARTMENT);
     }else if (overSubway){ //exit to subway
         gameState = SUBWAY;
         player.position.x = 3011;
         gotoStreet = true;
+        gotoPark = false; //turn off gotopark when leaving by subway, was causing bug
+        UpdateNPCActivity(PARK, SUBWAY);
        
 
     } else{ //call fade out in park, leaving by car to outside. 
@@ -1697,6 +1755,7 @@ void HandleParkTransition(GameState& gamestate, Player& player, PlayerCar player
         player.position.x = player_car.position.x-64; //center of car
         gotoPark = false; //reset gotopark
         carToPark = false; //take the car back from the park and render it outside. 
+        UpdateNPCActivity(PARK, OUTSIDE);
 
     }
 
@@ -1709,10 +1768,12 @@ void HandleSubwayTransition(GameState& gameState, Player& player){
     if (subwayExit && !subwayToPark){ //your at outside subway so exit to outside
         gameState = OUTSIDE;
         player.position.x = 4579;
+        UpdateNPCActivity(SUBWAY, OUTSIDE);
     }
 
     if (subwayExit && subwayToPark){ //your at the parksubway so exit to park
         gameState = PARK;
+        UpdateNPCActivity(SUBWAY, PARK);
     }
 
     if (player.enter_train && !subwayToPark && !carToPark){ //Riding train to park
@@ -1720,6 +1781,7 @@ void HandleSubwayTransition(GameState& gameState, Player& player){
         subwayToPark = true; //travel to park from subway, you will need to take the subway back. 
         gameState = PARK;
         player.position.x = 3000;
+        UpdateNPCActivity(SUBWAY, PARK);
 
     }else if (player.enter_train && subwayToPark){ //Riding train to outside
         player.enter_train = false;
@@ -1728,11 +1790,13 @@ void HandleSubwayTransition(GameState& gameState, Player& player){
         gotoPark = false;
         gotoStreet = false;
         player.position.x = 4500;
+        UpdateNPCActivity(SUBWAY, OUTSIDE);
 
     }else if (player.enter_train && carToPark){ //riding train to outside
         player.enter_train = false;
         carToPark = false; //car magically teleports back to to the street following the player, simplifying things drastically
         gameState = OUTSIDE;
+        UpdateNPCActivity(SUBWAY, OUTSIDE);
         gotoStreet = false;
         player.position.x = 4500;
     }
@@ -4019,7 +4083,7 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Ele
 
     if (globalAgro && can_spawn_mibs){
         can_spawn_mibs = false;
-        spawnMib(resources, player, player.position + Vector2 {300, 0});
+        //spawnMib(resources, player, player.position + Vector2 {300, 0});
         spawnMib(resources, player, player.position + Vector2 {-300, 0});
         
     }
@@ -5324,7 +5388,7 @@ int main() {
             SoundManager::getInstance().StopMusic("subwayAmbience");
         }
   
-        HandleActiveNPC();
+        //HandleActiveNPC();
 
         UpdateBullets();
         //check each enemy group for bullet collisions

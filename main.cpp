@@ -1226,17 +1226,18 @@ void Flocking(Player& player, std::vector<NPC>& npcs) {
 }
 
 void UpdateNPCActivity(GameState previousState, GameState newState) {
+    //Activate/DeActivate NPCs depending on the game state. 
     // Map game states to multiple NPC groups
     std::map<GameState, std::vector<std::vector<NPC>*>> npcGroups = {
         { NECROTECH, { &robots } },
         { LOBBY, { &lobbyRobots, &lobbyNPCs, &lobbyMibs } },  // Multiple NPC groups in LOBBY
         { ASTRAL, { &astralBats, &astralGhosts } },
-        { GRAVEYARD, { &ghosts } },
-        { OUTSIDE, { &npcs, &mibs } },
-        { SUBWAY, { &npcs } },
-        { CEMETERY, { &zombies } },
-        { GRAVEYARD, { &zombies } },
-        { PARK, { &ParkNpcs }},
+        { GRAVEYARD, { &ghosts } }, //singular ghost in graveyard
+        { OUTSIDE, { &npcs, &mibs } }, //sigular mib outside
+        { SUBWAY, { &npcs } }, //same NPCs as outside, so when going from outside to subway they are switched off then back on. 
+        { CEMETERY, { &zombies } }, //zombies in the cemetery, graveyard, and park are in the same vector, because they aren't created until they spawn in. 
+        { GRAVEYARD, { &zombies } },//we switch them all off when not in one of those 3 scenes. 
+        { PARK, { &ParkNpcs, &zombies }},
 
     };
 
@@ -1261,209 +1262,6 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
     }
 }
 
-
-// void UpdateNPCActivity(GameState previousState, GameState newState) {
-//     // Map game states to their corresponding NPC groups
-//     std::map<GameState, std::vector<NPC>*> npcGroups = {
-//         { NECROTECH, &robots },
-//         { LOBBY, &lobbyRobots },
-//         { LOBBY, &lobbyNPCs },
-//         { LOBBY, &lobbyMibs },
-//         { ASTRAL, &astralBats },
-//         { ASTRAL, &astralGhosts },
-//         { GRAVEYARD, &ghosts },
-//         { OUTSIDE, &npcs },
-//         { SUBWAY, &npcs },
-//         { CEMETERY, &zombies },
-//         { GRAVEYARD, &zombies },
-
-//     };
-
-    
-
-//     // Deactivate NPCs from previous scene
-//     if (npcGroups.find(previousState) != npcGroups.end()) {
-//         for (NPC& npc : *npcGroups[previousState]) {
-//             npc.isActive = false;
-//         }
-//     }
-
-//     // Activate NPCs in the new scene
-//     if (npcGroups.find(newState) != npcGroups.end()) {
-//         for (NPC& npc : *npcGroups[newState]) {
-//             if (npc.health > 0) {
-//                 npc.isActive = true;
-//             }
-//         }
-//     }
-// }
-
-
-// void HandleActiveNPC() {
-//     // Map game states to their corresponding NPC groups
-
-//     //normal outside NPCs are not a part of this, neither are normal cemetery/graveyard zombies. 
-//     std::map<GameState, std::vector<NPC>*> npcGroups = {
-//         { NECROTECH, &robots },
-//         { LOBBY, &lobbyRobots },
-//         { LOBBY, &lobbyNPCs },
-//         { LOBBY, &lobbyMibs },
-//         { ASTRAL, &astralBats },
-//         { ASTRAL, &astralGhosts },
-//         { GRAVEYARD, &ghosts },
-//         { PARK, &ParkNpcs },
-        
-//     };
-
-//     // Iterate through all NPC groups and set active status
-//     for (auto& [state, npcList] : npcGroups) {
-//         for (NPC& npc : *npcList) {
-//             if (gameState == state && npc.health > 0) {
-//                 npc.isActive = true;
-//             } else if (npc.health <= 0 && !npc.isDying) {
-//                 npc.isActive = false;
-//             } else if (gameState != state) {
-//                 npc.isActive = false;
-//             }
-//         }
-//     }
-
-//     // Handle lobby robots agro behavior separately
-//     if (gameState == LOBBY) {
-//         for (NPC& robot : lobbyRobots) {
-//             if (robot.agro) {
-//                 for (NPC& r : lobbyRobots) {
-//                     r.agro = true;
-//                 }
-//                 break; // Only need to check once
-//             }
-//         }
-//     }
-// }
-
-
-
-// void HandleActiveNPC(){
-//     //ensure NPCs are only active if they are being rendered. 
-
-//     ///robots were still active when not rendering the scene they are in. How come this wasn't a problem with zombies in the graveyard and cemetery.
-
-//     //zombies in cemetery transfer over to graveyard because they are in the same vector, 
-//     //we should probably make a second zombie vector for graveyard. 
-
-//     //This asserts that robots are not active when not being rendered. Do we need to do this for all NPC? 
-
-
-//     for (NPC& robot : robots){
-//         if (gameState == NECROTECH && robot.health > 0) robot.isActive = true;
-
-//         if (robot.health <= 0 && !robot.isDying){
-//             robot.isActive = false;
-//         }
-
-//         if (gameState != NECROTECH){
-//             robot.isActive = false; //deactivate if outside proper scene
-//         }
-//     }
-
-//     for (NPC& robot : lobbyRobots){
-//         if (gameState == LOBBY && robot.health > 0) robot.isActive = true;
-        
-//         if (robot.health <= 0 && !robot.isDying){
-//             robot.isActive = false;
-//         }
-
-//         if (gameState != LOBBY){
-//             robot.isActive = false;
-//         }
-
-//         if (robot.agro){ // if one robot gets angry, they all do. 
-//             for (NPC& r : lobbyRobots){
-//                 if (!r.agro){
-//                     r.agro = true;
-//                 }
-//             }
-//         }
-//     }
-
-//     for (NPC& npc : lobbyNPCs){
-//         if (npc.health > 0 && gameState == LOBBY){
-//             npc.isActive = true;
-//         }
-
-//         if (npc.health <= 0 && !npc.isDying){
-//             npc.isActive = false;
-//         }
-
-//         if (gameState != LOBBY){
-//             npc.isActive = false;
-//         }
-//     }
-
-//     for (NPC& mib : lobbyMibs){
-//         if (mib.health > 0 && gameState == LOBBY){
-//             mib.isActive = true;
-//         }
-
-//         if (mib.health <= 0 && !mib.isDying){
-//             mib.isActive = false;
-//         }
-
-//         if (gameState != LOBBY){
-//             mib.isActive = false;
-//         }
-//     }
-
-//     for (NPC& astralbat : astralBats){
-//         if (astralbat.health > 0 && gameState == ASTRAL){
-//                 astralbat.isActive = true;
-//             }
-
-//             if (astralbat.health <= 0 && !astralbat.isDying){
-//                 astralbat.isActive = false;
-//             }
-
-//             if (gameState != ASTRAL){
-//                 astralbat.isActive = false;
-//             }
-
-//     }
-
-//     for (NPC& ghost : astralGhosts){ //there must be a better way
-//         if (ghost.health > 0 && gameState == ASTRAL){
-//                 ghost.isActive = true;
-//             }
-
-//             if (ghost.health <= 0 && !ghost.isDying){
-//                 ghost.isActive = false;
-//             }
-
-//             if (gameState != ASTRAL){
-//                 ghost.isActive = false;
-//             }
-
-//     }
-
-//     for (NPC& ghost : ghosts){ //make sure friendly ghost is only active in graveyard. 
-//         if (ghost.health > 0 && gameState == GRAVEYARD){
-//                 ghost.isActive = true;
-//             }
-
-//             if (ghost.health <= 0 && !ghost.isDying){
-//                 ghost.isActive = false;
-//             }
-
-//             if (gameState != GRAVEYARD){
-//                 ghost.isActive = false;
-//             }
-
-//     }
-
-    
-
-
-
-// }
 
 
 
@@ -1788,7 +1586,7 @@ void HandleParkTransition(GameState& gamestate, Player& player, PlayerCar player
         gameState = SUBWAY;
         player.position.x = 3011;
         gotoStreet = true;
-        gotoPark = false; //turn off gotopark when leaving by subway, was causing bug
+        // gotoPark = false; //turn off elsewhere incase play changes there mind and goes back to park from subway
         UpdateNPCActivity(PARK, SUBWAY);
        
 
@@ -1807,20 +1605,21 @@ void HandleParkTransition(GameState& gamestate, Player& player, PlayerCar player
 void HandleSubwayTransition(GameState& gameState, Player& player){
     //the car magically teleports back to the street if you take the car to the park and take the subway back. 
 
-    if (subwayExit && !subwayToPark){ //your at outside subway so exit to outside
+    if (subwayExit && !subwayToPark && !gotoPark){ //your at outside subway so exit to outside
         gameState = OUTSIDE;
         player.position.x = 4579;
         UpdateNPCActivity(SUBWAY, OUTSIDE);
+        gotoPark = false;
     }
 
-    if (subwayExit && subwayToPark){ //your at the parksubway so exit to park
+    if (subwayExit && (subwayToPark || gotoPark)){ //your at the parksubway so exit to park, either took the train or drove. 
         gameState = PARK;
         UpdateNPCActivity(SUBWAY, PARK);
     }
 
     if (player.enter_train && !subwayToPark && !carToPark){ //Riding train to park
         player.enter_train = false;
-        subwayToPark = true; //travel to park from subway, you will need to take the subway back. 
+        subwayToPark = true; //travel to park from subway, 
         gameState = PARK;
         player.position.x = 3000;
         UpdateNPCActivity(SUBWAY, PARK);

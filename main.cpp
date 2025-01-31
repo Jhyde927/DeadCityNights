@@ -1226,40 +1226,77 @@ void Flocking(Player& player, std::vector<NPC>& npcs) {
 }
 
 void UpdateNPCActivity(GameState previousState, GameState newState) {
-    // Map game states to their corresponding NPC groups
-    std::map<GameState, std::vector<NPC>*> npcGroups = {
-        { NECROTECH, &robots },
-        { LOBBY, &lobbyRobots },
-        { LOBBY, &lobbyNPCs },
-        { LOBBY, &lobbyMibs },
-        { ASTRAL, &astralBats },
-        { ASTRAL, &astralGhosts },
-        { GRAVEYARD, &ghosts },
-        { OUTSIDE, &npcs },
-        { SUBWAY, &npcs },
-        { CEMETERY, &zombies },
-        { GRAVEYARD, &zombies },
+    // Map game states to multiple NPC groups
+    std::map<GameState, std::vector<std::vector<NPC>*>> npcGroups = {
+        { NECROTECH, { &robots } },
+        { LOBBY, { &lobbyRobots, &lobbyNPCs, &lobbyMibs } },  // Multiple NPC groups in LOBBY
+        { ASTRAL, { &astralBats, &astralGhosts } },
+        { GRAVEYARD, { &ghosts } },
+        { OUTSIDE, { &npcs, &mibs } },
+        { SUBWAY, { &npcs } },
+        { CEMETERY, { &zombies } },
+        { GRAVEYARD, { &zombies } },
+        { PARK, { &ParkNpcs }},
 
     };
 
-    
-
     // Deactivate NPCs from previous scene
-    if (npcGroups.find(previousState) != npcGroups.end()) {
-        for (NPC& npc : *npcGroups[previousState]) {
-            npc.isActive = false;
+    if (npcGroups.count(previousState)) {
+        for (std::vector<NPC>* group : npcGroups[previousState]) {
+            for (NPC& npc : *group) {
+                npc.isActive = false;
+            }
         }
     }
 
     // Activate NPCs in the new scene
-    if (npcGroups.find(newState) != npcGroups.end()) {
-        for (NPC& npc : *npcGroups[newState]) {
-            if (npc.health > 0) {
-                npc.isActive = true;
+    if (npcGroups.count(newState)) {
+        for (std::vector<NPC>* group : npcGroups[newState]) {
+            for (NPC& npc : *group) {
+                if (npc.health > 0) {
+                    npc.isActive = true;
+                }
             }
         }
     }
 }
+
+
+// void UpdateNPCActivity(GameState previousState, GameState newState) {
+//     // Map game states to their corresponding NPC groups
+//     std::map<GameState, std::vector<NPC>*> npcGroups = {
+//         { NECROTECH, &robots },
+//         { LOBBY, &lobbyRobots },
+//         { LOBBY, &lobbyNPCs },
+//         { LOBBY, &lobbyMibs },
+//         { ASTRAL, &astralBats },
+//         { ASTRAL, &astralGhosts },
+//         { GRAVEYARD, &ghosts },
+//         { OUTSIDE, &npcs },
+//         { SUBWAY, &npcs },
+//         { CEMETERY, &zombies },
+//         { GRAVEYARD, &zombies },
+
+//     };
+
+    
+
+//     // Deactivate NPCs from previous scene
+//     if (npcGroups.find(previousState) != npcGroups.end()) {
+//         for (NPC& npc : *npcGroups[previousState]) {
+//             npc.isActive = false;
+//         }
+//     }
+
+//     // Activate NPCs in the new scene
+//     if (npcGroups.find(newState) != npcGroups.end()) {
+//         for (NPC& npc : *npcGroups[newState]) {
+//             if (npc.health > 0) {
+//                 npc.isActive = true;
+//             }
+//         }
+//     }
+// }
 
 
 // void HandleActiveNPC() {
@@ -1519,12 +1556,14 @@ void DrawShovelPickup(GameResources& resources, Player& player, Vector2 mousePos
 }
 
 void HandleLobbyTransition(Player& player, GameCalendar& calendar){
-    if (over_exit){
+    if (over_exit && player.currentHealth > 0){
         gameState = NECROTECH;
         over_exit = false;
+        UpdateNPCActivity(LOBBY, NECROTECH);
     }else{
         //death in lobby, goto apartment
         gameState = APARTMENT;
+        UpdateNPCActivity(LOBBY, APARTMENT);
         player.position.x = apartmentX;
         player.isDead = false;
         player.currentHealth = player.maxHealth;
@@ -1538,6 +1577,7 @@ void HandleNecroTransition(Player& player, PlayerCar& player_car, GameCalendar c
     //faded out
     if (over_necro and passwordValidated && !player.isDead){
         gameState = LOBBY; //over enterance goto lobby
+        UpdateNPCActivity(NECROTECH,LOBBY); //turn off NPCs in the scene you are leaving, turn on NPCs in the scene you are entering. 
 
     }else if (player.isDead){
         gameState = APARTMENT;
@@ -1545,6 +1585,7 @@ void HandleNecroTransition(Player& player, PlayerCar& player_car, GameCalendar c
         player.isDead = false;
         player.currentHealth = player.maxHealth;
         calendar.AdvanceDay();
+        UpdateNPCActivity(NECROTECH,APARTMENT);
 
 
     } else{ //leave by car back to street. 
@@ -1552,6 +1593,7 @@ void HandleNecroTransition(Player& player, PlayerCar& player_car, GameCalendar c
         player_car.position.x = 1710;
         player.position.x = player_car.position.x; //center of car
         gotoNecro = false;
+        UpdateNPCActivity(NECROTECH,OUTSIDE);
 
     }
 
@@ -3553,7 +3595,7 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
         ghost.Update(player, gameState);
         ghost.Render(shaders);
         ghost.ClickNPC(mousePosition, camera, player, gameState);
-        if (ghost.health > 0) ghost.isActive = true;
+        //if (ghost.health > 0) ghost.isActive = true; <- this caused some major pains
         if (ghost.interacting){
             show_dbox = true;
             dboxPosition = ghost.position;
@@ -4661,7 +4703,7 @@ void spawnNPCs(GameResources& resources){
     int m = 1;
     for (int i = 0; i < m; i++){
         Vector2 mib_pos = {static_cast<float>(2220 + i * 100), 700};
-        NPC mib = CreateNPC(resources.mibSheet, mib_pos, speed, IDLE, true, false);
+        NPC mib = CreateNPC(resources.mibSheet, mib_pos, speed, IDLE, true, false); //this mib starts active
         mib.SetDestination(2000, 2400);
         mib.MiB = true;
         mibs.push_back(mib);
@@ -4683,7 +4725,7 @@ void spawnNPCs(GameResources& resources){
     int ba = 5;
     for (int i = 0; i < ba; i++){
         Vector2 b_pos = {static_cast<float>(1800 + i * 200), 100};
-        NPC bat = CreateNPC(resources.batSheet, b_pos, speed, IDLE, true, false);
+        NPC bat = CreateNPC(resources.batSheet, b_pos, speed, IDLE, false, false);
         bat.SetDestination(1500, 3000);
         bat.bat = true;
         astralBats.push_back(bat);
@@ -4692,7 +4734,7 @@ void spawnNPCs(GameResources& resources){
     int ab = 5; //second row of bats higher up
     for (int i = 0; i < ab; i++){
         Vector2 b_pos = {static_cast<float>(1800 + i * 200), -500};
-        NPC bat = CreateNPC(resources.batSheet, b_pos, speed, IDLE, true, false);
+        NPC bat = CreateNPC(resources.batSheet, b_pos, speed, IDLE, false, false);
         bat.SetDestination(1500, 3000);
         bat.bat = true;
         
@@ -4703,7 +4745,7 @@ void spawnNPCs(GameResources& resources){
 
     //create ghost // call update on ghost where ever needed like graveyard or cemetery
     Vector2 g_pos = {2100, 700};
-    NPC ghost_npc = CreateNPC(resources.ghostSheet, g_pos, speed, IDLE, true, false);
+    NPC ghost_npc = CreateNPC(resources.ghostSheet, g_pos, speed, IDLE, false, false);
     ghost_npc.SetDestination(2100, 2200);
     ghost_npc.ghost = true;
     ghost_npc.maxHealth = 500;
@@ -4714,7 +4756,7 @@ void spawnNPCs(GameResources& resources){
     int ap = 2;
     for (int i = 0; i < ap; i++){
         Vector2 ag_pos = {static_cast<float>(2220 + i * 100), -751}; // spawn at the top of the atral plane. 
-        NPC astralGhost = CreateNPC(resources.ghostSheet, ag_pos, speed, IDLE, true, false);
+        NPC astralGhost = CreateNPC(resources.ghostSheet, ag_pos, speed, IDLE, false, false);
         ghost_npc.SetDestination(2000, 2200);
         astralGhost.ghost = true;
         astralGhost.maxHealth = 500;
@@ -4769,7 +4811,7 @@ void spawnNPCs(GameResources& resources){
     int rs = 1;
     for (int i = 0; i < rs; i++){
         Vector2 r_pos = {static_cast<float>(2200 + i * 100), 700};
-        NPC robot_npc = CreateNPC(resources.robotSheet, r_pos, speed, IDLE, true, false);
+        NPC robot_npc = CreateNPC(resources.robotSheet, r_pos, speed, IDLE, false, false);
         robot_npc.SetDestination(2100, 2300);
         robot_npc.robot = true;
         robot_npc.maxHealth = 300;
@@ -4782,7 +4824,7 @@ void spawnNPCs(GameResources& resources){
     int lr = 0;
     for (int i = 0; i < lr; i++){
         Vector2 r_pos = {static_cast<float>(2000 + i * 300), 700};
-        NPC robot_npc = CreateNPC(resources.robotSheet, r_pos, speed, IDLE, true, false);
+        NPC robot_npc = CreateNPC(resources.robotSheet, r_pos, speed, IDLE, false, false);
         robot_npc.SetDestination(2000, 2500);
         robot_npc.robot = true;
         robot_npc.maxHealth = 300;
@@ -4796,7 +4838,7 @@ void spawnNPCs(GameResources& resources){
     int bmen = 3;
     for (int i = 0; i < bmen; i++){
         Vector2 b_pos = {static_cast<float>(2200 + i * 100), 700};
-        NPC businessman = CreateNPC(resources.businessSheet, b_pos, speed, IDLE, true, false);
+        NPC businessman = CreateNPC(resources.businessSheet, b_pos, speed, IDLE, false, false);
         businessman.SetDestination(2000, 2500);
         businessman.lobbyNPC = true;
         
@@ -4806,7 +4848,7 @@ void spawnNPCs(GameResources& resources){
     int wm = 3;
     for (int i = 0; i < wm; i++){
         Vector2 w_pos = {static_cast<float>(2200 + i * 100), 700};
-        NPC woman = CreateNPC(resources.woman2Sheet, w_pos, speed, IDLE, true, false);
+        NPC woman = CreateNPC(resources.woman2Sheet, w_pos, speed, IDLE, false, false);
         woman.SetDestination(2000, 2500);
         woman.lobbyNPC = true;
         lobbyNPCs.push_back(woman);
@@ -4816,7 +4858,7 @@ void spawnNPCs(GameResources& resources){
     int mb = 3;
     for (int i = 0; i < mb; i++){
         Vector2 m_pos = {static_cast<float>(2000 + i * 200), 700}; 
-        NPC mib_npc = CreateNPC(resources.mibSheet, m_pos, speed, IDLE, true, false);
+        NPC mib_npc = CreateNPC(resources.mibSheet, m_pos, speed, IDLE, false, false);
         mib_npc.MiB = true;
         
         lobbyMibs.push_back(mib_npc);

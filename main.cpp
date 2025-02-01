@@ -5228,6 +5228,13 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadVoice("voice24", "assets/sounds/v17.ogg");
     soundManager.LoadVoice("voice25", "assets/sounds/v18.ogg");
 
+    //robot voices
+    soundManager.LoadRobotVoice("robot1", "assets/sounds/robot1.ogg");
+    soundManager.LoadRobotVoice("robot2", "assets/sounds/robot2.ogg");
+    soundManager.LoadRobotVoice("robot3", "assets/sounds/robot3.ogg");
+    soundManager.LoadRobotVoice("robot4", "assets/sounds/robot4.ogg");
+
+
     soundManager.LoadSound("phit1", "assets/sounds/PlayerHit1.ogg"); //player VA hits
     soundManager.LoadSound("phit2", "assets/sounds/PlayerHit2.ogg");
 

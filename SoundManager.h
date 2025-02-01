@@ -26,6 +26,13 @@ public:
         }
     }
 
+    void LoadRobotVoice(const std::string& name, std::string filepath) {
+        if (robotVoices.find(name) == robotVoices.end()) {
+            Sound sound = ::LoadSound(filepath.c_str());
+            robotVoices[name] = sound;
+        }
+    }
+
     // Load a sound and store it in the manager
     void LoadSound(const std::string& name, const std::string& filePath) {
         if (sounds.find(name) == sounds.end()) {//key doesn't exist in the map, so add it. 
@@ -59,6 +66,10 @@ public:
         return voices[name];
     }
 
+    Sound& GetRobotVoice(const std::string& name) {
+        return robotVoices[name];
+    }
+
     void PlayRandomVoice() { //Play a single random clip
         if (voices.empty()) return; // Ensure there are voices loaded
 
@@ -73,14 +84,27 @@ public:
         ::PlaySound(it->second);
     }
 
+    void PlayerRandomRobotVoice() {
+        if (robotVoices.empty()) return;
+
+        int randomIndex = rand() % robotVoices.size();
+
+        auto it = robotVoices.begin();
+        std::advance(it, randomIndex);
+
+        ::PlaySound(it->second);
+    }
+
     void PlayNextVoice() { //play a randomized series of clips. 
         if (voices.empty()) return;
 
         // Select a random voice
         int randomIndex = rand() % voices.size();
         auto it = voices.begin(); //asign the first sound.
+    
 
         std::advance(it, randomIndex); //advance to random index 
+        
         
         // Set current voice and play it
         currentVoice = it->second; //second means the value, in a key value pair. 
@@ -111,6 +135,8 @@ public:
             voicePlaying = false; //stop playing before playing next voice. 
             PlayNextVoice(); // Play the next random voice
         }
+
+        
     }
 
 
@@ -251,6 +277,7 @@ private:
     std::map<std::string, Sound> sounds; //array of sounds 
     std::map<std::string, Music> musicTracks;  // array of music tracks
     std::map<std::string, Sound> voices; //array of voices
+    std::map<std::string, Sound> robotVoices; //array of robot noises
 
     // Make constructor private to enforce Singleton pattern
     SoundManager() = default;

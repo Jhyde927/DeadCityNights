@@ -163,6 +163,7 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){ //Click or
             idleTime = 10;
 
            if (interactions == 0 && validPassword){
+                SoundManager::getInstance().PlayerRandomRobotVoice();
                 speech = "Beep Boop";
            }
 
@@ -172,17 +173,20 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){ //Click or
                 clickCount += 1;
                 switch (clickCount){
                     case 1:
+                        SoundManager::getInstance().PlayerRandomRobotVoice();
                         speech = "Password?";
                         break;
                     case 2:
-
+                        SoundManager::getInstance().PlayerRandomRobotVoice();
                         speech = "Invalid Password";
                         break;
                     case 3:
+                        SoundManager::getInstance().PlayerRandomRobotVoice();
                         speech = "Intruder Detected!";
                         break;
                     case 4:
                         if (!validPassword){
+                            SoundManager::getInstance().PlayerRandomRobotVoice();
                             speech = "Terminate Intruder";
                             agro = true;
                             idleTime = 2;
@@ -385,18 +389,22 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){ //Click or
                 switch (clickCount)
                 {
                 case 1:
+                    SoundManager::getInstance().StartRandomVoices(1);
                     speech = "A 3 digit code you say?";
                     break;
                 
                 case 2:
+                    SoundManager::getInstance().StartRandomVoices(2);
                     speech = "What's the most evil\n\nthree digit number";
                     break;
 
                 case 3:
+                    SoundManager::getInstance().StartRandomVoices(2);
                     speech = "You know...\n\nThe mark of the beast?";
                     break;
 
                 case 4:
+                    SoundManager::getInstance().StartRandomVoices(1);
                     speech = "...the password is\n\n666"; //repeats
                     break;
                 }

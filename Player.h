@@ -77,6 +77,7 @@ public:
     float shotgunReloadTime;
     bool validatedPassword;
     bool necroTechSearched;
+    bool onElevator;
 
     bool step = false;
 

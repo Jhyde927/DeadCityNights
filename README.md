@@ -17,7 +17,7 @@
 The release is a very early alpha version. Unzip and run game.exe. Windows only for now. 
 
 ## Controls
-Arrow keys left and right or A and D to move. Press up to interact with environment. Press up or click on NPCs to talk to them. Right click or F to aim. Left click or space while aiming to shoot. 1 selects handgun. 2 selects shotgun. Guns only work in the cemetery.
+Arrow keys left and right or A and D to move. Press up to interact with environment. Press up or click on NPCs to talk to them. Right click or F to aim. Left click or space while aiming to shoot. 1 selects handgun. 2 selects shotgun. 3 selects mac10. 
 
 ## Notes
 I've been programming in python and making games in Godot with gd script for like 3 years. I've always wanted to learn C++ so I could eventually make bigger and better things. I thought a good way to learn C++ would be to make a game in it. I've seen people on the internet using raylib and I thought it would be perfect for my needs. I have used pygame a little in the past and knew how a game loop worked. I knew how classes worked from programming in python, so all this knowledge transfered over to cpp and raylib. The syntax is a little different but I'm still doing the same things I did in Godot I just dont have a GUI to place things in the world, and all the classes and structures I need to make myself, but I find that to be the fun part. Since this is my first thing in cpp I wanted to keep it simple and do what I know. So this game is like minimalist art. I started by taking a pixel art image I had made and slowly made it more and more interactive. I added a player character and a camera, then pedestrians, then other areas, and so on. 

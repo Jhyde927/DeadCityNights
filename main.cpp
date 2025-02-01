@@ -47,6 +47,7 @@ bool buttonCemetery = false;
 bool buttonInternet = false;
 bool hasCemeteryKey = false;
 bool canGiveFortune = true;
+bool can_spawn_zombies = true;
 bool showInternet = false;
 bool borderlessWindow = false;
 bool windowStateChanged = false;
@@ -372,6 +373,7 @@ void LoadGameResources(GameResources& resources) {
     resources.LobbyForeground = LoadTexture("assets/LobbyForeground.png");
     resources.elevatorSheet = LoadTexture("assets/elevatorSheet.png");
     resources.floorNumberSheet = LoadTexture("assets/floorNumberSheet.png");
+    resources.officeBackground = LoadTexture("assets/officeBackground.png");
 
 }
 
@@ -460,6 +462,7 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.LobbyForeground); 
     UnloadTexture(resources.elevatorSheet);
     UnloadTexture(resources.floorNumberSheet);
+    UnloadTexture(resources.officeBackground);
 
   
 }
@@ -1228,7 +1231,7 @@ void Flocking(Player& player, std::vector<NPC>& npcs) {
 void UpdateNPCActivity(GameState previousState, GameState newState) {
     //Activate/DeActivate NPCs depending on the game state. 
     // Map game states to multiple NPC groups
-    std::map<GameState, std::vector<std::vector<NPC>*>> npcGroups = {
+    std::map<GameState, std::vector<std::vector<NPC>*>> npcGroups = { //key = gameState, val = vector of vectors 
         { NECROTECH, { &robots } },
         { LOBBY, { &lobbyRobots, &lobbyNPCs, &lobbyMibs } },  // Multiple NPC groups in LOBBY
         { ASTRAL, { &astralBats, &astralGhosts } },
@@ -1236,7 +1239,8 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
         { OUTSIDE, { &npcs, &mibs } }, //sigular mib outside
         { SUBWAY, { &npcs } }, //same NPCs as outside, so when going from outside to subway they are switched off then back on. 
         { CEMETERY, { &zombies } }, //zombies in the cemetery, graveyard, and park are in the same vector, because they aren't created until they spawn in. 
-        { GRAVEYARD, { &zombies } },//we switch them all off when not in one of those 3 scenes. 
+        { GRAVEYARD, { &zombies } },//we switch them all off when not in one of those 3 scenes. This means zombies will be retained for those scenes.
+        //so if you spawn zombies in the park(and dont kill them all), they will also be in the graveyard and cemetery. 
         { PARK, { &ParkNpcs, &zombies }},
 
     };
@@ -1308,7 +1312,7 @@ void DrawMac10Pickup(GameResources& resources, Player& player, Vector2 mousePosi
 }
 
 void DrawShovelPickup(GameResources& resources, Player& player, Vector2 mousePosition, Camera2D& camera){
-    //render shovel. Click the shovel to pick it up. 
+    //render shovel. Click or keyUP the shovel to pick it up. 
 
     Vector2 shovelPos = {1870, 700}; // render within 1900. where zombies trigger
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
@@ -1357,7 +1361,13 @@ void HandleLobbyTransition(Player& player, GameCalendar& calendar){
     if (over_exit && player.currentHealth > 0){
         gameState = NECROTECH;
         over_exit = false;
-        UpdateNPCActivity(LOBBY, NECROTECH);
+        UpdateNPCActivity(LOBBY, NECROTECH);//turn off NPCs in the scene you are leaving, turn on NPCs in the scene you are entering. 
+    }else if (player.onElevator){
+        gameState = OFFICE;
+        UpdateNPCActivity(LOBBY, OFFICE);
+        player.onElevator = false;
+        
+
     }else{
         //death in lobby, goto apartment
         gameState = APARTMENT;
@@ -1574,6 +1584,10 @@ void HandleAstralTransition(Player& player, GameCalendar& calendar){
 
 }
 
+void HandleOfficeTransition(Player& player, GameCalendar calender){
+    //do something
+}
+
 void HandleParkTransition(GameState& gamestate, Player& player, PlayerCar player_car){
     if (player.isDead){ //player dies in park, reset to apartment.
         gameState = APARTMENT;
@@ -1686,6 +1700,10 @@ void PerformStateTransition(Player& player, PlayerCar& player_car, GameCalendar&
 
         case LOBBY:
             HandleLobbyTransition(player, calendar);
+            break;
+
+        case OFFICE:
+            HandleOfficeTransition(player, calendar);
             break;
   
     }
@@ -3857,6 +3875,70 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
 
 }
 
+//Office
+void RenderOffice(GameResources& resources, Camera2D& camera, Player& player, Elevator& elevator, Vector2& mousePosition, ShaderResources& shaders){
+    show_dbox = false;
+    over_elevator = false;
+    over_Ebutton = false;
+    elevator.isOccupied = false;
+    float deltaTime = GetFrameTime();
+
+    camera.target = player.position;
+    BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
+    ClearBackground(customBackgroundColor);
+    
+    if (drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
+        
+    
+
+    //No parallax for lobby
+    DrawTexturePro(resources.officeBackground, {0, 0, static_cast<float>(resources.officeBackground.width), static_cast<float>(resources.officeBackground.height)},
+                    {1300, 0, static_cast<float>(resources.officeBackground.width), static_cast<float>(resources.officeBackground.height)}, {0, 0}, 0.0f, WHITE);
+
+
+    DrawElevator(elevator, resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
+
+
+
+    //DRAW PLAYER
+    if (!elevator.isOccupied) player.DrawPlayer(resources, gameState, camera, shaders);
+
+    DrawBullets();
+    EndShaderMode(); ////////////////////////////SHADER OFF
+    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
+    HandleKeyboardAiming(player, worldMousePosition);
+    EndMode2D();
+
+    //draw healthbar 
+    if (player.currentHealth < 100 &&  !player.enter_car){
+        Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
+        DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
+
+    }
+
+    DrawMoney(); //draw money after EndMode2d()
+    if (showInventory){
+         
+        RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+    }
+
+    if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
+        DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+    }else{
+        DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+    }
+
+    if (show_dbox){
+        DrawDialogBox(player, camera, 0, 0, 20);
+
+    }
+
+    if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player); //always show ammo when outside of car in the cemetery or NecroT
+
+
+
+}
+
 //Lobby
 void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Elevator& elevator, Vector2& mousePosition, ShaderResources shaders){
     show_dbox = false;   
@@ -3919,6 +4001,13 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Ele
         can_spawn_robots = false;
         spawnRobot(resources, player, player.position + Vector2 {300, 0});
         spawnRobot(resources, player, player.position + Vector2 {-300, 0});
+
+    }
+
+    if (AreAllNPCsDeactivated(lobbyRobots) && lobbyRobots.size() > 0 && can_spawn_zombies){ //robots are spawned and killed. so spawn zombies. 
+        can_spawn_zombies = false;
+        StartZombieSpawn(10);
+
 
     }
 
@@ -3993,16 +4082,42 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Ele
 
             //Lobby NPCs can't talk, it interferes with Mib Convo
 
-            // npc.ClickNPC(mousePosition, camera, player, gameState);
+        if (!npc.isActive && npc.CanSpawnZombie && !can_spawn_zombies){ //wait for can_spawn_zombies the global var triggered by no active robots. 
+            
+            spawnZombiePark(resources, npc.position); //NPC is transformed into a zombie. 
+        }
 
-            // if (npc.interacting){
-            //     phrase = npc.speech;
-            //     show_dbox = true;
-            //     dboxPosition = npc.position;
-            // }
         }
     }
 
+    for (NPC& zombie : zombies){
+        zombie.Update(player, gameState);
+        zombie.Render(shaders);
+        float minDist = 1000;
+        float closestNPCPositionX = 0.0f;
+        zombie.targetNPC = nullptr;
+
+        for (NPC& npc : lobbyNPCs) { //find the cloeset NPC and chase them. 
+            if (npc.isActive){
+                float dist = fabs(zombie.position.x - npc.position.x);
+
+                if (dist < minDist) {
+                    minDist = dist;
+                    closestNPCPositionX = npc.position.x;
+                    zombie.targetNPC = &npc;   
+                }
+            }
+        }
+
+        if (zombie.targetNPC != nullptr) {
+            zombie.hasTarget = true;
+            zombie.destination = { closestNPCPositionX, zombie.position.y };
+
+        } else {
+            //zombie.hasTarget = false;
+            // Optional behavior when no target is found
+        }
+    }
 
     DrawBullets();
     EndShaderMode(); ////////////////////////////SHADER OFF
@@ -4855,6 +4970,7 @@ void UptoEnter(Player& player, PlayerCar& player_car, Elevator& elevator){
         if (over_elevator && gameState == LOBBY){
             if (elevator.isOpen){
                  elevator.isOccupied = true; //Enter elevator
+                 player.onElevator = true;
                  elevator.isOpen = false;    //close the door and fade out. 
                  transitionState = FADE_OUT; //goes to apartment right now because next scene doesn't exist yet. 
 
@@ -5371,6 +5487,10 @@ int main() {
 
                 case LOBBY:
                     RenderLobby(resources, camera, player, elevator, mousePosition, shaders);
+                    break;
+
+                case OFFICE:
+                    RenderOffice(resources, camera, player, elevator, mousePosition, shaders);
                     break;
                     
             }

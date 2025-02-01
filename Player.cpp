@@ -82,7 +82,8 @@ Player::Player() {
     AllowGuns = true;
 
     validatedPassword = false;
-    necroTechSearched = false;  
+    necroTechSearched = false;
+    onElevator = false;
 
 }
 
@@ -138,6 +139,8 @@ float GetRightBoundary(GameState gameState){
         return 2631;
     }else if (gameState == LOBBY){
         return 2590;
+    }else if (gameState == OFFICE){
+        return 2590;
     }
 }
 
@@ -163,6 +166,8 @@ float GetLeftBoundary(GameState gameState){
     }else if (gameState == NECROTECH){
         return 1550;
     }else if (gameState == LOBBY){
+        return 1600;
+    }else if (gameState == OFFICE){
         return 1600;
     }
 }

@@ -56,6 +56,7 @@ public:
     bool teller;
     bool bat;
     bool MiB;
+    bool office;
     bool CanSpawnZombie;
     int clickCount;
     int interactions;

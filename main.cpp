@@ -189,9 +189,11 @@ std::vector<NPC>robots; //necrotech
 std::vector<NPC>lobbyRobots;
 std::vector<NPC>lobbyNPCs;
 std::vector<NPC>lobbyMibs;
+std::vector<NPC>officeWorkers;
 
 
 std::vector<Platform> platforms;
+
 
 GameState gameState = OUTSIDE;
 
@@ -284,6 +286,8 @@ struct Train {
     TrainState state;
 };
 
+std::vector<Elevator> elevators;
+
 // Function to initialize and load resources
 void LoadGameResources(GameResources& resources) {
     resources.background = LoadTexture("assets/Background.png");
@@ -374,6 +378,7 @@ void LoadGameResources(GameResources& resources) {
     resources.elevatorSheet = LoadTexture("assets/elevatorSheet.png");
     resources.floorNumberSheet = LoadTexture("assets/floorNumberSheet.png");
     resources.officeBackground = LoadTexture("assets/officeBackground.png");
+    resources.officeSheet = LoadTexture("assets/officeSheet.png");
 
 }
 
@@ -463,6 +468,7 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.elevatorSheet);
     UnloadTexture(resources.floorNumberSheet);
     UnloadTexture(resources.officeBackground);
+    UnloadTexture(resources.officeSheet);
 
   
 }
@@ -488,8 +494,8 @@ void InitEarth(Earth& earth){
     earth.frameTime = .1;
 }
 
-void InitElevator(Elevator& elevator){
-    elevator.position = {2446, 648};
+void InitElevator(Elevator& elevator, Vector2 position){
+    elevator.position = position;
     elevator.currentFrame = 0;
     elevator.frameTimer = 0.0;
     elevator.frameTime = 0.05;
@@ -501,6 +507,7 @@ void InitElevator(Elevator& elevator){
     elevator.floorFrameTimer = 0.0;
     elevator.floorFrameTime= 0.5;
     elevator.floorOffset = Vector2 {32, -10};
+    
 }
 
 
@@ -1242,6 +1249,7 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
         { GRAVEYARD, { &zombies } },//we switch them all off when not in one of those 3 scenes. This means zombies will be retained for those scenes.
         //so if you spawn zombies in the park(and dont kill them all), they will also be in the graveyard and cemetery. 
         { PARK, { &ParkNpcs, &zombies }},
+        { OFFICE, {&officeWorkers}},
 
     };
 
@@ -1364,7 +1372,7 @@ void HandleLobbyTransition(Player& player, GameCalendar& calendar){
         UpdateNPCActivity(LOBBY, NECROTECH);//turn off NPCs in the scene you are leaving, turn on NPCs in the scene you are entering. 
     }else if (player.onElevator){
         gameState = OFFICE;
-        UpdateNPCActivity(LOBBY, OFFICE);
+        UpdateNPCActivity(LOBBY, OFFICE); //turn on office workers
         player.onElevator = false;
         
 
@@ -1585,7 +1593,18 @@ void HandleAstralTransition(Player& player, GameCalendar& calendar){
 }
 
 void HandleOfficeTransition(Player& player, GameCalendar calender){
-    //do something
+    if (player.onElevator){
+        gameState = LOBBY;
+        UpdateNPCActivity(OFFICE, LOBBY);
+        player.onElevator = false;
+    }else if (player.isDead){
+        //death in office return to apartment
+        gameState = APARTMENT;
+        UpdateNPCActivity(OFFICE, APARTMENT);
+        player.position.x = apartmentX;
+        player.onElevator = false;
+
+    }
 }
 
 void HandleParkTransition(GameState& gamestate, Player& player, PlayerCar player_car){
@@ -3883,6 +3902,33 @@ void RenderOffice(GameResources& resources, Camera2D& camera, Player& player, El
     elevator.isOccupied = false;
     float deltaTime = GetFrameTime();
 
+    if (player.position.x < 2540 && player.position.x > 2520){
+        over_Ebutton = true;
+        phrase = "Call Elevator";
+        show_dbox = true;
+        dboxPosition = player.position;
+    
+    }
+
+    if (player.position.x < 3295 && player.position.x > 3275){
+        over_Ebutton = true;
+        phrase = "Call Elevator";
+        show_dbox = true;
+        dboxPosition = player.position;
+    
+    }
+
+    if (player.position.x < 2488 && player.position.x > 2468){
+        if (elevator.isOpen){
+            over_elevator = true;
+            phrase = "Up to Enter";
+            show_dbox = true;
+            dboxPosition = player.position;
+
+        } 
+
+    }
+
     camera.target = player.position;
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
     ClearBackground(customBackgroundColor);
@@ -3893,15 +3939,32 @@ void RenderOffice(GameResources& resources, Camera2D& camera, Player& player, El
 
     //No parallax for lobby
     DrawTexturePro(resources.officeBackground, {0, 0, static_cast<float>(resources.officeBackground.width), static_cast<float>(resources.officeBackground.height)},
-                    {1300, 0, static_cast<float>(resources.officeBackground.width), static_cast<float>(resources.officeBackground.height)}, {0, 0}, 0.0f, WHITE);
+                    {300, 0, static_cast<float>(resources.officeBackground.width), static_cast<float>(resources.officeBackground.height)}, {0, 0}, 0.0f, WHITE);
 
 
     DrawElevator(elevator, resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
+    DrawElevator(elevators[1], resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
+    // for (Elevator& el : elevators){ //draw multiple elevator with the same properties exept for position. 
+    //     DrawElevator(el, resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
+    // }
 
 
 
     //DRAW PLAYER
-    if (!elevator.isOccupied) player.DrawPlayer(resources, gameState, camera, shaders);
+    if (!player.onElevator) player.DrawPlayer(resources, gameState, camera, shaders);
+
+    for (NPC& office_npc : officeWorkers){
+        office_npc.Update(player, gameState);
+        office_npc.Render(shaders);
+        office_npc.ClickNPC(mousePosition, camera, player, gameState);
+
+        if (office_npc.interacting){
+            phrase = office_npc.speech;
+            show_dbox = true;
+            dboxPosition = office_npc.position;
+            showPasswordInterface = true;
+        }
+    }
 
     DrawBullets();
     EndShaderMode(); ////////////////////////////SHADER OFF
@@ -3945,7 +4008,9 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Ele
     over_exit = false;
     over_Ebutton = false;
     over_elevator = false;
+    elevator.isOccupied = false;
     float deltaTime = GetFrameTime();
+
     if (player.position.x < 2126 && player.position.x > 2106){ //exit lobby to necrotech exterior, triggered in uptoEnter()
         over_exit = true;
         phrase = "UP TO EXIT";
@@ -3993,7 +4058,7 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Ele
 
 
     //DRAW PLAYER
-    if (!elevator.isOccupied) player.DrawPlayer(resources, gameState, camera, shaders);
+    if (!player.onElevator) player.DrawPlayer(resources, gameState, camera, shaders);
 
 
 
@@ -4778,6 +4843,16 @@ void spawnNPCs(GameResources& resources){
         lobbyMibs.push_back(mib_npc);
     }
 
+    int of = 7;
+    for (int i = 0; i < of; i++){
+        Vector2 o_pos = {static_cast<float>(2000 + i * 200), 700};
+        NPC officeWorker = CreateNPC(resources.officeSheet, o_pos, speed, IDLE, false, false);
+        officeWorker.office = true;
+
+        officeWorkers.push_back(officeWorker);
+
+    }
+
 
 }
 
@@ -4967,12 +5042,35 @@ void UptoEnter(Player& player, PlayerCar& player_car, Elevator& elevator){
             }
             
         }
+
+        if (over_Ebutton && gameState == OFFICE){ //open and close all elevators. shouldn't matter because they are offscreen. 
+            if (elevator.isOpen){
+                elevator.isOpen = false;
+                elevators[1].isOpen = false;
+            
+            }else{
+                elevator.isOpen = true;
+                elevators[1].isOpen = true;
+                
+            }
+        }
+
+        if (over_elevator && gameState == OFFICE){
+            if (elevator.isOpen){
+                elevator.isOpen = false;
+                elevator.isOccupied = true;
+                player.onElevator = true;
+                transitionState = FADE_OUT; //go to lobby
+            }
+        }
+
+
         if (over_elevator && gameState == LOBBY){
             if (elevator.isOpen){
                  elevator.isOccupied = true; //Enter elevator
                  player.onElevator = true;
                  elevator.isOpen = false;    //close the door and fade out. 
-                 transitionState = FADE_OUT; //goes to apartment right now because next scene doesn't exist yet. 
+                 transitionState = FADE_OUT; //goes to office 
 
             } 
 
@@ -5209,7 +5307,7 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadSound("zombieDeath", "assets/sounds/zombieDeath.ogg");
 
     //random gibberish clips - removed voice 1-7
-    soundManager.LoadVoice("voice8", "assets/sounds/v1.ogg");
+    soundManager.LoadVoice("voice8", "assets/sounds/v1.ogg"); //load voices into sound managers's voices vector
     soundManager.LoadVoice("voice9", "assets/sounds/v2.ogg");
     soundManager.LoadVoice("voice10", "assets/sounds/v3.ogg");
     soundManager.LoadVoice("voice11", "assets/sounds/v4.ogg");
@@ -5233,6 +5331,7 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadRobotVoice("robot2", "assets/sounds/robot2.ogg");
     soundManager.LoadRobotVoice("robot3", "assets/sounds/robot3.ogg");
     soundManager.LoadRobotVoice("robot4", "assets/sounds/robot4.ogg");
+    soundManager.LoadRobotVoice("robot5", "assets/sounds/robot5.ogg");
 
 
     soundManager.LoadSound("phit1", "assets/sounds/PlayerHit1.ogg"); //player VA hits
@@ -5283,12 +5382,15 @@ int main() {
     UFO ufo;
     Train train;
     Elevator elevator;
+    Elevator elevator2;
 
 
     InitializePlayerCar(player_car);
     InitializeMagicDoor(magicDoor);
     InitEarth(earth);
-    InitElevator(elevator);
+    InitElevator(elevator, Vector2 {2446, 648});
+    InitElevator(elevator2, Vector2 {3200, 648});
+
     InitUFO(ufo);
     spawnNPCs(resources); //spawn NPCs before rendering them outside
     InitPlatforms();
@@ -5296,6 +5398,8 @@ int main() {
     
     setButtonColors(); //main menu button colors, sets globally for all rayGUI buttons
 
+    elevators.push_back(elevator);
+    elevators.push_back(elevator2);
     // Initialize the camer
     Camera2D camera = { 0 };
     camera.offset = (Vector2){ GAME_SCREEN_WIDTH / 2.0f, GAME_SCREEN_HEIGHT / 2.0f + 188.0f };  // Screen center + y offset 188 lower ground for bigger sky

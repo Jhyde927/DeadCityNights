@@ -140,7 +140,7 @@ float GetRightBoundary(GameState gameState){
     }else if (gameState == LOBBY){
         return 2590;
     }else if (gameState == OFFICE){
-        return 3000;
+        return 3800;
     }
 }
 
@@ -168,7 +168,7 @@ float GetLeftBoundary(GameState gameState){
     }else if (gameState == LOBBY){
         return 1600;
     }else if (gameState == OFFICE){
-        return 1725;
+        return 1000;
     }
 }
 

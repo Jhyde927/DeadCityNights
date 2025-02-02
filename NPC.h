@@ -74,6 +74,7 @@ public:
     bool trigger;
     bool lobbyNPC;
     bool zRight;
+    bool targetedTimer;
 
     NPC* targetNPC;
  

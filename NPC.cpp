@@ -70,6 +70,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     trigger = false;
     lobbyNPC = false;
     zRight = false;
+    targetedTimer = 0.0f;
  
 }
 
@@ -414,7 +415,7 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){ //Click or
         }
 
         if (!talked && !hobo && !police && !teller and !robot){ //all other NPCs
-            SoundManager::getInstance().StartRandomVoices(.5);
+            //SoundManager::getInstance().StartRandomVoices(.5); normal NPCs dont talk anymore until I find better audio clips
             talked = true;
             speech = GetRandomPhrase(); // NPC greets player
             talkTimer = 3; //limit talking. 
@@ -801,6 +802,12 @@ void NPC::Update(Player& player, GameState& gameState) {
 };
 
     directionToPlayer = Vector2Normalize(directionToPlayer);
+
+    if (targetedTimer > 0){ //dont stay targeted forever, go back to normal after 5 seconds. 
+        targetedTimer -= GetFrameTime();
+    }else{
+        isTargeted = false;
+    }
 
 
     //NPCs choose a random position called destination. they move toward destination until they arrive then wait a random amount of time and repeat 

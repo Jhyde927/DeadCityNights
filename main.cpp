@@ -48,6 +48,7 @@ bool buttonInternet = false;
 bool hasCemeteryKey = false;
 bool canGiveFortune = true;
 bool can_spawn_zombies = true;
+bool visitedOffice = false;
 bool showInternet = false;
 bool borderlessWindow = false;
 bool windowStateChanged = false;
@@ -504,9 +505,9 @@ void InitElevator(Elevator& elevator, Vector2 position){
     elevator.totalFrames = 7;
 
     elevator.currentFloorFrame = 0;
-    elevator.floorFrameTimer = 0.0;
-    elevator.floorFrameTime= 0.5;
-    elevator.floorOffset = Vector2 {32, -10};
+    elevator.floorFrameTimer = 0.0; //ticks up when fading out and elevator is occupied and closed. 
+    elevator.floorFrameTime= 0.18; //stops on floor 7. 0.01667 second per loop 
+    elevator.floorOffset = Vector2 {32, -10}; //floorNumbers offset from elevator position
     
 }
 
@@ -684,7 +685,8 @@ void DrawElevator(Elevator& elevator, Texture2D elevatorTexture, Texture2D floor
     // Update animation only if the elevator is opening or closing
 
 
-    if (elevator.isOccupied && !elevator.isOpen){
+    if (elevator.isOccupied && !elevator.isOpen){ //animate floor numbers
+        std::cout << "count up";
         elevator.floorFrameTimer += deltaTime;
         if (elevator.floorFrameTimer >= elevator.floorFrameTime){
             elevator.floorFrameTimer -= elevator.floorFrameTime;
@@ -692,14 +694,14 @@ void DrawElevator(Elevator& elevator, Texture2D elevatorTexture, Texture2D floor
         }
 
     }
-    if (elevator.isOpen && elevator.currentFrame < elevator.totalFrames - 1) {
+    if (elevator.isOpen && elevator.currentFrame < elevator.totalFrames - 1) { //animate opening door
         elevator.frameTimer += deltaTime;
         if (elevator.frameTimer >= elevator.frameTime) {
             elevator.frameTimer -= elevator.frameTime;
             elevator.currentFrame++;  // Play forward
         }
     } 
-    else if (!elevator.isOpen && elevator.currentFrame > 0) {
+    else if (!elevator.isOpen && elevator.currentFrame > 0) { //animate closing door
         elevator.frameTimer += deltaTime;
         if (elevator.frameTimer >= elevator.frameTime) {
             elevator.frameTimer -= elevator.frameTime;
@@ -1374,7 +1376,12 @@ void HandleLobbyTransition(Player& player, GameCalendar& calendar){
         gameState = OFFICE;
         UpdateNPCActivity(LOBBY, OFFICE); //turn on office workers
         player.onElevator = false;
-        can_spawn_zombies = true; //queue up more zombies to be spawned in the office. 
+        if (!visitedOffice){
+            can_spawn_zombies = true; //queue up more zombies to be spawned in the office.
+            visitedOffice = true;
+        } else{
+            can_spawn_zombies = false; //already visited office so don't spawn anymore zombies. 
+        }
         
 
     }else{
@@ -1598,6 +1605,7 @@ void HandleOfficeTransition(Player& player, GameCalendar calender){
         gameState = LOBBY;
         UpdateNPCActivity(OFFICE, LOBBY);
         player.onElevator = false;
+        can_spawn_zombies = false; //only spawn zombies once. 
     }else if (player.isDead){
         //death in office return to apartment
         gameState = APARTMENT;
@@ -4003,6 +4011,7 @@ void RenderOffice(GameResources& resources, Camera2D& camera, Player& player, El
                     zombie.targetNPC = &npc;
                     npc.zRight = npc.position.x < zombie.position.x; 
                     npc.isTargeted = true;
+                    npc.targetedTimer = 5.0f;
           
                 }
             }
@@ -4053,7 +4062,7 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Ele
     over_exit = false;
     over_Ebutton = false;
     over_elevator = false;
-    elevator.isOccupied = false;
+    //elevator.isOccupied = false;
     float deltaTime = GetFrameTime();
 
 
@@ -4658,7 +4667,7 @@ void spawnNPCs(GameResources& resources){
     float speed = 50.0f; //normal NPC speed
 
     //spawn generic NPCs
-    int generic = 10;
+    int generic = 5;
     for (int i = 0; i < generic; ++i) {
         float randomX = dis(gen); //random distrabution using RNG
         Vector2 g_pos = {randomX, 700.0f};   
@@ -4670,6 +4679,17 @@ void spawnNPCs(GameResources& resources){
         }
         npcs.push_back(npc);  // Add the NPC to the vector
         //ParkNpcs.push_back(npc); //no generic NPCs in park, too many people
+    }
+
+    //spawn office workers outside
+
+    int workers = 3;
+    for (int i = 0; i < workers; i++){
+        float randomX = dis(gen);
+        Vector2 w_pos = {randomX, 700.0f};
+        NPC worker_npc = CreateNPC(resources.officeSheet, w_pos, speed, IDLE, true, false);
+        worker_npc.SetDestination(0, 4000.0f);
+        npcs.push_back(worker_npc);
     }
 
     //spawn businessMan
@@ -4695,7 +4715,7 @@ void spawnNPCs(GameResources& resources){
 
 
     //spawn woman
-    int women = 1;
+    int women = 2;
     for (int i = 0; i < women; i++){
         float randomX = dis(gen);
         Vector2 w_pos = {randomX, 700};
@@ -4710,7 +4730,7 @@ void spawnNPCs(GameResources& resources){
     }
 
     //spawn woman2
-    int women2 = 2;
+    int women2 = 3;
     for (int i = 0; i < women2; i++){
         float randomX = dis(gen);
         Vector2 w_pos = {randomX, 700};

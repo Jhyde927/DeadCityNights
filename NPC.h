@@ -73,6 +73,7 @@ public:
     bool validPassword;
     bool trigger;
     bool lobbyNPC;
+    bool zRight;
 
     NPC* targetNPC;
  

@@ -69,6 +69,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     validPassword = false;
     trigger = false;
     lobbyNPC = false;
+    zRight = false;
  
 }
 
@@ -807,19 +808,34 @@ void NPC::Update(Player& player, GameState& gameState) {
         // Move towards the destination
 
         if (!ghost && !bat){ //pedestrians on the street/zombies
-           
-            if (position.x < destination.x) {
-                position.x += speed * GetFrameTime();
-                facingRight = true;
+
+            if (!isTargeted){
+                if (position.x < destination.x) {
+                    position.x += speed * GetFrameTime();
+                    facingRight = true;
+                    SetAnimationState(WALK);
+                
+                } else if (position.x > destination.x) {
+                    position.x -= speed * GetFrameTime();
+                    facingRight = false;
+                    SetAnimationState(WALK);
+                    
+                }       
+
+            }
+
+            if (isTargeted && zRight){ //run away from zombies if you are targeted and a zombie is on your right. 
                 SetAnimationState(WALK);
-               
-            } else if (position.x > destination.x) {
                 position.x -= speed * GetFrameTime();
                 facingRight = false;
+            }  
+            if (isTargeted && !zRight){ //zombie on the left, run right
                 SetAnimationState(WALK);
-                
-            
+                position.x += speed * GetFrameTime();
+                facingRight = true;
             }
+            
+            
         }else if (bat || ghost) {
             if (agro && hasTarget) {
                 float deltaTime = GetFrameTime(); // Get the frame time

@@ -990,7 +990,7 @@ void StartZombieSpawn(int zombie_count){
     spawnTimer = 0.0f; //reset timer
     nextSpawnDelay = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 3.0f));  // Random delay between 1-4 seconds
     //film = true;
-    glitch = true; //Activate glitch shader to make things more dramatic
+    if (gameState != OFFICE) glitch = true; //Activate glitch shader to make things more dramatic
 }
 
 void spawnRobot(GameResources& resources, Player& player, Vector2 position){
@@ -1019,7 +1019,7 @@ void spawnMib(GameResources& resources, Player& player, Vector2 position){
 
 }
 
-void spawnZombiePark(GameResources& resources, Vector2 position){
+void spawnZombie(GameResources& resources, Vector2 position){
     //spawn a zombie at the dead NPC position
     
     int zombie_speed = 25;
@@ -1374,6 +1374,7 @@ void HandleLobbyTransition(Player& player, GameCalendar& calendar){
         gameState = OFFICE;
         UpdateNPCActivity(LOBBY, OFFICE); //turn on office workers
         player.onElevator = false;
+        can_spawn_zombies = true; //queue up more zombies to be spawned in the office. 
         
 
     }else{
@@ -3779,7 +3780,7 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
             if (!npc.isActive && npc.CanSpawnZombie){ //wait untill NPC is not active before raising zombie, so death animation can finish.  
                 npc.CanSpawnZombie = false;
                 
-                spawnZombiePark(resources, npc.position); //NPC is transformed into a zombie. 
+                spawnZombie(resources, npc.position); //NPC is transformed into a zombie. 
             }
 
       
@@ -3902,6 +3903,12 @@ void RenderOffice(GameResources& resources, Camera2D& camera, Player& player, El
     elevator.isOccupied = false;
     float deltaTime = GetFrameTime();
 
+
+    if (can_spawn_zombies){
+        can_spawn_zombies = false;
+        StartZombieSpawn(15);
+    }
+
     if (player.position.x < 2540 && player.position.x > 2520){
         over_Ebutton = true;
         phrase = "Call Elevator";
@@ -3962,8 +3969,46 @@ void RenderOffice(GameResources& resources, Camera2D& camera, Player& player, El
             phrase = office_npc.speech;
             show_dbox = true;
             dboxPosition = office_npc.position;
-            showPasswordInterface = true;
+            
         }
+
+        if (!office_npc.isActive && office_npc.CanSpawnZombie && !can_spawn_zombies){ //wait for can_spawn_zombies the global var triggered by no active robots. 
+            office_npc.CanSpawnZombie = false;
+            spawnZombie(resources, office_npc.position); //NPC is transformed into a zombie. 
+        }
+    }
+
+
+
+    for (NPC& zombie : zombies){
+        zombie.Update(player, gameState);
+        zombie.Render(shaders);
+        float minDist = 1000;
+        float closestNPCPositionX = 0.0f;
+        zombie.targetNPC = nullptr;
+
+        if (zombie.targetNPC != nullptr) {
+            zombie.hasTarget = true;
+            zombie.destination = { closestNPCPositionX, zombie.position.y };
+
+        } 
+
+        for (NPC& npc : officeWorkers) { //find the cloeset NPC and chase them. 
+            if (npc.isActive){
+                float dist = fabs(zombie.position.x - npc.position.x);
+
+                if (dist < minDist) {
+                    minDist = dist;
+                    closestNPCPositionX = npc.position.x;
+                    zombie.targetNPC = &npc;
+                    npc.zRight = npc.position.x < zombie.position.x; 
+                    npc.isTargeted = true;
+          
+                }
+            }
+        }
+
+
     }
 
     DrawBullets();
@@ -4010,6 +4055,7 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Ele
     over_elevator = false;
     elevator.isOccupied = false;
     float deltaTime = GetFrameTime();
+
 
     if (player.position.x < 2126 && player.position.x > 2106){ //exit lobby to necrotech exterior, triggered in uptoEnter()
         over_exit = true;
@@ -4147,9 +4193,9 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Ele
 
             //Lobby NPCs can't talk, it interferes with Mib Convo
 
-        if (!npc.isActive && npc.CanSpawnZombie && !can_spawn_zombies){ //wait for can_spawn_zombies the global var triggered by no active robots. 
-            
-            spawnZombiePark(resources, npc.position); //NPC is transformed into a zombie. 
+        if (!npc.isActive && npc.CanSpawnZombie){ //spawn a zombie when the NPC dies even if they are not killed by a zombie. 
+            npc.CanSpawnZombie = false;
+            spawnZombie(resources, npc.position); //NPC is transformed into a zombie. 
         }
 
         }
@@ -5465,12 +5511,16 @@ int main() {
         CheckBulletNPCCollisions(astralGhosts, player);
         CheckBulletNPCCollisions(bats, player);
         CheckBulletNPCCollisions(astralBats, player);
-        CheckBulletPlayerCollisions(player); //NPCs shoot player
+        
         CheckBulletNPCCollisions(robots, player); //player shoots necroTech robot
         CheckBulletNPCCollisions(lobbyRobots, player); //player shoots lobby robots
         CheckBulletNPCCollisions(lobbyMibs, player); // player shoots mibs
+        
         CheckLaserNPCCollisions(lobbyNPCs, player); //robots can shoot regular NPCs if they happen to be in the way
+        CheckLaserNPCCollisions(zombies, player); //mibs can shoot zombies if they get in the way.
 
+
+        CheckBulletPlayerCollisions(player); //NPCs shoot player
         MonitorMouseClicks(player, calendar); 
         UpdateZombieSpawning(resources, player);
         //glowEffect(glowShader, gameState); //update glow shader

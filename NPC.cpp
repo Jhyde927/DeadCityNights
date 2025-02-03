@@ -71,6 +71,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     lobbyNPC = false;
     zRight = false;
     targetedTimer = 0.0f;
+    float directionLockTimer = 0.5f; // Prevents rapid flipping 
  
 }
 
@@ -714,6 +715,14 @@ void NPC::Update(Player& player, GameState& gameState) {
     if (!isZombie && !robot) riseTimer = 0;
     float distance_to_player = abs(player.position.x - position.x);
 
+    if (targetedTimer > 0){ //dont stay targeted forever, go back to normal after 5 seconds. 
+        targetedTimer -= GetFrameTime();
+        
+        
+    }else{
+        isTargeted = false;
+    }
+
     if (distance_to_player >= 30){
         highLight = false;//Turn off highlights on any interacting NPCs when far enough way. 
         interacting = false; // maybe this is a good idea
@@ -799,15 +808,11 @@ void NPC::Update(Player& player, GameState& gameState) {
     Vector2 directionToPlayer = {
     player.position.x - position.x,
     player.position.y - position.y
-};
+    };
 
     directionToPlayer = Vector2Normalize(directionToPlayer);
 
-    if (targetedTimer > 0){ //dont stay targeted forever, go back to normal after 5 seconds. 
-        targetedTimer -= GetFrameTime();
-    }else{
-        isTargeted = false;
-    }
+
 
 
     //NPCs choose a random position called destination. they move toward destination until they arrive then wait a random amount of time and repeat 
@@ -816,7 +821,7 @@ void NPC::Update(Player& player, GameState& gameState) {
 
         if (!ghost && !bat){ //pedestrians on the street/zombies
 
-            if (!isTargeted){
+            if (!isTargeted){ //not targeted regular npc movement
                 if (position.x < destination.x) {
                     position.x += speed * GetFrameTime();
                     facingRight = true;
@@ -827,23 +832,23 @@ void NPC::Update(Player& player, GameState& gameState) {
                     facingRight = false;
                     SetAnimationState(WALK);
                     
-                }else if (position.x == destination.x && !isDying){
-                    SetAnimationState(IDLE); 
-                }       
+                }     
 
             }
 
-            if (isTargeted && zRight){ //run away from zombies if you are targeted and a zombie is on your right. 
+
+            if (isTargeted && zRight){ //run away from zombies, zright only changes after targetedTimer is 0. to prevent flip flopping. 
                 SetAnimationState(WALK);
                 position.x -= speed * GetFrameTime();
                 facingRight = false;
-                return; //early return to prevent NPC glitcing right and left. 
-            }  
-            if (isTargeted && !zRight){ //zombie on the left, run right
+                 
+            }else if (isTargeted && !zRight){ //zombie on the left, run right
                 SetAnimationState(WALK);
                 position.x += speed * GetFrameTime();
                 facingRight = true;
             }
+
+
             
             
         }else if (bat || ghost) {
@@ -1084,9 +1089,10 @@ void NPC::TakeDamage(int damage, Player& player) {
 
     }
 
-    int soundIndex = rand() % 4; //returns 0, 1, 2 or 3
     
-    if (ghost || bat) agro = true;
+    
+    if (ghost || bat) agro = true; //trigger agro on hit
+
     if (!isZombie && !bat && !ghost && !robot){
         destination = position; //if your an NPC, stop when you take damage so we can play the death animation. 
         
@@ -1106,6 +1112,8 @@ void NPC::TakeDamage(int damage, Player& player) {
         idleTime = 0;
         facingRight = (player.position.x > position.x);
     }
+
+    int soundIndex = rand() % 4; //returns 0, 1, 2 or 3
 
     if (isZombie){
         switch (soundIndex){ //zombie hits

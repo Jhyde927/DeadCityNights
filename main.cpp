@@ -1388,6 +1388,7 @@ void HandleLobbyTransition(Player& player, GameCalendar& calendar){
     if (over_exit && player.currentHealth > 0){
         gameState = NECROTECH;
         over_exit = false;
+        player.position.x = 2138;
         UpdateNPCActivity(LOBBY, NECROTECH);//turn off NPCs in the scene you are leaving, turn on NPCs in the scene you are entering. 
     }else if (player.onElevator){
         gameState = OFFICE;
@@ -1888,13 +1889,20 @@ void UpdateZombieTarget(NPC& zombie, std::vector<NPC>& npcs) {
     zombie.targetNPC = FindClosestNPC(zombie, npcs);
 
     if (zombie.targetNPC != nullptr) {
-        zombie.hasTarget = true;
-        zombie.destination = { zombie.targetNPC->position.x, zombie.position.y };
+        zombie.hasTarget = true; //dont go idle
+        zombie.destination = { zombie.targetNPC->position.x, zombie.position.y }; //chase NPC
 
         // Make the NPC run away
-        zombie.targetNPC->zRight = zombie.targetNPC->position.x < zombie.position.x;
-        zombie.targetNPC->isTargeted = true;
-        zombie.targetNPC->targetedTimer = 5.0f;
+
+        if (zombie.targetNPC->targetedTimer <= 0){ //if the NPC isn't targeted, 
+            zombie.targetNPC->targetedTimer = 2.0f;
+            //change npc direction if neccesary, only every 2 seconds to prevent flip flop
+            zombie.targetNPC->zRight = zombie.targetNPC->position.x < zombie.position.x; 
+            
+            zombie.targetNPC->isTargeted = true;
+            
+        }
+
     } else {
         zombie.hasTarget = false;
     }
@@ -3085,6 +3093,12 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
         if (ghost.agro){
             Flocking(player, astralGhosts);
         }
+
+        if (abs(ghost.position.y - player.position.y) < 50){
+            if (!ghost.agro){
+                ghost.agro = true;
+            }
+        }
     }
 
     for (NPC& bat : astralBats){
@@ -4069,7 +4083,7 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Ele
     float deltaTime = GetFrameTime();
 
     
-    if (player.position.x < 2027 && player.position.x > 2007){
+    if (player.position.x < 2051 && player.position.x > 2031){
         over_medkit = true;
         phrase = "Pills Here";
         show_dbox = true;
@@ -4077,7 +4091,15 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Ele
     }
 
 
-    if (player.position.x < 2326 && player.position.x > 2306){ //exit lobby to necrotech exterior, triggered in uptoEnter()
+    if (player.position.x < 2770 && player.position.x > 2750){ //exit lobby to necrotech exterior, triggered in uptoEnter()
+        over_exit = true;
+        phrase = "UP TO EXIT";
+        show_dbox = true;
+        dboxPosition = player.position;
+        
+    }
+
+    if (player.position.x < 1330 && player.position.x > 1310){ //exit lobby to necrotech exterior, triggered in uptoEnter()
         over_exit = true;
         phrase = "UP TO EXIT";
         show_dbox = true;
@@ -4117,7 +4139,7 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Ele
 
   
     DrawTexturePro(resources.LobbyForeground, {0, 0, static_cast<float>(resources.LobbyForeground.width), static_cast<float>(resources.LobbyForeground.height)},
-                    {1064, 0, static_cast<float>(resources.LobbyForeground.width), static_cast<float>(resources.LobbyForeground.height)}, {0, 0}, 0.0f, WHITE);
+                    {64, 0, static_cast<float>(resources.LobbyForeground.width), static_cast<float>(resources.LobbyForeground.height)}, {0, 0}, 0.0f, WHITE);
 
     DrawElevator(elevator, resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
 
@@ -5174,6 +5196,7 @@ void UptoEnter(Player& player, PlayerCar& player_car, Elevator& elevator){
             if (!player.hasPills){
                 player.hasPills = true;
                 AddItemToInventory("pills", inventory, INVENTORY_SIZE);
+                showInventory = true;
                
 
             }
@@ -5451,10 +5474,11 @@ void InitSounds(SoundManager& soundManager){
     //SoundManager::getInstance().SetMusicVolume("Schumann", 0.25f);
     
     //sounds
-    SoundManager::getInstance().SetSoundVolume("Mac10", .5);    
-    SoundManager::getInstance().SetSoundVolume("CarStart", 0.5);
+    SoundManager::getInstance().SetSoundVolume("Mac10", 0.5f);    
+    SoundManager::getInstance().SetSoundVolume("CarStart", 0.5f);
     SoundManager::getInstance().SetSoundVolume("BoneCrack", 0.3f);
-    SoundManager::getInstance().SetSoundVolume("Owl", 0.5);
+    SoundManager::getInstance().SetSoundVolume("Owl", 0.5f);
+    SoundManager::getInstance().SetSoundVolume("alarm", 0.5f);
 }
 
 

@@ -827,6 +827,8 @@ void NPC::Update(Player& player, GameState& gameState) {
                     facingRight = false;
                     SetAnimationState(WALK);
                     
+                }else if (position.x == destination.x && !isDying){
+                    SetAnimationState(IDLE); 
                 }       
 
             }
@@ -835,6 +837,7 @@ void NPC::Update(Player& player, GameState& gameState) {
                 SetAnimationState(WALK);
                 position.x -= speed * GetFrameTime();
                 facingRight = false;
+                return; //early return to prevent NPC glitcing right and left. 
             }  
             if (isTargeted && !zRight){ //zombie on the left, run right
                 SetAnimationState(WALK);

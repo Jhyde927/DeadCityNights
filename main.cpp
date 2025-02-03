@@ -67,7 +67,8 @@ bool dealerButtonAdded = false;
 bool subwayToPark = false;
 bool carToPark = false;
 bool buttonWork = false;
-bool hasPills = false;
+
+bool over_medkit = false;
 bool digSpot = false;
 bool NecroTech = false;
 bool playerOffsetX = 0;
@@ -597,11 +598,11 @@ void AddItemToInventory(const std::string& item, std::string inventory[], int in
 
 std::string GetTellerPhrase() {
     std::vector<std::string> tellerPhrases = {
-        "Your courage will lead you\n\n to unexpected rewards.",
-        "Fortune smiles upon you\n\nin your next endeavor.",
-        "A difficult choice \n\nwill test your resolve.",
-        "Beware of the shadows\n\n not all is as it seems.",
-        "Fortune favors the bold\n\n take the leap.",
+        "Your courage will lead you\n\n to unexpected rewards.\n\n The password is: 666",
+        "Fortune smiles upon you\n\nin your next endeavor.\n\n The password is: 666",
+        "A difficult choice \n\nwill test your resolve.\n\n The password is: 666",
+        "Beware of the shadows\n\n not all is as it seems.\n\n The password is: 666",
+        "Fortune favors the bold\n\n take the leap.\n\n The password is: 666",
 
     };
 
@@ -684,14 +685,20 @@ bool AreAllNPCsDeactivated(const std::vector<NPC>& npcs) {
 void DrawElevator(Elevator& elevator, Texture2D elevatorTexture, Texture2D floorTexture, int frameWidth, int frameHeight, float deltaTime) {
     // Update animation only if the elevator is opening or closing
 
+    if (gameState == OFFICE) elevator.currentFloorFrame = 7;
+    if (gameState == LOBBY) elevator.currentFloorFrame = 0;
 
     if (elevator.isOccupied && !elevator.isOpen){ //animate floor numbers
-        std::cout << "count up";
-        elevator.floorFrameTimer += deltaTime;
-        if (elevator.floorFrameTimer >= elevator.floorFrameTime){
-            elevator.floorFrameTimer -= elevator.floorFrameTime;
-            elevator.currentFloorFrame++;
-        }
+        
+        // elevator.floorFrameTimer += deltaTime;
+        // if (elevator.floorFrameTimer >= elevator.floorFrameTime){
+        //     elevator.floorFrameTimer -= elevator.floorFrameTime;
+        //     elevator.currentFloorFrame++;
+        // }
+
+        //dont count up floors
+
+     
 
     }
     if (elevator.isOpen && elevator.currentFrame < elevator.totalFrames - 1) { //animate opening door
@@ -993,6 +1000,7 @@ void StartZombieSpawn(int zombie_count){
     nextSpawnDelay = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 3.0f));  // Random delay between 1-4 seconds
     //film = true;
     if (gameState != OFFICE) glitch = true; //Activate glitch shader to make things more dramatic
+    
 }
 
 void spawnRobot(GameResources& resources, Player& player, Vector2 position){
@@ -1051,7 +1059,15 @@ void UpdateZombieSpawning(GameResources& resources, Player& player){
     if (remainingZombiesToSpawn > 0){
         spawnTimer += GetFrameTime();
 
+        if (gameState == LOBBY || gameState == OFFICE){ //play alarm sound when zombies are spawning inside the building. 
+            if (!SoundManager::getInstance().IsSoundPlaying("alarm")){
+                PlaySound(SoundManager::getInstance().GetSound("alarm"));
+        }
+
+        }
+
         if (spawnTimer >= nextSpawnDelay){ // spawn zombies at randomm position around the player
+
             Vector2 z_pos = GetRandomSpawnPositionX(player.position, minDistToPlayer, maxDistToPlayer);  // Min/max distance from player, set globally so it can change
             int zombie_speed = 25;
             NPC zombie_npc = CreateNPC(resources.zombieSheet, z_pos, zombie_speed, RISING, true, true);
@@ -1086,6 +1102,7 @@ void UpdateZombieSpawning(GameResources& resources, Player& player){
     }else{
         glitch = false; //glitch only runs if zombies are actively spawning.
         //film = false;
+        
     }
 
 }
@@ -1802,8 +1819,8 @@ void HandleTransition(Player& player, PlayerCar& player_car, GameCalendar& calen
 
 void Dig(Player& player){
     //check if player is over dig spot, while clicking. Then add item to inventory
-   if (player.position.x > 1860 && player.position.x < 1880 && !hasPills && gameState == CEMETERY){ //over dig spot
-        hasPills = true; //if you dont have pill you can allways get more here. 
+   if (player.position.x > 1860 && player.position.x < 1880 && !player.hasPills && gameState == CEMETERY){ //over dig spot
+        player.hasPills = true; //if you dont have pill you can allways get more here. 
         AddItemToInventory("pills", inventory, INVENTORY_SIZE);
         showInventory = true;
         PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
@@ -1821,9 +1838,9 @@ void Dig(Player& player){
 
     }
 
-    if (player.position.x > 82.0 && player.position.x < 102 && gameState == OUTSIDE && !hasPills){
+    if (player.position.x > 82.0 && player.position.x < 102 && gameState == OUTSIDE && !player.hasPills){
         PlaySound(SoundManager::getInstance().GetSound("ShovelDig")); //far left outside
-        hasPills = true;
+        player.hasPills = true;
         AddItemToInventory("pills", inventory, INVENTORY_SIZE);
         shovelTint = RED;
     }
@@ -1847,6 +1864,42 @@ Vector2 Lerp(Vector2 start, Vector2 end, float t) {
         start.y + t * (end.y - start.y)
     };
 }
+
+
+NPC* FindClosestNPC(NPC& zombie, std::vector<NPC>& npcs) {
+    //find closest npc to zombie
+    NPC* closestNPC = nullptr;
+    float minDist = 1000.0f; // Large initial distance
+
+    for (NPC& npc : npcs) {
+        if (npc.isActive) {
+            float dist = fabs(zombie.position.x - npc.position.x);
+
+            if (dist < minDist) {
+                minDist = dist;
+                closestNPC = &npc;
+            }
+        }
+    }
+    return closestNPC;
+}
+
+void UpdateZombieTarget(NPC& zombie, std::vector<NPC>& npcs) {
+    zombie.targetNPC = FindClosestNPC(zombie, npcs);
+
+    if (zombie.targetNPC != nullptr) {
+        zombie.hasTarget = true;
+        zombie.destination = { zombie.targetNPC->position.x, zombie.position.y };
+
+        // Make the NPC run away
+        zombie.targetNPC->zRight = zombie.targetNPC->position.x < zombie.position.x;
+        zombie.targetNPC->isTargeted = true;
+        zombie.targetNPC->targetedTimer = 5.0f;
+    } else {
+        zombie.hasTarget = false;
+    }
+}
+
 
 void UpdateInventoryPosition(const Camera2D& camera, GameState& gameState) {
     // Static inventory position, relative to the camera offset
@@ -2031,10 +2084,10 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
 
                 if (CheckCollisionPointRec(mousePosition, pillBounds)){
                     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-                        if (player.currentHealth < player.maxHealth && hasPills){
+                        if (player.currentHealth < player.maxHealth && player.hasPills){
                             inventory[i] = std::string("");  // erase pills from the string
                             player.currentHealth = player.maxHealth;
-                            hasPills = false;
+                            player.hasPills = false;
                             PlaySound(SoundManager::getInstance().GetSound("Pills"));
 
                         }
@@ -3800,31 +3853,7 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
     for (NPC& zombie : zombies){
         zombie.Update(player, gameState);
         zombie.Render(shaders);
-        float minDist = 1000;
-        float closestNPCPositionX = 0.0f;
-        zombie.targetNPC = nullptr;
-
-        for (NPC& npc : ParkNpcs) { //find the cloeset NPC and chase them. 
-            if (npc.isActive){
-                float dist = fabs(zombie.position.x - npc.position.x);
-
-                if (dist < minDist) {
-                    minDist = dist;
-                    closestNPCPositionX = npc.position.x;
-                    zombie.targetNPC = &npc;   
-                }
-            }
-        }
-
-        if (zombie.targetNPC != nullptr) {
-            zombie.hasTarget = true;
-            zombie.destination = { closestNPCPositionX, zombie.position.y };
-            //zombie.targetNPC->isTargeted = true;  // Mark NPC as targeted, not sure if we need this, we check for it on death, but do we need to?
-            //isTargeted was supposed to let zombies only attack NPCs that werent already targeted but thats dumb. they should be able to attack the same NPC. 
-        } else {
-            //zombie.hasTarget = false;
-            // Optional behavior when no target is found
-        }
+        UpdateZombieTarget(zombie, ParkNpcs);
     }
 
     if (show_carUI && !move_car && player.enter_car){ //destination menu //Draw inside mode2d
@@ -3987,37 +4016,10 @@ void RenderOffice(GameResources& resources, Camera2D& camera, Player& player, El
     }
 
 
-
     for (NPC& zombie : zombies){
         zombie.Update(player, gameState);
         zombie.Render(shaders);
-        float minDist = 1000;
-        float closestNPCPositionX = 0.0f;
-        zombie.targetNPC = nullptr;
-
-        if (zombie.targetNPC != nullptr) {
-            zombie.hasTarget = true;
-            zombie.destination = { closestNPCPositionX, zombie.position.y };
-
-        } 
-
-        for (NPC& npc : officeWorkers) { //find the cloeset NPC and chase them. 
-            if (npc.isActive){
-                float dist = fabs(zombie.position.x - npc.position.x);
-
-                if (dist < minDist) {
-                    minDist = dist;
-                    closestNPCPositionX = npc.position.x;
-                    zombie.targetNPC = &npc;
-                    npc.zRight = npc.position.x < zombie.position.x; 
-                    npc.isTargeted = true;
-                    npc.targetedTimer = 5.0f;
-          
-                }
-            }
-        }
-
-
+        UpdateZombieTarget(zombie, officeWorkers);
     }
 
     DrawBullets();
@@ -4062,11 +4064,20 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Ele
     over_exit = false;
     over_Ebutton = false;
     over_elevator = false;
+    over_medkit = false;
     //elevator.isOccupied = false;
     float deltaTime = GetFrameTime();
 
+    
+    if (player.position.x < 2027 && player.position.x > 2007){
+        over_medkit = true;
+        phrase = "Pills Here";
+        show_dbox = true;
+        dboxPosition = player.position;
+    }
 
-    if (player.position.x < 2126 && player.position.x > 2106){ //exit lobby to necrotech exterior, triggered in uptoEnter()
+
+    if (player.position.x < 2326 && player.position.x > 2306){ //exit lobby to necrotech exterior, triggered in uptoEnter()
         over_exit = true;
         phrase = "UP TO EXIT";
         show_dbox = true;
@@ -4121,15 +4132,21 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Ele
         can_spawn_robots = false;
         spawnRobot(resources, player, player.position + Vector2 {300, 0});
         spawnRobot(resources, player, player.position + Vector2 {-300, 0});
+        if (can_spawn_zombies){
+            can_spawn_zombies = false;
+            StartZombieSpawn(10); //spawn zombies when robots spawn, spawning zombies in the lobby triggers the alarm. 
+
+        }
 
     }
 
-    if (AreAllNPCsDeactivated(lobbyRobots) && lobbyRobots.size() > 0 && can_spawn_zombies){ //robots are spawned and killed. so spawn zombies. 
-        can_spawn_zombies = false;
-        StartZombieSpawn(10);
+    // if (AreAllNPCsDeactivated(lobbyRobots) && lobbyRobots.size() > 0 && can_spawn_zombies){ //robots are spawned and killed. so spawn zombies. 
+    //     can_spawn_zombies = false;
+    //     StartZombieSpawn(10);
+        
 
 
-    }
+    // }
 
     if (globalAgro && can_spawn_mibs){
         can_spawn_mibs = false;
@@ -4213,31 +4230,41 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Ele
     for (NPC& zombie : zombies){
         zombie.Update(player, gameState);
         zombie.Render(shaders);
-        float minDist = 1000;
-        float closestNPCPositionX = 0.0f;
-        zombie.targetNPC = nullptr;
-
-        for (NPC& npc : lobbyNPCs) { //find the cloeset NPC and chase them. 
-            if (npc.isActive){
-                float dist = fabs(zombie.position.x - npc.position.x);
-
-                if (dist < minDist) {
-                    minDist = dist;
-                    closestNPCPositionX = npc.position.x;
-                    zombie.targetNPC = &npc;   
-                }
-            }
-        }
-
-        if (zombie.targetNPC != nullptr) {
-            zombie.hasTarget = true;
-            zombie.destination = { closestNPCPositionX, zombie.position.y };
-
-        } else {
-            //zombie.hasTarget = false;
-            // Optional behavior when no target is found
-        }
+        UpdateZombieTarget(zombie, lobbyNPCs);
     }
+
+    // for (NPC& zombie : zombies){
+    //     zombie.Update(player, gameState);
+    //     zombie.Render(shaders);
+    //     float minDist = 1000;
+    //     float closestNPCPositionX = 0.0f;
+    //     zombie.targetNPC = nullptr;
+
+    //     for (NPC& npc : lobbyNPCs) { //find the cloeset NPC and chase them. 
+    //         if (npc.isActive){
+    //             float dist = fabs(zombie.position.x - npc.position.x);
+
+    //             if (dist < minDist) {
+    //                 minDist = dist;
+    //                 closestNPCPositionX = npc.position.x;
+    //                 zombie.targetNPC = &npc;  
+
+    //                 npc.zRight = npc.position.x < zombie.position.x; 
+    //                 npc.isTargeted = true; //if npc is targeted, run away from the zombie targeting it. We needed isTargeted after all. 
+    //                 npc.targetedTimer = 5.0f;  
+    //             }
+    //         }
+    //     }
+
+    //     if (zombie.targetNPC != nullptr) {
+    //         zombie.hasTarget = true;
+    //         zombie.destination = { closestNPCPositionX, zombie.position.y };
+
+    //     } else {
+    //         //zombie.hasTarget = false;
+    //         // Optional behavior when no target is found
+    //     }
+    // }
 
     DrawBullets();
     EndShaderMode(); ////////////////////////////SHADER OFF
@@ -4888,6 +4915,7 @@ void spawnNPCs(GameResources& resources){
         businessman.lobbyNPC = true;
         
         lobbyNPCs.push_back(businessman);
+        officeWorkers.push_back(businessman); //business men in the office are the management lets say. 
     }
 
     int wm = 3;
@@ -5142,6 +5170,15 @@ void UptoEnter(Player& player, PlayerCar& player_car, Elevator& elevator){
 
         }
 
+        if (over_medkit && gameState == LOBBY){
+            if (!player.hasPills){
+                player.hasPills = true;
+                AddItemToInventory("pills", inventory, INVENTORY_SIZE);
+               
+
+            }
+        }
+
     }
 }
 
@@ -5322,6 +5359,8 @@ void InitSounds(SoundManager& soundManager){
     
     SoundManager::getInstance().LoadMusic("CarRun", "assets/sounds/CarRun.ogg"); // load CarRun.ogg into music tracks with the name CarRun
     //music tracks automatically loop.The car running sound needs to loop, so we call it music.
+
+    
     
     SoundManager::getInstance().LoadMusic("subwayAmbience", "assets/sounds/SubwayAmbience.ogg");
     
@@ -5353,6 +5392,8 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadSound("TrainArriving", "assets/sounds/TrainArriving.ogg");
     soundManager.LoadSound("TrainLeaving", "assets/sounds/TrainLeaving.ogg");
     //soundManager.LoadSound("subwayAmbience", "assets/sounds/SubwayAmbience.ogg");
+
+    soundManager.LoadSound("alarm", "assets/sounds/alarm1.ogg");
 
     soundManager.LoadSound("ShotGun", "assets/sounds/ShotGun.ogg");
     soundManager.LoadSound("ShotgunReload", "assets/sounds/ShotgunReload.ogg");
@@ -5407,7 +5448,7 @@ void InitSounds(SoundManager& soundManager){
     
     //music
     SoundManager::getInstance().SetMusicVolume("CarRun", 0.25f);
-    SoundManager::getInstance().SetMusicVolume("Schumann", 0.25f);
+    //SoundManager::getInstance().SetMusicVolume("Schumann", 0.25f);
     
     //sounds
     SoundManager::getInstance().SetSoundVolume("Mac10", .5);    

@@ -78,6 +78,7 @@ public:
     bool validatedPassword;
     bool necroTechSearched;
     bool onElevator;
+    bool hasPills;
 
     bool step = false;
 

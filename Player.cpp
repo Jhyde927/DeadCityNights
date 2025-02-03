@@ -85,6 +85,8 @@ Player::Player() {
     necroTechSearched = false;
     onElevator = false;
 
+    hasPills = false;
+
 }
 
 void Player::take_damage(int damage) {

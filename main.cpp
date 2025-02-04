@@ -23,7 +23,7 @@
 //Remember: The Law is One. 
 
 
-int apartmentX = 2256;
+float apartmentX = 2256;
 int vacantLotX = 2753;
 int vacantExitX = 2762;
 bool over_lot = false;
@@ -481,8 +481,8 @@ void InitializePlayerCar(PlayerCar& player_car){
     player_car.currentFrame = 0;
 }
 
-void InitializeMagicDoor(MagicDoor& magicDoor){
-    magicDoor.position = {2089, 700};
+void InitializeMagicDoor(MagicDoor& magicDoor, Vector2 position){
+    magicDoor.position = position;//{2089, 700};
     magicDoor.currentFrame = 0;
 }
 
@@ -1259,16 +1259,15 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
     // Map game states to multiple NPC groups
     std::map<GameState, std::vector<std::vector<NPC>*>> npcGroups = { //key = gameState, val = vector of vectors 
         { NECROTECH, { &robots } },
-        { LOBBY, { &lobbyRobots, &lobbyNPCs, &lobbyMibs } },  // Multiple NPC groups in LOBBY
-        { ASTRAL, { &astralBats, &astralGhosts } },
-        { GRAVEYARD, { &ghosts } }, //singular ghost in graveyard
+        { LOBBY, { &lobbyRobots, &lobbyNPCs, &lobbyMibs, &zombies } },  // Multiple NPC groups in LOBBY
+        { ASTRAL, { &astralBats, &astralGhosts } },    
         { OUTSIDE, { &npcs, &mibs } }, //sigular mib outside
         { SUBWAY, { &npcs } }, //same NPCs as outside, so when going from outside to subway they are switched off then back on. 
         { CEMETERY, { &zombies } }, //zombies in the cemetery, graveyard, and park are in the same vector, because they aren't created until they spawn in. 
-        { GRAVEYARD, { &zombies } },//we switch them all off when not in one of those 3 scenes. This means zombies will be retained for those scenes.
+        { GRAVEYARD, { &zombies, &ghosts } },//we switch them all off when not in one of those 3 scenes. This means zombies will be retained for those scenes.
         //so if you spawn zombies in the park(and dont kill them all), they will also be in the graveyard and cemetery. 
         { PARK, { &ParkNpcs, &zombies }},
-        { OFFICE, {&officeWorkers}},
+        { OFFICE, {&officeWorkers, &zombies}},
 
     };
 
@@ -1590,7 +1589,7 @@ void HandleLotTransition(Player& player) {
 void HandleAstralTransition(Player& player, GameCalendar& calendar){
     if (player.isDead){ //player dies on the astral plane, reset back to apartment.
         gameState = APARTMENT;//wake up back at your apartment with full health.
-        player.position.x = apartmentX;
+        player.position = Vector2 {apartmentX, 700}; // consider the Y
         player.position.y = 700; //incase player dies on a platform. reset to ground level
         player.isDead = false;
         player.gravity = 800; //reset gravity to normal. 
@@ -1610,7 +1609,8 @@ void HandleAstralTransition(Player& player, GameCalendar& calendar){
         openMagicDoor = false; //We set it back to false when entering astral, we should set it false when leaving astral aswell
         player.gravity = 800; //reset gravity on leaving astral plane.
         player.outline = false; //set outline off when exiting astral
-        applyShader = false; //drugs ware off when exiting astral. 
+        applyShader = false; //drugs ware off when exiting astral.
+        player.position = Vector2 {apartmentX, 700.0f}; //move back to ground level.  
         for (NPC& ghost : astralGhosts){
             ghost.agro = false; //ghost lose agro after leaving the plane. regain agro when inside detection radius
         }
@@ -1642,6 +1642,7 @@ void HandleParkTransition(GameState& gamestate, Player& player, PlayerCar player
         player.currentHealth = player.maxHealth;
         applyShader = false; //if you die, you are no longer high when respawning
         UpdateNPCActivity(PARK, APARTMENT);
+
     }else if (overSubway){ //exit to subway
         gameState = SUBWAY;
         player.position.x = 3011;
@@ -3019,7 +3020,7 @@ void RenderSubway(GameResources& resources, Player& player, Camera2D& camera, Ve
 
 
 
-void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoor& magicDoor, ShaderResources& shaders){
+void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoor& magicDoor, MagicDoor& magicdoor2, ShaderResources& shaders){
     player.gravity = 200;
     player.outline = true;//turn on outline shader in asteral plane
 
@@ -3067,6 +3068,7 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
     DrawEarth(resources, earth, camera); //draw earth outside of shader. 
     
     DrawMagicDoor(resources, player, magicDoor, shaders);
+    DrawMagicDoor(resources, player, magicdoor2, shaders);
 
     player.DrawPlayer(resources, gameState, camera, shaders);
 
@@ -3229,6 +3231,9 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
 
    if (player.position.x > carMin && player.position.x < carMax){
         over_car = true;
+        phrase = "UP TO ENTER";
+        show_dbox = true;
+        dboxPosition = player.position;
         
    }
 
@@ -5510,6 +5515,7 @@ int main() {
     PlayerCar player_car;
     Earth earth;
     MagicDoor magicDoor;
+    MagicDoor magicDoor2;
     UFO ufo;
     Train train;
     Elevator elevator;
@@ -5517,7 +5523,8 @@ int main() {
 
 
     InitializePlayerCar(player_car);
-    InitializeMagicDoor(magicDoor);
+    InitializeMagicDoor(magicDoor,Vector2 {2089, 700});
+    InitializeMagicDoor(magicDoor2, Vector2{2000, -747});
     InitEarth(earth);
     InitElevator(elevator, Vector2 {2446, 648});
     InitElevator(elevator2, Vector2 {3200, 648});
@@ -5717,7 +5724,7 @@ int main() {
                     RenderGraveyard(resources, player, camera, mousePosition, shaders);
                     break;
                 case ASTRAL:
-                    RenderAstral(resources, player, camera, mousePosition, earth, magicDoor, shaders);
+                    RenderAstral(resources, player, camera, mousePosition, earth, magicDoor, magicDoor2, shaders);
                     break;
                 case PARK:
                     RenderPark(resources, player,player_car, camera, mousePosition, shaders);

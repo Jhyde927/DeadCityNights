@@ -14,33 +14,34 @@ enum WeaponType {
     MAC10
 };
 
-
 class Player {
-public:
-    // Public member variables
+public:  
+    // Player attributes
     Vector2 position;
-    Vector2 velocity;      // New velocity vector
+    Vector2 velocity;
     Vector2 size;
-    float gravity;         // Gravity force applied to the player
-    bool isOnGround;       // Flag to check if the player is on the ground
-    float jumpForce;       // The initial upward force when the player jumps
+    float gravity;
+    bool isOnGround;
+    float jumpForce;
     bool jumping;
     bool onPlatform;
     float fallTimer;
     float stunTimer;
     float walkSpeed;
     float runSpeed;
-    int currentFrame;    // Current animation frame
-    float frameCounter;  // Counter to track time between frames
-    float frameSpeed;    // Speed of the animation (frames per second)
-    float maxSpeedX;       // Maximum horizontal speed
-    float maxSpeedY;       // Maximum vertical speed (terminal velocity)
+    int currentFrame;
+    float frameCounter;
+    float frameSpeed;
+    float maxSpeedX;
+    float maxSpeedY;
     float acceleration;
     float deceleration;
 
-    float walkFrameSpeed; // Slower animation speed for walking
-    float runFrameSpeed;   // Faster animation speed for running
+    // Animation speeds
+    float walkFrameSpeed;
+    float runFrameSpeed;
 
+    // Player state flags
     bool isMoving;
     bool facingRight;
     bool isRunning;
@@ -58,14 +59,22 @@ public:
     bool outline;
     bool holdingDown;
     bool dropping;
-    float dropTimer;
     bool enter_car;
     bool enter_train;
     bool arriving;
+    bool can_take_damage;
+    bool AllowGuns;
+    bool validatedPassword;
+    bool necroTechSearched;
+    bool onElevator;
+    bool hasPills;
+    bool step = false;
+
+    // Timers & counters
+    float dropTimer;
     int bulletCount;
     int shells;
     int autoAmmo;
-    bool can_take_damage; 
     int maxHealth;
     int currentHealth;
     float hitTimer;
@@ -73,38 +82,28 @@ public:
     double LastTapTimeLeft;
     double LastTapTimeRight;
     double tapInterval;
-    bool AllowGuns;
     float shotgunReloadTime;
-    bool validatedPassword;
-    bool necroTechSearched;
-    bool onElevator;
-    bool hasPills;
 
-    bool step = false;
+    // Weapon variables
+    WeaponType currentWeapon;
+    int shotgunBulletCount;
+    int revolverBulletCount;
+    int mac10BulletCount;
 
-    //declare class
+    // Constructor
     Player();
 
     // Methods
-    public:
-        WeaponType currentWeapon;  
-        int shotgunBulletCount;
-        int revolverBulletCount;
-        int mac10BulletCount;
-        void take_damage(int damage);
-        void UpdateMovement(GameResources& resources, GameState& gameState, Vector2& mousePosition, Camera2D& camera,std::vector<Platform> platforms);  // Move the update movement here
-        void DrawPlayer(const GameResources& resources, GameState& gameState, Camera2D& camera, ShaderResources& shaders);  // Draw player method
-        void HandleInput(float speed);
-        void Reload();
-        void reloadLogic(float deltaTime);
-        void playerPhysics(float deltaTime, std::vector<Platform> platforms);
-        void updateAnimations(GameResources& resources);
-        bool CheckIfOnPlatform(const std::vector<Platform>& platforms);
-        bool CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition, Vector2 bulletSize);
-
-
-
-    
+    void take_damage(int damage);
+    void UpdateMovement(GameResources& resources, GameState& gameState, Vector2& mousePosition, Camera2D& camera, std::vector<Platform> platforms);
+    void DrawPlayer(const GameResources& resources, GameState& gameState, Camera2D& camera, ShaderResources& shaders);
+    void HandleInput(float speed);
+    void Reload();
+    void reloadLogic(float deltaTime);
+    void playerPhysics(float deltaTime, std::vector<Platform> platforms);
+    void updateAnimations(GameResources& resources);
+    bool CheckIfOnPlatform(const std::vector<Platform>& platforms);
+    bool CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition, Vector2 bulletSize);
 };
 
-#endif
+#endif  // PLAYER_H

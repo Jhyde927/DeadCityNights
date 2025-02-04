@@ -26,9 +26,14 @@ There are eight different areas you can visit so far. The player character has a
 
 Besides the combat there are also NPCs to interact with. On main street of the game there are generic NPCs of different types that walk back and forth to different randomly set destinations. They will give one line greeting to the player. There are also special NPCs. Like the drug dealer, fortune teller, and police man. There is also a story character. A hobo who lives in the vacant lot by your apartment. He warns you about the zombies and gives you certain needed items. 
 
-I make good use of shaders in the game. I've spent a lot of time experimenting with different effects. There is a vignette shader to give the game more atmosphere. A glitch shader that plays whenever zombies are spawning to give it some tension. When you take drugs from the drug dealer NPC there is a glow shader that gets activated to imply drug use. 
+*update*
+I've been working on the game for six months now. From what I have written down, there should be 16 different scenes in the game by the time I'm finished. I am up to 13 right now, so I'm not that far off. There are still a couple side missions I need to design. Then at some point I need to research how to make it into a stand alone executable, and I'm still looking for the right music. 
 
-All the animations are done by using a big sprite sheet for each character. With different rows for each animation. I can then use code to select the correct row and cycle through the frames horizontally based on the animation state. The rest of the game is just a bunch of hand drawn textures rendered to the screen. I thought making a game with no engine would be harder, but it's not so bad. I miss being able to use a mouse to place things in the world. Other than that I sort of enjoy making it all with code from scratch.
+The current music I made myself and can get repetitive. I'm not in the right headspace to be writing music right now, so I guess I'm on the lookout for music I can freely use. What I really want is a few different tracks. One for on the street, a different one for the astral realm, and maybe battle music that plays when zombies are spawning and such. 
+
+I'm also on the look out for voice sound effects. Right now the NPCs can speak gibberish, but the audio clip I cut apart isn't that great. I just need some good babble that sounds better than what I have now. 
+
+Other than that, things are going swimmingly. I have been going hard for like 2 weeks straight and getting work done. This kind of productivity can't last though. I think taking that 2 week break really help recharged my motivation to finish this thing.
 
 
 I post about making the game on twitter. https://x.com/J_Hyde_

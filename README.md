@@ -34,7 +34,7 @@ The current music I made myself and can get repetitive. I'm not in the right hea
 
 I'm also on the look out for voice sound effects. Right now the NPCs can speak gibberish, but the audio clip I cut apart isn't that great. I just need some good babble that sounds better than what I have now. 
 
-Other than that, things are going swimmingly. I have been going hard for like 2 weeks straight and getting work done. This kind of productivity can't last though. I think taking that 2 week break really help recharged my motivation to finish this thing.
+Other than that, things are going swimmingly. I have been going hard for like 2 weeks straight and getting work done. This kind of productivity can't last though. I think taking that 2 week break really helped recharged my motivation to finish this thing.
 
 
 I post about making the game on twitter. https://x.com/J_Hyde_

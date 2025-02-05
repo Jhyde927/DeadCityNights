@@ -1062,11 +1062,12 @@ void UpdateZombieSpawning(GameResources& resources, Player& player){
         if (gameState == LOBBY || gameState == OFFICE){ //play alarm sound when zombies are spawning inside the building. 
             if (!SoundManager::getInstance().IsSoundPlaying("alarm")){
                 PlaySound(SoundManager::getInstance().GetSound("alarm"));
-        }
-
+            }
         }
 
         if (spawnTimer >= nextSpawnDelay){ // spawn zombies at randomm position around the player
+        
+            if (gameState == OFFICE) maxDistToPlayer = 400;//spawn zombies further away, more of a chance they find a target. 
 
             Vector2 z_pos = GetRandomSpawnPositionX(player.position, minDistToPlayer, maxDistToPlayer);  // Min/max distance from player, set globally so it can change
             int zombie_speed = 25;
@@ -1874,7 +1875,7 @@ NPC* FindClosestNPC(NPC& zombie, std::vector<NPC>& npcs) {
     float minDist = 1000.0f; // Large initial distance
 
     for (NPC& npc : npcs) {
-        if (npc.isActive) {
+        if (npc.isActive && zombie.isActive) { //make sure the zombie is also active
             float dist = fabs(zombie.position.x - npc.position.x);
 
             if (dist < minDist) {

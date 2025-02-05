@@ -12,6 +12,7 @@
 #include <string>
 #include <cstdlib>  // For rand and srand
 #include "shaderControl.h"
+#include "Particle.h"
 
 
 
@@ -74,6 +75,8 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     float directionLockTimer = 0.5f; // Prevents rapid flipping 
  
 }
+
+Emitter bloodEmitter({0.0, 0.0});
 
 
 // Function to get a random phrase
@@ -715,6 +718,9 @@ void NPC::Update(Player& player, GameState& gameState) {
     if (!isZombie && !robot) riseTimer = 0;
     float distance_to_player = abs(player.position.x - position.x);
 
+    bloodEmitter.UpdateParticles(GetFrameTime());
+    
+
     if (targetedTimer > 0){ //dont stay targeted forever, go back to normal after 5 seconds. 
         targetedTimer -= GetFrameTime();
         
@@ -979,6 +985,8 @@ void NPC::Render(ShaderResources& shaders) {
         highLight = true;
     }
 
+    bloodEmitter.DrawParticles();
+
     // Draw the texture at the NPC's position
     // Tint the NPC red if recently hit
     Color tint = (hitTimer > 0) ? RED : WHITE;
@@ -1088,8 +1096,8 @@ void NPC::TakeDamage(int damage, Player& player) {
         hitTimer = 0.3f; // Tint the sprite red for 0.3 seconds
 
     }
-
-    
+    bloodEmitter.position = Vector2 {position.x + 32, position.y + 20};
+    bloodEmitter.SpawnBlood(10, !facingRight);
     
     if (ghost || bat) agro = true; //trigger agro on hit
 

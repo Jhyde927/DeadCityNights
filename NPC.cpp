@@ -76,7 +76,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
  
 }
 
-Emitter bloodEmitter({0.0, 0.0});
+Emitter bloodEmitter({0.0, 0.0}); 
 
 
 // Function to get a random phrase
@@ -717,8 +717,9 @@ void NPC::Update(Player& player, GameState& gameState) {
     if (!isActive) return;  // Skip update if the NPC is not active
     if (!isZombie && !robot) riseTimer = 0;
     float distance_to_player = abs(player.position.x - position.x);
-
+    
     bloodEmitter.UpdateParticles(GetFrameTime());
+    bloodEmitter.DrawParticles();
     
 
     if (targetedTimer > 0){ //dont stay targeted forever, go back to normal after 5 seconds. 
@@ -985,7 +986,7 @@ void NPC::Render(ShaderResources& shaders) {
         highLight = true;
     }
 
-    bloodEmitter.DrawParticles();
+    
 
     // Draw the texture at the NPC's position
     // Tint the NPC red if recently hit
@@ -1096,9 +1097,13 @@ void NPC::TakeDamage(int damage, Player& player) {
         hitTimer = 0.3f; // Tint the sprite red for 0.3 seconds
 
     }
-    bloodEmitter.position = Vector2 {position.x + 32, position.y + 20};
-    bloodEmitter.SpawnBlood(10, !facingRight);
-    
+
+    //handle particles
+    bloodEmitter.position = Vector2 {position.x + 32, position.y + 20}; //head area
+    if (!robot || ghost) bloodEmitter.SpawnBlood(5, !facingRight); //everyone bleeds, except robots and ghosts
+    if (robot) bloodEmitter.SpawnExplosion(5, YELLOW);
+
+
     if (ghost || bat) agro = true; //trigger agro on hit
 
     if (!isZombie && !bat && !ghost && !robot){
@@ -1185,6 +1190,7 @@ void NPC::TakeDamage(int damage, Player& player) {
         //play robot death sound
         //trigger = true; //summon more robots on death in lobby
         SoundManager::getInstance().PlayPositionalSound("explosion", position, player.position, 500);
+        bloodEmitter.SpawnExplosion(20, YELLOW);
         destination = position;
         deathTimer = .85f;
 

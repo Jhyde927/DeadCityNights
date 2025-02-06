@@ -5,19 +5,26 @@
 // Constructor
 Emitter::Emitter(Vector2 pos) : position(pos) {}
 
-// **Blood spray effect** (spawns particles in one direction)
+// **Set max particles**
+void Emitter::SetMaxParticles(int max) {
+    maxParticles = max;
+}
+
+// **Blood spray effect** (limited number of particles)
 void Emitter::SpawnBlood(int amount, bool facingRight) {
-    float baseAngle = facingRight ? 0.0f : 180.0f; // Right = 0°, Left = 180°
+    float baseAngle = facingRight ? 0.0f : 180.0f; 
 
     for (int i = 0; i < amount; i++) {
+        if (particles.size() >= maxParticles) {
+            particles.erase(particles.begin()); // Remove oldest particle if over limit
+        }
+
         Particle p;
         p.position = position;
 
-        // Randomized spread angle
         float randomAngle = baseAngle + GetRandomValue(-angleSpread, angleSpread);
         float radians = randomAngle * DEG2RAD;
 
-        // Set velocity based on angle
         float speed = GetRandomValue(speedMin, speedMax) / 100.0f;
         p.velocity = { cosf(radians) * speed, sinf(radians) * speed };
 
@@ -28,17 +35,19 @@ void Emitter::SpawnBlood(int amount, bool facingRight) {
     }
 }
 
-// **Explosion effect** (spawns particles in all directions)
+// **Explosion effect** (limited number of particles)
 void Emitter::SpawnExplosion(int amount, Color explosionColor) {
     for (int i = 0; i < amount; i++) {
+        if (particles.size() >= maxParticles) {
+            particles.erase(particles.begin()); // Remove oldest particle
+        }
+
         Particle p;
         p.position = position;
 
-        // Generate random direction (0° to 360°)
         float randomAngle = GetRandomValue(0, 360);
         float radians = randomAngle * DEG2RAD;
 
-        // Set velocity in all directions
         float speed = GetRandomValue(speedMin, speedMax) / 100.0f;
         p.velocity = { cosf(radians) * speed, sinf(radians) * speed };
 
@@ -49,28 +58,30 @@ void Emitter::SpawnExplosion(int amount, Color explosionColor) {
     }
 }
 
-// Update particle movement
+// Update particles and remove expired ones
 void Emitter::UpdateParticles(float deltaTime) {
     for (size_t i = 0; i < particles.size();) {
         particles[i].position.x += particles[i].velocity.x * deltaTime * 60;
         particles[i].position.y += particles[i].velocity.y * deltaTime * 60;
-
-        //particles[i].velocity.y += 50 * deltaTime; // Apply gravity  NO GRAVITY
+        particles[i].velocity.y += .1 * deltaTime;
 
         particles[i].lifetime -= deltaTime;
 
-        // Remove expired particles
         if (particles[i].lifetime <= 0) {
             particles.erase(particles.begin() + i);
         } else {
             i++;
         }
+
+
+
     }
 }
 
 // Draw all particles
 void Emitter::DrawParticles() const {
     for (const auto& p : particles) {
-        DrawPixel(p.position.x, p.position.y, p.color);
+        //DrawPixel(p.position.x, p.position.y, p.color);
+        DrawRectangle(p.position.x, p.position.y, 2, 2, RED);
     }
 }

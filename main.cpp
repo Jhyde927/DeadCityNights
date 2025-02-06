@@ -3238,6 +3238,15 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         
    }
 
+    if (show_dbox){
+        DrawDialogBox(player, camera, 0, 0, 20);
+    }
+
+    if (over_gate && hasCemeteryKey){
+        DrawDialogBox(player, camera, 0, 0, 20);
+
+    }
+
     BeginMode2D(camera);
 
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
@@ -3304,15 +3313,18 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
 
     }
 
-    if (show_carUI && !move_car && player.enter_car){ //destination menu //draw UI inside mode2d
-        DrawCarUI(player_car, mousePosition, camera, gameState);
-    }
+
 
     if (player.enter_car == false){// if enter car is false, dont render player or update position camera should stay focused on player pos. 
         player.DrawPlayer(resources, gameState, camera, shaders);
 
     }
     DrawBullets(); //draw bullets in cemetery after everything else. 
+
+    if (show_carUI && !move_car && player.enter_car){ //destination menu //draw UI inside mode2d
+        DrawCarUI(player_car, mousePosition, camera, gameState);
+    }
+    
 
     EndMode2D();
 
@@ -3326,15 +3338,9 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
-    if (show_dbox){
-        DrawDialogBox(player, camera, 0, 0, 20);
-    }
 
-    if (over_gate && hasCemeteryKey){
-        DrawDialogBox(player, camera, 0, 0, 20);
 
-    }
-    
+
     
 
     if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player); //always show ammo when outside of car in the cemetery
@@ -4510,10 +4516,14 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     float parallaxMidBuildings = camera.target.x * 0.4;
     float parallaxMidground = camera.target.x * 0.6f;  // Midground moves slower
     float parallaxBackground = camera.target.x * 0.8f;  // Background moves even slower
+
+
     
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
     //Outside of Mode2D is screen space coords. 
     ClearBackground(customBackgroundColor);
+
+
 
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
     HandleKeyboardAiming(player, worldMousePosition);
@@ -4542,7 +4552,9 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
                     {-639, 0, static_cast<float>(resources.foreground.width), static_cast<float>(resources.foreground.height)}, {0, 0}, 0.0f, WHITE);
     
     
-   
+     if (show_carUI && !move_car && player.enter_car){ //draw carUI inside Mode2d for reasons, show carUI infront of dialog box
+        DrawCarUI(player_car, mousePosition, camera, gameState); //draw dialog box behind carUI
+    }  
 
     if (move_ufo){
         ufoTimer -= GetFrameTime();
@@ -4674,9 +4686,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     //         move_car = true;
     //     }
     // }
-    if (show_carUI && !move_car && player.enter_car){ //draw carUI inside Mode2d for reasons
-        DrawCarUI(player_car, mousePosition, camera, gameState);
-    }
+
 
 
 

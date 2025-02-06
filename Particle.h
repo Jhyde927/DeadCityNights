@@ -18,16 +18,18 @@ public:
 
     Emitter(Vector2 pos);
     
-    void SpawnBlood(int amount, bool facingRight); // Blood spray in one direction
+    void SpawnBlood(int amount, bool facingRight); // Blood spray in one direction, opposite of facingRight
     void SpawnExplosion(int amount, Color explosionColor); // Full circular explosion
 
     void UpdateParticles(float deltaTime);
     void DrawParticles() const;
+    void SetMaxParticles(int max); // NEW: Allow setting max particle count
 
 private:
-    float particleLifetime = 0.8f;
-    float speedMin = 25.0f, speedMax = 150.0f;
+    float particleLifetime = 2.0f;
+    float speedMin = 1.0f, speedMax = 30.0f;
     float angleSpread = 30.0f; // Used for blood spray
+    int maxParticles = 200; // NEW: Maximum number of particles at once
 };
 
 #endif // PARTICLE_H

@@ -2,8 +2,10 @@
 #include <raymath.h>
 #include <cmath>
 
-// Constructor
-Emitter::Emitter(Vector2 pos) : position(pos) {}
+//constructor
+Emitter::Emitter(Vector2 pos) {
+    position = pos;
+}
 
 // **Set max particles**
 void Emitter::SetMaxParticles(int max) {
@@ -63,7 +65,7 @@ void Emitter::UpdateParticles(float deltaTime) {
     for (size_t i = 0; i < particles.size();) {
         particles[i].position.x += particles[i].velocity.x * deltaTime * 60;
         particles[i].position.y += particles[i].velocity.y * deltaTime * 60;
-        particles[i].velocity.y += .1 * deltaTime;
+        particles[i].velocity.y += .1 * deltaTime;//very low gravity seems to work best. 
 
         particles[i].lifetime -= deltaTime;
 
@@ -72,9 +74,7 @@ void Emitter::UpdateParticles(float deltaTime) {
         } else {
             i++;
         }
-
-
-
+        
     }
 }
 
@@ -82,6 +82,6 @@ void Emitter::UpdateParticles(float deltaTime) {
 void Emitter::DrawParticles() const {
     for (const auto& p : particles) {
         //DrawPixel(p.position.x, p.position.y, p.color);
-        DrawRectangle(p.position.x, p.position.y, 2, 2, RED);
+        DrawRectangle(p.position.x, p.position.y, 2, 2, RED); //2x2 square for thicker pixelated blood
     }
 }

@@ -5659,7 +5659,7 @@ int main() {
         if (totalTime > 10000.0f) totalTime -= 10000.0f; //reset total time just in case. 
             
         UpdateShaders(shaders, deltaTime, borderlessWindow,  gameState);
-        SoundManager::getInstance().UpdateRandomVoices(deltaTime);
+        //SoundManager::getInstance().UpdateRandomVoices(deltaTime); //////////////////TURNED OFF VOICES for now
 
         if (windowStateChanged) { //toggle full screen    
             UpdateDrawRectangle(&destRect); 

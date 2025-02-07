@@ -23,13 +23,13 @@ public:
 
     void UpdateParticles(float deltaTime);
     void DrawParticles() const;
-    void SetMaxParticles(int max); // NEW: Allow setting max particle count
+    void SetMaxParticles(int max); 
 
 private:
     float particleLifetime = 2.0f;
     float speedMin = 1.0f, speedMax = 30.0f;
     float angleSpread = 30.0f; // Used for blood spray
-    int maxParticles = 200; // NEW: Maximum number of particles at once
+    int maxParticles = 200; 
 };
 
 #endif // PARTICLE_H

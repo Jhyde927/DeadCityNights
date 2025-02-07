@@ -1841,6 +1841,16 @@ void Dig(Player& player){
 
     }
 
+    if (digSpot && gameState == GRAVEYARD){
+        PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
+        shovelTint = RED;
+        if (!player.hasMac10){
+            AddItemToInventory("mac10", inventory, INVENTORY_SIZE);
+            PlaySound(SoundManager::getInstance().GetSound("reload"));
+            player.hasMac10 = true;
+        }
+    }
+
     if (player.position.x > 82.0 && player.position.x < 102 && gameState == OUTSIDE && !player.hasPills){
         PlaySound(SoundManager::getInstance().GetSound("ShovelDig")); //far left outside
         player.hasPills = true;
@@ -3450,7 +3460,10 @@ void RenderRoad(const GameResources& resources, PlayerCar& player_car,Player& pl
 }
 
 void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vector2 mousePosition, ShaderResources& shaders){
+
+    float digPos = 2350.0f;
     
+
 
 
     if (player.position.x > 3437 and raiseZombies){
@@ -3569,6 +3582,17 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
         }
         
     }
+
+    if (player.position.x > digPos - 10 && player.position.x < digPos + 10){
+        digSpot = true;
+        phrase = "Dig";
+        show_dbox = true;
+        dboxPosition = player.position;
+        
+    }else{
+        digSpot = false;
+    }
+
     if (show_dbox){
         DrawDialogBox(player, camera, 0, 0, 20);
 

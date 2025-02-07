@@ -230,7 +230,7 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){ //Click or
                         break;
 
                     case 4:
-                        speech = "BOOOO!";
+                        speech = "Six feet deep, my fate was spun \n\nBuried beside my smoking gun.";
                         clickCount = 0;
                         break;
                 }

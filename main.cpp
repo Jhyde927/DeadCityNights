@@ -35,6 +35,7 @@ bool streetSounds = false;
 bool over_apartment = false;
 bool over_car = false;
 bool over_elevator = false;
+bool over_elevator2 = false;
 bool over_Ebutton = false;
 bool over_necro = false;
 bool over_gate = false;
@@ -58,6 +59,7 @@ bool canMoveUfo = true;
 bool globalAgro = false;
 bool firstHobo = true;
 bool can_spawn_robots = true;
+bool spawning_zombies = false;
 bool can_spawn_mibs = true;
 bool firstBlood = false;
 bool drawShovel = false;
@@ -108,6 +110,7 @@ bool subwayExit = false;
 bool npcWalk = false;
 bool openDrawer = false;
 bool raiseZombies = false;
+bool spawn_frank = true;
 bool zombieWave2 = false;
 bool zombieWave3 = false;
 bool abductionBeam = false;
@@ -381,6 +384,7 @@ void LoadGameResources(GameResources& resources) {
     resources.floorNumberSheet = LoadTexture("assets/floorNumberSheet.png");
     resources.officeBackground = LoadTexture("assets/officeBackground.png");
     resources.officeSheet = LoadTexture("assets/officeSheet.png");
+    resources.frankSheet = LoadTexture("assets/frankSheet.png");
 
 }
 
@@ -471,6 +475,7 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.floorNumberSheet);
     UnloadTexture(resources.officeBackground);
     UnloadTexture(resources.officeSheet);
+    UnloadTexture(resources.frankSheet);
 
   
 }
@@ -995,6 +1000,7 @@ Vector2 GetRandomSpawnPositionX(Vector2 playerPos, float minDistance, float maxD
 }
 
 void StartZombieSpawn(int zombie_count){
+    spawning_zombies = true;
     remainingZombiesToSpawn = zombie_count;
     spawnTimer = 0.0f; //reset timer
     nextSpawnDelay = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 3.0f));  // Random delay between 1-4 seconds
@@ -1026,6 +1032,17 @@ void spawnMib(GameResources& resources, Player& player, Vector2 position){
     mib_npc.agro = true; //robots mibs angry
     mib_npc.SetDestination(player.position.x, player.position.x + 100);
     lobbyMibs.push_back(mib_npc);
+
+}
+
+void spawnFrank(GameResources& resources, Player& player, Vector2 position){
+    int speed = 50;
+    NPC frank = CreateNPC(resources.frankSheet, position, speed, IDLE, true, false);
+    frank.frank = true;
+    frank.maxHealth = 400;
+    frank.health = 400;
+    frank.SetDestination(player.position.x, player.position.x + 10);
+    officeWorkers.push_back(frank);
 
 }
 
@@ -1102,6 +1119,7 @@ void UpdateZombieSpawning(GameResources& resources, Player& player){
         }
     }else{
         glitch = false; //glitch only runs if zombies are actively spawning.
+        spawning_zombies = false;
         //film = false;
         
     }
@@ -1208,19 +1226,14 @@ void UpdateTrain(Train &train,Player& player, float deltaTime) {
 }
 
 void Flocking(Player& player, std::vector<NPC>& npcs) {
+    //apply seperationForce to Enemies if they get too close.
     Vector2 separationForce = {0.0f, 0.0f};
 
     for (size_t i = 0; i < npcs.size(); i++) {
         NPC& npcA = npcs[i];
 
-        // Update and render the current NPC
-        //npcA.Update(player, gameState);
-        //npcA.Render(shaders);
-
         // Check if NPC is active
-        if (npcA.health > 0) npcA.isActive = true;
-
-        
+        //if (npcA.health > 0) npcA.isActive = true;
 
         // Check distances to all other NPCs in the same vector
         for (size_t j = 0; j < npcs.size(); j++) {
@@ -1304,7 +1317,7 @@ void DrawMac10Pickup(GameResources& resources, Player& player, Vector2 mousePosi
     float distance_to_macY = abs(macPos.y - player.position.y);
     if (drawMac10){ //mac10 pickup
         DrawTexture(resources.Mac10pickup, macPos.x, macPos.y, WHITE);
-        Rectangle macBounds = { //shovel button
+        Rectangle macBounds = { //hitbox of the mac10
             macPos.x,      
             macPos.y,     
             static_cast<float>(64),  
@@ -3248,14 +3261,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
         
    }
 
-    if (show_dbox){
-        DrawDialogBox(player, camera, 0, 0, 20);
-    }
 
-    if (over_gate && hasCemeteryKey){
-        DrawDialogBox(player, camera, 0, 0, 20);
-
-    }
 
     BeginMode2D(camera);
 
@@ -3349,7 +3355,14 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
     }
 
 
+    if (show_dbox){
+        DrawDialogBox(player, camera, 0, 0, 20);
+    }
 
+    if (over_gate && hasCemeteryKey){
+        DrawDialogBox(player, camera, 0, 0, 20);
+
+    }
 
     
 
@@ -3996,7 +4009,7 @@ void RenderOffice(GameResources& resources, Camera2D& camera, Player& player, El
         StartZombieSpawn(15);
     }
 
-    if (player.position.x < 2540 && player.position.x > 2520){
+    if (player.position.x < 2540 && player.position.x > 2520){ //first elevator button
         over_Ebutton = true;
         phrase = "Call Elevator";
         show_dbox = true;
@@ -4004,15 +4017,8 @@ void RenderOffice(GameResources& resources, Camera2D& camera, Player& player, El
     
     }
 
-    if (player.position.x < 3295 && player.position.x > 3275){
-        over_Ebutton = true;
-        phrase = "Call Elevator";
-        show_dbox = true;
-        dboxPosition = player.position;
-    
-    }
 
-    if (player.position.x < 2488 && player.position.x > 2468){
+    if (player.position.x < 2488 && player.position.x > 2468){ //enter first elevator
         if (elevator.isOpen){
             over_elevator = true;
             phrase = "Up to Enter";
@@ -4021,6 +4027,22 @@ void RenderOffice(GameResources& resources, Camera2D& camera, Player& player, El
 
         } 
 
+    }
+
+    if (player.position.x < 3295 && player.position.x > 3275){ //second elevator button
+        over_Ebutton = true;
+        phrase = "Call Elevator";
+        show_dbox = true;
+        dboxPosition = player.position;
+    
+    }
+
+    if (player.position.x < 3295-52 && player.position.x > 3275-52){ //second elevator button
+        over_elevator2 = true;
+        phrase = "Up to Enter";
+        show_dbox = true;
+        dboxPosition = player.position;
+    
     }
 
     camera.target = player.position;
@@ -4056,6 +4078,7 @@ void RenderOffice(GameResources& resources, Camera2D& camera, Player& player, El
             phrase = office_npc.speech;
             show_dbox = true;
             dboxPosition = office_npc.position;
+
             
         }
 
@@ -4104,6 +4127,13 @@ void RenderOffice(GameResources& resources, Camera2D& camera, Player& player, El
 
     if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player); //always show ammo when outside of car in the cemetery or NecroT
 
+    if (!spawning_zombies && spawn_frank && AreAllNPCsDeactivated(zombies)){ //all spawned zombies are dead
+        spawn_frank = false;
+        spawnFrank(resources, player, player.position);
+        std::cout << "spawning frank";
+
+
+    }
 
 
 }
@@ -4186,7 +4216,7 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Ele
 
 
 
-    if (AreAllNPCsDeactivated(lobbyMibs) && can_spawn_robots){ //if all the lobby mibs are dead, spawn robots
+    if (AreAllNPCsDeactivated(lobbyMibs) && can_spawn_robots){ //if all the lobby mibs are dead, spawn robots and zombies
         can_spawn_robots = false;
         spawnRobot(resources, player, player.position + Vector2 {300, 0});
         spawnRobot(resources, player, player.position + Vector2 {-300, 0});
@@ -4198,13 +4228,7 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Ele
 
     }
 
-    // if (AreAllNPCsDeactivated(lobbyRobots) && lobbyRobots.size() > 0 && can_spawn_zombies){ //robots are spawned and killed. so spawn zombies. 
-    //     can_spawn_zombies = false;
-    //     StartZombieSpawn(10);
-        
 
-
-    // }
 
     if (globalAgro && can_spawn_mibs){
         can_spawn_mibs = false;
@@ -5178,19 +5202,19 @@ void UptoEnter(Player& player, PlayerCar& player_car, Elevator& elevator){
             transitionState = FADE_OUT;//transition to lot
         }
         if (over_gate && gameState == CEMETERY){
-            transitionState = FADE_OUT;
+            transitionState = FADE_OUT; //transition to graveyard
             
         }
         if (overSubway && gameState == OUTSIDE){
-            transitionState = FADE_OUT;
+            transitionState = FADE_OUT; //trans to subway
         }
         if (over_necro && gameState == NECROTECH){
-            transitionState = FADE_OUT;
+            transitionState = FADE_OUT; //trans to lobby
         }
         if (over_exit && gameState == LOBBY){
-            transitionState = FADE_OUT;
+            transitionState = FADE_OUT; //trans to necrotech
         }
-        if (over_Ebutton && gameState == LOBBY){
+        if (over_Ebutton && gameState == LOBBY){ //elevator button in lobby
             if (elevator.isOpen){
                 elevator.isOpen = false;
             }else{
@@ -5217,6 +5241,15 @@ void UptoEnter(Player& player, PlayerCar& player_car, Elevator& elevator){
                 elevator.isOccupied = true;
                 player.onElevator = true;
                 transitionState = FADE_OUT; //go to lobby
+            }
+        }
+
+        if (over_elevator2 && gameState == OFFICE){ //go to penthouse office TODO: implement penthouse office, FADOUT will fall though to ouside necrotech i think
+            if (elevators[1].isOpen){
+                elevators[1].isOpen = false;
+                elevators[1].isOccupied = true;
+                player.onElevator = true;
+                transitionState = FADE_OUT;
             }
         }
 
@@ -5308,7 +5341,7 @@ void MainMenu(GameResources& resources, Vector2 mousePosition, PauseState& curre
             DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, 0.3f));
 
             // Calculate positions for buttons
-            // Let's center them vertically and place them near the center of the screen
+            
             float btnWidth = 200;
             float btnHeight = 40;
             float spacing = 20;
@@ -5422,8 +5455,6 @@ void InitSounds(SoundManager& soundManager){
     
     SoundManager::getInstance().LoadMusic("CarRun", "assets/sounds/CarRun.ogg"); // load CarRun.ogg into music tracks with the name CarRun
     //music tracks automatically loop.The car running sound needs to loop, so we call it music.
-
-    
     
     SoundManager::getInstance().LoadMusic("subwayAmbience", "assets/sounds/SubwayAmbience.ogg");
     
@@ -5585,13 +5616,8 @@ int main() {
     SetTargetFPS(60);
     dboxPosition = player.position;
 
-    //AddItemToInventory("Drugs", inventory, INVENTORY_SIZE);
-    // Font RubicBold = LoadFontEx("assets/fonts/Rubik-Bold.ttf", 32, NULL, 0);
-    // Font Righteous = LoadFontEx("assets/fonts/Righteous-Regular.ttf", 32, NULL, 0);
-
     //GuiSetFont(RubicBold); // Set the loaded font as the default GUI font
 
-    //PlayMusicStream(SoundManager::getInstance().GetMusic("Jangwa"));
     PlayMusicStream(SoundManager::getInstance().GetMusic("NewNeon"));
     
     RenderTexture2D targetTexture = LoadRenderTexture(GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT); //render target. Draw to rendertexture2d first
@@ -5659,7 +5685,7 @@ int main() {
         if (totalTime > 10000.0f) totalTime -= 10000.0f; //reset total time just in case. 
             
         UpdateShaders(shaders, deltaTime, borderlessWindow,  gameState);
-        //SoundManager::getInstance().UpdateRandomVoices(deltaTime); //////////////////TURNED OFF VOICES for now
+        SoundManager::getInstance().UpdateRandomVoices(deltaTime); //////////////////TURNED OFF VOICES for now
 
         if (windowStateChanged) { //toggle full screen    
             UpdateDrawRectangle(&destRect); 

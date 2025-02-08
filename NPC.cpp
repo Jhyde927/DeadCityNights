@@ -52,6 +52,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     teller = false;
     bat = false;
     MiB = false;
+    frank = false;
     clickCount = 0;
     interactions = 0;
     talkTimer = 0.0f;
@@ -128,6 +129,44 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){ //Click or
             idleTime = 5;
             //zombies triggered elsewhere
 
+        }
+
+        if (!talked && frank && gameState == OFFICE){
+            talked = true;
+            talkTimer = 3;
+            idleTime = 3;
+            if (interactions == 0){
+                clickCount += 1;
+                switch (clickCount)
+                {
+                case 1:
+                    speech = "Are they all dead?";
+                    break;
+
+                case 2:
+                    speech = "I just work here man";
+                    break;
+                
+                case 3:
+                    speech = "The experiments with the undead\n\nThey went too far!";
+                    break;
+
+                case 4:
+                    speech = "It's the new CEO\n\nHe is responsible for this madness!";
+                    break;
+                case 5:
+                    speech = "Here is the code for the elevator";
+                    break;
+
+                case 6:
+                    speech = "";
+                    interactions += 1;
+                    idleTime = 0;
+                    talkTimer = 0;
+                    break;
+                    
+                }
+            }
         }
 
         if (!talked && MiB && !agro && gameState == LOBBY){ //talk to a mib in the lobby before fight
@@ -719,7 +758,6 @@ void NPC::Update(Player& player, GameState& gameState) {
     float distance_to_player = abs(player.position.x - position.x);
     
     bloodEmitter.UpdateParticles(GetFrameTime());
-    bloodEmitter.DrawParticles();
     
 
     if (targetedTimer > 0){ //dont stay targeted forever, go back to normal after 5 seconds. 
@@ -987,7 +1025,7 @@ void NPC::Render(ShaderResources& shaders) {
     }
 
     
-
+    bloodEmitter.DrawParticles();
     // Draw the texture at the NPC's position
     // Tint the NPC red if recently hit
     Color tint = (hitTimer > 0) ? RED : WHITE;
@@ -1102,6 +1140,7 @@ void NPC::TakeDamage(int damage, Player& player) {
     bloodEmitter.position = Vector2 {position.x + 32, position.y + 20}; //head area
     if (!robot || ghost) bloodEmitter.SpawnBlood(5, !facingRight); //everyone bleeds, except robots and ghosts
     if (robot) bloodEmitter.SpawnExplosion(5, YELLOW);
+    if (ghost) bloodEmitter.SpawnExplosion(5, WHITE);
 
 
     if (ghost || bat) agro = true; //trigger agro on hit

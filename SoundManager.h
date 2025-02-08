@@ -196,7 +196,7 @@ public:
         return false;  // Music track not found or not playing
     }
 
-    // **Optional: Pause and resume music methods**
+    
     void PauseMusic(const std::string& name) {
         if (musicTracks.find(name) != musicTracks.end()) {
             ::PauseMusicStream(musicTracks[name]);

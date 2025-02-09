@@ -131,7 +131,7 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){ //Click or
 
         }
 
-        if (!talked && frank && gameState == OFFICE){
+        if (!talked && frank && gameState == OFFICE){ //frank the office worker gives some plot
             talked = true;
             talkTimer = 3;
             idleTime = 3;
@@ -144,7 +144,7 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){ //Click or
                     break;
 
                 case 2:
-                    speech = "I just work here man";
+                    speech = "I just work here man!";
                     break;
                 
                 case 3:
@@ -152,13 +152,20 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){ //Click or
                     break;
 
                 case 4:
-                    speech = "It's the new CEO\n\nHe is responsible for this madness!";
+                    speech = "It's the new CEO\n\nThey say he's a Necromancer";
                     break;
                 case 5:
-                    speech = "Here is the code for the elevator";
+                    speech = "Here is the code for the elevator\n\nThe name's frank by the way";
                     break;
 
                 case 6:
+                    speech = "Here, I found this box of ammo";
+                    player.autoAmmo = 150;
+                    player.shells = 30;
+                    PlaySound(SoundManager::getInstance().GetSound("reload"));
+                    break;
+
+                case 7:
                     speech = "";
                     interactions += 1;
                     idleTime = 0;
@@ -959,7 +966,7 @@ void NPC::Update(Player& player, GameState& gameState) {
 
         if (isZombie && distanceToPlayer >= detectionRange && fabs(position.x - destination.x) < 5){ //at destination and zombie and no target
             
-            SetDestination(1000, 4000); //wander around if player is far away
+            SetDestination(player.position.x - 100, player.position.x + 100); //move toward player as to not get lost. test this
         }
 
         if (fabs(position.x - destination.x) < 5.0f && hasTarget && isZombie){ //destination = targetNPC pos or player pos when has target is true
@@ -1025,14 +1032,15 @@ void NPC::Render(ShaderResources& shaders) {
     }
 
     
-    bloodEmitter.DrawParticles();
+    
     // Draw the texture at the NPC's position
     // Tint the NPC red if recently hit
     Color tint = (hitTimer > 0) ? RED : WHITE;
     if (ghost) tint = ColorAlpha(WHITE, ghostAlpha);//use Color alpha to change alpha of ghost on hit
     if (bat) BeginShaderMode(shaders.rainbowOutlineShader); //raindbow bats
-    if (highLight) BeginShaderMode(shaders.highlightShader);
+    if (highLight && !frank) BeginShaderMode(shaders.highlightShader);//highlight when talking except for frank, for reasons. 
     DrawTextureRec(texture, sourceRec, position, tint);
+    bloodEmitter.DrawParticles(); //draw blood in front of sprite, looks better IMO
     EndShaderMode();
 }
 
@@ -1108,22 +1116,24 @@ bool NPC::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition
         return true;  // Return true indicating a hit
     }
 
-    // Check if the bullet's path (line from previous to current position) intersects with the hitbox
-    if (CheckCollisionPointRec(previousBulletPosition, npcHitbox) || CheckCollisionPointRec(currentBulletPosition, npcHitbox)) {
+
+    if (CheckCollisionPointRec(previousBulletPosition, npcHitbox)) {
         return true;
     }
+
 
     // Use raycasting to check for collisions between the previous and current bullet positions
     Vector2 bulletPath = Vector2Subtract(currentBulletPosition, previousBulletPosition);
     int steps = ceil(Vector2Length(bulletPath) / bulletSize.x);  // Steps depend on bullet size
 
     // Check along the bullet's path for a collision
-    for (int i = 0; i < steps; i++) {
+    for (int i = 1; i < steps; i++) {  // Start at 1 to skip previousBulletPosition
         Vector2 interpolatedPosition = Vector2Lerp(previousBulletPosition, currentBulletPosition, i / (float)steps);
         if (CheckCollisionPointRec(interpolatedPosition, npcHitbox)) {
-            return true;  // A hit is detected
+            return true;
         }
     }
+
 
     return false;  // Return false if no hit occurred
 }
@@ -1138,9 +1148,11 @@ void NPC::TakeDamage(int damage, Player& player) {
 
     //handle particles
     bloodEmitter.position = Vector2 {position.x + 32, position.y + 20}; //head area
-    if (!robot || ghost) bloodEmitter.SpawnBlood(5, !facingRight); //everyone bleeds, except robots and ghosts
-    if (robot) bloodEmitter.SpawnExplosion(5, YELLOW);
-    if (ghost) bloodEmitter.SpawnExplosion(5, WHITE);
+
+    if (robot || ghost) bloodEmitter.SpawnExplosion(5, WHITE);
+
+    if (!robot && !ghost) bloodEmitter.SpawnBlood(5, !facingRight); //everyone bleeds, except robots and ghosts
+
 
 
     if (ghost || bat) agro = true; //trigger agro on hit

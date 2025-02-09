@@ -1005,7 +1005,7 @@ void StartZombieSpawn(int zombie_count){
     spawnTimer = 0.0f; //reset timer
     nextSpawnDelay = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 3.0f));  // Random delay between 1-4 seconds
     //film = true;
-    if (gameState != OFFICE) glitch = true; //Activate glitch shader to make things more dramatic
+    if (gameState != OFFICE) glitch = true; //Activate glitch shader to make things more dramatic, not in the office however, it's a bit too much. 
     
 }
 
@@ -1039,9 +1039,9 @@ void spawnFrank(GameResources& resources, Player& player, Vector2 position){
     int speed = 50;
     NPC frank = CreateNPC(resources.frankSheet, position, speed, IDLE, true, false);
     frank.frank = true;
-    frank.maxHealth = 400;
-    frank.health = 400;
-    frank.SetDestination(player.position.x, player.position.x + 10);
+    frank.maxHealth = 10000;
+    frank.health = 10000;
+    frank.SetDestination(player.position.x-100, player.position.x + 100);
     officeWorkers.push_back(frank);
 
 }
@@ -4127,11 +4127,10 @@ void RenderOffice(GameResources& resources, Camera2D& camera, Player& player, El
 
     if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player); //always show ammo when outside of car in the cemetery or NecroT
 
-    if (!spawning_zombies && spawn_frank && AreAllNPCsDeactivated(zombies)){ //all spawned zombies are dead
+    if (!spawning_zombies && spawn_frank && AreAllNPCsDeactivated(zombies)){ //all spawned zombies are dead , spawn frank 
         spawn_frank = false;
-        spawnFrank(resources, player, player.position);
-        std::cout << "spawning frank";
-
+        spawnFrank(resources, player, player.position + Vector2 {100, 0}); //spawn to the right of player, like he emerges from hiding. 
+    
 
     }
 
@@ -4901,7 +4900,7 @@ void spawnNPCs(GameResources& resources){
 
 
 
-    //create ghost // call update on ghost where ever needed like graveyard or cemetery
+    //create ghost // 
     Vector2 g_pos = {2100, 700};
     NPC ghost_npc = CreateNPC(resources.ghostSheet, g_pos, speed, IDLE, false, false);
     ghost_npc.SetDestination(2100, 2200);
@@ -5004,6 +5003,7 @@ void spawnNPCs(GameResources& resources){
         officeWorkers.push_back(businessman); //business men in the office are the management lets say. 
     }
 
+    //spawn lobby women
     int wm = 3;
     for (int i = 0; i < wm; i++){
         Vector2 w_pos = {static_cast<float>(2200 + i * 100), 700};
@@ -5023,7 +5023,8 @@ void spawnNPCs(GameResources& resources){
         lobbyMibs.push_back(mib_npc);
     }
 
-    int of = 7;
+    //spawn office workers
+    int of = 4;
     for (int i = 0; i < of; i++){
         Vector2 o_pos = {static_cast<float>(2000 + i * 200), 700};
         NPC officeWorker = CreateNPC(resources.officeSheet, o_pos, speed, IDLE, false, false);
@@ -5641,7 +5642,7 @@ int main() {
         mousePosition = clampMouseCursor(mousePosition); //stop mouse from going offscreen when in fullscreen. 
         
 
-        if (!player.enter_car) player.UpdateMovement(resources, gameState, mousePosition, camera, platforms);  // Update player position and animation
+        if (!player.enter_car && !player.onElevator && !player.enter_train) player.UpdateMovement(resources, gameState, mousePosition, camera, platforms);  // Update player position and animation
         UpdateInventoryPosition(camera, gameState);
 
         

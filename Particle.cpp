@@ -74,7 +74,7 @@ void Emitter::UpdateParticles(float deltaTime) {
         } else {
             i++;
         }
-        
+
     }
 }
 

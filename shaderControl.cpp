@@ -201,7 +201,7 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
 
     //highlight
     // Set uniform values
-    float outlineColor3[4] = { 1.0f, 1.0f, 1.0f, 1.0f };  // color
+    float outlineColor3[4] = { 1.0f, 1.0f, 1.0f, 1.0f };  // color WHITE
     SetShaderValue(shaders.highlightShader, outlineColorLoc, outlineColor3, SHADER_UNIFORM_VEC4);
 
     float Othreshold = 0.5f;
@@ -235,6 +235,7 @@ void UpdateShaders(ShaderResources& shaders, float deltaTime, bool fullscreen, G
 
     SetShaderValue(shaders.glitchShader, GetShaderLocation(shaders.glitchShader, "time"), &time_, SHADER_UNIFORM_FLOAT);
 
+
     ///update glowShader
     float time = GetTime();  // Get the total elapsed time
     float minThreshold = 0.1f;
@@ -247,6 +248,14 @@ void UpdateShaders(ShaderResources& shaders, float deltaTime, bool fullscreen, G
         oscillationSpeed = 0.9f;  // 1 second duration
 
     }
+
+    // if (gameState == OFFICE){ //dont show outline in office, it looks better this way. 
+    //     float outlineColor[4] = {0.0, 0.0, 0.0, 0.0}; //black
+    //     int outlineColorLoc = GetShaderLocation(shaders.outlineShader, "outlineColor");
+    //     SetShaderValue(shaders.highlightShader, outlineColorLoc, outlineColor, SHADER_UNIFORM_VEC4);
+    // }
+
+
     // Calculate the oscillating glow threshold using a sine wave
     float glowThreshold = minThreshold + (maxThreshold - minThreshold) * (0.5f * (1.0f + sin(oscillationSpeed * time)));    
 

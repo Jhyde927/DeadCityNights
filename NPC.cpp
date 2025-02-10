@@ -1149,9 +1149,16 @@ void NPC::TakeDamage(int damage, Player& player) {
     //handle particles
     bloodEmitter.position = Vector2 {position.x + 32, position.y + 20}; //head area
 
-    if (robot || ghost) bloodEmitter.SpawnExplosion(5, WHITE);
+    if (robot || ghost){
+        
+        bloodEmitter.SpawnExplosion(5, WHITE);
+    } 
 
-    if (!robot && !ghost) bloodEmitter.SpawnBlood(5, !facingRight); //everyone bleeds, except robots and ghosts
+    if (!robot && !ghost){
+        bloodEmitter.SpawnBlood(5, !facingRight); //everyone bleeds, except robots and ghosts
+        
+
+    } 
 
 
 
@@ -1210,6 +1217,7 @@ void NPC::TakeDamage(int damage, Player& player) {
         SoundManager::getInstance().PlayPositionalSound("zombieDeath", position, player.position, 500);
         riseTimer = 0; //if killed while still rising set the risetimer back to 0 as to not play rise animation
         isDying = true;           // Start dying process
+        bloodEmitter.SpawnExplosion(20, RED);
         if (rand() % 2 == 0){
             SetAnimationState(DEATH);  // Set to death animation
         }else{
@@ -1224,6 +1232,7 @@ void NPC::TakeDamage(int damage, Player& player) {
         isDying = true;
         deathTimer = 0.3; // same as the fade out time. So the ghost just fades out for good on death. 
         destination = position;
+        bloodEmitter.SpawnExplosion(20, WHITE);
     }
 
     if (health <= 0 && bat && !isDying){

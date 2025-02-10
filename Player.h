@@ -69,6 +69,10 @@ public:
     bool onElevator;
     bool hasPills;
     bool step = false;
+    bool hasCrowbar;
+    bool canSwing;
+    bool swinging;
+    float swingTimer;
 
     // Timers & counters
     float dropTimer;
@@ -104,6 +108,7 @@ public:
     void updateAnimations(GameResources& resources);
     bool CheckIfOnPlatform(const std::vector<Platform>& platforms);
     bool CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition, Vector2 bulletSize);
+    void shootLogic();
 };
 
 #endif  // PLAYER_H

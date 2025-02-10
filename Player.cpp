@@ -80,6 +80,10 @@ Player::Player() {
     shotgunReloadTime = 0.7f;  // Reload time for Shotgun
     currentWeapon = REVOLVER;  // Start with Revolver
     AllowGuns = true;
+    hasCrowbar = true;
+    canSwing = true;
+    swinging = false;
+    swingTimer = 0.0;
 
     validatedPassword = false;
     necroTechSearched = false;
@@ -560,18 +564,26 @@ void Player::updateAnimations(GameResources& resources){
                 
             }
         }
+    }else if (swinging){
+        frameCounter += GetFrameTime() * frameSpeed;
+        int numFrames = (maxSpeedX == runSpeed) ? (resources.runSheet.width / 64) : (resources.walkSheet.width / 64);
+
+        if (frameCounter >= 0.1){
+            currentFrame++;
+            frameCounter = 0;
+
+            if (currentFrame >= numFrames){
+                currentFrame = 0;
+            }
+        }
+
     } else if (!isAiming) {
         currentFrame = 0;
     }
 
 }
 
-void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vector2& mousePosition, Camera2D& camera, std::vector<Platform> platforms) {
-    isMoving = false; //reset is moving to false at the start of the frame. If it remains false all the way though to the next frame, we are not moving. 
-
-
-
-    float deltaTime = GetFrameTime();
+void Player::shootLogic(){
 
     if (IsKeyPressed(KEY_ONE)) {
         currentWeapon = REVOLVER;
@@ -581,19 +593,30 @@ void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vec
         currentWeapon = MAC10;
     }
 
-    
-    reloadLogic(deltaTime);
-    
-    if (IsKeyPressed(KEY_R) && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
-        Reload();
+    if (IsKeyPressed(KEY_V) && canSwing && !isAiming && !isReloading && !isShooting){ //swing the crowbar
+        canSwing = false;
+        swinging = true;
+        swingTimer = 0.5f;
+        PlaySound(SoundManager::getInstance().GetSound("crowbarSwing"));
+
     }
 
+    if (swingTimer > 0){
+        swingTimer -= GetFrameTime();
+    }else{
+        canSwing = true;
+        swinging = false;
+    }
+
+
+
+
     //AIMING
-    isAiming = (hasGun || hasShotgun || hasMac10) && (IsKeyDown(KEY_F) || IsKeyDown(KEY_LEFT_CONTROL) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) && !isShooting && !isReloading && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns);
+    isAiming = ((hasGun || hasShotgun || hasMac10) && (IsKeyDown(KEY_F) || IsKeyDown(KEY_LEFT_CONTROL) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) && !isShooting && !isReloading && AllowGuns);
 
 
-    //SHOOTING
-    if (currentWeapon == REVOLVER && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
+    //SHOOTING REVOLVER
+    if (currentWeapon == REVOLVER && AllowGuns){
 
         if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && revolverBulletCount <= 0){
             //SoundManager::getInstance().GetSound("dryFire");
@@ -614,8 +637,8 @@ void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vec
             FireBullet(*this, false, 25, false);
             
         }
-
-    }else if (currentWeapon == SHOTGUN && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
+    //SHOOTING SHOTGUN
+    }else if (currentWeapon == SHOTGUN && AllowGuns){
         if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && shotgunBulletCount <= 0){
             //SoundManager::getInstance().GetSound("dryFire");
             PlaySound(SoundManager::getInstance().GetSound("dryFire"));
@@ -638,7 +661,8 @@ void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vec
             }
 
         }
-    }else if (currentWeapon == MAC10 && (gameState == CEMETERY || gameState == GRAVEYARD || gameState == ASTRAL || AllowGuns)){
+        //SHOOTING MAC10
+    }else if (currentWeapon == MAC10 && AllowGuns){
         if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && mac10BulletCount <= 0){
             //SoundManager::getInstance().GetSound("dryFire");
             PlaySound(SoundManager::getInstance().GetSound("dryFire"));
@@ -659,7 +683,24 @@ void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vec
             
 
         }
-    }       
+    }  
+}
+
+void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vector2& mousePosition, Camera2D& camera, std::vector<Platform> platforms) {
+    isMoving = false; //reset is moving to false at the start of the frame. If it remains false all the way though to the next frame, we are not moving. 
+
+    float deltaTime = GetFrameTime();
+    
+    reloadLogic(deltaTime);
+    shootLogic(); //handle key presses for shooting and switching weapons. 
+    
+    if (IsKeyPressed(KEY_R) && AllowGuns){
+        Reload();
+    }
+
+
+
+     
 
     maxSpeedX = isRunning ? runSpeed : walkSpeed; //if running, maxspeed = runspeed else walkspeed
     frameSpeed = isRunning ? runFrameSpeed : walkFrameSpeed;
@@ -724,8 +765,7 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
             // Walking or running animation
             currentSheet = isRunning ? resources.runSheet : resources.walkSheet;  // Use runSheet if running, else walkSheet
             sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
-        } 
-        else {
+        }else {
             // Idle pose
             currentSheet = resources.manTexture;  // Idle pose
             sourceRec = { 0, 0, static_cast<float>(currentSheet.width), static_cast<float>(currentSheet.height) };
@@ -801,6 +841,12 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
         }
     }
 
+
+    if (swinging && !isMoving && !isAiming && !isShooting){
+            currentSheet = resources.crowbarSheet;
+            sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
+        }
+
     // Adjust source rectangle for direction
     if (!facingRight) {
         sourceRec.width = -frameWidth;  // Flip the texture if facing left
@@ -816,8 +862,6 @@ void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Ca
     }
 
 
-     //sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
-     //DrawRectangleLines(position.x, position.y, frameWidth, frameWidth, RED);
 
     // Draw the player
     Color tint = (hitTimer > 0) ? RED : WHITE;

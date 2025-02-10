@@ -97,6 +97,7 @@ struct GameResources {
     Texture2D officeBackground;
     Texture2D officeSheet;
     Texture2D frankSheet;
+    Texture2D crowbarSheet;
     
 
     Font defaultFont;

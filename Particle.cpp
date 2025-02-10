@@ -51,6 +51,9 @@ void Emitter::SpawnExplosion(int amount, Color explosionColor) {
         float radians = randomAngle * DEG2RAD;
 
         float speed = GetRandomValue(speedMin, speedMax) / 100.0f;
+        if (explosionColor.r == YELLOW.r && explosionColor.g == YELLOW.g && explosionColor.b == YELLOW.b){
+            speed = speed * 2;
+        }
         p.velocity = { cosf(radians) * speed, sinf(radians) * speed };
 
         p.lifetime = particleLifetime;
@@ -82,6 +85,6 @@ void Emitter::UpdateParticles(float deltaTime) {
 void Emitter::DrawParticles() const {
     for (const auto& p : particles) {
         //DrawPixel(p.position.x, p.position.y, p.color);
-        DrawRectangle(p.position.x, p.position.y, 2, 2, RED); //2x2 square for thicker pixelated blood
+        DrawRectangle(p.position.x, p.position.y, 2, 2, p.color); //2x2 square for thicker pixelated blood
     }
 }

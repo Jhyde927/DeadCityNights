@@ -37,6 +37,7 @@ bool over_car = false;
 bool over_elevator = false;
 bool over_elevator2 = false;
 bool over_Ebutton = false;
+bool over_Ebutton2 = false;
 bool over_necro = false;
 bool over_gate = false;
 bool over_shotgun = false;
@@ -385,6 +386,7 @@ void LoadGameResources(GameResources& resources) {
     resources.officeBackground = LoadTexture("assets/officeBackground.png");
     resources.officeSheet = LoadTexture("assets/officeSheet.png");
     resources.frankSheet = LoadTexture("assets/frankSheet.png");
+    resources.crowbarSheet = LoadTexture("assets/crowbarSheet.png");
 
 }
 
@@ -476,6 +478,7 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.officeBackground);
     UnloadTexture(resources.officeSheet);
     UnloadTexture(resources.frankSheet);
+    UnloadTexture(resources.crowbarSheet);
 
   
 }
@@ -749,6 +752,46 @@ void DrawElevator(Elevator& elevator, Texture2D elevatorTexture, Texture2D floor
     DrawTexturePro(floorTexture, sourceRectFloor, destRectFloor, {0.0f, 0.0f}, 0.0f, WHITE);
 
     DrawTexturePro(elevatorTexture, sourceRect, destRect, {0.0f, 0.0f}, 0.0f, WHITE);
+}
+
+void crowbarAttack(Player& player, std::vector<NPC>& enemies){
+    if (!player.swinging) return;
+    // Define the attack hitbox relative to the player
+    Rectangle attackHitbox;
+
+    float offsetX = (player.facingRight) ? player.size.x+24 : 8.0f;  // Offset right or left
+    float offsetY = (player.size.y / 2);  // Position near the middle
+
+    // Set the hitbox position
+    attackHitbox.x = player.position.x + offsetX;
+    attackHitbox.y = player.position.y + offsetY;
+    attackHitbox.width = 16;
+    attackHitbox.height = 16;
+
+    // Debug: Draw the hitbox
+    //DrawRectangleLines(attackHitbox.x, attackHitbox.y, attackHitbox.width, attackHitbox.height, RED);
+
+    for (NPC& zombie : enemies){
+        if (zombie.isActive){          
+            float hitboxWidth = 16.0f;   
+            float hitboxHeight = 32.0f;  //Tall rectange to cover the sprite. 
+            
+            Rectangle npcHitbox = { // Hit box for mouse clicks
+                zombie.position.x+24,      // Center horizontally
+                zombie.position.y+16,      //Center vertically
+                hitboxWidth,  
+                hitboxHeight                    
+            };
+            //DrawRectangleLines(npcHitbox.x, npcHitbox.y, npcHitbox.width, npcHitbox.height, RED); //debug draw hitbox
+            if (CheckCollisionRecs(attackHitbox, npcHitbox) && player.currentFrame == 2){
+                zombie.TakeDamage(10, player);
+                PlaySound(SoundManager::getInstance().GetSound("crowbarAttack"));
+                break;
+            }
+
+        }
+    }
+
 }
 
 
@@ -3999,7 +4042,9 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
 void RenderOffice(GameResources& resources, Camera2D& camera, Player& player, Elevator& elevator, Vector2& mousePosition, ShaderResources& shaders){
     show_dbox = false;
     over_elevator = false;
+    over_elevator2 = false;
     over_Ebutton = false;
+    over_Ebutton2 = false;
     elevator.isOccupied = false;
     float deltaTime = GetFrameTime();
 
@@ -4030,18 +4075,22 @@ void RenderOffice(GameResources& resources, Camera2D& camera, Player& player, El
     }
 
     if (player.position.x < 3295 && player.position.x > 3275){ //second elevator button
-        over_Ebutton = true;
+        over_Ebutton2 = true;
         phrase = "Call Elevator";
         show_dbox = true;
         dboxPosition = player.position;
     
     }
 
-    if (player.position.x < 3295-52 && player.position.x > 3275-52){ //second elevator button
-        over_elevator2 = true;
-        phrase = "Up to Enter";
-        show_dbox = true;
-        dboxPosition = player.position;
+    if (player.position.x < 3295-52 && player.position.x > 3275-52){ //Enter second elevator 
+        if (elevators[1].isOpen){
+            over_elevator2 = true;
+            phrase = "Up to Enter";
+            show_dbox = true;
+            dboxPosition = player.position;
+
+        }
+
     
     }
 
@@ -4632,7 +4681,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
         }
 
     }
-
+    
     dealer = false;
     teller = false;
     for (NPC& npc : npcs){ //iterate NPCs, update/render, check for player interaction.
@@ -4736,7 +4785,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 
 
 
-
+    crowbarAttack(player, zombies);
 
     EndMode2D();  // End 2D mode 
 
@@ -5226,15 +5275,21 @@ void UptoEnter(Player& player, PlayerCar& player_car, Elevator& elevator){
 
         if (over_Ebutton && gameState == OFFICE){ //open and close all elevators. shouldn't matter because they are offscreen. 
             if (elevator.isOpen){
-                elevator.isOpen = false;
-                elevators[1].isOpen = false;
-            
+                elevator.isOpen = false;          
             }else{
-                elevator.isOpen = true;
-                elevators[1].isOpen = true;
-                
+                elevator.isOpen = true;       
             }
         }
+
+        if (over_Ebutton2 && gameState == OFFICE){ //over ebutton2, open second elevator
+            if (elevators[1].isOpen){
+                elevators[1].isOpen = false;
+            }else{
+                elevators[1].isOpen = true;
+            }
+        }
+
+
 
         if (over_elevator && gameState == OFFICE){
             if (elevator.isOpen){
@@ -5486,7 +5541,8 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadSound("Mac10", "assets/sounds/Mac10.ogg");
     soundManager.LoadSound("TrainArriving", "assets/sounds/TrainArriving.ogg");
     soundManager.LoadSound("TrainLeaving", "assets/sounds/TrainLeaving.ogg");
-    //soundManager.LoadSound("subwayAmbience", "assets/sounds/SubwayAmbience.ogg");
+    soundManager.LoadSound("crowbarSwing", "assets.sounds.crowbarSwing.ogg");
+    soundManager.LoadSound("crowbarAttack", "assets/sounds/crowbarAttack.ogg");
 
     soundManager.LoadSound("alarm", "assets/sounds/alarm1.ogg");
 
@@ -5673,13 +5729,22 @@ int main() {
         CheckLaserNPCCollisions(lobbyNPCs, player); //robots can shoot regular NPCs if they happen to be in the way
         CheckLaserNPCCollisions(zombies, player); //mibs can shoot zombies if they get in the way.
 
+        crowbarAttack(player, zombies); //check crowbar collisions with every enemy group.
+        crowbarAttack(player, lobbyMibs);
+        crowbarAttack(player, lobbyRobots);
+        crowbarAttack(player, astralBats);
+        crowbarAttack(player, astralGhosts);
+        crowbarAttack(player, ghosts);
+        crowbarAttack(player, robots);
+        crowbarAttack(player, bats); //there are no bats, but just incase future bats
+
 
         CheckBulletPlayerCollisions(player); //NPCs shoot player
         MonitorMouseClicks(player, calendar); 
         UpdateZombieSpawning(resources, player);
         //glowEffect(glowShader, gameState); //update glow shader
 
-       
+        
         
         float deltaTime = GetFrameTime();
         totalTime += deltaTime; // used for UFO sine wave
@@ -5811,7 +5876,10 @@ int main() {
             }
 
             HandleTransition(player, player_car, calendar, npcs); //Check everyframe for gamestate transitions, inside draw to handle fadeouts
-            EndTextureMode(); 
+            
+            EndTextureMode();
+            
+
 
         }
 
@@ -5849,9 +5917,11 @@ int main() {
         EndTextureMode();
 
         // Draw the target texture //////FINAL PASS: Draw finalTexture to screen. 
+
+        
         BeginDrawing();
             ClearBackground(BLACK);
-
+            
             //drunk shader is set inside render functions      
             if (applyShader) BeginShaderMode(shaders.glowShader);     //Apply various shaders before rendering to screen
             if (glitch) BeginShaderMode(shaders.glitchShader);
@@ -5864,6 +5934,8 @@ int main() {
                 0.0f,
                 WHITE
             );
+
+            
 
             
         EndShaderMode();

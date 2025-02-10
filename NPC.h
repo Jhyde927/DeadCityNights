@@ -76,7 +76,7 @@ public:
     bool lobbyNPC;
     bool zRight;
     float targetedTimer;
-    float directionLockTimer;
+  
 
     NPC* targetNPC;
  

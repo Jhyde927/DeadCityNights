@@ -73,7 +73,6 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     lobbyNPC = false;
     zRight = false;
     targetedTimer = 0.0f;
-    float directionLockTimer = 0.5f; // Prevents rapid flipping 
  
 }
 
@@ -1187,24 +1186,25 @@ void NPC::TakeDamage(int damage, Player& player) {
     int soundIndex = rand() % 4; //returns 0, 1, 2 or 3
 
     if (isZombie){
+
+        
         switch (soundIndex){ //zombie hits
             case 0:
-                //SoundManager::getInstance().GetSound("zhit1");  // Access the sound directly
-                //PlaySound(SoundManager::getInstance().GetSound("zhit1"));
                 SoundManager::getInstance().PlayPositionalSound("zhit1", position, player.position, 500);
+                
                 break;
             case 1:
-                //PlaySound(SoundManager::getInstance().GetSound("zhit2"));
+
                 SoundManager::getInstance().PlayPositionalSound("zhit2", position, player.position, 500);
                 break;
 
             case 2:
-                //PlaySound(SoundManager::getInstance().GetSound("zhit3"));
+
                 SoundManager::getInstance().PlayPositionalSound("zhit3", position, player.position, 500);
                 break;
             
             case 3:
-                //PlaySound(SoundManager::getInstance().GetSound("zhit4"));
+
                 SoundManager::getInstance().PlayPositionalSound("zhit4", position, player.position, 500);
                 break;
 

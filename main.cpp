@@ -31,6 +31,8 @@ bool over_exit = false;
 //cemetery_start 1743, 700
 bool runOnce = true;
 bool quitRequested = false;
+bool canPlaySound = true;
+float playSoundTimer = 0.0;
 bool streetSounds = false;
 bool over_apartment = false;
 bool over_car = false;
@@ -779,16 +781,24 @@ void crowbarAttack(Player& player, std::vector<NPC>& enemies){
             float hitboxWidth = 16.0f;   
             float hitboxHeight = 32.0f;  //Tall rectange to cover the sprite. 
             
-            Rectangle npcHitbox = { // Hit box for mouse clicks
+            Rectangle npcHitbox = { 
                 zombie.position.x+24,      // Center horizontally
                 zombie.position.y+16,      //Center vertically
                 hitboxWidth,  
                 hitboxHeight                    
             };
-            //DrawRectangleLines(npcHitbox.x, npcHitbox.y, npcHitbox.width, npcHitbox.height, RED); //debug draw hitbox
-            if (CheckCollisionRecs(attackHitbox, npcHitbox) && player.currentFrame == 2){
-                zombie.TakeDamage(10, player);
-                PlaySound(SoundManager::getInstance().GetSound("crowbarAttack"));
+            //debug draw hitbox
+            //DrawRectangleLines(npcHitbox.x, npcHitbox.y, npcHitbox.width, npcHitbox.height, RED); 
+
+            if (CheckCollisionRecs(attackHitbox, npcHitbox) && player.currentFrame == 2){ 
+                
+                if (zombie.hitTimer <= 0 && canPlaySound){
+                    canPlaySound = false;
+                    playSoundTimer = .2;
+                    PlaySound(SoundManager::getInstance().GetSound("crowbarAttack"));
+                    
+                }
+                zombie.TakeDamage(10, player); //2 hits to kill a zombie
                 break;
             }
 
@@ -4856,7 +4866,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 
 
 
-    crowbarAttack(player, zombies);
+
 
     EndMode2D();  // End 2D mode 
 
@@ -5264,6 +5274,15 @@ void debugKeys(Player& player){
         }
     }
 
+    if (IsKeyPressed(KEY_L)){
+        if (!player.hasCrowbar){
+            player.hasCrowbar = true;
+            AddItemToInventory("crowbar", inventory, INVENTORY_SIZE);
+            PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
+            
+        }
+    }
+
     if (IsKeyPressed(KEY_G)){
         if (!player.hasGun){
             AddItemToInventory("Gun", inventory, INVENTORY_SIZE);
@@ -5612,8 +5631,10 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadSound("Mac10", "assets/sounds/Mac10.ogg");
     soundManager.LoadSound("TrainArriving", "assets/sounds/TrainArriving.ogg");
     soundManager.LoadSound("TrainLeaving", "assets/sounds/TrainLeaving.ogg");
-    soundManager.LoadSound("crowbarSwing", "assets.sounds.crowbarSwing.ogg");
+    soundManager.LoadSound("crowbarSwing", "assets/sounds/crowbarSwing.ogg");
+    soundManager.LoadSound("crowbarSwing2", "assets/sounds/crowbarSwing2.ogg");
     soundManager.LoadSound("crowbarAttack", "assets/sounds/crowbarAttack.ogg");
+    soundManager.LoadSound("jump", "assets/sounds/jump.ogg");
 
     soundManager.LoadSound("alarm", "assets/sounds/alarm1.ogg");
 
@@ -5678,6 +5699,7 @@ void InitSounds(SoundManager& soundManager){
     SoundManager::getInstance().SetSoundVolume("BoneCrack", 0.3f);
     SoundManager::getInstance().SetSoundVolume("Owl", 0.5f);
     SoundManager::getInstance().SetSoundVolume("alarm", 0.5f);
+    SoundManager::getInstance().SetSoundVolume("crowbarAttack", 0.5);
 }
 
 
@@ -5816,7 +5838,12 @@ int main() {
         UpdateZombieSpawning(resources, player);
         //glowEffect(glowShader, gameState); //update glow shader
 
-        
+        if (playSoundTimer > 0){
+            canPlaySound = false;
+            playSoundTimer -= GetFrameTime();
+        }else{
+            canPlaySound = true;
+        }
         
         float deltaTime = GetFrameTime();
         totalTime += deltaTime; // used for UFO sine wave

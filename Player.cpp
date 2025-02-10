@@ -290,6 +290,7 @@ void Player::HandleInput(float speed){
             velocity.y = -jumpForce;  
             isOnGround = false;
             jumping = true;
+            PlaySound(SoundManager::getInstance().GetSound("jump"));
 
         }
 
@@ -597,7 +598,14 @@ void Player::shootLogic(){
         canSwing = false;
         swinging = true;
         swingTimer = 0.5f;
-        PlaySound(SoundManager::getInstance().GetSound("crowbarSwing"));
+
+        if (rand() % 2 == 0){//multiple swing sounds
+            PlaySound(SoundManager::getInstance().GetSound("crowbarSwing"));
+
+        }else{
+            PlaySound(SoundManager::getInstance().GetSound("crowbarSwing2"));
+        }
+        
 
     }
 

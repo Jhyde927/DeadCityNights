@@ -80,7 +80,7 @@ Player::Player() {
     shotgunReloadTime = 0.7f;  // Reload time for Shotgun
     currentWeapon = REVOLVER;  // Start with Revolver
     AllowGuns = true;
-    hasCrowbar = true;
+    hasCrowbar = false;
     canSwing = true;
     swinging = false;
     swingTimer = 0.0;
@@ -593,7 +593,7 @@ void Player::shootLogic(){
         currentWeapon = MAC10;
     }
 
-    if (IsKeyPressed(KEY_V) && canSwing && !isAiming && !isReloading && !isShooting){ //swing the crowbar
+    if (IsKeyPressed(KEY_V) && canSwing && !isAiming && !isReloading && !isShooting && hasCrowbar){ //swing the crowbar
         canSwing = false;
         swinging = true;
         swingTimer = 0.5f;

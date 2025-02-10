@@ -64,6 +64,7 @@ bool spawning_zombies = false;
 bool can_spawn_mibs = true;
 bool firstBlood = false;
 bool drawShovel = false;
+bool drawCrowbar = true;
 bool drawMac10 = true;
 bool drawShotgun = true;
 bool dealerButtonAdded = false;
@@ -387,6 +388,7 @@ void LoadGameResources(GameResources& resources) {
     resources.officeSheet = LoadTexture("assets/officeSheet.png");
     resources.frankSheet = LoadTexture("assets/frankSheet.png");
     resources.crowbarSheet = LoadTexture("assets/crowbarSheet.png");
+    resources.crowbarIcon = LoadTexture("assets/crowbarIcon.png");
 
 }
 
@@ -479,6 +481,7 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.officeSheet);
     UnloadTexture(resources.frankSheet);
     UnloadTexture(resources.crowbarSheet);
+    UnloadTexture(resources.crowbarIcon);
 
   
 }
@@ -1392,7 +1395,69 @@ void DrawMac10Pickup(GameResources& resources, Player& player, Vector2 mousePosi
 
     }
     
+
 }
+
+void DrawCrowbarPickup(GameResources& resources, Player& player, Vector2 mousePosition, Camera2D& camera){
+    Vector2 crowbar_pos = {2943, 700};
+    Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
+    float distance_to_cb = abs(player.position.x - crowbar_pos.x);
+
+    if (distance_to_cb < 20 && drawCrowbar){
+        phrase = "Press V to swing crowbar";
+        show_dbox = true;
+        dboxPosition = player.position;  
+    }
+
+    if (drawCrowbar){
+
+        Rectangle sourceRec = { 0, 0, (float)resources.crowbarIcon.width, (float)resources.crowbarIcon.height }; // Full texture
+        Rectangle destRec = { crowbar_pos.x, crowbar_pos.y+16, 32, 32 };  // Scale to 32x32
+        Vector2 origin = { 0, 0 }; // No rotation, origin at top-left
+        float rotation = 0.0f;  // No rotation
+
+        DrawTexturePro(resources.crowbarIcon, sourceRec, destRec, origin, rotation, WHITE);
+
+
+        //DrawTexture(resources.crowbarIcon, crowbar_pos.x, crowbar_pos.y, WHITE);
+        Rectangle crowbarBounds = { //shovel button
+            crowbar_pos.x,      
+            crowbar_pos.y,     
+            static_cast<float>(32),  
+            static_cast<float>(64)  
+        };
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)&& distance_to_cb < 20){ //pickup shovel 
+            if (CheckCollisionPointRec(mouseWorldPos, crowbarBounds)){
+                //add shovel in inventory
+                if (!player.hasCrowbar){
+                    drawCrowbar = false;
+                    AddItemToInventory("crowbar", inventory, INVENTORY_SIZE);
+                    PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
+                    showInventory = true;
+                    player.hasCrowbar = true;
+
+                }
+            
+            }
+        }
+
+                //Press up key or W to pickup shovel when close enough
+        if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
+            if (!player.hasCrowbar && distance_to_cb < 20){
+                drawCrowbar = false;
+                AddItemToInventory("crowbar", inventory, INVENTORY_SIZE);
+                PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
+                showInventory = true;
+                player.hasCrowbar= true;
+            
+             }
+        }
+    }
+
+}
+
+
+
 
 void DrawShovelPickup(GameResources& resources, Player& player, Vector2 mousePosition, Camera2D& camera){
     //render shovel. Click or keyUP the shovel to pick it up. 
@@ -2052,6 +2117,10 @@ void RenderInventory(const GameResources& resources, std::string inventory[], in
        // Draw the icon at x, y
         if (!inventory[i].empty()) { //inventory buttons are all done in the same for loop we use to draw it. Consider abstracting this somehow. 
         //chatGPT suggests using enum ItemType and struct inventoryDefinitions, just makes it more spread out and complicated.
+
+            if (inventory[i] == "crowbar"){
+                DrawTexture(resources.crowbarIcon, x, y, WHITE);
+            }
 
             if (inventory[i] == "carKeys"){
                 DrawTexture(resources.CarKeys, x, y, WHITE);
@@ -3830,6 +3899,8 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
     }
     
     player.DrawPlayer(resources, gameState, camera, shaders);
+
+    DrawCrowbarPickup(resources, player, mousePosition, camera);
     DrawBullets();
     
     EndMode2D();  // End 2D mode 
@@ -5382,7 +5453,7 @@ void ShowControls(){
     //Vector2 controlsRectPos = { 664, 212 };
     Vector2 controlsRectSize = { 300, 600 };
     DrawRectangle(controlsRectPos.x, controlsRectPos.y, controlsRectSize.x, controlsRectSize.y, Fade(BLACK, 0.7f)); // Semi-transparent background
-    DrawText("\nControls:\n\n\nEsc - Menu\n\nD - Move Right\n\nA - Move Left\n\nShift - Run\n\nW - Interact\n\nS - Exit Car/Apartment\n\nSpace - Jump\n\nI - Open Inventory\n\nRightClick - Aim\n\nLeftClick - Fire\n\nM - Mute Music\n\n\n\nDebug Keys:\n\nK - Give Keys\n\nG - Give Guns\n\nH - Give Shovel\n\nP - Give Drugs", 
+    DrawText("\nControls:\n\n\nEsc - Menu\n\nD - Move Right\n\nA - Move Left\n\nShift - Run\n\nW - Interact\n\nS - Exit Car/Apartment\n\nSpace - Jump\n\nI - Open Inventory\n\nV - Melee\n\nRightClick - Aim\n\nLeftClick - Fire\n\nM - Mute Music\n\n\n\nDebug Keys:\n\nK - Give Keys\n\nG - Give Guns\n\nH - Give Shovel\n\nP - Give Drugs", 
             controlsRectPos.x + 32, controlsRectPos.y, 20, WHITE); 
 
 }
@@ -5687,6 +5758,7 @@ int main() {
 
     PauseState currentPauseState = GAME_RUNNING;
 
+    //AddItemToInventory("crowbar", inventory, INVENTORY_SIZE); //TODO: find a place to give the player the crowbar. Should it just be the shovel?
     
     float totalTime = 0.0f; // time elapsed from start of game //glitch shader/ufo
     // Main game loop
@@ -5729,7 +5801,7 @@ int main() {
         CheckLaserNPCCollisions(lobbyNPCs, player); //robots can shoot regular NPCs if they happen to be in the way
         CheckLaserNPCCollisions(zombies, player); //mibs can shoot zombies if they get in the way.
 
-        crowbarAttack(player, zombies); //check crowbar collisions with every enemy group.
+        crowbarAttack(player, zombies); //check crowbar collisions with every enemy group. optimize this?
         crowbarAttack(player, lobbyMibs);
         crowbarAttack(player, lobbyRobots);
         crowbarAttack(player, astralBats);

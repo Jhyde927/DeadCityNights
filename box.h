@@ -20,7 +20,7 @@ public:
     float cooldownTimer = 0.0;
     float damageCooldown = 0.2f;
 
-    Emitter boxEmitter; // Now each box has its own emitter
+    Emitter boxEmitter; //each box has it's own emitter
 
     
 

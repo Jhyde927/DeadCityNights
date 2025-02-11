@@ -73,10 +73,12 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     lobbyNPC = false;
     zRight = false;
     targetedTimer = 0.0f;
+
+
  
 }
 
-Emitter bloodEmitter({0.0, 0.0}); 
+//Emitter bloodEmitter({0.0, 0.0}); 
 
 
 // Function to get a random phrase
@@ -763,6 +765,8 @@ void NPC::Update(Player& player, GameState& gameState) {
     if (!isZombie && !robot) riseTimer = 0;
     float distance_to_player = abs(player.position.x - position.x);
     
+    //bloodEmitter.UpdateParticles(GetFrameTime());
+
     bloodEmitter.UpdateParticles(GetFrameTime());
     
 

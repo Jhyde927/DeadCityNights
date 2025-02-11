@@ -5,6 +5,7 @@
 #include <raylib.h>
 #include "Player.h"
 #include <string>
+#include "Particle.h"
 
 
 class Player;  // Forward declaration of Player
@@ -76,6 +77,9 @@ public:
     bool lobbyNPC;
     bool zRight;
     float targetedTimer;
+
+    // Add an emitter for each NPC
+    Emitter bloodEmitter;
   
 
     NPC* targetNPC;

@@ -16,6 +16,7 @@
 #include "shaderControl.h"
 #include <random>
 #include <algorithm>
+#include "box.h"
 
 #include "raygui.h"
 
@@ -199,6 +200,10 @@ std::vector<NPC>lobbyRobots;
 std::vector<NPC>lobbyNPCs;
 std::vector<NPC>lobbyMibs;
 std::vector<NPC>officeWorkers;
+
+std::vector<Box> boxes;
+
+
 
 
 std::vector<Platform> platforms;
@@ -392,6 +397,7 @@ void LoadGameResources(GameResources& resources) {
     resources.crowbarSheet = LoadTexture("assets/crowbarSheet.png");
     resources.crowbarIcon = LoadTexture("assets/crowbarIcon.png");
 
+    resources.boxSheet = LoadTexture("assets/boxSheet.png");
 }
 
 void UnloadGameResources(GameResources& resources){
@@ -485,6 +491,8 @@ void UnloadGameResources(GameResources& resources){
     UnloadTexture(resources.crowbarSheet);
     UnloadTexture(resources.crowbarIcon);
 
+    UnloadTexture(resources.boxSheet);
+
   
 }
 
@@ -568,6 +576,15 @@ void InitializeTrain(Train &train) {
 
     float stoppingDistance = (train.maxSpeed * train.maxSpeed) / (2.0f * train.deceleration);
     train.slowDownStartX = 2500.0f + stoppingDistance;
+}
+
+void InitBoxes(GameResources& resources){
+    // Adding a box
+    Texture2D boxSheet = resources.boxSheet;
+    Vector2 box_pos = {2938, 700 + 24};
+    Vector2 box_pos2 = {2988, 700 + 24};
+    boxes.emplace_back(box_pos, boxSheet);
+    boxes.emplace_back(box_pos2, boxSheet);
 }
 
 void InitPlatforms() {
@@ -759,6 +776,43 @@ void DrawElevator(Elevator& elevator, Texture2D elevatorTexture, Texture2D floor
     DrawTexturePro(elevatorTexture, sourceRect, destRect, {0.0f, 0.0f}, 0.0f, WHITE);
 }
 
+void crowbarAttackBoxes(Player& player, std::vector<Box>& _boxes){
+    if (!player.swinging) return;
+
+    Rectangle attackHitbox;
+
+    float offsetX = (player.facingRight) ? player.size.x+24 : 8.0f;  // Offset right or left
+    float offsetY = (player.size.y / 2);  // Position near the middle
+
+    // Set the hitbox position
+    attackHitbox.x = player.position.x + offsetX;
+    attackHitbox.y = player.position.y + offsetY;
+    attackHitbox.width = 16;
+    attackHitbox.height = 16;
+
+    DrawRectangleLines(attackHitbox.x, attackHitbox.y, attackHitbox.width, attackHitbox.height, RED);
+
+    for (Box& box : _boxes){
+        float hitboxWidth = 24.0f;   
+        float hitboxHeight = 24.0f;  //Tall rectange to cover the sprite. 
+
+        Rectangle boxHitbox = { 
+            box.position.x,      // Center horizontally
+            box.position.y,      //Center vertically
+            hitboxWidth,  
+            hitboxHeight                    
+        };
+        DrawRectangleLines(boxHitbox.x, boxHitbox.y, boxHitbox.width, boxHitbox.height, RED); 
+
+        if (CheckCollisionRecs(attackHitbox, boxHitbox) && player.currentFrame == 2){ 
+            box.TakeDamage(1);
+            return;
+        }
+
+    }
+
+}
+
 void crowbarAttack(Player& player, std::vector<NPC>& enemies){
     if (!player.swinging) return;
     // Define the attack hitbox relative to the player
@@ -799,7 +853,7 @@ void crowbarAttack(Player& player, std::vector<NPC>& enemies){
                     
                 }
                 zombie.TakeDamage(10, player); //2 hits to kill a zombie
-                break;
+                return; //does this help?
             }
 
         }
@@ -1409,7 +1463,7 @@ void DrawMac10Pickup(GameResources& resources, Player& player, Vector2 mousePosi
 }
 
 void DrawCrowbarPickup(GameResources& resources, Player& player, Vector2 mousePosition, Camera2D& camera){
-    Vector2 crowbar_pos = {2943, 700};
+    Vector2 crowbar_pos = {2860, 700};
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
     float distance_to_cb = abs(player.position.x - crowbar_pos.x);
 
@@ -3907,6 +3961,13 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
             // show_dbox = false;
         }
     }
+
+
+    for (Box& box : boxes){
+        box.Update(GetFrameTime());
+        box.Draw();
+        
+    }
     
     player.DrawPlayer(resources, gameState, camera, shaders);
 
@@ -4807,6 +4868,8 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
         }
     
     }
+
+
     
     //DrawStreetLight
     BeginBlendMode(BLEND_ADDITIVE);
@@ -4816,6 +4879,8 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     DrawTexture(resources.lightCone, 4550, 610, WHITE);
     EndBlendMode();
     
+
+
     DrawBullets();
 
     //DrawPlayerCar
@@ -4863,7 +4928,6 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     //         move_car = true;
     //     }
     // }
-
 
 
 
@@ -5635,6 +5699,7 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadSound("crowbarSwing2", "assets/sounds/crowbarSwing2.ogg");
     soundManager.LoadSound("crowbarAttack", "assets/sounds/crowbarAttack.ogg");
     soundManager.LoadSound("jump", "assets/sounds/jump.ogg");
+    soundManager.LoadSound("woodBreak", "assets/sounds/woodBreak.ogg");
 
     soundManager.LoadSound("alarm", "assets/sounds/alarm1.ogg");
 
@@ -5749,6 +5814,8 @@ int main() {
     spawnNPCs(resources); //spawn NPCs before rendering them outside
     InitPlatforms();
     InitializeTrain(train);
+
+    InitBoxes(resources);
     
     setButtonColors(); //main menu button colors, sets globally for all rayGUI buttons
 
@@ -5831,6 +5898,10 @@ int main() {
         crowbarAttack(player, ghosts);
         crowbarAttack(player, robots);
         crowbarAttack(player, bats); //there are no bats, but just incase future bats
+
+        crowbarAttackBoxes(player, boxes); //breakable boxes
+
+
 
 
         CheckBulletPlayerCollisions(player); //NPCs shoot player

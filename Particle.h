@@ -16,6 +16,9 @@ public:
     Vector2 position;
     std::vector<Particle> particles;
 
+        // Default constructor (needed for Box)
+    Emitter() : position({0, 0}) {}
+
     Emitter(Vector2 pos);
     
     void SpawnBlood(int amount, bool facingRight); // Blood spray in one direction, opposite of facingRight

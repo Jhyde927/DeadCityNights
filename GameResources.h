@@ -5,6 +5,10 @@
 
 #include <raylib.h>  // Include Raylib to use Texture2D and Font types
 
+
+
+
+
 // Struct to hold game resources
 struct GameResources {
     Texture2D background;
@@ -100,11 +104,21 @@ struct GameResources {
     Texture2D crowbarSheet;
     Texture2D crowbarIcon;
     Texture2D boxSheet;
+    Texture2D shellsPickup;
     
 
     Font defaultFont;
+
+
+        // Load all game resources
+    void Load();
+
+    // Unload all game resources
+    void Unload();
+
 };
 
+extern GameResources resources;  // ✅ Declare external global instance
 
 
 #endif // GAMERESOURCES_H

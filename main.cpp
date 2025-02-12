@@ -17,6 +17,7 @@
 #include <random>
 #include <algorithm>
 #include "box.h"
+#include "Pickup.h"
 
 #include "raygui.h"
 
@@ -303,198 +304,197 @@ struct Train {
 std::vector<Elevator> elevators;
 
 // Function to initialize and load resources
-void LoadGameResources(GameResources& resources) {
-    resources.background = LoadTexture("assets/Background.png");
-    resources.foreground = LoadTexture("assets/Foreground.png");
-    resources.midground = LoadTexture("assets/Midground.png");
-    resources.manTexture = LoadTexture("assets/Man.png");
-    resources.walkSheet = LoadTexture("assets/WalkSheet.png");
-    resources.runSheet = LoadTexture("assets/RunSheet.png");
-    resources.apartment = LoadTexture("assets/Apartment.png");
-    resources.road = LoadTexture("assets/Road.png");
-    resources.car = LoadTexture("assets/Car.png");
-    resources.carSheet = LoadTexture("assets/Car-Sheet.png");
-    resources.reloadSheet = LoadTexture("assets/reloadSheet.png");
-    resources.lightBeam = LoadTexture("assets/LightBeam.png");
-    resources.lightCone = LoadTexture("assets/LightCone.png");
-    resources.cemetery = LoadTexture("assets/Cemetery.png");
-    resources.inventorySlot = LoadTexture("assets/InventorySlot.png");
-    resources.cemeteryBackground = LoadTexture("assets/Cemetery(backGround).png");
-    resources.cemeteryTrees = LoadTexture("assets/Cemetery(Trees).png");
-    resources.cemeteryMidground = LoadTexture("assets/Cemetery(midGround).png");
-    resources.cemeteryForeground = LoadTexture("assets/Cemetery(forground).png");
-    resources.carKey = LoadTexture("assets/carKey.png");
-    resources.npcTexture = LoadTexture("assets/npcSheet.png");
-    resources.breakLight = LoadTexture("assets/breakLight.png");
-    resources.truck = LoadTexture("assets/Truck.png");
-    resources.businessSheet = LoadTexture("assets/businessSheet.png");
-    resources.womanSheet = LoadTexture("assets/womanSheet.png");
-    resources.dealerSheet = LoadTexture("assets/DealerSheet.png");
-    resources.zombieSheet = LoadTexture("assets/zombieSheet.png");
-    resources.shootSheet = LoadTexture("assets/shootSheet.png");
-    resources.OpenDrawer = LoadTexture("assets/OpenDrawer.png");
-    resources.Revolver = LoadTexture("assets/Revolver.png");
-    resources.CarKeys = LoadTexture("assets/CarKeys.png");
-    resources.handCursor = LoadTexture("assets/hand.png");
-    resources.reticle = LoadTexture("assets/reticle.png");
-    resources.ShotGunSheet = LoadTexture("assets/ShotGunSheet.png");
-    resources.ShotgunReload = LoadTexture("assets/ShotGunReload.png");
-    resources.Drugs = LoadTexture("assets/Drugs.png");
-    resources.policeSheet = LoadTexture("assets/PoliceSheet.png");
-    resources.vacantLot = LoadTexture("assets/EmptyLot.png");
-    resources.hoboSheet = LoadTexture("assets/HoboSheet.png");
-    resources.shovel = LoadTexture("assets/shovel.png");
-    resources.shovelWorld = LoadTexture("assets/shovelWorld.png");
-    resources.shotgunPickup = LoadTexture("assets/ShotGunPickup.png");
-    resources.shotgunIcon = LoadTexture("assets/shotgunIcon.png");
-    resources.pills = LoadTexture("assets/pills.png");
-    resources.FortuneTellerSheet = LoadTexture("assets/FortuneTellerSheet.png");
-    resources.woman2Sheet = LoadTexture("assets/woman2Sheet.png");
-    resources.cemeteryKey = LoadTexture("assets/CemeteryKey.png");
-    resources.GraveyardGate = LoadTexture("assets/GraveyardGate.png");
-    resources.GraveyardForeground = LoadTexture("assets/GraveyardForeground.png");
-    resources.GreaveyardMidground= LoadTexture("assets/GraveyardMidground.png");
-    resources.deadZombie = LoadTexture("assets/DeadZombie.png");
-    resources.Badge = LoadTexture("assets/Badge.png");
-    resources.ComputerScreen = LoadTexture("assets/ComputerScreen.png");
-    resources.ghostSheet = LoadTexture("assets/ghostSheet.png");
-    resources.magicDoorSheet = LoadTexture("assets/MagicDoorSheet.png");
-    resources.AstralBackground = LoadTexture("assets/AstralBackground.png");
-    resources.AstralMidground = LoadTexture("assets/AstralMidGround.png");
-    resources.AstralClouds = LoadTexture("assets/AstralClouds.png");
-    resources.AstralForeground = LoadTexture("assets/AstralForeground.png");
-    resources.AstralClouds2 = LoadTexture("assets/AstralClouds2.png");
-    resources.EarthSheet = LoadTexture("assets/EarthSpin-Sheet.png");
-    resources.jumpSheet = LoadTexture("assets/JumpSheet.png");
-    resources.healthBorder = LoadTexture("assets/HealthBoarder.png");
-    resources.batSheet = LoadTexture("assets/batSheet.png");
-    resources.platformTexture = LoadTexture("assets/platform(128x32).png");
-    resources.mibSheet = LoadTexture("assets/mibSheet.png");
-    resources.whiskey = LoadTexture("assets/Whiskey.png");
-    resources.midgroundLot = LoadTexture("assets/MidGroundLot.png");
-    resources.UFOsheet = LoadTexture("assets/UFOsheet.png");
-    resources.lightBar = LoadTexture("assets/lightBar.png");
-    resources.ParkForeground = LoadTexture("assets/Park(foreground).png");
-    resources.ParkMidground = LoadTexture("assets/Park(midground).png");
-    resources.ParkBuildings = LoadTexture("assets/Park(buildings).png");
-    resources.MidBuildings = LoadTexture("assets/MidBuildings.png");
-    resources.shootSheetAuto = LoadTexture("assets/shootSheetAuto.png");
-    resources.reloadSheetAuto = LoadTexture("assets/reloadSheetAuto.png");
-    resources.Mac10 = LoadTexture("assets/Mac10.png");
-    resources.Mac10pickup = LoadTexture("assets/Mac10pickup.png");
-    resources.subwayForeground = LoadTexture("assets/subwayForground.png");
-    resources.subwayBackground = LoadTexture("assets/subwayBackground.png");
-    resources.subwayMidground = LoadTexture("assets/subwayMidground.png");
-    resources.train = LoadTexture("assets/Train.png");
-    resources.ntForeground = LoadTexture("assets/NTforeground.png");
-    resources.robotSheet = LoadTexture("assets/robotSheet.png");
-    resources.LobbyForeground = LoadTexture("assets/LobbyForeground.png");
-    resources.elevatorSheet = LoadTexture("assets/elevatorSheet.png");
-    resources.floorNumberSheet = LoadTexture("assets/floorNumberSheet.png");
-    resources.officeBackground = LoadTexture("assets/officeBackground.png");
-    resources.officeSheet = LoadTexture("assets/officeSheet.png");
-    resources.frankSheet = LoadTexture("assets/frankSheet.png");
-    resources.crowbarSheet = LoadTexture("assets/crowbarSheet.png");
-    resources.crowbarIcon = LoadTexture("assets/crowbarIcon.png");
+// void LoadGameResources(GameResources& resources) {
+//     resources.background = LoadTexture("assets/Background.png");
+//     resources.foreground = LoadTexture("assets/Foreground.png");
+//     resources.midground = LoadTexture("assets/Midground.png");
+//     resources.manTexture = LoadTexture("assets/Man.png");
+//     resources.walkSheet = LoadTexture("assets/WalkSheet.png");
+//     resources.runSheet = LoadTexture("assets/RunSheet.png");
+//     resources.apartment = LoadTexture("assets/Apartment.png");
+//     resources.road = LoadTexture("assets/Road.png");
+//     resources.car = LoadTexture("assets/Car.png");
+//     resources.carSheet = LoadTexture("assets/Car-Sheet.png");
+//     resources.reloadSheet = LoadTexture("assets/reloadSheet.png");
+//     resources.lightBeam = LoadTexture("assets/LightBeam.png");
+//     resources.lightCone = LoadTexture("assets/LightCone.png");
+//     resources.cemetery = LoadTexture("assets/Cemetery.png");
+//     resources.inventorySlot = LoadTexture("assets/InventorySlot.png");
+//     resources.cemeteryBackground = LoadTexture("assets/Cemetery(backGround).png");
+//     resources.cemeteryTrees = LoadTexture("assets/Cemetery(Trees).png");
+//     resources.cemeteryMidground = LoadTexture("assets/Cemetery(midGround).png");
+//     resources.cemeteryForeground = LoadTexture("assets/Cemetery(forground).png");
+//     resources.carKey = LoadTexture("assets/carKey.png");
+//     resources.npcTexture = LoadTexture("assets/npcSheet.png");
+//     resources.breakLight = LoadTexture("assets/breakLight.png");
+//     resources.truck = LoadTexture("assets/Truck.png");
+//     resources.businessSheet = LoadTexture("assets/businessSheet.png");
+//     resources.womanSheet = LoadTexture("assets/womanSheet.png");
+//     resources.dealerSheet = LoadTexture("assets/DealerSheet.png");
+//     resources.zombieSheet = LoadTexture("assets/zombieSheet.png");
+//     resources.shootSheet = LoadTexture("assets/shootSheet.png");
+//     resources.OpenDrawer = LoadTexture("assets/OpenDrawer.png");
+//     resources.Revolver = LoadTexture("assets/Revolver.png");
+//     resources.CarKeys = LoadTexture("assets/CarKeys.png");
+//     resources.handCursor = LoadTexture("assets/hand.png");
+//     resources.reticle = LoadTexture("assets/reticle.png");
+//     resources.ShotGunSheet = LoadTexture("assets/ShotGunSheet.png");
+//     resources.ShotgunReload = LoadTexture("assets/ShotGunReload.png");
+//     resources.Drugs = LoadTexture("assets/Drugs.png");
+//     resources.policeSheet = LoadTexture("assets/PoliceSheet.png");
+//     resources.vacantLot = LoadTexture("assets/EmptyLot.png");
+//     resources.hoboSheet = LoadTexture("assets/HoboSheet.png");
+//     resources.shovel = LoadTexture("assets/shovel.png");
+//     resources.shovelWorld = LoadTexture("assets/shovelWorld.png");
+//     resources.shotgunPickup = LoadTexture("assets/ShotGunPickup.png");
+//     resources.shotgunIcon = LoadTexture("assets/shotgunIcon.png");
+//     resources.pills = LoadTexture("assets/pills.png");
+//     resources.FortuneTellerSheet = LoadTexture("assets/FortuneTellerSheet.png");
+//     resources.woman2Sheet = LoadTexture("assets/woman2Sheet.png");
+//     resources.cemeteryKey = LoadTexture("assets/CemeteryKey.png");
+//     resources.GraveyardGate = LoadTexture("assets/GraveyardGate.png");
+//     resources.GraveyardForeground = LoadTexture("assets/GraveyardForeground.png");
+//     resources.GreaveyardMidground= LoadTexture("assets/GraveyardMidground.png");
+//     resources.deadZombie = LoadTexture("assets/DeadZombie.png");
+//     resources.Badge = LoadTexture("assets/Badge.png");
+//     resources.ComputerScreen = LoadTexture("assets/ComputerScreen.png");
+//     resources.ghostSheet = LoadTexture("assets/ghostSheet.png");
+//     resources.magicDoorSheet = LoadTexture("assets/MagicDoorSheet.png");
+//     resources.AstralBackground = LoadTexture("assets/AstralBackground.png");
+//     resources.AstralMidground = LoadTexture("assets/AstralMidGround.png");
+//     resources.AstralClouds = LoadTexture("assets/AstralClouds.png");
+//     resources.AstralForeground = LoadTexture("assets/AstralForeground.png");
+//     resources.AstralClouds2 = LoadTexture("assets/AstralClouds2.png");
+//     resources.EarthSheet = LoadTexture("assets/EarthSpin-Sheet.png");
+//     resources.jumpSheet = LoadTexture("assets/JumpSheet.png");
+//     resources.healthBorder = LoadTexture("assets/HealthBoarder.png");
+//     resources.batSheet = LoadTexture("assets/batSheet.png");
+//     resources.platformTexture = LoadTexture("assets/platform(128x32).png");
+//     resources.mibSheet = LoadTexture("assets/mibSheet.png");
+//     resources.whiskey = LoadTexture("assets/Whiskey.png");
+//     resources.midgroundLot = LoadTexture("assets/MidGroundLot.png");
+//     resources.UFOsheet = LoadTexture("assets/UFOsheet.png");
+//     resources.lightBar = LoadTexture("assets/lightBar.png");
+//     resources.ParkForeground = LoadTexture("assets/Park(foreground).png");
+//     resources.ParkMidground = LoadTexture("assets/Park(midground).png");
+//     resources.ParkBuildings = LoadTexture("assets/Park(buildings).png");
+//     resources.MidBuildings = LoadTexture("assets/MidBuildings.png");
+//     resources.shootSheetAuto = LoadTexture("assets/shootSheetAuto.png");
+//     resources.reloadSheetAuto = LoadTexture("assets/reloadSheetAuto.png");
+//     resources.Mac10 = LoadTexture("assets/Mac10.png");
+//     resources.Mac10pickup = LoadTexture("assets/Mac10pickup.png");
+//     resources.subwayForeground = LoadTexture("assets/subwayForground.png");
+//     resources.subwayBackground = LoadTexture("assets/subwayBackground.png");
+//     resources.subwayMidground = LoadTexture("assets/subwayMidground.png");
+//     resources.train = LoadTexture("assets/Train.png");
+//     resources.ntForeground = LoadTexture("assets/NTforeground.png");
+//     resources.robotSheet = LoadTexture("assets/robotSheet.png");
+//     resources.LobbyForeground = LoadTexture("assets/LobbyForeground.png");
+//     resources.elevatorSheet = LoadTexture("assets/elevatorSheet.png");
+//     resources.floorNumberSheet = LoadTexture("assets/floorNumberSheet.png");
+//     resources.officeBackground = LoadTexture("assets/officeBackground.png");
+//     resources.officeSheet = LoadTexture("assets/officeSheet.png");
+//     resources.frankSheet = LoadTexture("assets/frankSheet.png");
+//     resources.crowbarSheet = LoadTexture("assets/crowbarSheet.png");
+//     resources.crowbarIcon = LoadTexture("assets/crowbarIcon.png");
+//     resources.boxSheet = LoadTexture("assets/boxSheet.png");
+//     resources.shellsPickup = LoadTexture("assets/shellsPickup.png");
+// }
 
-    resources.boxSheet = LoadTexture("assets/boxSheet.png");
-}
-
-void UnloadGameResources(GameResources& resources){
-    UnloadTexture(resources.background);
-    UnloadTexture(resources.foreground);
-    UnloadTexture(resources.midground);
-    UnloadTexture(resources.walkSheet);
-    UnloadTexture(resources.runSheet);
-    UnloadTexture(resources.manTexture);
-    UnloadTexture(resources.apartment);
-    UnloadTexture(resources.carSheet);
-    UnloadTexture(resources.car);
-    UnloadTexture(resources.road);
-    UnloadTexture(resources.cemetery);
-    UnloadTexture(resources.inventorySlot);
-    UnloadTexture(resources.cemeteryBackground);
-    UnloadTexture(resources.cemeteryTrees);
-    UnloadTexture(resources.cemeteryMidground);
-    UnloadTexture(resources.cemeteryForeground);
-    UnloadTexture(resources.npcTexture);
-    UnloadTexture(resources.lightBeam);
-    UnloadTexture(resources.lightCone);
-    UnloadTexture(resources.breakLight);
-    UnloadTexture(resources.truck);
-    UnloadTexture(resources.businessSheet);
-    UnloadTexture(resources.womanSheet);
-    UnloadTexture(resources.zombieSheet);
-    UnloadTexture(resources.shootSheet);
-    UnloadTexture(resources.OpenDrawer);
-    UnloadTexture(resources.Revolver);
-    UnloadTexture(resources.CarKeys);
-    UnloadTexture(resources.handCursor);
-    UnloadTexture(resources.reticle);
-    UnloadTexture(resources.ShotGunSheet);
-    UnloadTexture(resources.ShotgunReload);
-    UnloadTexture(resources.Drugs);
-    UnloadTexture(resources.policeSheet);
-    UnloadTexture(resources.vacantLot);
-    UnloadTexture(resources.hoboSheet);
-    UnloadTexture(resources.shovel);
-    UnloadTexture(resources.shovelWorld);
-    UnloadTexture(resources.shotgunPickup);
-    UnloadTexture(resources.shotgunIcon);
-    UnloadTexture(resources.pills);
-    UnloadTexture(resources.FortuneTellerSheet);
-    UnloadTexture(resources.woman2Sheet);
-    UnloadTexture(resources.cemeteryKey);
-    UnloadTexture(resources.GraveyardGate);
-    UnloadTexture(resources.GraveyardForeground);
-    UnloadTexture(resources.GreaveyardMidground);
-    UnloadTexture(resources.deadZombie);
-    UnloadTexture(resources.Badge);
-    UnloadTexture(resources.ComputerScreen);
-    UnloadTexture(resources.ghostSheet);
-    UnloadTexture(resources.magicDoorSheet);
-    UnloadTexture(resources.AstralBackground);
-    UnloadTexture(resources.AstralMidground);
-    UnloadTexture(resources.AstralClouds);
-    UnloadTexture(resources.AstralForeground);
-    UnloadTexture(resources.AstralClouds2);
-    UnloadTexture(resources.EarthSheet);
-    UnloadTexture(resources.jumpSheet);
-    UnloadTexture(resources.healthBorder);
-    UnloadTexture(resources.batSheet);
-    UnloadTexture(resources.platformTexture);
-    UnloadTexture(resources.mibSheet);
-    UnloadTexture(resources.whiskey);
-    UnloadTexture(resources.midgroundLot);
-    UnloadTexture(resources.UFOsheet);
-    UnloadTexture(resources.lightBar);
-    UnloadTexture(resources.ParkForeground);
-    UnloadTexture(resources.ParkMidground);
-    UnloadTexture(resources.ParkBuildings);
-    UnloadTexture(resources.MidBuildings);
-    UnloadTexture(resources.shootSheetAuto);
-    UnloadTexture(resources.reloadSheetAuto);
-    UnloadTexture(resources.Mac10);
-    UnloadTexture(resources.Mac10pickup);
-    UnloadTexture(resources.subwayBackground);
-    UnloadTexture(resources.subwayForeground);
-    UnloadTexture(resources.subwayMidground);
-    UnloadTexture(resources.train);
-    UnloadTexture(resources.ntForeground);
-    UnloadTexture(resources.robotSheet);
-    UnloadTexture(resources.LobbyForeground); 
-    UnloadTexture(resources.elevatorSheet);
-    UnloadTexture(resources.floorNumberSheet);
-    UnloadTexture(resources.officeBackground);
-    UnloadTexture(resources.officeSheet);
-    UnloadTexture(resources.frankSheet);
-    UnloadTexture(resources.crowbarSheet);
-    UnloadTexture(resources.crowbarIcon);
-
-    UnloadTexture(resources.boxSheet);
-
+// void UnloadGameResources(GameResources& resources){
+//     UnloadTexture(resources.background);
+//     UnloadTexture(resources.foreground);
+//     UnloadTexture(resources.midground);
+//     UnloadTexture(resources.walkSheet);
+//     UnloadTexture(resources.runSheet);
+//     UnloadTexture(resources.manTexture);
+//     UnloadTexture(resources.apartment);
+//     UnloadTexture(resources.carSheet);
+//     UnloadTexture(resources.car);
+//     UnloadTexture(resources.road);
+//     UnloadTexture(resources.cemetery);
+//     UnloadTexture(resources.inventorySlot);
+//     UnloadTexture(resources.cemeteryBackground);
+//     UnloadTexture(resources.cemeteryTrees);
+//     UnloadTexture(resources.cemeteryMidground);
+//     UnloadTexture(resources.cemeteryForeground);
+//     UnloadTexture(resources.npcTexture);
+//     UnloadTexture(resources.lightBeam);
+//     UnloadTexture(resources.lightCone);
+//     UnloadTexture(resources.breakLight);
+//     UnloadTexture(resources.truck);
+//     UnloadTexture(resources.businessSheet);
+//     UnloadTexture(resources.womanSheet);
+//     UnloadTexture(resources.zombieSheet);
+//     UnloadTexture(resources.shootSheet);
+//     UnloadTexture(resources.OpenDrawer);
+//     UnloadTexture(resources.Revolver);
+//     UnloadTexture(resources.CarKeys);
+//     UnloadTexture(resources.handCursor);
+//     UnloadTexture(resources.reticle);
+//     UnloadTexture(resources.ShotGunSheet);
+//     UnloadTexture(resources.ShotgunReload);
+//     UnloadTexture(resources.Drugs);
+//     UnloadTexture(resources.policeSheet);
+//     UnloadTexture(resources.vacantLot);
+//     UnloadTexture(resources.hoboSheet);
+//     UnloadTexture(resources.shovel);
+//     UnloadTexture(resources.shovelWorld);
+//     UnloadTexture(resources.shotgunPickup);
+//     UnloadTexture(resources.shotgunIcon);
+//     UnloadTexture(resources.pills);
+//     UnloadTexture(resources.FortuneTellerSheet);
+//     UnloadTexture(resources.woman2Sheet);
+//     UnloadTexture(resources.cemeteryKey);
+//     UnloadTexture(resources.GraveyardGate);
+//     UnloadTexture(resources.GraveyardForeground);
+//     UnloadTexture(resources.GreaveyardMidground);
+//     UnloadTexture(resources.deadZombie);
+//     UnloadTexture(resources.Badge);
+//     UnloadTexture(resources.ComputerScreen);
+//     UnloadTexture(resources.ghostSheet);
+//     UnloadTexture(resources.magicDoorSheet);
+//     UnloadTexture(resources.AstralBackground);
+//     UnloadTexture(resources.AstralMidground);
+//     UnloadTexture(resources.AstralClouds);
+//     UnloadTexture(resources.AstralForeground);
+//     UnloadTexture(resources.AstralClouds2);
+//     UnloadTexture(resources.EarthSheet);
+//     UnloadTexture(resources.jumpSheet);
+//     UnloadTexture(resources.healthBorder);
+//     UnloadTexture(resources.batSheet);
+//     UnloadTexture(resources.platformTexture);
+//     UnloadTexture(resources.mibSheet);
+//     UnloadTexture(resources.whiskey);
+//     UnloadTexture(resources.midgroundLot);
+//     UnloadTexture(resources.UFOsheet);
+//     UnloadTexture(resources.lightBar);
+//     UnloadTexture(resources.ParkForeground);
+//     UnloadTexture(resources.ParkMidground);
+//     UnloadTexture(resources.ParkBuildings);
+//     UnloadTexture(resources.MidBuildings);
+//     UnloadTexture(resources.shootSheetAuto);
+//     UnloadTexture(resources.reloadSheetAuto);
+//     UnloadTexture(resources.Mac10);
+//     UnloadTexture(resources.Mac10pickup);
+//     UnloadTexture(resources.subwayBackground);
+//     UnloadTexture(resources.subwayForeground);
+//     UnloadTexture(resources.subwayMidground);
+//     UnloadTexture(resources.train);
+//     UnloadTexture(resources.ntForeground);
+//     UnloadTexture(resources.robotSheet);
+//     UnloadTexture(resources.LobbyForeground); 
+//     UnloadTexture(resources.elevatorSheet);
+//     UnloadTexture(resources.floorNumberSheet);
+//     UnloadTexture(resources.officeBackground);
+//     UnloadTexture(resources.officeSheet);
+//     UnloadTexture(resources.frankSheet);
+//     UnloadTexture(resources.crowbarSheet);
+//     UnloadTexture(resources.crowbarIcon);
+//     UnloadTexture(resources.boxSheet);
+//     UnloadTexture(resources.shellsPickup);
   
-}
+// }
 
 void InitializePlayerCar(PlayerCar& player_car){
     player_car.position = {1710, 700-32};
@@ -3968,6 +3968,8 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
         box.Draw();
         
     }
+
+    DrawPickups();
     
     player.DrawPlayer(resources, gameState, camera, shaders);
 
@@ -5783,10 +5785,10 @@ int main() {
     srand(static_cast<unsigned>(time(0))); //randomize seed based on time
     
     // Initialize game resources
-    GameResources resources;
+    //GameResources resources;
     GameCalendar calendar;
-    LoadGameResources(resources);
-
+    //LoadGameResources(resources);
+    resources.Load();
     // Initialize shaders
     ShaderResources shaders; //struct holding all the shaders. 
     InitShaders(shaders, screenWidth, screenHeight); //refactored shader setup to shaderControl.cpp
@@ -5901,6 +5903,7 @@ int main() {
 
         crowbarAttackBoxes(player, boxes); //breakable boxes
 
+        UpdatePickups(player);
 
 
 
@@ -6044,7 +6047,7 @@ int main() {
                     break;
                     
             }
-
+            
             HandleTransition(player, player_car, calendar, npcs); //Check everyframe for gamestate transitions, inside draw to handle fadeouts
             
             EndTextureMode();
@@ -6115,7 +6118,8 @@ int main() {
     }
 
     // Unload resources and close the window
-    UnloadGameResources(resources);
+    //UnloadGameResources(resources);
+    resources.Unload();
     soundManager.UnloadAllSounds();
     UnloadShaders(shaders);
     CloseAudioDevice();

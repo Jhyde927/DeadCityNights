@@ -1,9 +1,13 @@
 #ifndef BOX_H
 #define BOX_H
 
+
+#include "GameResources.h"
 #include <raylib.h>
 #include "Particle.h"
 #include "SoundManager.h"
+#include "Pickup.h"
+#include <iostream>
 
 
 
@@ -42,18 +46,21 @@ public:
     } 
 
     void Draw() {
-        if (!destroyed) {
-            int currentFrame = maxFrames - health;  // Calculate frame based on remaining health
-            if (currentFrame >= maxFrames) currentFrame = maxFrames - 1; // Clamp to last frame
-            
-            Rectangle sourceRect = { (float)(currentFrame * frameWidth), 0, (float)frameWidth, (float)frameHeight };
-            Rectangle destRect = { position.x, position.y, 24, 24 };
-            Vector2 origin = { 0, 0 };
+        //still draw the last frame of the box even after it's destroyed. 
+        int currentFrame = maxFrames - health;  // Calculate frame based on remaining health
+        if (currentFrame >= maxFrames) currentFrame = maxFrames - 1; // Clamp to last frame
+        
+        Rectangle sourceRect = { (float)(currentFrame * frameWidth), 0, (float)frameWidth, (float)frameHeight };
+        Rectangle destRect = { position.x, position.y, 24, 24 };
+        Vector2 origin = { 0, 0 };
 
-            DrawTexturePro(texture, sourceRect, destRect, origin, 0.0f, WHITE);
+        DrawTexturePro(texture, sourceRect, destRect, origin, 0.0f, WHITE);
+        if (!destroyed){
             boxEmitter.DrawParticles();
-            
         }
+        
+            
+        
     }
 
     void TakeDamage(int damage) {
@@ -66,6 +73,9 @@ public:
             PlaySound(SoundManager::getInstance().GetSound("woodBreak"));
             if (health <= 0) {
                 destroyed = true;
+                SpawnPickup(position, PickupType::SHOTGUN_AMMO, resources.shellsPickup);
+                std::cout <<"spawning shells\n" << position.x << "\n";
+                
             }
         }
     }

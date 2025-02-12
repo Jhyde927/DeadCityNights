@@ -87,6 +87,6 @@ void Emitter::DrawParticles() const {
     for (const auto& p : particles) {
         //DrawPixel(p.position.x, p.position.y, p.color);
         DrawRectangle(p.position.x, p.position.y, 2, 2, p.color); //2x2 square for thicker pixelated blood
-        std::cout << "drawing particle\n";
+
     }
 }

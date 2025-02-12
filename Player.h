@@ -97,6 +97,8 @@ public:
     // Constructor
     Player();
 
+    
+
     // Methods
     void take_damage(int damage);
     void UpdateMovement(GameResources& resources, GameState& gameState, Vector2& mousePosition, Camera2D& camera, std::vector<Platform> platforms);
@@ -109,6 +111,10 @@ public:
     bool CheckIfOnPlatform(const std::vector<Platform>& platforms);
     bool CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition, Vector2 bulletSize);
     void shootLogic();
+
+    
 };
+
+extern Player player; // Declare the player globally
 
 #endif  // PLAYER_H

@@ -469,7 +469,7 @@ void RenderPasswordInterface() {
     }
 }
 
-void UpdatePasswordInterface(Player& player) {
+void UpdatePasswordInterface() {
 
 
 
@@ -584,7 +584,7 @@ void DrawElevator(Elevator& elevator, Texture2D elevatorTexture, Texture2D floor
     DrawTexturePro(elevatorTexture, sourceRect, destRect, {0.0f, 0.0f}, 0.0f, WHITE);
 }
 
-void crowbarAttackBoxes(Player& player, std::vector<Box>& _boxes){
+void crowbarAttackBoxes(std::vector<Box>& _boxes){
     if (!player.swinging) return;
 
     Rectangle attackHitbox;
@@ -621,7 +621,7 @@ void crowbarAttackBoxes(Player& player, std::vector<Box>& _boxes){
 
 }
 
-void crowbarAttack(Player& player, std::vector<NPC>& enemies){
+void crowbarAttack(std::vector<NPC>& enemies){
     if (!player.swinging) return;
     // Define the attack hitbox relative to the player
     Rectangle attackHitbox;
@@ -672,7 +672,7 @@ void crowbarAttack(Player& player, std::vector<NPC>& enemies){
 
 
 
-void MonitorMouseClicks(Player& player, GameCalendar& calendar){
+void MonitorMouseClicks(GameCalendar& calendar){
 
     //monitors mouse clicks for all scenes. Consider moving item pickup left clicks here. 
 
@@ -832,7 +832,7 @@ void MonitorMouseClicks(Player& player, GameCalendar& calendar){
 
 }
 
-void HandleKeyboardAiming(Player& player, Vector2 mousePosition){
+void HandleKeyboardAiming(Vector2 mousePosition){
     //mousePosition is screen2world(mousePosition)
     if (player.isAiming && IsKeyDown(KEY_F)) {
         // Handle keyboard-only aiming (e.g., using arrow keys or player movement keys)
@@ -927,7 +927,7 @@ void StartZombieSpawn(int zombie_count){
     
 }
 
-void spawnRobot(Player& player, Vector2 position){
+void spawnRobot(Vector2 position){
     //spawn more robots in the lobby on first robot death
     int speed = 50;
     NPC robot_npc = CreateNPC(resources.robotSheet, position, speed, RISING, true, false);
@@ -940,7 +940,7 @@ void spawnRobot(Player& player, Vector2 position){
 
 }
 
-void spawnMib(Player& player, Vector2 position){
+void spawnMib(Vector2 position){
     //spawn more mibsin the lobby on first agro
     int speed = 50;
     NPC mib_npc = CreateNPC(resources.mibSheet, position, speed, IDLE, true, false);
@@ -953,7 +953,7 @@ void spawnMib(Player& player, Vector2 position){
 
 }
 
-void spawnFrank(Player& player, Vector2 position){
+void spawnFrank(Vector2 position){
     int speed = 50;
     NPC frank = CreateNPC(resources.frankSheet, position, speed, IDLE, true, false);
     frank.frank = true;
@@ -990,7 +990,7 @@ void spawnZombie(Vector2 position){
     
 }
 
-void UpdateZombieSpawning(Player& player){
+void UpdateZombieSpawning(){
     if (remainingZombiesToSpawn > 0){
         spawnTimer += GetFrameTime();
 
@@ -1044,7 +1044,7 @@ void UpdateZombieSpawning(Player& player){
 
 }
 
-void UpdateTrain(Train &train,Player& player, float deltaTime) {
+void UpdateTrain(Train &train,float deltaTime) {
     switch (train.state) {
         case MovingToStation:
             if (train.position.x < 5500 && gameState == SUBWAY){
@@ -1143,7 +1143,7 @@ void UpdateTrain(Train &train,Player& player, float deltaTime) {
     // printf("State: %d, Position: %f, Speed: %f\n", train.state, train.position.x, train.speed);
 }
 
-void Flocking(Player& player, std::vector<NPC>& npcs) {
+void Flocking(std::vector<NPC>& npcs) {
     //apply seperationForce to Enemies if they get too close.
     Vector2 separationForce = {0.0f, 0.0f};
 
@@ -1227,7 +1227,7 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
 
 
 
-void DrawMac10Pickup(Player& player, Vector2 mousePosition, Camera2D& camera){
+void DrawMac10Pickup(Vector2 mousePosition, Camera2D& camera){
     //Mac10 pickup in asteral plane
     Vector2 macPos = {2445, -735}; // 
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
@@ -1270,7 +1270,7 @@ void DrawMac10Pickup(Player& player, Vector2 mousePosition, Camera2D& camera){
 
 }
 
-void DrawCrowbarPickup(Player& player, Vector2 mousePosition, Camera2D& camera){
+void DrawCrowbarPickup(Vector2 mousePosition, Camera2D& camera){
     Vector2 crowbar_pos = {2860, 700};
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
     float distance_to_cb = abs(player.position.x - crowbar_pos.x);
@@ -1331,7 +1331,7 @@ void DrawCrowbarPickup(Player& player, Vector2 mousePosition, Camera2D& camera){
 
 
 
-void DrawShovelPickup(Player& player, Vector2 mousePosition, Camera2D& camera){
+void DrawShovelPickup(Vector2 mousePosition, Camera2D& camera){
     //render shovel. Click or keyUP the shovel to pick it up. 
 
     Vector2 shovelPos = {1870, 700}; // render within 1900. where zombies trigger
@@ -1377,7 +1377,7 @@ void DrawShovelPickup(Player& player, Vector2 mousePosition, Camera2D& camera){
     }
 }
 
-void HandleLobbyTransition(Player& player, GameCalendar& calendar){
+void HandleLobbyTransition(GameCalendar& calendar){
     if (over_exit && player.currentHealth > 0){
         gameState = NECROTECH;
         over_exit = false;
@@ -1408,7 +1408,7 @@ void HandleLobbyTransition(Player& player, GameCalendar& calendar){
     }
 }
 
-void HandleNecroTransition(Player& player, PlayerCar& player_car, GameCalendar calendar){
+void HandleNecroTransition(PlayerCar& player_car, GameCalendar calendar){
     //faded out
     if (over_necro and passwordValidated && !player.isDead){
         gameState = LOBBY; //over enterance goto lobby
@@ -1437,7 +1437,7 @@ void HandleNecroTransition(Player& player, PlayerCar& player_car, GameCalendar c
 
 
 
-void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<NPC>& npcs, GameCalendar calendar) {
+void HandleOutsideTransition(PlayerCar& player_car, std::vector<NPC>& npcs, GameCalendar calendar) {
     if (move_car && !gotoWork && !gotoPark && !gotoNecro) {  // Car is moving, go to road
         gameState = ROAD;
         UpdateNPCActivity(OUTSIDE, ROAD);
@@ -1499,12 +1499,12 @@ void HandleOutsideTransition(Player& player, PlayerCar& player_car, std::vector<
     }
 }
 
-void HandleApartmentTransition(Player& player) {
+void HandleApartmentTransition() {
     gameState = OUTSIDE;  // Go back outside
     UpdateNPCActivity(APARTMENT, OUTSIDE);
 }
 
-void HandleRoadTransition(Player& player, PlayerCar& player_car) {
+void HandleRoadTransition(PlayerCar& player_car) {
     if (!reverse_road) {
         gameState = CEMETERY;
         player_car.position.x = 3000;
@@ -1520,7 +1520,7 @@ void HandleRoadTransition(Player& player, PlayerCar& player_car) {
     }
 }
 
-void HandleCemeteryTransition(Player& player, PlayerCar& player_car, GameCalendar& calendar) {
+void HandleCemeteryTransition(PlayerCar& player_car, GameCalendar& calendar) {
     reverse_road = true;
     player_car.facingLeft = false;
     move_car = false;
@@ -1544,7 +1544,7 @@ void HandleCemeteryTransition(Player& player, PlayerCar& player_car, GameCalenda
     }
 }
 
-void HandleGraveyardTransition(Player& player, GameCalendar& calendar, std::vector<NPC>& ghosts){
+void HandleGraveyardTransition(GameCalendar& calendar, std::vector<NPC>& ghosts){
     if (player.isDead){
         gameState = APARTMENT;//wake up back at your apartment with full health.
         player.position.x = apartmentX;
@@ -1564,7 +1564,7 @@ void HandleGraveyardTransition(Player& player, GameCalendar& calendar, std::vect
     }
 }
 
-void HandleWorkTransition(Player& player) {
+void HandleWorkTransition() {
     gotoWork = false;
     move_car = false;
     hasWorked = true;
@@ -1574,13 +1574,13 @@ void HandleWorkTransition(Player& player) {
     UpdateNPCActivity(WORK, OUTSIDE);
 }
 
-void HandleLotTransition(Player& player) {
+void HandleLotTransition() {
     gameState = OUTSIDE;
     player.position.x = vacantLotX;
     UpdateNPCActivity(LOT, OUTSIDE);
 }
 
-void HandleAstralTransition(Player& player, GameCalendar& calendar){
+void HandleAstralTransition(GameCalendar& calendar){
     if (player.isDead){ //player dies on the astral plane, reset back to apartment.
         gameState = APARTMENT;//wake up back at your apartment with full health.
         player.position = Vector2 {apartmentX, 700}; // consider the Y
@@ -1612,7 +1612,7 @@ void HandleAstralTransition(Player& player, GameCalendar& calendar){
 
 }
 
-void HandleOfficeTransition(Player& player, GameCalendar calender){
+void HandleOfficeTransition(GameCalendar calender){
     if (player.onElevator){
         gameState = LOBBY;
         UpdateNPCActivity(OFFICE, LOBBY);
@@ -1628,7 +1628,7 @@ void HandleOfficeTransition(Player& player, GameCalendar calender){
     }
 }
 
-void HandleParkTransition(GameState& gamestate, Player& player, PlayerCar player_car){
+void HandleParkTransition(GameState& gamestate,PlayerCar player_car){
     if (player.isDead){ //player dies in park, reset to apartment.
         gameState = APARTMENT;
         player.position.x = apartmentX;
@@ -1657,7 +1657,7 @@ void HandleParkTransition(GameState& gamestate, Player& player, PlayerCar player
 
 }
 
-void HandleSubwayTransition(GameState& gameState, Player& player){
+void HandleSubwayTransition(GameState& gameState){
     //the car magically teleports back to the street if you take the car to the park and take the subway back. 
 
     if (subwayExit && !subwayToPark && !gotoPark){ //your at outside subway so exit to outside
@@ -1698,53 +1698,53 @@ void HandleSubwayTransition(GameState& gameState, Player& player){
     }
 }
 
-void PerformStateTransition(Player& player, PlayerCar& player_car, GameCalendar& calendar, std::vector<NPC>& npcs) {
+void PerformStateTransition( PlayerCar& player_car, GameCalendar& calendar, std::vector<NPC>& npcs) {
     //if we are fading out, we are transitioning, switch to the next area depending on the gameState. 
     switch (gameState) {
         case OUTSIDE:
-            HandleOutsideTransition(player, player_car, npcs, calendar);
+            HandleOutsideTransition(player_car, npcs, calendar);
             break;
         case APARTMENT:
-            HandleApartmentTransition(player);
+            HandleApartmentTransition();
             break;
         case ROAD:
-            HandleRoadTransition(player, player_car);
+            HandleRoadTransition( player_car);
             break;
         case CEMETERY:
-            HandleCemeteryTransition(player, player_car, calendar);
+            HandleCemeteryTransition(player_car, calendar);
             break;
         case WORK:
-            HandleWorkTransition(player);
+            HandleWorkTransition();
             break;
         case LOT:
-            HandleLotTransition(player);
+            HandleLotTransition();
             break;
         case GRAVEYARD:
-            HandleGraveyardTransition(player, calendar, ghosts);
+            HandleGraveyardTransition(calendar, ghosts);
             break;
 
         case ASTRAL:
-            HandleAstralTransition(player, calendar);
+            HandleAstralTransition(calendar);
             break;
 
         case PARK:
-            HandleParkTransition(gameState, player, player_car);
+            HandleParkTransition(gameState,player_car);
             break;
 
         case SUBWAY:
-            HandleSubwayTransition(gameState, player);
+            HandleSubwayTransition(gameState);
             break;
 
         case NECROTECH:
-            HandleNecroTransition(player, player_car, calendar);
+            HandleNecroTransition(player_car, calendar);
             break;
 
         case LOBBY:
-            HandleLobbyTransition(player, calendar);
+            HandleLobbyTransition(calendar);
             break;
 
         case OFFICE:
-            HandleOfficeTransition(player, calendar);
+            HandleOfficeTransition(calendar);
             break;
   
     }
@@ -1764,7 +1764,7 @@ void HandleFadeIn() {
     }
 }
 
-void HandleFadeOut(Player& player, PlayerCar& player_car, GameCalendar& calendar, std::vector<NPC>& npcs) { 
+void HandleFadeOut(PlayerCar& player_car, GameCalendar& calendar, std::vector<NPC>& npcs) { 
     fadeAlpha += fadeSpeed;  // Fade out gradually
     if (fadeAlpha >= 1.0f) {
         fadeAlpha = 1.0f;
@@ -1775,7 +1775,7 @@ void HandleFadeOut(Player& player, PlayerCar& player_car, GameCalendar& calendar
             blackoutTimer = 0.0f;  // Reset blackout timer
 
             // Transition to the next state
-            PerformStateTransition(player, player_car, calendar, npcs);
+            PerformStateTransition(player_car, calendar, npcs);
 
             if (!gotoWork) {  // Don't fade in when at work; fade in later
                 transitionState = FADE_IN;  // Start fading back in
@@ -1786,7 +1786,7 @@ void HandleFadeOut(Player& player, PlayerCar& player_car, GameCalendar& calendar
 
 
 
-void HandleTransition(Player& player, PlayerCar& player_car, GameCalendar& calendar, std::vector<NPC>& npcs) {
+void HandleTransition(PlayerCar& player_car, GameCalendar& calendar, std::vector<NPC>& npcs) {
     //if you want to tranision to a new scene, just say FADEOUT = TRUE
     if (firstTransition) {
         fadeAlpha = 0.0f;  // Ensure it starts at 0 for the first fade
@@ -1796,7 +1796,7 @@ void HandleTransition(Player& player, PlayerCar& player_car, GameCalendar& calen
     if (transitionState == FADE_IN) {
         HandleFadeIn();
     } else if (transitionState == FADE_OUT) {
-        HandleFadeOut(player, player_car, calendar, npcs);
+        HandleFadeOut(player_car, calendar, npcs);
     }
 
     // Reset player position and health on death
@@ -1813,7 +1813,7 @@ void HandleTransition(Player& player, PlayerCar& player_car, GameCalendar& calen
 }
 
 
-void Dig(Player& player){
+void Dig(){
     //check if player is over dig spot, while clicking. Then add item to inventory
    if (player.position.x > 1860 && player.position.x < 1880 && !player.hasPills && gameState == CEMETERY){ //over dig spot
         player.hasPills = true; //if you dont have pill you can allways get more here. 
@@ -1925,7 +1925,7 @@ void UpdateInventoryPosition(const Camera2D& camera, GameState& gameState) {
     
 }
 
-void drawDeadZombie(Player& player, Vector2 bodyPosition,Vector2& mouseWorldPos){
+void drawDeadZombie(Vector2 bodyPosition,Vector2& mouseWorldPos){
     //The first zombie that is killed in the graveyard drops a dead body you can click on and get the ID badge. 
     DrawTexture(resources.deadZombie, bodyPosition.x, bodyPosition.y, WHITE);
     Rectangle bodyBounds = {
@@ -1964,7 +1964,7 @@ void drawDeadZombie(Player& player, Vector2 bodyPosition,Vector2& mouseWorldPos)
 }
 
 
-void RenderInventory(std::string inventory[], int inventorySize, Player& player, Vector2& mousePosition) {
+void RenderInventory(std::string inventory[], int inventorySize,Vector2& mousePosition) {
     int slotWidth = resources.inventorySlot.width;
     shovelTint = WHITE;
     Color gunTint = WHITE;
@@ -2124,7 +2124,7 @@ void RenderInventory(std::string inventory[], int inventorySize, Player& player,
                 if (CheckCollisionPointRec(mousePosition, shovelBounds)){ //dig
                     
                     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-                        Dig(player); //click shovel icon to dig
+                        Dig(); //click shovel icon to dig
                      
                     }
                 }
@@ -2156,7 +2156,7 @@ void RenderInventory(std::string inventory[], int inventorySize, Player& player,
     
 }
 
-void CheckBulletPlayerCollisions(Player& player) {
+void CheckBulletPlayerCollisions() {
     Vector2 bulletSize = {5, 2};
     for (int i = 0; i < MAX_BULLETS; i++){
         if (bullets[i].isActive && bullets[i].laser){ //only lasers hurt player
@@ -2170,7 +2170,7 @@ void CheckBulletPlayerCollisions(Player& player) {
     }
 }
 
-void CheckLaserNPCCollisions(std::vector<NPC>& npcs, Player& player){
+void CheckLaserNPCCollisions(std::vector<NPC>& npcs){
     Vector2 laserSize = {5, 2};
     int laserDamage = 50; //lasers do more damage to NPCs
 
@@ -2188,7 +2188,7 @@ void CheckLaserNPCCollisions(std::vector<NPC>& npcs, Player& player){
     }
 }
 
-void CheckBulletNPCCollisions(std::vector<NPC>& npcs, Player& player) { //Bullet collision with zombies, bats, and ghosts
+void CheckBulletNPCCollisions(std::vector<NPC>& npcs) { //Bullet collision with zombies, bats, and ghosts
     Vector2 bulletSize = {1, 1};  // Size of the bullet hitbox
 
     for (int i = 0; i < MAX_BULLETS; i++) {
@@ -2874,7 +2874,7 @@ void playerOutsideInteraction(Player& player, PlayerCar& player_car){
 
 
 
-void RenderSubway(Player& player, Camera2D& camera, Vector2& mousePosition,Train& train, ShaderResources& shaders){
+void RenderSubway(Camera2D& camera, Vector2& mousePosition,Train& train, ShaderResources& shaders){
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
 
     show_dbox = false;
@@ -2893,7 +2893,7 @@ void RenderSubway(Player& player, Camera2D& camera, Vector2& mousePosition,Train
 
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
 
-    HandleKeyboardAiming(player, mouseWorldPos);
+    HandleKeyboardAiming(mouseWorldPos);
 
 
     if (drunk){
@@ -2963,7 +2963,7 @@ void RenderSubway(Player& player, Camera2D& camera, Vector2& mousePosition,Train
 
 
     float deltaTime = GetFrameTime();
-    UpdateTrain(train, player, deltaTime);
+    UpdateTrain(train, deltaTime);
     DrawTexture(resources.train, train.position.x, train.position.y-27, WHITE); //draw train in front of NPCs and player
 
 
@@ -2994,7 +2994,7 @@ void RenderSubway(Player& player, Camera2D& camera, Vector2& mousePosition,Train
     }
 
     if (showInventory){
-        RenderInventory(inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+        RenderInventory(inventory, INVENTORY_SIZE, mousePosition);  // Render the inventory 
     }
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
         DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
@@ -3028,7 +3028,7 @@ void RenderSubway(Player& player, Camera2D& camera, Vector2& mousePosition,Train
 
 
 
-void RenderAstral(Player& player, Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoor& magicDoor, MagicDoor& magicdoor2, ShaderResources& shaders){
+void RenderAstral(Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoor& magicDoor, MagicDoor& magicdoor2, ShaderResources& shaders){
     player.gravity = 200;
     player.outline = true;//turn on outline shader in asteral plane
 
@@ -3047,7 +3047,7 @@ void RenderAstral(Player& player, Camera2D& camera, Vector2& mousePosition,Earth
     ClearBackground(customBackgroundColor);
 
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
-    HandleKeyboardAiming(player, worldMousePosition);
+    HandleKeyboardAiming(worldMousePosition);
 
 
     if (drunk){
@@ -3101,7 +3101,7 @@ void RenderAstral(Player& player, Camera2D& camera, Vector2& mousePosition,Earth
         ghost.Render(shaders);
         
         if (ghost.agro){
-            Flocking(player, astralGhosts);
+            Flocking(astralGhosts);
         }
 
         if (abs(ghost.position.y - player.position.y) < 50){
@@ -3116,13 +3116,13 @@ void RenderAstral(Player& player, Camera2D& camera, Vector2& mousePosition,Earth
         bat.Render(shaders);
         
         if (bat.agro){
-            Flocking(player,astralBats);
+            Flocking(astralBats);
         }
     }
     
 
 
-    DrawMac10Pickup(player, mousePosition, camera);
+    DrawMac10Pickup(mousePosition, camera);
 
     
     DrawBullets(); //draw bullets in cemetery after everything else. 
@@ -3141,7 +3141,7 @@ void RenderAstral(Player& player, Camera2D& camera, Vector2& mousePosition,Earth
     
 
     if (showInventory){
-        RenderInventory(inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+        RenderInventory(inventory, INVENTORY_SIZE, mousePosition);  // Render the inventory 
     }
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
         DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
@@ -3159,7 +3159,7 @@ void RenderAstral(Player& player, Camera2D& camera, Vector2& mousePosition,Earth
 }
 
 
-void RenderCemetery(Player& player, PlayerCar& player_car, UFO& ufo, float& time, Camera2D& camera,Vector2 mousePosition, ShaderResources& shaders){
+void RenderCemetery(PlayerCar& player_car, UFO& ufo, float& time, Camera2D& camera,Vector2 mousePosition, ShaderResources& shaders){
     int carMax = 2800;
     int carMin = 2765;
 
@@ -3250,7 +3250,7 @@ void RenderCemetery(Player& player, PlayerCar& player_car, UFO& ufo, float& time
     BeginMode2D(camera);
 
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
-    HandleKeyboardAiming(player, worldMousePosition);
+    HandleKeyboardAiming(worldMousePosition);
     
     // if (!IsKeyDown(KEY_F)){
     //     if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
@@ -3305,7 +3305,7 @@ void RenderCemetery(Player& player, PlayerCar& player_car, UFO& ufo, float& time
         DrawUFO(ufo, camera, time, shaders);
     }
 
-    DrawShovelPickup(player, mousePosition, camera);
+    DrawShovelPickup(mousePosition, camera);
 
     for (NPC& zombie : zombies){ //update and draw zombies in cemetery
         zombie.Update(player, gameState);
@@ -3329,7 +3329,7 @@ void RenderCemetery(Player& player, PlayerCar& player_car, UFO& ufo, float& time
     EndMode2D();
 
     if (showInventory){
-        RenderInventory(inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+        RenderInventory(inventory, INVENTORY_SIZE,mousePosition);  // Render the inventory 
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
@@ -3374,7 +3374,7 @@ void RenderCemetery(Player& player, PlayerCar& player_car, UFO& ufo, float& time
     
 }
 
-void RenderRoad(PlayerCar& player_car,Player& player, Camera2D& camera, Vector2 mousePosition, ShaderResources& shaders){
+void RenderRoad(PlayerCar& player_car, Camera2D& camera, Vector2 mousePosition, ShaderResources& shaders){
     if (player_car.position.x < 200 && !reverse_road){//transition to cemetery
         
         transitionState = FADE_OUT;
@@ -3456,7 +3456,7 @@ void RenderRoad(PlayerCar& player_car,Player& player, Camera2D& camera, Vector2 
    
 }
 
-void RenderGraveyard(Player& player,Camera2D& camera,Vector2 mousePosition, ShaderResources& shaders){
+void RenderGraveyard(Camera2D& camera,Vector2 mousePosition, ShaderResources& shaders){
 
     float digPos = 2350.0f;
     
@@ -3477,7 +3477,7 @@ void RenderGraveyard(Player& player,Camera2D& camera,Vector2 mousePosition, Shad
 
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
 
-    HandleKeyboardAiming(player, mouseWorldPos);
+    HandleKeyboardAiming(mouseWorldPos);
 
     float parallaxforeground = camera.target.x * 0.4;
     float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
@@ -3544,7 +3544,7 @@ void RenderGraveyard(Player& player,Camera2D& camera,Vector2 mousePosition, Shad
                 {1024, 70, static_cast<float>(resources.GraveyardGate.width), static_cast<float>(resources.GraveyardGate.height)}, {0, 0}, 0.0f, WHITE);
 
     if (firstBlood && !player.hasBadge){
-        drawDeadZombie(player, dz_pos, mouseWorldPos);
+        drawDeadZombie(dz_pos, mouseWorldPos);
     }
 
     EndMode2D();
@@ -3558,7 +3558,7 @@ void RenderGraveyard(Player& player,Camera2D& camera,Vector2 mousePosition, Shad
     }
 
     if (showInventory){
-        RenderInventory(inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+        RenderInventory(inventory, INVENTORY_SIZE, mousePosition);  // Render the inventory 
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
@@ -3610,7 +3610,7 @@ void RenderGraveyard(Player& player,Camera2D& camera,Vector2 mousePosition, Shad
 
 
 
-void RenderApartment(Player player, Vector2 mousePosition, GameCalendar& calendar, Camera2D camera, ShaderResources& shaders){
+void RenderApartment(Vector2 mousePosition, GameCalendar& calendar, Camera2D camera, ShaderResources& shaders){
     player.position.x -= 20; //ensure over_apartment = false
     int screen_center = (screenWidth - resources.apartment.width)/2;
 
@@ -3638,7 +3638,7 @@ void RenderApartment(Player player, Vector2 mousePosition, GameCalendar& calenda
     
 
     if (showInventory){
-        RenderInventory(inventory, INVENTORY_SIZE, player, mousePosition);
+        RenderInventory(inventory, INVENTORY_SIZE,mousePosition);
         
     }
 
@@ -3658,7 +3658,7 @@ void RenderApartment(Player player, Vector2 mousePosition, GameCalendar& calenda
     
 }
 
-void RenderLot(Player& player, Camera2D& camera, Vector2& mousePosition,ShaderResources& shaders){
+void RenderLot(Camera2D& camera, Vector2& mousePosition,ShaderResources& shaders){
 
     show_dbox = false; //turn off dbox if no one is interacting
     int digPos = 2600;
@@ -3709,7 +3709,7 @@ void RenderLot(Player& player, Camera2D& camera, Vector2& mousePosition,ShaderRe
 
 
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
-    HandleKeyboardAiming(player, worldMousePosition);
+    HandleKeyboardAiming(worldMousePosition);
     if (drunk){
         BeginShaderMode(shaders.glowShader2);
 
@@ -3781,7 +3781,7 @@ void RenderLot(Player& player, Camera2D& camera, Vector2& mousePosition,ShaderRe
     
     player.DrawPlayer(resources, gameState, camera, shaders);
 
-    DrawCrowbarPickup(player, mousePosition, camera);
+    DrawCrowbarPickup(mousePosition, camera);
     DrawBullets();
     
     EndMode2D();  // End 2D mode 
@@ -3794,13 +3794,13 @@ void RenderLot(Player& player, Camera2D& camera, Vector2& mousePosition,ShaderRe
 
     if (showInventory){
          
-        RenderInventory(inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+        RenderInventory(inventory, INVENTORY_SIZE, mousePosition);  // Render the inventory 
     }
 
     DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
 }
 
-void RenderPark(Player& player, PlayerCar& player_car, Camera2D& camera,Vector2& mousePosition, ShaderResources& shaders){
+void RenderPark(PlayerCar& player_car, Camera2D& camera,Vector2& mousePosition, ShaderResources& shaders){
     BeginMode2D(camera);  // Begin 2D mode with the camera
     ClearBackground(customBackgroundColor);
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
@@ -3827,7 +3827,7 @@ void RenderPark(Player& player, PlayerCar& player_car, Camera2D& camera,Vector2&
 
 
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
-    HandleKeyboardAiming(player, worldMousePosition);
+    HandleKeyboardAiming(worldMousePosition);
     
      // Draw the background (sky)
     DrawTexturePro(resources.background, {0, 0, static_cast<float>(resources.background.width), static_cast<float>(resources.background.height)},
@@ -3944,7 +3944,7 @@ void RenderPark(Player& player, PlayerCar& player_car, Camera2D& camera,Vector2&
 
     if (showInventory){ // this could be done globally, there is never a time when we don't want to show inventory
          
-        RenderInventory(inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+        RenderInventory(inventory, INVENTORY_SIZE, mousePosition);  // Render the inventory 
     }
 
     if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)){
@@ -3991,7 +3991,7 @@ void RenderPark(Player& player, PlayerCar& player_car, Camera2D& camera,Vector2&
 }
 
 //Office
-void RenderOffice(Camera2D& camera, Player& player, Elevator& elevator, Vector2& mousePosition, ShaderResources& shaders){
+void RenderOffice(Camera2D& camera,Elevator& elevator, Vector2& mousePosition, ShaderResources& shaders){
     show_dbox = false;
     over_elevator = false;
     over_elevator2 = false;
@@ -4099,7 +4099,7 @@ void RenderOffice(Camera2D& camera, Player& player, Elevator& elevator, Vector2&
     DrawBullets();
     EndShaderMode(); ////////////////////////////SHADER OFF
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
-    HandleKeyboardAiming(player, worldMousePosition);
+    HandleKeyboardAiming(worldMousePosition);
     EndMode2D();
 
     //draw healthbar 
@@ -4112,7 +4112,7 @@ void RenderOffice(Camera2D& camera, Player& player, Elevator& elevator, Vector2&
     DrawMoney(); //draw money after EndMode2d()
     if (showInventory){
          
-        RenderInventory(inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+        RenderInventory(inventory, INVENTORY_SIZE, mousePosition);  // Render the inventory 
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
@@ -4130,7 +4130,7 @@ void RenderOffice(Camera2D& camera, Player& player, Elevator& elevator, Vector2&
 
     if (!spawning_zombies && spawn_frank && AreAllNPCsDeactivated(zombies)){ //all spawned zombies are dead , spawn frank 
         spawn_frank = false;
-        spawnFrank(player, player.position + Vector2 {100, 0}); //spawn to the right of player, like he emerges from hiding. 
+        spawnFrank(player.position + Vector2 {100, 0}); //spawn to the right of player, like he emerges from hiding. 
     
 
     }
@@ -4139,7 +4139,7 @@ void RenderOffice(Camera2D& camera, Player& player, Elevator& elevator, Vector2&
 }
 
 //Lobby
-void RenderLobby(Camera2D& camera, Player& player, Elevator& elevator, Vector2& mousePosition, ShaderResources shaders){
+void RenderLobby(Camera2D& camera,Elevator& elevator, Vector2& mousePosition, ShaderResources shaders){
     show_dbox = false;   
     over_exit = false;
     over_Ebutton = false;
@@ -4218,8 +4218,8 @@ void RenderLobby(Camera2D& camera, Player& player, Elevator& elevator, Vector2& 
 
     if (AreAllNPCsDeactivated(lobbyMibs) && can_spawn_robots){ //if all the lobby mibs are dead, spawn robots and zombies
         can_spawn_robots = false;
-        spawnRobot(player, player.position + Vector2 {300, 0});
-        spawnRobot(player, player.position + Vector2 {-300, 0});
+        spawnRobot(player.position + Vector2 {300, 0});
+        spawnRobot(player.position + Vector2 {-300, 0});
         if (can_spawn_zombies){
             can_spawn_zombies = false;
             StartZombieSpawn(10); //spawn zombies when robots spawn, spawning zombies in the lobby triggers the alarm. 
@@ -4233,7 +4233,7 @@ void RenderLobby(Camera2D& camera, Player& player, Elevator& elevator, Vector2& 
     if (globalAgro && can_spawn_mibs){
         can_spawn_mibs = false;
         //spawnMib(resources, player, player.position + Vector2 {300, 0});
-        spawnMib(player, player.position + Vector2 {-300, 0});
+        spawnMib(player.position + Vector2 {-300, 0});
         
     }
     
@@ -4248,7 +4248,7 @@ void RenderLobby(Camera2D& camera, Player& player, Elevator& elevator, Vector2& 
 
             if (robot.agro){
                 robot.destination = player.position;
-                Flocking(player, lobbyRobots); //repulsion force if NPCs get too close. 
+                Flocking(lobbyRobots); //repulsion force if NPCs get too close. 
             }
 
             if (robot.interacting && !robot.agro){
@@ -4283,7 +4283,7 @@ void RenderLobby(Camera2D& camera, Player& player, Elevator& elevator, Vector2& 
                 mib.hasTarget = true;
                 mib.destination = player.position;
                 mib.facingRight = player.position.x > mib.position.x;
-                Flocking(player, lobbyMibs); //only flock if agro. flocking = repulsion force. 
+                Flocking(lobbyMibs); //only flock if agro. flocking = repulsion force. 
                 globalAgro = true; //if 1 mib is agro, alert everyone else. 
 
 
@@ -4351,7 +4351,7 @@ void RenderLobby(Camera2D& camera, Player& player, Elevator& elevator, Vector2& 
     DrawBullets();
     EndShaderMode(); ////////////////////////////SHADER OFF
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
-    HandleKeyboardAiming(player, worldMousePosition);
+    HandleKeyboardAiming(worldMousePosition);
     EndMode2D();
 
 
@@ -4365,7 +4365,7 @@ void RenderLobby(Camera2D& camera, Player& player, Elevator& elevator, Vector2& 
     DrawMoney(); //draw money after EndMode2d()
     if (showInventory){
          
-        RenderInventory(inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+        RenderInventory(inventory, INVENTORY_SIZE,mousePosition);  // Render the inventory 
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
@@ -4385,7 +4385,7 @@ void RenderLobby(Camera2D& camera, Player& player, Elevator& elevator, Vector2& 
 }
 
 //NecroTech
-void RenderNecroTech(Camera2D& camera, Player& player, PlayerCar& player_car, Vector2& mousePosition, ShaderResources& shaders){
+void RenderNecroTech(Camera2D& camera,PlayerCar& player_car, Vector2& mousePosition, ShaderResources& shaders){
 
     show_dbox = false;
     
@@ -4501,7 +4501,7 @@ void RenderNecroTech(Camera2D& camera, Player& player, PlayerCar& player_car, Ve
     DrawBullets();
     EndShaderMode(); ////////////////////////////SHADER OFF
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
-    HandleKeyboardAiming(player, worldMousePosition);
+    HandleKeyboardAiming(worldMousePosition);
     EndMode2D();
 
     //draw healthbar 
@@ -4514,7 +4514,7 @@ void RenderNecroTech(Camera2D& camera, Player& player, PlayerCar& player_car, Ve
     DrawMoney(); //draw money after EndMode2d()
     if (showInventory){
          
-        RenderInventory(inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+        RenderInventory(inventory, INVENTORY_SIZE, mousePosition);  // Render the inventory 
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
@@ -4536,7 +4536,7 @@ void RenderNecroTech(Camera2D& camera, Player& player, PlayerCar& player_car, Ve
 
     //This delays turning off password interface so player has time to read the message. Make this logic better. 
     if (!passwordValidated && showPasswordInterface && passwordTimer <= 0){
-        UpdatePasswordInterface(player); //show password interface
+        UpdatePasswordInterface(); //show password interface
         RenderPasswordInterface();
 
     }else if (passwordValidated && showPasswordInterface && passwordTimer > 0){
@@ -4552,7 +4552,7 @@ void RenderNecroTech(Camera2D& camera, Player& player, PlayerCar& player_car, Ve
 
 
 //Main Street
-void RenderOutside(Camera2D& camera,Player& player, PlayerCar& player_car,MagicDoor& magicDoor, float& totalTime,  std::vector<NPC>& npcs, UFO& ufo, Vector2 mousePosition, ShaderResources& shaders) {
+void RenderOutside(Camera2D& camera, PlayerCar& player_car,MagicDoor& magicDoor, float& totalTime,  std::vector<NPC>& npcs, UFO& ufo, Vector2 mousePosition, ShaderResources& shaders) {
 
     SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide or in vacant lot
     SoundManager::getInstance().PlayMusic("StreetSounds");
@@ -4574,7 +4574,7 @@ void RenderOutside(Camera2D& camera,Player& player, PlayerCar& player_car,MagicD
 
 
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
-    HandleKeyboardAiming(player, worldMousePosition);
+    HandleKeyboardAiming(worldMousePosition);
     
     if (drunk){
         BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason. TODO: fix drunk shader, make it global and look good.
@@ -4770,7 +4770,7 @@ void RenderOutside(Camera2D& camera,Player& player, PlayerCar& player_car,MagicD
     DrawMoney(); //draw money after EndMode2d()
     if (showInventory){
          
-        RenderInventory(inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+        RenderInventory(inventory, INVENTORY_SIZE, mousePosition);  // Render the inventory 
     }
     //Draw cursor last so it's on top
     DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
@@ -5068,7 +5068,7 @@ void handleCamera(Camera2D& camera, float& targetZoom){
 
 }
 
-void debugKeys(Player& player){
+void debugKeys(){
     //Debug keys, disable for release. 
     if (IsKeyPressed(KEY_SPACE)){
         std::cout << "Player Position: "; //print player position on key_space for debug purposes
@@ -5180,7 +5180,7 @@ void debugKeys(Player& player){
 
 
 
-void UptoEnter(Player& player, PlayerCar& player_car, Elevator& elevator){
+void UptoEnter(PlayerCar& player_car, Elevator& elevator){
     //enter places by pressing up 
     if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
 
@@ -5602,7 +5602,7 @@ int main() {
     InitShaders(shaders, screenWidth, screenHeight); //refactored shader setup to shaderControl.cpp
 
     // Initialize player
-    Player player;
+    //Player player; //initialized in player.cpp, declared extern in player.h for easy access 
     PlayerCar player_car;
     Earth earth;
     MagicDoor magicDoor;
@@ -5687,37 +5687,37 @@ int main() {
 
         UpdateBullets();
         //check each enemy group for bullet collisions
-        CheckBulletNPCCollisions(zombies, player);
-        CheckBulletNPCCollisions(ghosts, player);
-        CheckBulletNPCCollisions(astralGhosts, player);
-        CheckBulletNPCCollisions(bats, player);
-        CheckBulletNPCCollisions(astralBats, player);
+        CheckBulletNPCCollisions(zombies);
+        CheckBulletNPCCollisions(ghosts);
+        CheckBulletNPCCollisions(astralGhosts);
+        CheckBulletNPCCollisions(bats);
+        CheckBulletNPCCollisions(astralBats);
         
-        CheckBulletNPCCollisions(robots, player); //player shoots necroTech robot
-        CheckBulletNPCCollisions(lobbyRobots, player); //player shoots lobby robots
-        CheckBulletNPCCollisions(lobbyMibs, player); // player shoots mibs
+        CheckBulletNPCCollisions(robots); //player shoots necroTech robot
+        CheckBulletNPCCollisions(lobbyRobots); //player shoots lobby robots
+        CheckBulletNPCCollisions(lobbyMibs); // player shoots mibs
         
-        CheckLaserNPCCollisions(lobbyNPCs, player); //robots can shoot regular NPCs if they happen to be in the way
-        CheckLaserNPCCollisions(zombies, player); //mibs can shoot zombies if they get in the way.
+        CheckLaserNPCCollisions(lobbyNPCs); //robots can shoot regular NPCs if they happen to be in the way
+        CheckLaserNPCCollisions(zombies); //mibs can shoot zombies if they get in the way.
 
-        crowbarAttack(player, zombies); //check crowbar collisions with every enemy group. optimize this?
-        crowbarAttack(player, lobbyMibs);
-        crowbarAttack(player, lobbyRobots);
-        crowbarAttack(player, astralBats);
-        crowbarAttack(player, astralGhosts);
-        crowbarAttack(player, ghosts);
-        crowbarAttack(player, robots);
-        crowbarAttack(player, bats); //there are no bats, but just incase future bats
+        crowbarAttack(zombies); //check crowbar collisions with every enemy group. optimize this?
+        crowbarAttack(lobbyMibs);
+        crowbarAttack(lobbyRobots);
+        crowbarAttack(astralBats);
+        crowbarAttack(astralGhosts);
+        crowbarAttack(ghosts);
+        crowbarAttack(robots);
+        crowbarAttack(bats); //there are no bats, but just incase future bats
 
-        crowbarAttackBoxes(player, boxes); //breakable boxes
+        crowbarAttackBoxes(boxes); //breakable boxes
 
-        UpdatePickups(player);
+        UpdatePickups();
 
 
 
-        CheckBulletPlayerCollisions(player); //NPCs shoot player
-        MonitorMouseClicks(player, calendar); 
-        UpdateZombieSpawning(player);
+        CheckBulletPlayerCollisions(); //NPCs shoot player
+        MonitorMouseClicks(calendar); 
+        UpdateZombieSpawning();
         //glowEffect(glowShader, gameState); //update glow shader
 
         if (playSoundTimer > 0){
@@ -5764,7 +5764,7 @@ int main() {
 
         ////DEBUG/////////////////DEBUG///////////
         if (debug){
-            debugKeys(player);
+            debugKeys();
 
         }
         //////////////////////////////////////////////
@@ -5779,7 +5779,7 @@ int main() {
             
         }
        
-        UptoEnter(player, player_car, elevator);//enter different areas by pressing up
+        UptoEnter(player_car, elevator);//enter different areas by pressing up
         
 
         if (currentPauseState == GAME_PAUSED){ //if game is paused, save the last frame of the game running, and draw it behind the menus
@@ -5811,52 +5811,52 @@ int main() {
             
             switch (gameState){//Depending on the gameState, render the scene. 
                 case OUTSIDE:
-                    RenderOutside(camera, player, player_car, magicDoor, totalTime, npcs, ufo, mousePosition, shaders); 
+                    RenderOutside(camera,player_car, magicDoor, totalTime, npcs, ufo, mousePosition, shaders); 
                     break;
                 case APARTMENT:
-                    RenderApartment(player, mousePosition, calendar, camera, shaders);
+                    RenderApartment(mousePosition, calendar, camera, shaders);
                     break;
                 case ROAD:
-                    RenderRoad(player_car, player, camera, mousePosition, shaders);
+                    RenderRoad(player_car,camera, mousePosition, shaders);
                     break;
                 case CEMETERY:
-                    RenderCemetery(player, player_car, ufo, totalTime, camera,mousePosition, shaders);
+                    RenderCemetery(player_car, ufo, totalTime, camera,mousePosition, shaders);
                     break;
                 case WORK:
                     ClearBackground(BLACK);//do nothing at the moment
                     break;
                 case LOT:
-                    RenderLot(player, camera, mousePosition, shaders);
+                    RenderLot(camera, mousePosition, shaders);
                     break;
                 case GRAVEYARD:
-                    RenderGraveyard(player, camera, mousePosition, shaders);
+                    RenderGraveyard(camera, mousePosition, shaders);
                     break;
                 case ASTRAL:
-                    RenderAstral(player, camera, mousePosition, earth, magicDoor, magicDoor2, shaders);
+                    RenderAstral(camera, mousePosition, earth, magicDoor, magicDoor2, shaders);
                     break;
                 case PARK:
-                    RenderPark(player,player_car, camera, mousePosition, shaders);
+                    RenderPark(player_car, camera, mousePosition, shaders);
                     break;
 
                 case SUBWAY:
-                    RenderSubway(player, camera, mousePosition, train, shaders);
+                    RenderSubway( camera, mousePosition, train, shaders);
                     break;
 
                 case NECROTECH:
-                    RenderNecroTech(camera, player, player_car, mousePosition, shaders);
+                    RenderNecroTech(camera, player_car, mousePosition, shaders);
                     break;
 
                 case LOBBY:
-                    RenderLobby(camera, player, elevator, mousePosition, shaders);
+                    RenderLobby(camera, elevator, mousePosition, shaders);
                     break;
 
                 case OFFICE:
-                    RenderOffice(camera, player, elevator, mousePosition, shaders);
+                    RenderOffice(camera,  elevator, mousePosition, shaders);
                     break;
                     
             }
             
-            HandleTransition(player, player_car, calendar, npcs); //Check everyframe for gamestate transitions, inside draw to handle fadeouts
+            HandleTransition(player_car, calendar, npcs); //Check everyframe for gamestate transitions, inside draw to handle fadeouts
             
             EndTextureMode();
             

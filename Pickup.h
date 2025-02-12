@@ -87,7 +87,7 @@ void SpawnPickup(Vector2 position, PickupType type, Texture2D texture) {
 }
 
 // Function to update all pickups
-void UpdatePickups(Player& player) {
+void UpdatePickups() {
     for (auto& pickup : pickups) {
         pickup.Update(player);
     }

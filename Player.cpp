@@ -14,7 +14,7 @@
 WeaponType currentWeapon;  // To track the current weapon
 
 
-
+Player player;  // Define the player instance
 
 
 Player::Player() {
@@ -92,6 +92,8 @@ Player::Player() {
     hasPills = false;
 
 }
+
+
 
 void Player::take_damage(int damage) {
     

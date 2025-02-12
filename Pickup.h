@@ -5,6 +5,8 @@
 #include <vector>
 #include "Player.h"
 #include <algorithm>
+#include <iostream>
+#include "SoundManager.h"
 
 // Enum for different types of pickups
 enum class PickupType {
@@ -18,7 +20,7 @@ public:
     Vector2 position;
     PickupType type;
     bool isCollected = false;
-    float pickupRadius = 16.0f;
+    float pickupRadius = 32.0f;
     Texture2D texture;
     int value; // Amount of ammo/health this pickup gives
 
@@ -47,7 +49,9 @@ public:
     // Check if player is close enough to pick up the item
     void Update(Player& player) {
         if (!isCollected && CheckCollisionPointCircle(player.position, position, pickupRadius)) {
+            std::cout << "pickup\n";
             ApplyEffect(player);
+            PlaySound(SoundManager::getInstance().GetSound("reload"));
             isCollected = true;
         }
     }

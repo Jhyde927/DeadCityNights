@@ -303,198 +303,6 @@ struct Train {
 
 std::vector<Elevator> elevators;
 
-// Function to initialize and load resources
-// void LoadGameResources(GameResources& resources) {
-//     resources.background = LoadTexture("assets/Background.png");
-//     resources.foreground = LoadTexture("assets/Foreground.png");
-//     resources.midground = LoadTexture("assets/Midground.png");
-//     resources.manTexture = LoadTexture("assets/Man.png");
-//     resources.walkSheet = LoadTexture("assets/WalkSheet.png");
-//     resources.runSheet = LoadTexture("assets/RunSheet.png");
-//     resources.apartment = LoadTexture("assets/Apartment.png");
-//     resources.road = LoadTexture("assets/Road.png");
-//     resources.car = LoadTexture("assets/Car.png");
-//     resources.carSheet = LoadTexture("assets/Car-Sheet.png");
-//     resources.reloadSheet = LoadTexture("assets/reloadSheet.png");
-//     resources.lightBeam = LoadTexture("assets/LightBeam.png");
-//     resources.lightCone = LoadTexture("assets/LightCone.png");
-//     resources.cemetery = LoadTexture("assets/Cemetery.png");
-//     resources.inventorySlot = LoadTexture("assets/InventorySlot.png");
-//     resources.cemeteryBackground = LoadTexture("assets/Cemetery(backGround).png");
-//     resources.cemeteryTrees = LoadTexture("assets/Cemetery(Trees).png");
-//     resources.cemeteryMidground = LoadTexture("assets/Cemetery(midGround).png");
-//     resources.cemeteryForeground = LoadTexture("assets/Cemetery(forground).png");
-//     resources.carKey = LoadTexture("assets/carKey.png");
-//     resources.npcTexture = LoadTexture("assets/npcSheet.png");
-//     resources.breakLight = LoadTexture("assets/breakLight.png");
-//     resources.truck = LoadTexture("assets/Truck.png");
-//     resources.businessSheet = LoadTexture("assets/businessSheet.png");
-//     resources.womanSheet = LoadTexture("assets/womanSheet.png");
-//     resources.dealerSheet = LoadTexture("assets/DealerSheet.png");
-//     resources.zombieSheet = LoadTexture("assets/zombieSheet.png");
-//     resources.shootSheet = LoadTexture("assets/shootSheet.png");
-//     resources.OpenDrawer = LoadTexture("assets/OpenDrawer.png");
-//     resources.Revolver = LoadTexture("assets/Revolver.png");
-//     resources.CarKeys = LoadTexture("assets/CarKeys.png");
-//     resources.handCursor = LoadTexture("assets/hand.png");
-//     resources.reticle = LoadTexture("assets/reticle.png");
-//     resources.ShotGunSheet = LoadTexture("assets/ShotGunSheet.png");
-//     resources.ShotgunReload = LoadTexture("assets/ShotGunReload.png");
-//     resources.Drugs = LoadTexture("assets/Drugs.png");
-//     resources.policeSheet = LoadTexture("assets/PoliceSheet.png");
-//     resources.vacantLot = LoadTexture("assets/EmptyLot.png");
-//     resources.hoboSheet = LoadTexture("assets/HoboSheet.png");
-//     resources.shovel = LoadTexture("assets/shovel.png");
-//     resources.shovelWorld = LoadTexture("assets/shovelWorld.png");
-//     resources.shotgunPickup = LoadTexture("assets/ShotGunPickup.png");
-//     resources.shotgunIcon = LoadTexture("assets/shotgunIcon.png");
-//     resources.pills = LoadTexture("assets/pills.png");
-//     resources.FortuneTellerSheet = LoadTexture("assets/FortuneTellerSheet.png");
-//     resources.woman2Sheet = LoadTexture("assets/woman2Sheet.png");
-//     resources.cemeteryKey = LoadTexture("assets/CemeteryKey.png");
-//     resources.GraveyardGate = LoadTexture("assets/GraveyardGate.png");
-//     resources.GraveyardForeground = LoadTexture("assets/GraveyardForeground.png");
-//     resources.GreaveyardMidground= LoadTexture("assets/GraveyardMidground.png");
-//     resources.deadZombie = LoadTexture("assets/DeadZombie.png");
-//     resources.Badge = LoadTexture("assets/Badge.png");
-//     resources.ComputerScreen = LoadTexture("assets/ComputerScreen.png");
-//     resources.ghostSheet = LoadTexture("assets/ghostSheet.png");
-//     resources.magicDoorSheet = LoadTexture("assets/MagicDoorSheet.png");
-//     resources.AstralBackground = LoadTexture("assets/AstralBackground.png");
-//     resources.AstralMidground = LoadTexture("assets/AstralMidGround.png");
-//     resources.AstralClouds = LoadTexture("assets/AstralClouds.png");
-//     resources.AstralForeground = LoadTexture("assets/AstralForeground.png");
-//     resources.AstralClouds2 = LoadTexture("assets/AstralClouds2.png");
-//     resources.EarthSheet = LoadTexture("assets/EarthSpin-Sheet.png");
-//     resources.jumpSheet = LoadTexture("assets/JumpSheet.png");
-//     resources.healthBorder = LoadTexture("assets/HealthBoarder.png");
-//     resources.batSheet = LoadTexture("assets/batSheet.png");
-//     resources.platformTexture = LoadTexture("assets/platform(128x32).png");
-//     resources.mibSheet = LoadTexture("assets/mibSheet.png");
-//     resources.whiskey = LoadTexture("assets/Whiskey.png");
-//     resources.midgroundLot = LoadTexture("assets/MidGroundLot.png");
-//     resources.UFOsheet = LoadTexture("assets/UFOsheet.png");
-//     resources.lightBar = LoadTexture("assets/lightBar.png");
-//     resources.ParkForeground = LoadTexture("assets/Park(foreground).png");
-//     resources.ParkMidground = LoadTexture("assets/Park(midground).png");
-//     resources.ParkBuildings = LoadTexture("assets/Park(buildings).png");
-//     resources.MidBuildings = LoadTexture("assets/MidBuildings.png");
-//     resources.shootSheetAuto = LoadTexture("assets/shootSheetAuto.png");
-//     resources.reloadSheetAuto = LoadTexture("assets/reloadSheetAuto.png");
-//     resources.Mac10 = LoadTexture("assets/Mac10.png");
-//     resources.Mac10pickup = LoadTexture("assets/Mac10pickup.png");
-//     resources.subwayForeground = LoadTexture("assets/subwayForground.png");
-//     resources.subwayBackground = LoadTexture("assets/subwayBackground.png");
-//     resources.subwayMidground = LoadTexture("assets/subwayMidground.png");
-//     resources.train = LoadTexture("assets/Train.png");
-//     resources.ntForeground = LoadTexture("assets/NTforeground.png");
-//     resources.robotSheet = LoadTexture("assets/robotSheet.png");
-//     resources.LobbyForeground = LoadTexture("assets/LobbyForeground.png");
-//     resources.elevatorSheet = LoadTexture("assets/elevatorSheet.png");
-//     resources.floorNumberSheet = LoadTexture("assets/floorNumberSheet.png");
-//     resources.officeBackground = LoadTexture("assets/officeBackground.png");
-//     resources.officeSheet = LoadTexture("assets/officeSheet.png");
-//     resources.frankSheet = LoadTexture("assets/frankSheet.png");
-//     resources.crowbarSheet = LoadTexture("assets/crowbarSheet.png");
-//     resources.crowbarIcon = LoadTexture("assets/crowbarIcon.png");
-//     resources.boxSheet = LoadTexture("assets/boxSheet.png");
-//     resources.shellsPickup = LoadTexture("assets/shellsPickup.png");
-// }
-
-// void UnloadGameResources(GameResources& resources){
-//     UnloadTexture(resources.background);
-//     UnloadTexture(resources.foreground);
-//     UnloadTexture(resources.midground);
-//     UnloadTexture(resources.walkSheet);
-//     UnloadTexture(resources.runSheet);
-//     UnloadTexture(resources.manTexture);
-//     UnloadTexture(resources.apartment);
-//     UnloadTexture(resources.carSheet);
-//     UnloadTexture(resources.car);
-//     UnloadTexture(resources.road);
-//     UnloadTexture(resources.cemetery);
-//     UnloadTexture(resources.inventorySlot);
-//     UnloadTexture(resources.cemeteryBackground);
-//     UnloadTexture(resources.cemeteryTrees);
-//     UnloadTexture(resources.cemeteryMidground);
-//     UnloadTexture(resources.cemeteryForeground);
-//     UnloadTexture(resources.npcTexture);
-//     UnloadTexture(resources.lightBeam);
-//     UnloadTexture(resources.lightCone);
-//     UnloadTexture(resources.breakLight);
-//     UnloadTexture(resources.truck);
-//     UnloadTexture(resources.businessSheet);
-//     UnloadTexture(resources.womanSheet);
-//     UnloadTexture(resources.zombieSheet);
-//     UnloadTexture(resources.shootSheet);
-//     UnloadTexture(resources.OpenDrawer);
-//     UnloadTexture(resources.Revolver);
-//     UnloadTexture(resources.CarKeys);
-//     UnloadTexture(resources.handCursor);
-//     UnloadTexture(resources.reticle);
-//     UnloadTexture(resources.ShotGunSheet);
-//     UnloadTexture(resources.ShotgunReload);
-//     UnloadTexture(resources.Drugs);
-//     UnloadTexture(resources.policeSheet);
-//     UnloadTexture(resources.vacantLot);
-//     UnloadTexture(resources.hoboSheet);
-//     UnloadTexture(resources.shovel);
-//     UnloadTexture(resources.shovelWorld);
-//     UnloadTexture(resources.shotgunPickup);
-//     UnloadTexture(resources.shotgunIcon);
-//     UnloadTexture(resources.pills);
-//     UnloadTexture(resources.FortuneTellerSheet);
-//     UnloadTexture(resources.woman2Sheet);
-//     UnloadTexture(resources.cemeteryKey);
-//     UnloadTexture(resources.GraveyardGate);
-//     UnloadTexture(resources.GraveyardForeground);
-//     UnloadTexture(resources.GreaveyardMidground);
-//     UnloadTexture(resources.deadZombie);
-//     UnloadTexture(resources.Badge);
-//     UnloadTexture(resources.ComputerScreen);
-//     UnloadTexture(resources.ghostSheet);
-//     UnloadTexture(resources.magicDoorSheet);
-//     UnloadTexture(resources.AstralBackground);
-//     UnloadTexture(resources.AstralMidground);
-//     UnloadTexture(resources.AstralClouds);
-//     UnloadTexture(resources.AstralForeground);
-//     UnloadTexture(resources.AstralClouds2);
-//     UnloadTexture(resources.EarthSheet);
-//     UnloadTexture(resources.jumpSheet);
-//     UnloadTexture(resources.healthBorder);
-//     UnloadTexture(resources.batSheet);
-//     UnloadTexture(resources.platformTexture);
-//     UnloadTexture(resources.mibSheet);
-//     UnloadTexture(resources.whiskey);
-//     UnloadTexture(resources.midgroundLot);
-//     UnloadTexture(resources.UFOsheet);
-//     UnloadTexture(resources.lightBar);
-//     UnloadTexture(resources.ParkForeground);
-//     UnloadTexture(resources.ParkMidground);
-//     UnloadTexture(resources.ParkBuildings);
-//     UnloadTexture(resources.MidBuildings);
-//     UnloadTexture(resources.shootSheetAuto);
-//     UnloadTexture(resources.reloadSheetAuto);
-//     UnloadTexture(resources.Mac10);
-//     UnloadTexture(resources.Mac10pickup);
-//     UnloadTexture(resources.subwayBackground);
-//     UnloadTexture(resources.subwayForeground);
-//     UnloadTexture(resources.subwayMidground);
-//     UnloadTexture(resources.train);
-//     UnloadTexture(resources.ntForeground);
-//     UnloadTexture(resources.robotSheet);
-//     UnloadTexture(resources.LobbyForeground); 
-//     UnloadTexture(resources.elevatorSheet);
-//     UnloadTexture(resources.floorNumberSheet);
-//     UnloadTexture(resources.officeBackground);
-//     UnloadTexture(resources.officeSheet);
-//     UnloadTexture(resources.frankSheet);
-//     UnloadTexture(resources.crowbarSheet);
-//     UnloadTexture(resources.crowbarIcon);
-//     UnloadTexture(resources.boxSheet);
-//     UnloadTexture(resources.shellsPickup);
-  
-// }
 
 void InitializePlayerCar(PlayerCar& player_car){
     player_car.position = {1710, 700-32};
@@ -578,7 +386,7 @@ void InitializeTrain(Train &train) {
     train.slowDownStartX = 2500.0f + stoppingDistance;
 }
 
-void InitBoxes(GameResources& resources){
+void InitBoxes(){
     // Adding a box
     Texture2D boxSheet = resources.boxSheet;
     Vector2 box_pos = {2938, 700 + 24};
@@ -1119,7 +927,7 @@ void StartZombieSpawn(int zombie_count){
     
 }
 
-void spawnRobot(GameResources& resources, Player& player, Vector2 position){
+void spawnRobot(Player& player, Vector2 position){
     //spawn more robots in the lobby on first robot death
     int speed = 50;
     NPC robot_npc = CreateNPC(resources.robotSheet, position, speed, RISING, true, false);
@@ -1132,7 +940,7 @@ void spawnRobot(GameResources& resources, Player& player, Vector2 position){
 
 }
 
-void spawnMib(GameResources& resources, Player& player, Vector2 position){
+void spawnMib(Player& player, Vector2 position){
     //spawn more mibsin the lobby on first agro
     int speed = 50;
     NPC mib_npc = CreateNPC(resources.mibSheet, position, speed, IDLE, true, false);
@@ -1145,7 +953,7 @@ void spawnMib(GameResources& resources, Player& player, Vector2 position){
 
 }
 
-void spawnFrank(GameResources& resources, Player& player, Vector2 position){
+void spawnFrank(Player& player, Vector2 position){
     int speed = 50;
     NPC frank = CreateNPC(resources.frankSheet, position, speed, IDLE, true, false);
     frank.frank = true;
@@ -1156,7 +964,7 @@ void spawnFrank(GameResources& resources, Player& player, Vector2 position){
 
 }
 
-void spawnZombie(GameResources& resources, Vector2 position){
+void spawnZombie(Vector2 position){
     //spawn a zombie at the dead NPC position
     
     int zombie_speed = 25;
@@ -1182,7 +990,7 @@ void spawnZombie(GameResources& resources, Vector2 position){
     
 }
 
-void UpdateZombieSpawning(GameResources& resources, Player& player){
+void UpdateZombieSpawning(Player& player){
     if (remainingZombiesToSpawn > 0){
         spawnTimer += GetFrameTime();
 
@@ -1419,7 +1227,7 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
 
 
 
-void DrawMac10Pickup(GameResources& resources, Player& player, Vector2 mousePosition, Camera2D& camera){
+void DrawMac10Pickup(Player& player, Vector2 mousePosition, Camera2D& camera){
     //Mac10 pickup in asteral plane
     Vector2 macPos = {2445, -735}; // 
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
@@ -1462,7 +1270,7 @@ void DrawMac10Pickup(GameResources& resources, Player& player, Vector2 mousePosi
 
 }
 
-void DrawCrowbarPickup(GameResources& resources, Player& player, Vector2 mousePosition, Camera2D& camera){
+void DrawCrowbarPickup(Player& player, Vector2 mousePosition, Camera2D& camera){
     Vector2 crowbar_pos = {2860, 700};
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
     float distance_to_cb = abs(player.position.x - crowbar_pos.x);
@@ -1523,7 +1331,7 @@ void DrawCrowbarPickup(GameResources& resources, Player& player, Vector2 mousePo
 
 
 
-void DrawShovelPickup(GameResources& resources, Player& player, Vector2 mousePosition, Camera2D& camera){
+void DrawShovelPickup(Player& player, Vector2 mousePosition, Camera2D& camera){
     //render shovel. Click or keyUP the shovel to pick it up. 
 
     Vector2 shovelPos = {1870, 700}; // render within 1900. where zombies trigger
@@ -2117,7 +1925,7 @@ void UpdateInventoryPosition(const Camera2D& camera, GameState& gameState) {
     
 }
 
-void drawDeadZombie(GameResources& resources,Player& player, Vector2 bodyPosition,Vector2& mouseWorldPos){
+void drawDeadZombie(Player& player, Vector2 bodyPosition,Vector2& mouseWorldPos){
     //The first zombie that is killed in the graveyard drops a dead body you can click on and get the ID badge. 
     DrawTexture(resources.deadZombie, bodyPosition.x, bodyPosition.y, WHITE);
     Rectangle bodyBounds = {
@@ -2156,7 +1964,7 @@ void drawDeadZombie(GameResources& resources,Player& player, Vector2 bodyPositio
 }
 
 
-void RenderInventory(const GameResources& resources, std::string inventory[], int inventorySize, Player& player, Vector2& mousePosition) {
+void RenderInventory(std::string inventory[], int inventorySize, Player& player, Vector2& mousePosition) {
     int slotWidth = resources.inventorySlot.width;
     shovelTint = WHITE;
     Color gunTint = WHITE;
@@ -2434,7 +2242,7 @@ void MoveTraffic(GameResources resources){
     
 }
 
-void DrawApartmentUI(GameResources& resources, GameCalendar&, Vector2& mousePosition, Camera2D& camera){
+void DrawApartmentUI(GameCalendar&, Vector2& mousePosition, Camera2D& camera){
     //laptop computer interface
     Vector2 ui_pos = {screenWidth/2-100, 440};
     DrawTexture(resources.ComputerScreen, ui_pos.x, ui_pos.y, WHITE);
@@ -2637,7 +2445,7 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, G
 
 }
 
-void DrawMagicDoor(GameResources& resources,Player& player, MagicDoor& magicDoor, ShaderResources& shaders){
+void DrawMagicDoor(Player& player, MagicDoor& magicDoor, ShaderResources& shaders){
         float doorFrame = 64.0;
         Rectangle sourceDoorRec = {static_cast<float>(magicDoor.currentFrame) * doorFrame, 0, static_cast<float>(doorFrame), static_cast<float>(doorFrame)};
         //BeginShaderMode(shaders.rainbowOutlineShader);
@@ -2698,7 +2506,7 @@ void moveUFO(UFO& ufo, Player& player){
 
 }
 
-void DrawUFO(GameResources& resources, UFO& ufo, Camera2D& camera, float& time, ShaderResources& shaders){
+void DrawUFO(UFO& ufo, Camera2D& camera, float& time, ShaderResources& shaders){
 
     float deltaTime = GetFrameTime();
     ufo.frameTimer += deltaTime;
@@ -2763,7 +2571,7 @@ void DrawUFO(GameResources& resources, UFO& ufo, Camera2D& camera, float& time, 
     
 }
 
-void DrawEarth(GameResources& resources, Earth& earth, Camera2D& camera){
+void DrawEarth(Earth& earth, Camera2D& camera){
     // Draw rotating pixel earth floating in the astral sky, accounting for parallax
     float deltaTime = GetFrameTime();
     earth.frameTimer += deltaTime;
@@ -2955,7 +2763,7 @@ void DrawDialogBox(Player& player, Camera2D camera, int boxWidth, int boxHeight,
 
 }
 
-void EnterCar(GameResources& resources, Player& player, PlayerCar& player_car){
+void EnterCar(Player& player, PlayerCar& player_car){
         //render headlight/breaklight and show carUI
         
     Vector2 breakLight_pos = {player_car.position.x + 88, player_car.position.y + 53};
@@ -3066,7 +2874,7 @@ void playerOutsideInteraction(Player& player, PlayerCar& player_car){
 
 
 
-void RenderSubway(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition,Train& train, ShaderResources& shaders){
+void RenderSubway(Player& player, Camera2D& camera, Vector2& mousePosition,Train& train, ShaderResources& shaders){
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
 
     show_dbox = false;
@@ -3186,7 +2994,7 @@ void RenderSubway(GameResources& resources, Player& player, Camera2D& camera, Ve
     }
 
     if (showInventory){
-        RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+        RenderInventory(inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
     }
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
         DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
@@ -3220,7 +3028,7 @@ void RenderSubway(GameResources& resources, Player& player, Camera2D& camera, Ve
 
 
 
-void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoor& magicDoor, MagicDoor& magicdoor2, ShaderResources& shaders){
+void RenderAstral(Player& player, Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoor& magicDoor, MagicDoor& magicdoor2, ShaderResources& shaders){
     player.gravity = 200;
     player.outline = true;//turn on outline shader in asteral plane
 
@@ -3265,10 +3073,10 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
     
 
     EndShaderMode(); ////////////////////////////SHADER OFF
-    DrawEarth(resources, earth, camera); //draw earth outside of shader. 
+    DrawEarth(earth, camera); //draw earth outside of shader. 
     
-    DrawMagicDoor(resources, player, magicDoor, shaders);
-    DrawMagicDoor(resources, player, magicdoor2, shaders);
+    DrawMagicDoor(player, magicDoor, shaders);
+    DrawMagicDoor(player, magicdoor2, shaders);
 
     player.DrawPlayer(resources, gameState, camera, shaders);
 
@@ -3314,7 +3122,7 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
     
 
 
-    DrawMac10Pickup(resources, player, mousePosition, camera);
+    DrawMac10Pickup(player, mousePosition, camera);
 
     
     DrawBullets(); //draw bullets in cemetery after everything else. 
@@ -3333,7 +3141,7 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
     
 
     if (showInventory){
-        RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+        RenderInventory(inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
     }
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
         DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
@@ -3351,7 +3159,7 @@ void RenderAstral(GameResources& resources, Player& player, Camera2D& camera, Ve
 }
 
 
-void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_car, UFO& ufo, float& time, Camera2D& camera,Vector2 mousePosition, ShaderResources& shaders){
+void RenderCemetery(Player& player, PlayerCar& player_car, UFO& ufo, float& time, Camera2D& camera,Vector2 mousePosition, ShaderResources& shaders){
     int carMax = 2800;
     int carMin = 2765;
 
@@ -3485,7 +3293,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
 
     //render player car
     DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE);
-    if (player.enter_car) EnterCar(resources, player, player_car);
+    if (player.enter_car) EnterCar(player, player_car);
 
     abductionBeam = false;
     if (player.position.x > 3929 && player.position.x < 3949){
@@ -3494,10 +3302,10 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
 
     if (hasCemeteryKey){ // dont show UFO until later in the game
         ufo.basePosition = {3900, 400};
-        DrawUFO(resources, ufo, camera, time, shaders);
+        DrawUFO(ufo, camera, time, shaders);
     }
 
-    DrawShovelPickup(resources, player, mousePosition, camera);
+    DrawShovelPickup(player, mousePosition, camera);
 
     for (NPC& zombie : zombies){ //update and draw zombies in cemetery
         zombie.Update(player, gameState);
@@ -3521,7 +3329,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
     EndMode2D();
 
     if (showInventory){
-        RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+        RenderInventory(inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
@@ -3566,7 +3374,7 @@ void RenderCemetery(GameResources& resources,Player& player, PlayerCar& player_c
     
 }
 
-void RenderRoad(const GameResources& resources, PlayerCar& player_car,Player& player, Camera2D& camera, Vector2 mousePosition, ShaderResources& shaders){
+void RenderRoad(PlayerCar& player_car,Player& player, Camera2D& camera, Vector2 mousePosition, ShaderResources& shaders){
     if (player_car.position.x < 200 && !reverse_road){//transition to cemetery
         
         transitionState = FADE_OUT;
@@ -3648,7 +3456,7 @@ void RenderRoad(const GameResources& resources, PlayerCar& player_car,Player& pl
    
 }
 
-void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vector2 mousePosition, ShaderResources& shaders){
+void RenderGraveyard(Player& player,Camera2D& camera,Vector2 mousePosition, ShaderResources& shaders){
 
     float digPos = 2350.0f;
     
@@ -3736,7 +3544,7 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
                 {1024, 70, static_cast<float>(resources.GraveyardGate.width), static_cast<float>(resources.GraveyardGate.height)}, {0, 0}, 0.0f, WHITE);
 
     if (firstBlood && !player.hasBadge){
-        drawDeadZombie(resources,player, dz_pos, mouseWorldPos);
+        drawDeadZombie(player, dz_pos, mouseWorldPos);
     }
 
     EndMode2D();
@@ -3750,7 +3558,7 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
     }
 
     if (showInventory){
-        RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+        RenderInventory(inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
@@ -3802,7 +3610,7 @@ void RenderGraveyard(GameResources resources,Player& player,Camera2D& camera,Vec
 
 
 
-void RenderApartment(GameResources& resources, Player player, Vector2 mousePosition, GameCalendar& calendar, Camera2D camera, ShaderResources& shaders){
+void RenderApartment(Player player, Vector2 mousePosition, GameCalendar& calendar, Camera2D camera, ShaderResources& shaders){
     player.position.x -= 20; //ensure over_apartment = false
     int screen_center = (screenWidth - resources.apartment.width)/2;
 
@@ -3819,7 +3627,7 @@ void RenderApartment(GameResources& resources, Player player, Vector2 mousePosit
 
     
     if (showAPUI){
-        DrawApartmentUI(resources, calendar, mousePosition, camera);
+        DrawApartmentUI(calendar, mousePosition, camera);
     }
     
     
@@ -3830,7 +3638,7 @@ void RenderApartment(GameResources& resources, Player player, Vector2 mousePosit
     
 
     if (showInventory){
-        RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);
+        RenderInventory(inventory, INVENTORY_SIZE, player, mousePosition);
         
     }
 
@@ -3850,7 +3658,7 @@ void RenderApartment(GameResources& resources, Player player, Vector2 mousePosit
     
 }
 
-void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vector2& mousePosition,ShaderResources& shaders){
+void RenderLot(Player& player, Camera2D& camera, Vector2& mousePosition,ShaderResources& shaders){
 
     show_dbox = false; //turn off dbox if no one is interacting
     int digPos = 2600;
@@ -3973,7 +3781,7 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
     
     player.DrawPlayer(resources, gameState, camera, shaders);
 
-    DrawCrowbarPickup(resources, player, mousePosition, camera);
+    DrawCrowbarPickup(player, mousePosition, camera);
     DrawBullets();
     
     EndMode2D();  // End 2D mode 
@@ -3986,13 +3794,13 @@ void RenderLot(GameResources& resources, Player& player, Camera2D& camera, Vecto
 
     if (showInventory){
          
-        RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+        RenderInventory(inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
     }
 
     DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
 }
 
-void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car, Camera2D& camera,Vector2& mousePosition, ShaderResources& shaders){
+void RenderPark(Player& player, PlayerCar& player_car, Camera2D& camera,Vector2& mousePosition, ShaderResources& shaders){
     BeginMode2D(camera);  // Begin 2D mode with the camera
     ClearBackground(customBackgroundColor);
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
@@ -4055,7 +3863,7 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
 
     }
 
-    if (player.enter_car) EnterCar(resources, player, player_car); //draws headlights and such
+    if (player.enter_car) EnterCar(player, player_car); //draws headlights and such
 
     show_dbox = false;//reset box
     
@@ -4091,7 +3899,7 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
             if (!npc.isActive && npc.CanSpawnZombie){ //wait untill NPC is not active before raising zombie, so death animation can finish.  
                 npc.CanSpawnZombie = false;
                 
-                spawnZombie(resources, npc.position); //NPC is transformed into a zombie. 
+                spawnZombie(npc.position); //NPC is transformed into a zombie. 
             }
 
       
@@ -4136,7 +3944,7 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
 
     if (showInventory){ // this could be done globally, there is never a time when we don't want to show inventory
          
-        RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+        RenderInventory(inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
     }
 
     if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)){
@@ -4183,7 +3991,7 @@ void RenderPark(GameResources& resources, Player& player, PlayerCar& player_car,
 }
 
 //Office
-void RenderOffice(GameResources& resources, Camera2D& camera, Player& player, Elevator& elevator, Vector2& mousePosition, ShaderResources& shaders){
+void RenderOffice(Camera2D& camera, Player& player, Elevator& elevator, Vector2& mousePosition, ShaderResources& shaders){
     show_dbox = false;
     over_elevator = false;
     over_elevator2 = false;
@@ -4277,7 +4085,7 @@ void RenderOffice(GameResources& resources, Camera2D& camera, Player& player, El
 
         if (!office_npc.isActive && office_npc.CanSpawnZombie && !can_spawn_zombies){ //wait for can_spawn_zombies the global var triggered by no active robots. 
             office_npc.CanSpawnZombie = false;
-            spawnZombie(resources, office_npc.position); //NPC is transformed into a zombie. 
+            spawnZombie(office_npc.position); //NPC is transformed into a zombie. 
         }
     }
 
@@ -4304,7 +4112,7 @@ void RenderOffice(GameResources& resources, Camera2D& camera, Player& player, El
     DrawMoney(); //draw money after EndMode2d()
     if (showInventory){
          
-        RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+        RenderInventory(inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
@@ -4322,7 +4130,7 @@ void RenderOffice(GameResources& resources, Camera2D& camera, Player& player, El
 
     if (!spawning_zombies && spawn_frank && AreAllNPCsDeactivated(zombies)){ //all spawned zombies are dead , spawn frank 
         spawn_frank = false;
-        spawnFrank(resources, player, player.position + Vector2 {100, 0}); //spawn to the right of player, like he emerges from hiding. 
+        spawnFrank(player, player.position + Vector2 {100, 0}); //spawn to the right of player, like he emerges from hiding. 
     
 
     }
@@ -4331,7 +4139,7 @@ void RenderOffice(GameResources& resources, Camera2D& camera, Player& player, El
 }
 
 //Lobby
-void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Elevator& elevator, Vector2& mousePosition, ShaderResources shaders){
+void RenderLobby(Camera2D& camera, Player& player, Elevator& elevator, Vector2& mousePosition, ShaderResources shaders){
     show_dbox = false;   
     over_exit = false;
     over_Ebutton = false;
@@ -4410,8 +4218,8 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Ele
 
     if (AreAllNPCsDeactivated(lobbyMibs) && can_spawn_robots){ //if all the lobby mibs are dead, spawn robots and zombies
         can_spawn_robots = false;
-        spawnRobot(resources, player, player.position + Vector2 {300, 0});
-        spawnRobot(resources, player, player.position + Vector2 {-300, 0});
+        spawnRobot(player, player.position + Vector2 {300, 0});
+        spawnRobot(player, player.position + Vector2 {-300, 0});
         if (can_spawn_zombies){
             can_spawn_zombies = false;
             StartZombieSpawn(10); //spawn zombies when robots spawn, spawning zombies in the lobby triggers the alarm. 
@@ -4425,7 +4233,7 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Ele
     if (globalAgro && can_spawn_mibs){
         can_spawn_mibs = false;
         //spawnMib(resources, player, player.position + Vector2 {300, 0});
-        spawnMib(resources, player, player.position + Vector2 {-300, 0});
+        spawnMib(player, player.position + Vector2 {-300, 0});
         
     }
     
@@ -4495,7 +4303,7 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Ele
 
         if (!npc.isActive && npc.CanSpawnZombie){ //spawn a zombie when the NPC dies even if they are not killed by a zombie. 
             npc.CanSpawnZombie = false;
-            spawnZombie(resources, npc.position); //NPC is transformed into a zombie. 
+            spawnZombie(npc.position); //NPC is transformed into a zombie. 
         }
 
         }
@@ -4557,7 +4365,7 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Ele
     DrawMoney(); //draw money after EndMode2d()
     if (showInventory){
          
-        RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+        RenderInventory(inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
@@ -4577,7 +4385,7 @@ void RenderLobby(GameResources& resources, Camera2D& camera, Player& player, Ele
 }
 
 //NecroTech
-void RenderNecroTech(GameResources& resources, Camera2D& camera, Player& player, PlayerCar& player_car, Vector2& mousePosition, ShaderResources& shaders){
+void RenderNecroTech(Camera2D& camera, Player& player, PlayerCar& player_car, Vector2& mousePosition, ShaderResources& shaders){
 
     show_dbox = false;
     
@@ -4657,7 +4465,7 @@ void RenderNecroTech(GameResources& resources, Camera2D& camera, Player& player,
     float CarFrameWidth = 128;
     Rectangle sourceRecCar = {player_car.currentFrame * CarFrameWidth, 0, CarFrameWidth, CarFrameWidth};
     DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE); //draw player_car
-    if (player.enter_car) EnterCar(resources, player, player_car);
+    if (player.enter_car) EnterCar(player, player_car);
 
     if (player.enter_car == false){// if enter car is false, dont render player or update position. camera should stay focused on player pos. 
         SoundManager::getInstance().StopMusic("CarRun");
@@ -4706,7 +4514,7 @@ void RenderNecroTech(GameResources& resources, Camera2D& camera, Player& player,
     DrawMoney(); //draw money after EndMode2d()
     if (showInventory){
          
-        RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+        RenderInventory(inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
@@ -4744,7 +4552,7 @@ void RenderNecroTech(GameResources& resources, Camera2D& camera, Player& player,
 
 
 //Main Street
-void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, PlayerCar& player_car,MagicDoor& magicDoor, float& totalTime,  std::vector<NPC>& npcs, UFO& ufo, Vector2 mousePosition, ShaderResources& shaders) {
+void RenderOutside(Camera2D& camera,Player& player, PlayerCar& player_car,MagicDoor& magicDoor, float& totalTime,  std::vector<NPC>& npcs, UFO& ufo, Vector2 mousePosition, ShaderResources& shaders) {
 
     SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide or in vacant lot
     SoundManager::getInstance().PlayMusic("StreetSounds");
@@ -4798,7 +4606,7 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 
     if (move_ufo){
         ufoTimer -= GetFrameTime();
-        DrawUFO(resources, ufo, camera, totalTime, shaders);
+        DrawUFO(ufo, camera, totalTime, shaders);
         moveUFO(ufo, player);
     }
 
@@ -4896,11 +4704,11 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
 
     //Draw MagicDoor
     if (applyShader){
-        DrawMagicDoor(resources, player, magicDoor, shaders);  
+        DrawMagicDoor(player, magicDoor, shaders);  
     }
 
 
-    if (player.enter_car) EnterCar(resources, player, player_car);
+    if (player.enter_car) EnterCar(player, player_car);
    
 
     if (player.enter_car == false){// if enter car is false, dont render player or update position. camera should stay focused on player pos. 
@@ -4962,14 +4770,14 @@ void RenderOutside(GameResources& resources, Camera2D& camera,Player& player, Pl
     DrawMoney(); //draw money after EndMode2d()
     if (showInventory){
          
-        RenderInventory(resources, inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
+        RenderInventory(inventory, INVENTORY_SIZE, player, mousePosition);  // Render the inventory 
     }
     //Draw cursor last so it's on top
     DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
 }
 
 
-void spawnNPCs(GameResources& resources){
+void spawnNPCs(){
     // Create NPCs and set there starting desitnations. 
 
     float speed = 50.0f; //normal NPC speed
@@ -5543,7 +5351,7 @@ void ShowControls(){
 
 }
 
-void MainMenu(GameResources& resources, Vector2 mousePosition, PauseState& currentPauseState, Rectangle& destRect){
+void MainMenu(Vector2 mousePosition, PauseState& currentPauseState, Rectangle& destRect){
     // Draw semi-transparent background overlay
         if (menuOpen) {
             float offset_x = 0;
@@ -5813,11 +5621,11 @@ int main() {
     InitElevator(elevator2, Vector2 {3200, 648});
 
     InitUFO(ufo);
-    spawnNPCs(resources); //spawn NPCs before rendering them outside
+    spawnNPCs(); //spawn NPCs before rendering them outside
     InitPlatforms();
     InitializeTrain(train);
 
-    InitBoxes(resources);
+    InitBoxes();
     
     setButtonColors(); //main menu button colors, sets globally for all rayGUI buttons
 
@@ -5909,7 +5717,7 @@ int main() {
 
         CheckBulletPlayerCollisions(player); //NPCs shoot player
         MonitorMouseClicks(player, calendar); 
-        UpdateZombieSpawning(resources, player);
+        UpdateZombieSpawning(player);
         //glowEffect(glowShader, gameState); //update glow shader
 
         if (playSoundTimer > 0){
@@ -5989,7 +5797,7 @@ int main() {
             );
             setButtonColors(); //set menu button color and text size. 
             // Draw the pause menu
-            MainMenu(resources, mousePosition, currentPauseState, destRect); //draw main menu over the saved frame.
+            MainMenu(mousePosition, currentPauseState, destRect); //draw main menu over the saved frame.
 
             if (controlsMenu) ShowControls();
             EndDrawing();
@@ -6003,47 +5811,47 @@ int main() {
             
             switch (gameState){//Depending on the gameState, render the scene. 
                 case OUTSIDE:
-                    RenderOutside(resources, camera, player, player_car, magicDoor, totalTime, npcs, ufo, mousePosition, shaders); 
+                    RenderOutside(camera, player, player_car, magicDoor, totalTime, npcs, ufo, mousePosition, shaders); 
                     break;
                 case APARTMENT:
-                    RenderApartment(resources, player, mousePosition, calendar, camera, shaders);
+                    RenderApartment(player, mousePosition, calendar, camera, shaders);
                     break;
                 case ROAD:
-                    RenderRoad(resources, player_car, player, camera, mousePosition, shaders);
+                    RenderRoad(player_car, player, camera, mousePosition, shaders);
                     break;
                 case CEMETERY:
-                    RenderCemetery(resources, player, player_car, ufo, totalTime, camera,mousePosition, shaders);
+                    RenderCemetery(player, player_car, ufo, totalTime, camera,mousePosition, shaders);
                     break;
                 case WORK:
                     ClearBackground(BLACK);//do nothing at the moment
                     break;
                 case LOT:
-                    RenderLot(resources, player, camera, mousePosition, shaders);
+                    RenderLot(player, camera, mousePosition, shaders);
                     break;
                 case GRAVEYARD:
-                    RenderGraveyard(resources, player, camera, mousePosition, shaders);
+                    RenderGraveyard(player, camera, mousePosition, shaders);
                     break;
                 case ASTRAL:
-                    RenderAstral(resources, player, camera, mousePosition, earth, magicDoor, magicDoor2, shaders);
+                    RenderAstral(player, camera, mousePosition, earth, magicDoor, magicDoor2, shaders);
                     break;
                 case PARK:
-                    RenderPark(resources, player,player_car, camera, mousePosition, shaders);
+                    RenderPark(player,player_car, camera, mousePosition, shaders);
                     break;
 
                 case SUBWAY:
-                    RenderSubway(resources, player, camera, mousePosition, train, shaders);
+                    RenderSubway(player, camera, mousePosition, train, shaders);
                     break;
 
                 case NECROTECH:
-                    RenderNecroTech(resources, camera, player, player_car, mousePosition, shaders);
+                    RenderNecroTech(camera, player, player_car, mousePosition, shaders);
                     break;
 
                 case LOBBY:
-                    RenderLobby(resources, camera, player, elevator, mousePosition, shaders);
+                    RenderLobby(camera, player, elevator, mousePosition, shaders);
                     break;
 
                 case OFFICE:
-                    RenderOffice(resources, camera, player, elevator, mousePosition, shaders);
+                    RenderOffice(camera, player, elevator, mousePosition, shaders);
                     break;
                     
             }

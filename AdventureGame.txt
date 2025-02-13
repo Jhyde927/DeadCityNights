@@ -568,6 +568,147 @@ NecroTech Interior:
 
 	if lobby mibs don't follow player
 
+	Bats in astral realm are missing. They were never set to active when created, we jerry rigged it before. Wait..should they be active on spawn? that means there is invisible bats on every scene. We need to do the assert like we did for robots and mibs. assert that they are inactive when not in the right scene.
+
+	leaving park, we must not set goto park back to false, oh if you take subway back from the park, gotopark doesnt get set to false. is my guess
+
+	Mibs are broken for some reason. They shoot once then freeze, is it flocking problem? Not sure what the problem was. I think hasTarget was not being set to true when mibs were agro. It seems fixed now, but who knows. I thought it was working before and it just broke itself. 
+
+	Transfer vector<NPC>(npcs) to outsideNPCs
+	transfer zombies to cemetery zombies/graveyard zombies
+
+	All this just to stop them from being active. Why can't we just spawn them inactive and turn on when player enters scene?
+	what if the player leaves the scene and comes back. So we need a way to switch it off. Maybe it could live in the scene transition code. HandleOutsideTransition could set all NPCs to inactive when the player leaves. and when entering say Necrotech, all the robots get actived. I would need to do these checks for all scenes. Or I could do what I have now where we check every frame. If I just would have thought of this contingency before would have been ideal but here we are. I say we leave it as is. It can be a weekend project to optimize the code. Because we are literally iterating every vector every frame. or maybe the refactor chatGPT did stopped that but I have too look at it some more. 
+
+	No it definitely iterates all NPC vectors every frame. Can't be good. x Solved by using std::map and only updated NPC activity when changing scene. 
+
+	exiting park to subway then back to park leads you to outside. gotopark needs to be false only after leaving by train
+	maybe this is fixed?
+
+	what now. Just refactored NPC group activity code. what now. Elevator scene? penthouse scene, some one needs to get thrown out of a window. Had a flash. A fancy office with a floor to ceiling window. end of game the evil CEO gets thrown out the window somehow and we play a cut scene of him falling. 
+
+	"Your loyalty ensures eternal employment." -ChatGPT
+
+	In lobby, after robots die, spawn zombies. x
+
+	RenderOffice(resources, player, camera, ect, ect)
+
+	office worker NPCs + zombies. Maybe just business people, until I feel like drawing it. 
+
+	ROBOT SOUND EFFECTS - update sound manager to handle robot voices as well as human voices. x
+
+	necrotech front door password timer. 
+
+	created office worker NPC, the art is way better than the other NPCs. Consider redoing the normal NPCs. 
+
+	NPCs should run away from zombies. IF they are touched by a zombie they should stop though. How would I do that?
+	I would need a raycast or something. 
+
+	Find the closest zombie and move the opposite direction of it. x
+
+	Park NPCs need the run away logic. abstract it away? x
+
+	redid NPC art. People seem to like it. ray liked it. x
+
+	An alarm sound plays when zombies are spawning in the lobby and in the office. Needs to be not annoying. x
+
+	policeman zombie interaction? police could use there gun to shoot zombies, or club them if they are close. 
+
+	mibs hostile to zombies? maybe not. 
+
+	fortune teller gives you the password x
+
+	NPC flocking? only if targeted? fixed NPC runaway behavior, fixed flip flopping x
+
+	expand lobby to 4096 x
+
+	it should say uptoEnter on car in cemetery x
+
+	ghost in astral don't agro x
+
+	make another magic door at the top of astral for an exit. x
+
+	zombies were still targeting npcs from beyond the grave. So NPCs would continue to avoid dead zombies. Just needed to check if zombie is also active in findClosestNPC()
+
+	game isn't bloody enough. Could we add blood spatter? particles? you would need to make a particle class. and an emitter. 
+	A lot of work for not much payoff. I want the office to get bloody. when you kill a zombie leave a corps every time?
+	blood gets spattered on the walls when zombies are killed. make a blood spatter sprite. It wouldn't work for outside unless we do it on the ground. Maybe a very limited particle system. just a dot that we apply force to.
+
+	implemented particles. Particles.h has a particle struct and a class Emitter. in Particles.cpp we spawn and update the particles based on the emitters position. Complete with different functions for explosion or blood spray particles. 
+
+	could we do smoke? a city turned to rubble with pillars of smoke everywhere. and that's when rad city begins. this is a prequel to that game. 
+
+	another dig spot in the graveyard would make sense. <- what do you dig up? 
+
+	particles get messed up after a while for some reason. turn down the speed some more
+
+	CarUI was being rendered behind uptoenter text. x
+
+	write a song on guitar as a background track, another one for astral realm, and another one for battle music, the battle music could be part of the original track just more intense. take your time and do a good job.  
+
+	The astral realm is kinda secret. You could end up not having the mac 10 at the end game. We should have it buried in the graveyard. telegraph it with text if you have too.
+
+	over cemetery game doesn't show text, either does car. fixed?
+
+	friendly ghost tells you there is a machine gun buried over there. x 
+
+	Particle Monster? 
+
+	There should be more to do in the apartment. mini game? 
+
+	whats next. Penthouse office. Necromancer CEO, draw it.
+
+	Need to draw the environment first. It has to keep the same color scheme. 
+
+	what else I don't feel like drawing right now. more office stuff? Maybe a key for the elevator held by a NPC you need to talk to. He can explain the situation. He should show up after you kill all the zombies in the office. spawns by the elevator2. elevator2 is not accessible until you talk to this NPC. Just a random office worker. Frank. Frank says he just works here. He didn't know about the experiments with the undead. Frank could have a red tie or something to make him stand out. Maybe frank is covered in blood. 
+
+	Frank is in the game. 
+
+	Since we have security cameras everywhere, maybe we should do the bank of monitors in the CEO's office. instead of a floor to ceiling window with the city in the background which could be cool because we could do some parallax. or both...
+
+	make an over ebotton2. so elevators don't both open on ebutton. x done now what. 
+
+	chatGPT suggests a melee weapon. maybe a crowbar like rad city. existing weapon animation management is a nightmare to add too. review code and see if it's even possible. 
+
+	hmm maybe I could make it a weapon you always have, by pressing V when your not aiming, you swing the crowbar. that way it doesn't interfere with existing weapon code. You would need to find the crowbar somewhere.
+
+	Destructible boxes. barrels. can we make them have weight? could you carry them?
+
+	made header only file box.h I think I should try to keep things header only as much as possible going forward. Simplifies things and better than just having a struct in main cluttering things up. 
+
+	the box has 5 health points and takes 5 hits to make it fully disappear. Maybe is should explode on the third hit revealing an item. or maybe it should stay fully broken and not disappear.
+
+	Once destroyed the box should spawn a box of ammo. Need to make box of ammo. 
+
+	make the player bleed. 
+
+	made pickup.h a pickup can be shells, 9mm ammo, or pills, or money? randomized 
+
+	refactored game resources. I had gameresources.h but no gameresources.cpp. I was doing it in main. If I had just made a cpp file for it I could have been sharing resources whereever instead of passing it through functions. So I went ahead and made a gameresources.cpp and added a extern GameResources resources to gr.h That way if I want access to game resources I can just include it at the top of the file. We could probably do this same thing for the player/camera/ camera.h? player_car ect. 
+
+	refactored player the same way. Made an extern Player plaer inside player.h then made the class in player.cpp and include in main then we dont need to pass it to all the functions. cleaned up most of the player and gameresources redundant function calls. 
+
+	player is stronger with the crowbar. Make enemy faster. spawn in faster and walk faster.  
+
+	if you pick up pills when your inventory is full, hasPills is set to true and it isn't added to inventory, so you can no longer pickup pills. cant get full inventory with out cheating. Maybe make it 12 just in case. 
+
+	lock player movement when entering scene some how. 
+
+	up to enter rendered in front of car UI in cemetery. again
+
+	click on the badge to see the password somehow. x
+
+	put something else at the top of astral. 
+
+	dont change scenes if zombies are spawning. couldn't reproduce bug where badge doesn't show up in graveyard. 
+
+
+
+
+
+
+
+
 
 
 

@@ -111,6 +111,7 @@ public:
     bool CheckIfOnPlatform(const std::vector<Platform>& platforms);
     bool CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition, Vector2 bulletSize);
     void shootLogic();
+ 
 
     
 };

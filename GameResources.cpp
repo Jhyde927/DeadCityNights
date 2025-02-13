@@ -103,6 +103,8 @@ void GameResources::Load() {
     crowbarIcon = LoadTexture("assets/crowbarIcon.png");
     boxSheet = LoadTexture("assets/boxSheet.png");
     shellsPickup = LoadTexture("assets/shellsPickup.png");
+    autoPickup = LoadTexture("assets/9mm.png");
+    BigBadge = LoadTexture("assets/BigBadge.png");
 }
 
 // Unload all game resources
@@ -198,5 +200,7 @@ void GameResources::Unload() {
     UnloadTexture(crowbarIcon);
     UnloadTexture(boxSheet);
     UnloadTexture(shellsPickup);
+    UnloadTexture(autoPickup);
+    UnloadTexture(BigBadge);
   
 }

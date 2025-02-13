@@ -18,7 +18,7 @@
 #include <algorithm>
 #include "box.h"
 #include "Pickup.h"
-
+#include "Inventory.h"
 #include "raygui.h"
 
 
@@ -45,6 +45,7 @@ bool over_Ebutton2 = false;
 bool over_necro = false;
 bool over_gate = false;
 bool over_shotgun = false;
+bool showBadge = false;
 bool show_carUI = false;
 bool leave_apartment = false;
 bool leave_cemetery = false;
@@ -666,6 +667,11 @@ void crowbarAttack(std::vector<NPC>& enemies){
 
         }
     }
+
+}
+
+void showBigBadge(){
+    if (showBadge) DrawTexture(resources.BigBadge, 512, 512, WHITE);
 
 }
 
@@ -1501,6 +1507,7 @@ void HandleOutsideTransition(PlayerCar& player_car, std::vector<NPC>& npcs, Game
 
 void HandleApartmentTransition() {
     gameState = OUTSIDE;  // Go back outside
+    player.position.x = apartmentX;
     UpdateNPCActivity(APARTMENT, OUTSIDE);
 }
 
@@ -2000,6 +2007,25 @@ void RenderInventory(std::string inventory[], int inventorySize,Vector2& mousePo
             }
             if (inventory[i] == "Badge"){
                 DrawTexture(resources.Badge, x, y, WHITE);
+                Rectangle badgeBounds = { 
+                    static_cast<float>(x),      
+                    static_cast<float>(y),      
+                    static_cast<float>(64),  
+                    static_cast<float>(64)  
+                };
+
+                if (CheckCollisionPointRec(mousePosition, badgeBounds)){
+                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+                        if (!showBadge){
+                            showBadge = true;
+                        }else{
+                            showBadge = false;
+                        }
+                    }
+                }
+
+
+
             }
 
             if (inventory[i] == "cemeteryKey"){
@@ -2815,7 +2841,7 @@ void playerOutsideInteraction(Player& player, PlayerCar& player_car){
     
 
     //consider abstracting this into a seperate function. is_interacting, return true if any of these checks 
-    if (player.position.x > pc_min && player.position.x < pc_max && has_car_key){ //over_car with keys
+    if (player.position.x > pc_min && player.position.x < pc_max && has_car_key && !player.enter_car){ //over_car with keys
         over_car = true;
         if (fortuneTimer <= 0) phrase = "PRESS UP TO ENTER"; //Don't interupt the fortune teller
         show_dbox = true;
@@ -3629,6 +3655,7 @@ void RenderApartment(Vector2 mousePosition, GameCalendar& calendar, Camera2D cam
     if (showAPUI){
         DrawApartmentUI(calendar, mousePosition, camera);
     }
+    
     
     
     //DrawText("Apartment", screenWidth/2 - 128, 60, 50, WHITE);
@@ -4599,6 +4626,8 @@ void RenderOutside(Camera2D& camera, PlayerCar& player_car,MagicDoor& magicDoor,
     DrawTexturePro(resources.foreground, {0, 0, static_cast<float>(resources.foreground.width), static_cast<float>(resources.foreground.height)},
                     {-639, 0, static_cast<float>(resources.foreground.width), static_cast<float>(resources.foreground.height)}, {0, 0}, 0.0f, WHITE);
     
+
+    
     
      if (show_carUI && !move_car && player.enter_car){ //draw carUI inside Mode2d for reasons, show carUI infront of dialog box
         DrawCarUI(player_car, mousePosition, camera, gameState); //draw dialog box behind carUI
@@ -4733,16 +4762,10 @@ void RenderOutside(Camera2D& camera, PlayerCar& player_car,MagicDoor& magicDoor,
         }
     }
 
-    // if (IsKeyPressed(KEY_SPACE)){
-    //     if (player.enter_car){
-    //         move_car = true;
-    //     }
-    // }
 
-
-
-
+    
     EndMode2D();  // End 2D mode 
+    showBigBadge();
 
     
     //draw healthbar 
@@ -5157,6 +5180,13 @@ void debugKeys(){
         }
     }
 
+    if (IsKeyPressed(KEY_J)){
+        if (!player.hasBadge){
+            player.hasBadge = true;
+            AddItemToInventory("Badge", inventory, INVENTORY_SIZE);
+        }
+    }
+
     if (IsKeyPressed(KEY_G)){
         if (!player.hasGun){
             AddItemToInventory("Gun", inventory, INVENTORY_SIZE);
@@ -5209,6 +5239,7 @@ void UptoEnter(PlayerCar& player_car, Elevator& elevator){
             player.enter_car = true;
             over_car = false;
             player_car.currentFrame = 1;
+            show_dbox = false;
 
 
         }
@@ -5713,7 +5744,7 @@ int main() {
 
         UpdatePickups();
 
-
+        
 
         CheckBulletPlayerCollisions(); //NPCs shoot player
         MonitorMouseClicks(calendar); 
@@ -5811,7 +5842,8 @@ int main() {
             
             switch (gameState){//Depending on the gameState, render the scene. 
                 case OUTSIDE:
-                    RenderOutside(camera,player_car, magicDoor, totalTime, npcs, ufo, mousePosition, shaders); 
+                    RenderOutside(camera,player_car, magicDoor, totalTime, npcs, ufo, mousePosition, shaders);
+                    
                     break;
                 case APARTMENT:
                     RenderApartment(mousePosition, calendar, camera, shaders);
@@ -5868,6 +5900,7 @@ int main() {
         BeginTextureMode(vignetteTexture);
             ClearBackground(BLACK);
             BeginShaderMode(shaders.vignetteShader);
+                
                 DrawTextureRec( //Drawing the target texture inside texture mode saves it to what ever RenderTextur2D you provide. 
                     targetTexture.texture, 
                     (Rectangle){ 0, 0, (float)targetTexture.texture.width, -(float)targetTexture.texture.height }, 

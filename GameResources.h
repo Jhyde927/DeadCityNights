@@ -105,6 +105,8 @@ struct GameResources {
     Texture2D crowbarIcon;
     Texture2D boxSheet;
     Texture2D shellsPickup;
+    Texture2D autoPickup;
+    Texture2D BigBadge;
     
 
     Font defaultFont;

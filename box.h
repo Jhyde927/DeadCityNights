@@ -8,7 +8,7 @@
 #include "SoundManager.h"
 #include "Pickup.h"
 #include <iostream>
-
+#include "Inventory.h"
 
 
 class Box {
@@ -73,8 +73,23 @@ public:
             PlaySound(SoundManager::getInstance().GetSound("woodBreak"));
             if (health <= 0) {
                 destroyed = true;
-                SpawnPickup(position, PickupType::SHOTGUN_AMMO, resources.shellsPickup);
-                std::cout <<"spawning shells\n" << position.x << "\n";
+                int number = rand()%4;
+                switch (number)
+                {
+                case 1:
+                    SpawnPickup(position, PickupType::SHOTGUN_AMMO, resources.shellsPickup);
+                    break;
+
+                case 2:
+                    SpawnPickup(position, PickupType::NINE_MM_AMMO, resources.autoPickup);
+                    break;
+
+                case 3:
+                    AddItemToInventory("pills", inventory, INVENTORY_SIZE);
+                    PlaySound(SoundManager::getInstance().GetSound("Pills"));
+                    break;
+                
+                }
                 
             }
         }

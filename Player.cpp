@@ -94,7 +94,6 @@ Player::Player() {
 }
 
 
-
 void Player::take_damage(int damage) {
     
     if (!enter_car){ //dont take damage if inside car

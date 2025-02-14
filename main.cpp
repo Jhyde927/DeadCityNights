@@ -208,6 +208,7 @@ std::vector<Box> boxes;
 
 
 
+
 std::vector<Platform> platforms;
 
 
@@ -390,12 +391,20 @@ void InitializeTrain(Train &train) {
 void InitBoxes(){
     // Adding a box
     Texture2D boxSheet = resources.boxSheet;
-    Vector2 box_pos = {2938, 700 + 24};
-    Vector2 box_pos2 = {2988, 700 + 24};
-    Vector2 box_pos3 = {2988+50, 700 + 24};
-    boxes.emplace_back(box_pos, boxSheet);
-    boxes.emplace_back(box_pos2, boxSheet);
-    boxes.emplace_back(box_pos3, boxSheet);
+
+    //LOT
+    Vector2 box_pos = {2938, 724};
+    Vector2 box_pos2 = {2988, 724};
+    Vector2 box_pos3 = {2988+50, 724};
+    boxes.emplace_back(box_pos, boxSheet, LOT);
+    boxes.emplace_back(box_pos2, boxSheet, LOT);
+    boxes.emplace_back(box_pos3, boxSheet, LOT);
+
+    //CEMETERY
+    boxes.emplace_back(box_pos, boxSheet, CEMETERY);
+
+
+
 }
 
 void InitPlatforms() {
@@ -615,7 +624,7 @@ void crowbarAttackBoxes(std::vector<Box>& _boxes){
         };
         DrawRectangleLines(boxHitbox.x, boxHitbox.y, boxHitbox.width, boxHitbox.height, RED); 
 
-        if (CheckCollisionRecs(attackHitbox, boxHitbox) && player.currentFrame == 2){ 
+        if (CheckCollisionRecs(attackHitbox, boxHitbox) && player.currentFrame == 2 && box.scene == gameState && !box.destroyed){ 
             box.TakeDamage(1);
             return;
         }
@@ -675,6 +684,15 @@ void crowbarAttack(std::vector<NPC>& enemies){
 void showBigBadge(){
     if (showBadge) DrawTexture(resources.BigBadge, 512, 512, WHITE);
 
+}
+
+void renderBoxes(){
+    for (Box& box : boxes){
+        if (box.scene == gameState){
+            box.Draw();
+            box.Update(GetFrameTime());
+        }
+    }
 }
 
 
@@ -3025,7 +3043,8 @@ void RenderSubway(Camera2D& camera, Vector2& mousePosition,Train& train, ShaderR
         }
     }
    
-
+    renderBoxes();
+    DrawPickups();
     EndMode2D();
     showBigBadge();
 
@@ -3169,7 +3188,8 @@ void RenderAstral(Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoo
 
     
     DrawBullets(); //draw bullets in cemetery after everything else. 
-    
+    renderBoxes();
+    DrawPickups();
 
     EndMode2D();
     showBigBadge();
@@ -3368,7 +3388,8 @@ void RenderCemetery(PlayerCar& player_car, UFO& ufo, float& time, Camera2D& came
     if (show_carUI && !move_car && player.enter_car){ //destination menu //draw UI inside mode2d
         DrawCarUI(player_car, mousePosition, camera, gameState);
     }
-    
+    renderBoxes();
+    DrawPickups();
 
     EndMode2D();
     showBigBadge();
@@ -3504,10 +3525,6 @@ void RenderRoad(PlayerCar& player_car, Camera2D& camera, Vector2 mousePosition, 
 void RenderGraveyard(Camera2D& camera,Vector2 mousePosition, ShaderResources& shaders){
 
     float digPos = 2350.0f;
-    
-
-
-
     if (player.position.x > 3437 and raiseZombies){
         raiseZombies = false;
         StartZombieSpawn(20);
@@ -3591,7 +3608,8 @@ void RenderGraveyard(Camera2D& camera,Vector2 mousePosition, ShaderResources& sh
     if (firstBlood && !player.hasBadge){
         drawDeadZombie(dz_pos, mouseWorldPos);
     }
-    
+    renderBoxes();
+    DrawPickups();
     EndMode2D();
     showBigBadge();
     
@@ -3817,19 +3835,23 @@ void RenderLot(Camera2D& camera, Vector2& mousePosition,ShaderResources& shaders
     }
 
 
-    for (Box& box : boxes){
-        box.Update(GetFrameTime());
-        box.Draw();
-        
-    }
+    // for (Box& box : boxes){
+    //     if (box.scene == gameState){
+    //         box.Update(GetFrameTime());
+    //         box.Draw();
 
-    DrawPickups();
+    //     }
+        
+    // }
+
+
     
     player.DrawPlayer(resources, gameState, camera, shaders);
 
     DrawCrowbarPickup(mousePosition, camera);
     DrawBullets();
-
+    renderBoxes();
+    DrawPickups();
     EndMode2D();  // End 2D mode 
     showBigBadge();
  
@@ -3983,6 +4005,10 @@ void RenderPark(PlayerCar& player_car, Camera2D& camera,Vector2& mousePosition, 
     DrawTexture(resources.lightCone, 1967, 610, WHITE);
     EndBlendMode();
 
+
+
+    renderBoxes();
+    DrawPickups();
     EndMode2D();
     showBigBadge();
 
@@ -4157,7 +4183,8 @@ void RenderOffice(Camera2D& camera,Elevator& elevator, Vector2& mousePosition, S
     EndShaderMode(); ////////////////////////////SHADER OFF
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
     HandleKeyboardAiming(worldMousePosition);
-
+    renderBoxes();
+    DrawPickups();
     EndMode2D();
     showBigBadge();
 
@@ -4374,43 +4401,13 @@ void RenderLobby(Camera2D& camera,Elevator& elevator, Vector2& mousePosition, Sh
         UpdateZombieTarget(zombie, lobbyNPCs);
     }
 
-    // for (NPC& zombie : zombies){
-    //     zombie.Update(player, gameState);
-    //     zombie.Render(shaders);
-    //     float minDist = 1000;
-    //     float closestNPCPositionX = 0.0f;
-    //     zombie.targetNPC = nullptr;
-
-    //     for (NPC& npc : lobbyNPCs) { //find the cloeset NPC and chase them. 
-    //         if (npc.isActive){
-    //             float dist = fabs(zombie.position.x - npc.position.x);
-
-    //             if (dist < minDist) {
-    //                 minDist = dist;
-    //                 closestNPCPositionX = npc.position.x;
-    //                 zombie.targetNPC = &npc;  
-
-    //                 npc.zRight = npc.position.x < zombie.position.x; 
-    //                 npc.isTargeted = true; //if npc is targeted, run away from the zombie targeting it. We needed isTargeted after all. 
-    //                 npc.targetedTimer = 5.0f;  
-    //             }
-    //         }
-    //     }
-
-    //     if (zombie.targetNPC != nullptr) {
-    //         zombie.hasTarget = true;
-    //         zombie.destination = { closestNPCPositionX, zombie.position.y };
-
-    //     } else {
-    //         //zombie.hasTarget = false;
-    //         // Optional behavior when no target is found
-    //     }
-    // }
 
     DrawBullets();
     EndShaderMode(); ////////////////////////////SHADER OFF
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
     HandleKeyboardAiming(worldMousePosition);
+    renderBoxes();
+    DrawPickups();
     EndMode2D();
     showBigBadge();
 
@@ -4561,7 +4558,11 @@ void RenderNecroTech(Camera2D& camera,PlayerCar& player_car, Vector2& mousePosit
     DrawBullets();
     EndShaderMode(); ////////////////////////////SHADER OFF
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
+
     HandleKeyboardAiming(worldMousePosition);
+
+    renderBoxes();
+    DrawPickups();
     EndMode2D();
     showBigBadge();
 
@@ -4797,7 +4798,8 @@ void RenderOutside(Camera2D& camera, PlayerCar& player_car,MagicDoor& magicDoor,
     }
 
 
-    
+    renderBoxes();
+    DrawPickups();
     EndMode2D();  // End 2D mode 
     showBigBadge();
 
@@ -5752,7 +5754,7 @@ int main() {
         }
   
         //HandleActiveNPC();
-
+        
         UpdateBullets();
         //check each enemy group for bullet collisions
         CheckBulletNPCCollisions(zombies);

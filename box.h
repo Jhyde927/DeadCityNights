@@ -11,9 +11,12 @@
 #include "Inventory.h"
 
 
+
+
 class Box {
 public:
     Vector2 position;
+    GameState scene; //store which scene the box belongs to. 
     bool destroyed = false;
     bool canTakeDamage = true;
     int health = 4;  // Number of hits before breaking, 
@@ -28,9 +31,10 @@ public:
 
     
 
-    Box(Vector2 pos, Texture2D tex){
+    Box(Vector2 pos, Texture2D tex, GameState sceneType){
         position = pos;
         texture = tex;
+        scene = sceneType;
     }
 
     void Update(float deltaTime) {

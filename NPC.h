@@ -77,6 +77,7 @@ public:
     bool lobbyNPC;
     bool zRight;
     float targetedTimer;
+    bool agroZombie;
 
     // Add an emitter for each NPC
     Emitter bloodEmitter;

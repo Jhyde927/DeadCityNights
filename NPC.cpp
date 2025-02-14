@@ -73,6 +73,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     lobbyNPC = false;
     zRight = false;
     targetedTimer = 0.0f;
+    agroZombie = false;
 
 
  
@@ -700,6 +701,25 @@ void NPC::HandlePolice(Player& player, float& distanceToPlayer){
 
         SetAnimationState(ATTACKING);
         
+    }
+
+    if (agroZombie && targetNPC != nullptr && targetNPC->isActive && targetNPC->isZombie){
+        std::cout << "attacking zombie\n";
+        //police attack zombie//doesn't work and I don't know why
+        float distance_to = abs(targetNPC->position.x - position.x);
+        if (distance_to < 30){ //police has longer reach than zombie
+            destination = position;
+            idleTime = 0.0f;
+            attacking = true;
+            frameSpeed = 12;
+            SetAnimationState(ATTACKING);
+            if (targetNPC->isActive && currentFrame == 4){
+                targetNPC->TakeDamage(30, player);
+                PlaySound(SoundManager::getInstance().GetSound("BoneCrack"));
+
+            }
+
+        }
     }
 }
 

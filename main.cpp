@@ -76,7 +76,7 @@ bool dealerButtonAdded = false;
 bool subwayToPark = false;
 bool carToPark = false;
 bool buttonWork = false;
-
+bool fading = false;
 bool over_medkit = false;
 bool digSpot = false;
 bool NecroTech = false;
@@ -153,11 +153,11 @@ int gameHeight = 1024; // game resolution height
 Color customBackgroundColor = {32, 42, 63, 255};  //Same Color as sky background image. 
 Color shovelTint = WHITE;
 
-int money = 100;
+//int money = 100;
 int displayMoney = 100;
 bool showInventory = false;
-const int INVENTORY_SIZE = 10;  // Define the size of the inventory
-std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", "", "", ""}; //Inventory is a fixed array for no particular reason.
+const int INVENTORY_SIZE = 12;  // Define the size of the inventory
+std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", "", "", "", "", ""}; //Inventory is a fixed array for no particular reason.
 
 const int GAME_SCREEN_WIDTH = 1024;
 const int GAME_SCREEN_HEIGHT = 1024;
@@ -392,8 +392,10 @@ void InitBoxes(){
     Texture2D boxSheet = resources.boxSheet;
     Vector2 box_pos = {2938, 700 + 24};
     Vector2 box_pos2 = {2988, 700 + 24};
+    Vector2 box_pos3 = {2988+50, 700 + 24};
     boxes.emplace_back(box_pos, boxSheet);
     boxes.emplace_back(box_pos2, boxSheet);
+    boxes.emplace_back(box_pos3, boxSheet);
 }
 
 void InitPlatforms() {
@@ -887,7 +889,7 @@ void PlayPositionalSound(Sound sound, Vector2 soundPos, Vector2 listenerPos, flo
 }
 
 void addMoney(int amount){
-    money += amount;
+    player.money += amount;
 }
 
 
@@ -896,9 +898,9 @@ void DrawMoney(){
 
     DrawText(smoney.c_str(), screenWidth/2+400, 25, 30, WHITE);
     //Animate money ticking up or down. 
-    if (displayMoney < money){
+    if (displayMoney < player.money){
         displayMoney++;
-    }else if (displayMoney > money){
+    }else if (displayMoney > player.money){
         displayMoney--;
     }
 }
@@ -1768,11 +1770,13 @@ void HandleFadeIn() {
     if (fadeAlpha <= 0.0f) {
         fadeAlpha = 0.0f;
         transitionState = NONE;  // Fade-in complete
+        fading = false; //player may move again. 
     }
 }
 
 void HandleFadeOut(PlayerCar& player_car, GameCalendar& calendar, std::vector<NPC>& npcs) { 
     fadeAlpha += fadeSpeed;  // Fade out gradually
+    fading = true; //dont move player if fading
     if (fadeAlpha >= 1.0f) {
         fadeAlpha = 1.0f;
 
@@ -1897,6 +1901,18 @@ NPC* FindClosestNPC(NPC& zombie, std::vector<NPC>& npcs) {
     return closestNPC;
 }
 
+void UpdatePoliceTarget(NPC& police, std::vector<NPC>& zeds){
+    police.targetNPC = FindClosestNPC(police, zeds);
+
+    if (police.targetNPC != nullptr && police.targetNPC->isZombie){
+        
+        police.hasTarget = true;
+        police.agroZombie = true;
+        
+    }
+}
+
+
 void UpdateZombieTarget(NPC& zombie, std::vector<NPC>& npcs) {
     zombie.targetNPC = FindClosestNPC(zombie, npcs);
 
@@ -1923,7 +1939,7 @@ void UpdateZombieTarget(NPC& zombie, std::vector<NPC>& npcs) {
 
 void UpdateInventoryPosition(const Camera2D& camera, GameState& gameState) {
     // Static inventory position, relative to the camera offset
-    inventoryPositionX = camera.offset.x;  // Adjust the X position relative to the screen (e.g., 200 pixels left of the center)
+    inventoryPositionX = camera.offset.x-80;  // Adjust the X position relative to the screen (e.g., 200 pixels left of the center)
     if (gameState == APARTMENT){
         inventoryPositionY = camera.offset.y + 228;
     }else{
@@ -2750,7 +2766,7 @@ void DrawDialogBox(Player& player, Camera2D camera, int boxWidth, int boxHeight,
     DrawText(phrase.c_str(), screen_pos.x+ screen_offsetX, screen_pos.y + screen_offsetY, textSize, tint); //Draw Phrase
     
     //GUI buttons for certain NPC interactions. 
-    if (money >= 100 && dealer && GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY") ) //button pressed
+    if (player.money >= 100 && dealer && GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY") ) //button pressed
         {
             if (can_sell_drugs){ //can sell drugs gets reset once you take the drug
                 can_sell_drugs = false; // Dealer only has 1 drug for now. 
@@ -2764,7 +2780,7 @@ void DrawDialogBox(Player& player, Camera2D camera, int boxWidth, int boxHeight,
             }
         }
 
-    if (teller && !buyFortune && money >= 100 &&  GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY") ){
+    if (teller && !buyFortune && player.money >= 100 &&  GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY") ){
 
         if (canGiveFortune){
             canGiveFortune = false;
@@ -2780,7 +2796,7 @@ void DrawDialogBox(Player& player, Camera2D camera, int boxWidth, int boxHeight,
                 } 
         }
     }
-    if (overLiquor && showLiquor && money >= 100 &&  GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY")){
+    if (overLiquor && showLiquor && player.money >= 100 &&  GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY")){
         addMoney(-100);
         AddItemToInventory("whiskey", inventory, INVENTORY_SIZE);
         player.hasWhiskey = true;
@@ -3011,6 +3027,7 @@ void RenderSubway(Camera2D& camera, Vector2& mousePosition,Train& train, ShaderR
    
 
     EndMode2D();
+    showBigBadge();
 
     //draw healthbar 
     if (player.currentHealth < 100 &&  !player.enter_car){
@@ -3153,8 +3170,9 @@ void RenderAstral(Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoo
     
     DrawBullets(); //draw bullets in cemetery after everything else. 
     
-    
+
     EndMode2D();
+    showBigBadge();
 
 
     
@@ -3353,6 +3371,7 @@ void RenderCemetery(PlayerCar& player_car, UFO& ufo, float& time, Camera2D& came
     
 
     EndMode2D();
+    showBigBadge();
 
     if (showInventory){
         RenderInventory(inventory, INVENTORY_SIZE,mousePosition);  // Render the inventory 
@@ -3365,7 +3384,7 @@ void RenderCemetery(PlayerCar& player_car, UFO& ufo, float& time, Camera2D& came
     }
 
 
-    if (show_dbox){
+    if (show_dbox && !player.enter_car){
         DrawDialogBox(player, camera, 0, 0, 20);
     }
 
@@ -3475,9 +3494,9 @@ void RenderRoad(PlayerCar& player_car, Camera2D& camera, Vector2 mousePosition, 
         EndBlendMode();
     }
     
-    EndShaderMode();
+    
     EndMode2D();
- 
+    showBigBadge();
     DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D
    
 }
@@ -3572,9 +3591,9 @@ void RenderGraveyard(Camera2D& camera,Vector2 mousePosition, ShaderResources& sh
     if (firstBlood && !player.hasBadge){
         drawDeadZombie(dz_pos, mouseWorldPos);
     }
-
+    
     EndMode2D();
-
+    showBigBadge();
     
 
     if (badgeTimer > 0){ //show badge explanation
@@ -3810,8 +3829,9 @@ void RenderLot(Camera2D& camera, Vector2& mousePosition,ShaderResources& shaders
 
     DrawCrowbarPickup(mousePosition, camera);
     DrawBullets();
-    
+
     EndMode2D();  // End 2D mode 
+    showBigBadge();
  
     
 
@@ -3914,6 +3934,15 @@ void RenderPark(PlayerCar& player_car, Camera2D& camera,Vector2& mousePosition, 
                 
             }
 
+        }else if (npc.police){
+            npc.Update(player, gameState);
+            npc.Render(shaders);
+            npc.ClickNPC(mousePosition, camera, player, gameState);
+            UpdatePoliceTarget(npc, ParkNpcs);
+
+
+
+
         }else{//update and render all other NPCs in the Park, zombies can attack NPCs in the park
             npc.Update(player, gameState);
             npc.Render(shaders);
@@ -3955,6 +3984,7 @@ void RenderPark(PlayerCar& player_car, Camera2D& camera,Vector2& mousePosition, 
     EndBlendMode();
 
     EndMode2D();
+    showBigBadge();
 
     DrawMoney(); //draw money after EndMode2d()
     overSubway = false;
@@ -4127,7 +4157,9 @@ void RenderOffice(Camera2D& camera,Elevator& elevator, Vector2& mousePosition, S
     EndShaderMode(); ////////////////////////////SHADER OFF
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
     HandleKeyboardAiming(worldMousePosition);
+
     EndMode2D();
+    showBigBadge();
 
     //draw healthbar 
     if (player.currentHealth < 100 &&  !player.enter_car){
@@ -4380,6 +4412,7 @@ void RenderLobby(Camera2D& camera,Elevator& elevator, Vector2& mousePosition, Sh
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
     HandleKeyboardAiming(worldMousePosition);
     EndMode2D();
+    showBigBadge();
 
 
     //draw healthbar 
@@ -4530,6 +4563,7 @@ void RenderNecroTech(Camera2D& camera,PlayerCar& player_car, Vector2& mousePosit
     Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
     HandleKeyboardAiming(worldMousePosition);
     EndMode2D();
+    showBigBadge();
 
     //draw healthbar 
     if (player.currentHealth < 100 &&  !player.enter_car){
@@ -4927,7 +4961,7 @@ void spawnNPCs(){
 
 
 
-    //create ghost // 
+    //create ghost // Friendly ghost in graveyard. 
     Vector2 g_pos = {2100, 700};
     NPC ghost_npc = CreateNPC(resources.ghostSheet, g_pos, speed, IDLE, false, false);
     ghost_npc.SetDestination(2100, 2200);
@@ -4977,6 +5011,7 @@ void spawnNPCs(){
         police_npc.SetDestination(0, 4000);
         police_npc.police = true;
         npcs.push_back(police_npc);
+        ParkNpcs.push_back(police_npc);
 
     }
 
@@ -5081,7 +5116,7 @@ void handleCamera(Camera2D& camera, float& targetZoom){
 
         // Smoothly interpolate the current zoom towards the target zoom
         camera.zoom = Lerp(camera.zoom, targetZoom, 0.1f);
-        float maxZoom = 2.5;
+        float maxZoom = 3.5;
         float minZoom = 1.0;
         // Apply boundary checks for the zoom level
         if (camera.zoom > maxZoom) camera.zoom = maxZoom;
@@ -5246,7 +5281,7 @@ void UptoEnter(PlayerCar& player_car, Elevator& elevator){
         if (over_lot && gameState == OUTSIDE){ //over_lot = true
             transitionState = FADE_OUT;//transition to lot
         }
-        if (over_gate && gameState == CEMETERY){
+        if (over_gate && gameState == CEMETERY && !spawning_zombies){
             transitionState = FADE_OUT; //transition to graveyard
             
         }
@@ -5256,10 +5291,11 @@ void UptoEnter(PlayerCar& player_car, Elevator& elevator){
         if (over_necro && gameState == NECROTECH){
             transitionState = FADE_OUT; //trans to lobby
         }
-        if (over_exit && gameState == LOBBY){
+        if (over_exit && gameState == LOBBY && !spawning_zombies){ //can't leave the scene while zombies are spawning, 
+        //but you can when zombies are still active wich couid cause trouble
             transitionState = FADE_OUT; //trans to necrotech
         }
-        if (over_Ebutton && gameState == LOBBY){ //elevator button in lobby
+        if (over_Ebutton && gameState == LOBBY && !spawning_zombies){ //elevator button in lobby
             if (elevator.isOpen){
                 elevator.isOpen = false;
             }else{
@@ -5541,6 +5577,7 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadSound("crowbarAttack", "assets/sounds/crowbarAttack.ogg");
     soundManager.LoadSound("jump", "assets/sounds/jump.ogg");
     soundManager.LoadSound("woodBreak", "assets/sounds/woodBreak.ogg");
+    soundManager.LoadSound("moneyUp", "assets/sounds/moneyUp.ogg");
 
     soundManager.LoadSound("alarm", "assets/sounds/alarm1.ogg");
 
@@ -5700,7 +5737,7 @@ int main() {
         mousePosition = clampMouseCursor(mousePosition); //stop mouse from going offscreen when in fullscreen. 
         
 
-        if (!player.enter_car && !player.onElevator && !player.enter_train) player.UpdateMovement(resources, gameState, mousePosition, camera, platforms);  // Update player position and animation
+        if (!player.enter_car && !player.onElevator && !player.enter_train && !fading) player.UpdateMovement(resources, gameState, mousePosition, camera, platforms);  // Update player position and animation
         UpdateInventoryPosition(camera, gameState);
 
         

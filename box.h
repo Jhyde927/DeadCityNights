@@ -16,11 +16,11 @@ public:
     Vector2 position;
     bool destroyed = false;
     bool canTakeDamage = true;
-    int health = 5;  // Number of hits before breaking (5 frames, breaks after 4 hits)
+    int health = 4;  // Number of hits before breaking, 
     Texture2D texture;
     int frameWidth = 32;  // Width of each frame
     int frameHeight = 32; // Height of each frame
-    int maxFrames = 5;    // Number of frames in the sprite sheet
+    int maxFrames = 4;    // Number of frames in the sprite sheet, it's actualy 5, but we dont use the last frame because we lowered health by 1
     float cooldownTimer = 0.0;
     float damageCooldown = 0.2f;
 
@@ -71,22 +71,26 @@ public:
             boxEmitter.position = position;
             boxEmitter.SpawnExplosion(10, BROWN);
             PlaySound(SoundManager::getInstance().GetSound("woodBreak"));
+            Vector2 center_pos = {position.x - 8, position.y};
             if (health <= 0) {
                 destroyed = true;
-                int number = rand()%4;
+                int number = rand()%4; // 0,1,2,3
                 switch (number)
                 {
+                
+                case 0:
+                    SpawnPickup(center_pos, PickupType::SHOTGUN_AMMO, resources.shellsPickup);
+                    break;
                 case 1:
-                    SpawnPickup(position, PickupType::SHOTGUN_AMMO, resources.shellsPickup);
+                    SpawnPickup(center_pos, PickupType::SHOTGUN_AMMO, resources.shellsPickup);
                     break;
 
                 case 2:
-                    SpawnPickup(position, PickupType::NINE_MM_AMMO, resources.autoPickup);
+                    SpawnPickup(center_pos, PickupType::NINE_MM_AMMO, resources.autoPickup);
                     break;
 
                 case 3:
-                    AddItemToInventory("pills", inventory, INVENTORY_SIZE);
-                    PlaySound(SoundManager::getInstance().GetSound("Pills"));
+                    SpawnPickup(center_pos, PickupType::MONEY, resources.money);
                     break;
                 
                 }

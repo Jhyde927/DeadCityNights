@@ -87,6 +87,7 @@ public:
     double LastTapTimeRight;
     double tapInterval;
     float shotgunReloadTime;
+    int money;
 
     // Weapon variables
     WeaponType currentWeapon;

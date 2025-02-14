@@ -107,6 +107,7 @@ struct GameResources {
     Texture2D shellsPickup;
     Texture2D autoPickup;
     Texture2D BigBadge;
+    Texture2D money;
     
 
     Font defaultFont;

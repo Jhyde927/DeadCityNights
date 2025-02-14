@@ -84,7 +84,7 @@ Player::Player() {
     canSwing = true;
     swinging = false;
     swingTimer = 0.0;
-
+    money = 100;
     validatedPassword = false;
     necroTechSearched = false;
     onElevator = false;

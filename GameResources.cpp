@@ -105,6 +105,7 @@ void GameResources::Load() {
     shellsPickup = LoadTexture("assets/shellsPickup.png");
     autoPickup = LoadTexture("assets/9mm.png");
     BigBadge = LoadTexture("assets/BigBadge.png");
+    money = LoadTexture("assets/money.png");
 }
 
 // Unload all game resources
@@ -202,5 +203,6 @@ void GameResources::Unload() {
     UnloadTexture(shellsPickup);
     UnloadTexture(autoPickup);
     UnloadTexture(BigBadge);
+    UnloadTexture(money);
   
 }

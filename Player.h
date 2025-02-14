@@ -50,6 +50,7 @@ public:
     bool isDead;
     bool isReloading;
     bool canShoot;
+    bool hasWatch;
     bool hasGun;
     bool hasShotgun;
     bool hasMac10;

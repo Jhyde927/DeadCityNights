@@ -50,7 +50,7 @@ Player::Player() {
     isShooting = false;
     isReloading = false;
     canShoot = true;
-
+    hasWatch = false;
     hasGun = false;
     hasShotgun = false;
     hasMac10 = false;

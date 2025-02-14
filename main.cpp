@@ -389,20 +389,43 @@ void InitializeTrain(Train &train) {
 }
 
 void InitBoxes(){
-    // Adding a box
+    // boxes are stored in one big vector "boxes", and assigned to a specific scene on initiation. 
+    //renderBoxes then renders the appropriate boxes for each scene. 
     Texture2D boxSheet = resources.boxSheet;
 
     //LOT
-    Vector2 box_pos = {2938, 724};
-    Vector2 box_pos2 = {2988, 724};
-    Vector2 box_pos3 = {2988+50, 724};
-    boxes.emplace_back(box_pos, boxSheet, LOT);
-    boxes.emplace_back(box_pos2, boxSheet, LOT);
-    boxes.emplace_back(box_pos3, boxSheet, LOT);
+    boxes.emplace_back(Vector2 {2938, 724},boxSheet, LOT);
+    boxes.emplace_back(Vector2 {2988, 724}, boxSheet, LOT);
+    boxes.emplace_back(Vector2 {2988+50, 724}, boxSheet, LOT);
 
     //CEMETERY
-    boxes.emplace_back(box_pos, boxSheet, CEMETERY);
+    boxes.emplace_back(Vector2 {3550, 724}, boxSheet, CEMETERY);
+    boxes.emplace_back(Vector2 {3600, 724}, boxSheet, CEMETERY);
+    boxes.emplace_back(Vector2 {3500, 724}, boxSheet, CEMETERY);
 
+    //GRAVEYARD
+    boxes.emplace_back(Vector2 {4404, 724}, boxSheet, GRAVEYARD);
+
+    //OUTSIDE
+    boxes.emplace_back(Vector2 {241, 724}, boxSheet, OUTSIDE);
+    boxes.emplace_back(Vector2 {3980, 724}, boxSheet, OUTSIDE);
+    boxes.emplace_back(Vector2 {4030, 724}, boxSheet, OUTSIDE);
+    boxes.emplace_back(Vector2 {4080, 724}, boxSheet, OUTSIDE);
+
+    //SUBWAY
+    boxes.emplace_back(Vector2 {1740, 724}, boxSheet, SUBWAY);
+    boxes.emplace_back(Vector2 {1790, 724}, boxSheet, SUBWAY);
+
+    //PARK
+    boxes.emplace_back(Vector2 {1237, 724}, boxSheet, PARK);
+
+    //NECROTECH EXTERIOR
+    boxes.emplace_back(Vector2 {2500, 724}, boxSheet, NECROTECH);
+    boxes.emplace_back(Vector2 {2450, 724}, boxSheet, NECROTECH);
+
+    //OFFICE
+    boxes.emplace_back(Vector2 {1210, 724}, boxSheet, OFFICE);
+    boxes.emplace_back(Vector2 {1260, 724}, boxSheet, OFFICE);
 
 
 }
@@ -445,6 +468,24 @@ void AddItemToInventory(const std::string& item, std::string inventory[], int in
         }
     }
 }
+
+// Function to remove an item from the inventory by name
+void RemoveItemFromInventory(const std::string& item, std::string inventory[], int inventorySize) {
+    for (int i = 0; i < inventorySize; i++) {
+        if (inventory[i] == item) {
+            inventory[i] = "";  // Clear the item slot
+
+            // Shift remaining items left to maintain order
+            for (int j = i; j < inventorySize - 1; j++) {
+                inventory[j] = inventory[j + 1];
+            }
+            inventory[inventorySize - 1] = "";  // Clear the last slot after shifting
+
+            break;  // Stop after removing one occurrence
+        }
+    }
+}
+
 
 std::string GetTellerPhrase() {
     std::vector<std::string> tellerPhrases = {
@@ -1250,158 +1291,61 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
     }
 }
 
-
-
-
-void DrawMac10Pickup(Vector2 mousePosition, Camera2D& camera){
-    //Mac10 pickup in asteral plane
-    Vector2 macPos = {2445, -735}; // 
+void DrawItem(Vector2 itemPos, const std::string& itemType, Vector2 mousePosition, Camera2D& camera) {
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
-    float distance_to_mac = abs(macPos.x - player.position.x);
-    float distance_to_macY = abs(macPos.y - player.position.y);
-    if (drawMac10){ //mac10 pickup
-        DrawTexture(resources.Mac10pickup, macPos.x, macPos.y, WHITE);
-        Rectangle macBounds = { //hitbox of the mac10
-            macPos.x,      
-            macPos.y,     
-            static_cast<float>(64),  
-            static_cast<float>(64)  
-        };
-        //pickup mac10
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && distance_to_mac < 20 && distance_to_macY < 20){ //check for Y distance as well because its on platform
-            if (CheckCollisionPointRec(mouseWorldPos, macBounds)){
-                //add shovel in inventory
-                if (!player.hasMac10){
-                    drawMac10 = false;
-                    AddItemToInventory("mac10", inventory, INVENTORY_SIZE);
-                    PlaySound(SoundManager::getInstance().GetSound("reload"));
-                    showInventory = true;
-                    player.hasMac10 = true;
-                }
-            }
-        }
-        if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
-            if (!player.hasMac10 && distance_to_mac < 20 && distance_to_macY < 20){//check for Y distance as well because its on a platform
-                drawMac10 = false;
-                AddItemToInventory("mac10", inventory, INVENTORY_SIZE);
-                PlaySound(SoundManager::getInstance().GetSound("reload"));
-                showInventory = true;
-                player.hasMac10= true;
-            
-            }
-        }
+    float distanceToItemX = abs(itemPos.x - player.position.x);
+    float distanceToItemY = abs(itemPos.y - player.position.y);
 
-    }
-    
+    static std::map<std::string, Texture2D> itemTextures = {
+        {"mac10", resources.Mac10pickup},
+        {"shovel", resources.shovelWorld},
+        {"crowbar", resources.crowbarWorld}, 
+        {"watch", resources.pocketWatchWorld},
+        
+        
+    };
 
-}
+    static std::map<std::string, bool*> playerItemFlags = {
+        {"mac10", &player.hasMac10},
+        {"shovel", &player.hasShovel},
+        {"crowbar", &player.hasCrowbar},
+        {"watch", &player.hasWatch},
+  
+ 
+    };
 
-void DrawCrowbarPickup(Vector2 mousePosition, Camera2D& camera){
-    Vector2 crowbar_pos = {2860, 700};
-    Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
-    float distance_to_cb = abs(player.position.x - crowbar_pos.x);
+    static std::map<std::string, std::string> inventoryNames = {
+        {"mac10", "mac10"},
+        {"shovel", "shovel"},
+        {"crowbar", "crowbar"},
+        {"watch", "watch"},
 
-    if (distance_to_cb < 20 && drawCrowbar){
-        phrase = "Press V to swing crowbar";
-        show_dbox = true;
-        dboxPosition = player.position;  
+ 
+    };
+
+    if (itemTextures.find(itemType) == itemTextures.end() || playerItemFlags.find(itemType) == playerItemFlags.end()) {
+        return;  // Item type not recognized, exit early
     }
 
-    if (drawCrowbar){
+    DrawTexture(itemTextures[itemType], itemPos.x, itemPos.y, WHITE);
 
-        Rectangle sourceRec = { 0, 0, (float)resources.crowbarIcon.width, (float)resources.crowbarIcon.height }; // Full texture
-        Rectangle destRec = { crowbar_pos.x, crowbar_pos.y+16, 32, 32 };  // Scale to 32x32
-        Vector2 origin = { 0, 0 }; // No rotation, origin at top-left
-        float rotation = 0.0f;  // No rotation
+    Rectangle itemBounds = { itemPos.x, itemPos.y, 64, 64 };
 
-        DrawTexturePro(resources.crowbarIcon, sourceRec, destRec, origin, rotation, WHITE);
-
-
-        //DrawTexture(resources.crowbarIcon, crowbar_pos.x, crowbar_pos.y, WHITE);
-        Rectangle crowbarBounds = { //shovel button
-            crowbar_pos.x,      
-            crowbar_pos.y,     
-            static_cast<float>(32),  
-            static_cast<float>(64)  
-        };
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)&& distance_to_cb < 20){ //pickup shovel 
-            if (CheckCollisionPointRec(mouseWorldPos, crowbarBounds)){
-                //add shovel in inventory
-                if (!player.hasCrowbar){
-                    drawCrowbar = false;
-                    AddItemToInventory("crowbar", inventory, INVENTORY_SIZE);
-                    PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
-                    showInventory = true;
-                    player.hasCrowbar = true;
-
-                }
-            
-            }
-        }
-
-                //Press up key or W to pickup shovel when close enough
-        if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
-            if (!player.hasCrowbar && distance_to_cb < 20){
-                drawCrowbar = false;
-                AddItemToInventory("crowbar", inventory, INVENTORY_SIZE);
-                PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
-                showInventory = true;
-                player.hasCrowbar= true;
-            
-             }
+    if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(mouseWorldPos, itemBounds)) || 
+        (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)) && distanceToItemX < 20 && distanceToItemY < 50) {
+        
+        if (!(*playerItemFlags[itemType])) {
+            *playerItemFlags[itemType] = true;
+            AddItemToInventory(inventoryNames[itemType], inventory, INVENTORY_SIZE);
+            if (itemType == "mac10") PlaySound(SoundManager::getInstance().GetSound("reload"));
+            if (itemType == "shovel" || itemType == "crowbar") PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
+            if (itemType == "watch") PlaySound(SoundManager::getInstance().GetSound("moneyUp"));
+            showInventory = true;
         }
     }
-
 }
 
 
-
-
-void DrawShovelPickup(Vector2 mousePosition, Camera2D& camera){
-    //render shovel. Click or keyUP the shovel to pick it up. 
-
-    Vector2 shovelPos = {1870, 700}; // render within 1900. where zombies trigger
-    Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
-    float distance_to_shovel = abs(shovelPos.x - player.position.x);
-    if (drawShovel){ //shovel pickup
-        DrawTexture(resources.shovelWorld, shovelPos.x, shovelPos.y, WHITE);
-        Rectangle shovelBounds = { //shovel button
-            shovelPos.x,      
-            shovelPos.y,     
-            static_cast<float>(32),  
-            static_cast<float>(64)  
-        };
-
-    
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)&& distance_to_shovel < 20){ //pickup shovel 
-            if (CheckCollisionPointRec(mouseWorldPos, shovelBounds)){
-                //add shovel in inventory
-                if (!player.hasShovel){
-                    drawShovel = false;
-                    AddItemToInventory("shovel", inventory, INVENTORY_SIZE);
-                    PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
-                    showInventory = true;
-                    player.hasShovel = true;
-                
-                }
-            
-            }
-
-
-        }
-        //Press up key or W to pickup shovel when close enough
-        if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
-            if (!player.hasShovel && distance_to_shovel < 20){
-                drawShovel = false;
-                AddItemToInventory("shovel", inventory, INVENTORY_SIZE);
-                PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
-                showInventory = true;
-                player.hasShovel = true;
-            
-            }
-        }
-    }
-}
 
 void HandleLobbyTransition(GameCalendar& calendar){
     if (over_exit && player.currentHealth > 0){
@@ -2030,6 +1974,11 @@ void RenderInventory(std::string inventory[], int inventorySize,Vector2& mousePo
        // Draw the icon at x, y
         if (!inventory[i].empty()) { //inventory buttons are all done in the same for loop we use to draw it. Consider abstracting this somehow. 
         //chatGPT suggests using enum ItemType and struct inventoryDefinitions, just makes it more spread out and complicated.
+
+            if (inventory[i] == "watch"){
+                DrawTexture(resources.pocketWatchWorld, x, y, WHITE);
+
+            }
 
             if (inventory[i] == "crowbar"){
                 DrawTexture(resources.crowbarIcon, x, y, WHITE);
@@ -3181,11 +3130,12 @@ void RenderAstral(Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoo
             Flocking(astralBats);
         }
     }
+
+    if (!player.hasWatch){
+        DrawItem(Vector2 {2445, -745}, "watch", mousePosition, camera);
+    }
     
-
-
-    DrawMac10Pickup(mousePosition, camera);
-
+    //-735
     
     DrawBullets(); //draw bullets in cemetery after everything else. 
     renderBoxes();
@@ -3213,7 +3163,8 @@ void RenderAstral(Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoo
         DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
-    if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player);
+   
+    if ((player.hasGun || player.hasShotgun || player.hasMac10) && !player.enter_car) DrawHUD(player);
 
     if (show_dbox){
         DrawDialogBox(player, camera, 0, 0, 20);
@@ -3369,7 +3320,11 @@ void RenderCemetery(PlayerCar& player_car, UFO& ufo, float& time, Camera2D& came
         DrawUFO(ufo, camera, time, shaders);
     }
 
-    DrawShovelPickup(mousePosition, camera);
+    //DrawShovelPickup(mousePosition, camera);
+
+    if (!player.hasShovel){
+        DrawItem(Vector2 {1870, 700}, "shovel", mousePosition, camera);
+    }
 
     for (NPC& zombie : zombies){ //update and draw zombies in cemetery
         zombie.Update(player, gameState);
@@ -3416,7 +3371,7 @@ void RenderCemetery(PlayerCar& player_car, UFO& ufo, float& time, Camera2D& came
 
     
 
-    if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player); //always show ammo when outside of car in the cemetery
+    if ((player.hasGun || player.hasShotgun || player.hasMac10) && !player.enter_car) DrawHUD(player); //always show ammo when outside of car in the cemetery
 
     //DrawText("Cemetery", screenWidth/2 - 100, 60, 50, WHITE);
 
@@ -3592,7 +3547,17 @@ void RenderGraveyard(Camera2D& camera,Vector2 mousePosition, ShaderResources& sh
         ghost.Render(shaders);
         ghost.ClickNPC(mousePosition, camera, player, gameState);
         //if (ghost.health > 0) ghost.isActive = true; <- this caused some major pains
-        if (ghost.interacting){
+
+        if (ghost.interacting && player.hasWatch){
+            phrase = "oooooooo";
+            dboxPosition = ghost.position;
+            show_dbox = true;
+            ghost.health = 0;
+            RemoveItemFromInventory("watch", inventory, INVENTORY_SIZE);
+            
+        }
+
+        if (ghost.interacting && !player.hasWatch){
             show_dbox = true;
             dboxPosition = ghost.position;
             phrase = ghost.speech;
@@ -3848,7 +3813,11 @@ void RenderLot(Camera2D& camera, Vector2& mousePosition,ShaderResources& shaders
     
     player.DrawPlayer(resources, gameState, camera, shaders);
 
-    DrawCrowbarPickup(mousePosition, camera);
+    //DrawCrowbarPickup(mousePosition, camera);
+
+    if (!player.hasCrowbar){
+        DrawItem(Vector2 {2860, 700}, "crowbar", mousePosition, camera);
+    }
     DrawBullets();
     renderBoxes();
     DrawPickups();
@@ -5178,6 +5147,8 @@ void debugKeys(){
         if (!has_car_key || !hasCemeteryKey){
             AddItemToInventory("carKeys", inventory, INVENTORY_SIZE);
             AddItemToInventory("cemeteryKey", inventory, INVENTORY_SIZE);
+            AddItemToInventory("watch", inventory, INVENTORY_SIZE);
+            player.hasWatch = true;
             has_car_key = true;
             hasCemeteryKey = true;
             

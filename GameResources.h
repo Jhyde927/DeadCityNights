@@ -108,6 +108,9 @@ struct GameResources {
     Texture2D autoPickup;
     Texture2D BigBadge;
     Texture2D money;
+    Texture2D pocketWatch;
+    Texture2D pocketWatchWorld;
+    Texture2D crowbarWorld;
     
 
     Font defaultFont;

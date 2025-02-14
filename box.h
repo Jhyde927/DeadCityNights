@@ -11,8 +11,6 @@
 #include "Inventory.h"
 
 
-
-
 class Box {
 public:
     Vector2 position;
@@ -72,7 +70,7 @@ public:
             health -= damage;
             canTakeDamage = false;
             cooldownTimer = damageCooldown; // Start cooldown timer
-            boxEmitter.position = position;
+            boxEmitter.position = position+ Vector2 {8, 8};
             boxEmitter.SpawnExplosion(10, BROWN);
             PlaySound(SoundManager::getInstance().GetSound("woodBreak"));
             Vector2 center_pos = {position.x - 8, position.y};
@@ -83,7 +81,7 @@ public:
                 {
                 
                 case 0:
-                    SpawnPickup(center_pos, PickupType::SHOTGUN_AMMO, resources.shellsPickup);
+                    //SpawnPickup(center_pos, PickupType::SHOTGUN_AMMO, resources.shellsPickup);
                     break;
                 case 1:
                     SpawnPickup(center_pos, PickupType::SHOTGUN_AMMO, resources.shellsPickup);

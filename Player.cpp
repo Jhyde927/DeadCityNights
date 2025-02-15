@@ -67,6 +67,8 @@ Player::Player() {
     step = false;
     shells = 20;
     autoAmmo = 150;
+    revolverAmmo = 30;
+    
     arriving = false;
     LastTapTimeLeft = 0;
     LastTapTimeRight = 0;
@@ -74,6 +76,7 @@ Player::Player() {
     runFrameSpeed = 1.5;
     walkFrameSpeed = 1;
     bulletCount = 6;
+
     mac10BulletCount = 30;
     revolverBulletCount = 6;
     shotgunBulletCount = 2;  // For Shotgun
@@ -343,12 +346,17 @@ void Player::reloadLogic(float deltaTime){
 
 void Player::Reload(){
     if (currentWeapon == REVOLVER){
-        if (!isReloading){
+        if (!isReloading && revolverAmmo > 0 && revolverBulletCount < 6){
             isReloading = true;    
             reloadTimer = 0.5f;
-            revolverBulletCount = 6;
-            bulletCount = MAX_BULLETS;
+            
+            int bulletsNeeded = (6 - revolverBulletCount);
+            int bulletsToReload = (revolverAmmo >= bulletsNeeded) ? bulletsNeeded : revolverAmmo; 
             PlaySound(SoundManager::getInstance().GetSound("reload"));
+
+            // Update ammo counts
+            revolverAmmo -= bulletsToReload;
+            revolverBulletCount += bulletsToReload;
 
         }
         
@@ -595,7 +603,7 @@ void Player::shootLogic(){
         currentWeapon = MAC10;
     }
 
-    if (IsKeyPressed(KEY_V) && canSwing && !isAiming && !isReloading && !isShooting && hasCrowbar){ //swing the crowbar
+    if ((IsKeyPressed(KEY_V) || IsKeyPressed(KEY_LEFT_CONTROL)|| IsKeyPressed(KEY_RIGHT_CONTROL)) && canSwing && !isAiming && !isReloading && !isShooting && hasCrowbar){ //swing the crowbar
         canSwing = false;
         swinging = true;
         swingTimer = 0.5f;

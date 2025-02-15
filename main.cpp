@@ -489,11 +489,11 @@ void RemoveItemFromInventory(const std::string& item, std::string inventory[], i
 
 std::string GetTellerPhrase() {
     std::vector<std::string> tellerPhrases = {
-        "Your courage will lead you\n\n to unexpected rewards.\n\n The password is: 666",
-        "Fortune smiles upon you\n\nin your next endeavor.\n\n The password is: 666",
-        "A difficult choice \n\nwill test your resolve.\n\n The password is: 666",
-        "Beware of the shadows\n\n not all is as it seems.\n\n The password is: 666",
-        "Fortune favors the bold\n\n take the leap.\n\n The password is: 666",
+        "Your courage will lead you\n\n to unexpected rewards.",
+        "Fortune smiles upon you\n\nin your next endeavor.",
+        "A difficult choice \n\nwill test your resolve.",
+        "Beware of the shadows\n\n not all is as it seems.",
+        "Fortune favors the bold\n\n take the leap.",
 
     };
 
@@ -523,9 +523,6 @@ void RenderPasswordInterface() {
 }
 
 void UpdatePasswordInterface() {
-
-
-
     // Handle digit input (main number keys and numpad keys)
     int key = GetKeyPressed();
     if ((key >= KEY_ZERO && key <= KEY_NINE) || (key >= KEY_KP_0 && key <= KEY_KP_9)) {
@@ -1335,7 +1332,7 @@ void DrawItem(Vector2 itemPos, const std::string& itemType, Vector2 mousePositio
         (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)) && distanceToItemX < 20 && distanceToItemY < 50) {
         
         if (!(*playerItemFlags[itemType])) {
-            *playerItemFlags[itemType] = true;
+            *playerItemFlags[itemType] = true; //hasShovel, hasCrowbar ect.. = true
             AddItemToInventory(inventoryNames[itemType], inventory, INVENTORY_SIZE);
             if (itemType == "mac10") PlaySound(SoundManager::getInstance().GetSound("reload"));
             if (itemType == "shovel" || itemType == "crowbar") PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
@@ -1976,7 +1973,7 @@ void RenderInventory(std::string inventory[], int inventorySize,Vector2& mousePo
         //chatGPT suggests using enum ItemType and struct inventoryDefinitions, just makes it more spread out and complicated.
 
             if (inventory[i] == "watch"){
-                DrawTexture(resources.pocketWatchWorld, x, y, WHITE);
+                DrawTexture(resources.pocketWatch, x, y, WHITE);
 
             }
 
@@ -2111,7 +2108,8 @@ void RenderInventory(std::string inventory[], int inventorySize,Vector2& mousePo
                 if (CheckCollisionPointRec(mousePosition, pillBounds)){
                     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
                         if (player.currentHealth < player.maxHealth && player.hasPills){
-                            inventory[i] = std::string("");  // erase pills from the string
+                            //inventory[i] = std::string("");  // erase pills from the string
+                            RemoveItemFromInventory("pills", inventory, INVENTORY_SIZE);
                             player.currentHealth = player.maxHealth;
                             player.hasPills = false;
                             PlaySound(SoundManager::getInstance().GetSound("Pills"));
@@ -2152,7 +2150,8 @@ void RenderInventory(std::string inventory[], int inventorySize,Vector2& mousePo
 
                 if (CheckCollisionPointRec(mousePosition, textureBounds)){
                     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-                        inventory[i] = std::string("");  // erase drugs from the string
+                        //inventory[i] = std::string("");  // erase drugs from the string
+                        RemoveItemFromInventory("Drugs", inventory, INVENTORY_SIZE);
                         applyShader = true;
                         can_sell_drugs = true;
                     }
@@ -2223,14 +2222,15 @@ void DrawHUD(const Player& player) {
     float ammoX = 140.0;
     if (player.currentWeapon == REVOLVER && player.hasGun){
         DrawText(TextFormat("Ammo: %d", player.revolverBulletCount), screenWidth/2 + ammoX, ammoY, 20, WHITE); //screen space coordiantes
+         DrawText(TextFormat("Revolver: %d", player.revolverAmmo), screenWidth/2 + ammoX, ammoY+20, 20, WHITE);
     }
     else if (player.currentWeapon == SHOTGUN && player.hasShotgun){
         DrawText(TextFormat("Ammo: %d", player.shotgunBulletCount), screenWidth/2 + ammoX, ammoY, 20, WHITE);
-        DrawText(TextFormat("SHELLS: %d", player.shells), screenWidth/2 + ammoX, ammoY+20, 20, WHITE);
+        DrawText(TextFormat("Shotgun: %d", player.shells), screenWidth/2 + ammoX, ammoY+20, 20, WHITE);
     }
     else if (player.currentWeapon == MAC10 && player.hasMac10){
         DrawText(TextFormat("Ammo: %d", player.mac10BulletCount), screenWidth/2 + ammoX, ammoY, 20, WHITE); 
-        DrawText(TextFormat("9mm: %d", player.autoAmmo), screenWidth/2 + ammoX, ammoY+20, 20, WHITE);
+        DrawText(TextFormat("Mac10: %d", player.autoAmmo), screenWidth/2 + ammoX, ammoY+20, 20, WHITE);
     }
     
 }
@@ -2488,7 +2488,7 @@ void DrawMagicDoor(Player& player, MagicDoor& magicDoor, ShaderResources& shader
 
 }
 
-void moveUFO(UFO& ufo, Player& player){
+void moveUFO(UFO& ufo){
     if (canMoveUfo){
         //UFO drops down from the sky, hovers a few seconds, then darts off super fast.
         float deltaTime = GetFrameTime();
@@ -2677,7 +2677,7 @@ void DrawHealthBar(GameResources resources, Vector2 position, int maxHealth, int
 
 
 
-void DrawDialogBox(Player& player, Camera2D camera, int boxWidth, int boxHeight,int textSize){
+void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
     
     int offset = -63; //default offsets for regular NPCs
     int screen_offsetX = 16;
@@ -3029,7 +3029,7 @@ void RenderSubway(Camera2D& camera, Vector2& mousePosition,Train& train, ShaderR
     }
 
     if (show_dbox){
-        DrawDialogBox(player, camera, 0, 0, 20);
+        DrawDialogBox(camera, 0, 0, 20);
     }
 
 
@@ -3167,7 +3167,7 @@ void RenderAstral(Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoo
     if ((player.hasGun || player.hasShotgun || player.hasMac10) && !player.enter_car) DrawHUD(player);
 
     if (show_dbox){
-        DrawDialogBox(player, camera, 0, 0, 20);
+        DrawDialogBox(camera, 0, 0, 20);
     }
 
     
@@ -3361,11 +3361,11 @@ void RenderCemetery(PlayerCar& player_car, UFO& ufo, float& time, Camera2D& came
 
 
     if (show_dbox && !player.enter_car){
-        DrawDialogBox(player, camera, 0, 0, 20);
+        DrawDialogBox(camera, 0, 0, 20);
     }
 
     if (over_gate && hasCemeteryKey){
-        DrawDialogBox(player, camera, 0, 0, 20);
+        DrawDialogBox(camera, 0, 0, 20);
 
     }
 
@@ -3549,11 +3549,13 @@ void RenderGraveyard(Camera2D& camera,Vector2 mousePosition, ShaderResources& sh
         //if (ghost.health > 0) ghost.isActive = true; <- this caused some major pains
 
         if (ghost.interacting && player.hasWatch){
-            phrase = "oooooooo";
+            phrase = "You found my pocket watch"; //TODO: write a rhyme
             dboxPosition = ghost.position;
             show_dbox = true;
-            ghost.health = 0;
+            ghost.isActive = false;
             RemoveItemFromInventory("watch", inventory, INVENTORY_SIZE);
+
+
             
         }
 
@@ -3581,7 +3583,7 @@ void RenderGraveyard(Camera2D& camera,Vector2 mousePosition, ShaderResources& sh
 
     if (badgeTimer > 0){ //show badge explanation
         show_dbox = true;
-        DrawDialogBox(player, camera, 0, 0, 20);
+        DrawDialogBox(camera, 0, 0, 20);
         badgeTimer -= GetFrameTime();
     }
 
@@ -3619,7 +3621,7 @@ void RenderGraveyard(Camera2D& camera,Vector2 mousePosition, ShaderResources& sh
     }
 
     if (show_dbox){
-        DrawDialogBox(player, camera, 0, 0, 20);
+        DrawDialogBox(camera, 0, 0, 20);
 
     }
 
@@ -3827,7 +3829,7 @@ void RenderLot(Camera2D& camera, Vector2& mousePosition,ShaderResources& shaders
     
 
     if (show_dbox){      
-        DrawDialogBox(player, camera, 0, 0, 20); // draw box size of 0x0. hobo has no border box
+        DrawDialogBox(camera, 0, 0, 20); // draw box size of 0x0. hobo has no border box
     }  
 
     if (showInventory){
@@ -4015,7 +4017,7 @@ void RenderPark(PlayerCar& player_car, Camera2D& camera,Vector2& mousePosition, 
     }
 
     if (show_dbox){
-        DrawDialogBox(player, camera, 0, 0, 20);
+        DrawDialogBox(camera, 0, 0, 20);
 
     }
 
@@ -4177,7 +4179,7 @@ void RenderOffice(Camera2D& camera,Elevator& elevator, Vector2& mousePosition, S
     }
 
     if (show_dbox){
-        DrawDialogBox(player, camera, 0, 0, 20);
+        DrawDialogBox(camera, 0, 0, 20);
 
     }
 
@@ -4401,7 +4403,7 @@ void RenderLobby(Camera2D& camera,Elevator& elevator, Vector2& mousePosition, Sh
     }
 
     if (show_dbox){
-        DrawDialogBox(player, camera, 0, 0, 20);
+        DrawDialogBox(camera, 0, 0, 20);
 
     }
 
@@ -4555,7 +4557,7 @@ void RenderNecroTech(Camera2D& camera,PlayerCar& player_car, Vector2& mousePosit
     }
 
     if (show_dbox){
-        DrawDialogBox(player, camera, 0, 0, 20);
+        DrawDialogBox(camera, 0, 0, 20);
 
     }
 
@@ -4640,7 +4642,7 @@ void RenderOutside(Camera2D& camera, PlayerCar& player_car,MagicDoor& magicDoor,
     if (move_ufo){
         ufoTimer -= GetFrameTime();
         DrawUFO(ufo, camera, totalTime, shaders);
-        moveUFO(ufo, player);
+        moveUFO(ufo);
     }
 
     abductionBeam = false;
@@ -4766,6 +4768,7 @@ void RenderOutside(Camera2D& camera, PlayerCar& player_car,MagicDoor& magicDoor,
         }
     }
 
+    if (player.isAiming) DrawHUD(player);
 
     renderBoxes();
     DrawPickups();
@@ -4783,11 +4786,11 @@ void RenderOutside(Camera2D& camera, PlayerCar& player_car,MagicDoor& magicDoor,
     if (show_dbox && !player.enter_car){
 
         if (over_lot || over_apartment || over_car || start || overLiquor || overSubway){
-            DrawDialogBox(player, camera, 0, 0, 20);
+            DrawDialogBox(camera, 0, 0, 20);
             
             
         }else{
-            DrawDialogBox(player, camera, 0, 0, 20);
+            DrawDialogBox(camera, 0, 0, 20);
         }
         
     }
@@ -5521,7 +5524,7 @@ void InitSounds(SoundManager& soundManager){
     SoundManager::getInstance().LoadMusic("StreetSounds", "assets/sounds/StreetSounds.ogg"); 
     //SoundManager::getInstance().LoadMusic("Jangwa", "assets/sounds/Jangwa.ogg");
     
-    SoundManager::getInstance().LoadMusic("NewNeon", "assets/sounds/Neon(noDrum).ogg");
+    SoundManager::getInstance().LoadMusic("NewNeon", "assets/sounds/NewestNeon.ogg");
     soundManager.LoadSound("carRun", "assets/sounds/CarRun.ogg");
     soundManager.LoadSound("gunShot", "assets/sounds/gunShot.ogg");   //misc sounds
     soundManager.LoadSound("BoneCrack", "assets/sounds/BoneCrack.ogg");

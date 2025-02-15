@@ -80,6 +80,7 @@ public:
     int bulletCount;
     int shells;
     int autoAmmo;
+    int revolverAmmo;
     int maxHealth;
     int currentHealth;
     float hitTimer;

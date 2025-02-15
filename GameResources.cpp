@@ -106,7 +106,7 @@ void GameResources::Load() {
     autoPickup = LoadTexture("assets/9mm.png");
     BigBadge = LoadTexture("assets/BigBadge.png");
     money = LoadTexture("assets/money.png");
-    pocketWatch = LoadTexture("assets/pocketWatch.png");
+    pocketWatch = LoadTexture("assets/pocketWatchIcon.png");
     crowbarWorld = LoadTexture("assets/crowbarWorld.png");
     pocketWatchWorld = LoadTexture("assets/pocketWatchWorld.png");
 }

@@ -20,4 +20,6 @@ private:
     bool IsLeapYear(int year) const;
 };
 
+extern GameCalendar gameCalendar;
+
 #endif // GAMECALENDAR_H

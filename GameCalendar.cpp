@@ -3,6 +3,9 @@
 // Initialize the calendar to start on September 1st, 1999
 GameCalendar::GameCalendar() : day(1), month(10), year(1999) {}
 
+// // Define the global calendar instance
+GameCalendar gameCalendar;
+
 void GameCalendar::AdvanceDay() {
     day++;
     if (day > DaysInMonth(month, year)) {

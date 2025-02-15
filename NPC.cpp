@@ -705,7 +705,7 @@ void NPC::HandlePolice(Player& player, float& distanceToPlayer){
 
     if (agroZombie && targetNPC != nullptr && targetNPC->isActive && targetNPC->isZombie){
         std::cout << "attacking zombie\n";
-        //police attack zombie//doesn't work and I don't know why
+        //police attack zombie//doesn't work and I don't know why, police can be killed by zombies at least. 
         float distance_to = abs(targetNPC->position.x - position.x);
         if (distance_to < 30){ //police has longer reach than zombie
             destination = position;
@@ -734,13 +734,13 @@ void NPC::SetDestination(float minX, float maxX) {
 
 void NPC::HandleAnimationLogic(){
         // Update frame counter and animation logic
-    frameCounter += GetFrameTime() * frameSpeed; //Higher frameSpeed means frameCounter increases more each frame.
+    frameCounter += GetFrameTime() * frameSpeed; //accumulate frametime until it's time to switch. framecounter = time between frames, 0.0167 * 8 
     
     if (frameCounter >= 1.0f) { 
-        frameCounter = 0.0f;
+        frameCounter -= 1.0f; //subtract 1, as to not lose any accumulated time. prevents frame skipping
         currentFrame++;
 
-        // Determine the number of frames based on the current animation
+        // Determine the number of frames based on the current animation, all animations are 7 frames except idle
         int numFrames = 0;
         switch (currentAnimation) {
             case IDLE:
@@ -784,10 +784,8 @@ void NPC::Update(Player& player, GameState& gameState) {
     if (!isActive) return;  // Skip update if the NPC is not active
     if (!isZombie && !robot) riseTimer = 0;
     float distance_to_player = abs(player.position.x - position.x);
-    
-    //bloodEmitter.UpdateParticles(GetFrameTime());
 
-    bloodEmitter.UpdateParticles(GetFrameTime());
+    bloodEmitter.UpdateParticles(GetFrameTime()); //update blood
     
 
     if (targetedTimer > 0){ //dont stay targeted forever, go back to normal after 5 seconds. 
@@ -800,12 +798,12 @@ void NPC::Update(Player& player, GameState& gameState) {
 
     if (distance_to_player >= 30){
         highLight = false;//Turn off highlights on any interacting NPCs when far enough way. 
-        interacting = false; // maybe this is a good idea
+        interacting = false; // maybe this is a good idea too.
     }
 
     if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
-        if (distance_to_player < 20 && !police && !isZombie){
-            HandleNPCInteraction(player, gameState);
+        if (distance_to_player < 20 && !police && !isZombie){ //dont key up on police. Could accidently agro them. 
+            HandleNPCInteraction(player, gameState); //talk to NPCs
 
         }
     }
@@ -818,13 +816,9 @@ void NPC::Update(Player& player, GameState& gameState) {
         // Update frame counter and animation logic for RISING
         frameCounter += GetFrameTime() * frameSpeed;
         if (frameCounter >= 1.0f) {
-            frameCounter = 0.0f;
+            frameCounter -= 1.0f;
             currentFrame++;
 
-            // 7 frames in the RISING animation
-            // if (currentFrame >= 7) {
-            //     currentFrame = 0;  // Loop back to the first frame of the rising animation
-            // } //rising doesn't loop
         }
 
         return;  // Skip further logic until the zombie finishes rising
@@ -832,17 +826,14 @@ void NPC::Update(Player& player, GameState& gameState) {
 
 
     // Update hit timer if the NPC has been hit
+
     if (hitTimer > 0) {
         hitTimer -= GetFrameTime();
-        if (ghost) ghostAlpha = hitTimer / .3; //ghost becomes fully transparent on hit. 
-        if (ghost) ghostAlpha = Clamp(ghostAlpha, 0.0f, 1.0f); 
-        
-    }else{
-        ghostAlpha += 0.1; //is this redundant? ghostAlpha should tic up as hitTimer becomes smaller.
-        
-        if (ghostAlpha >= 1.0f){
-            ghostAlpha = 1.0f;
+        if (ghost) {
+            ghostAlpha = Clamp(hitTimer / 0.3f, 0.0f, 1.0f);  // ghost becomes transparent on hit, then fades back in
         }
+    } else {
+        ghostAlpha = 1.0f;  // Reset once hitTimer expires
     }
 
     // Handle death logic
@@ -873,6 +864,7 @@ void NPC::Update(Player& player, GameState& gameState) {
     float distanceToPlayer = Vector2Distance(position, player.position);
     hasTarget = false; //reset hasTarget incase we loose
     attacking = false;
+    
 
     if (MiB) HandleMiB(player, distance_to_player, gameState);
     if (police) HandlePolice(player, distance_to_player); //handle distance checks and attack logic. 

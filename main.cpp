@@ -736,7 +736,7 @@ void renderBoxes(){
 
 
 
-void MonitorMouseClicks(GameCalendar& calendar){
+void MonitorMouseClicks(){
 
     //monitors mouse clicks for all scenes. Consider moving item pickup left clicks here. 
 
@@ -763,7 +763,7 @@ void MonitorMouseClicks(GameCalendar& calendar){
             }
 
             if (buttonSleep && !hasSlept){ ////Go to sleep
-                calendar.AdvanceDay(); 
+                gameCalendar.AdvanceDay(); 
                 buttonSleep = false;
                 hasWorked = false;
                 hasSlept = true;
@@ -1289,6 +1289,7 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
 }
 
 void DrawItem(Vector2 itemPos, const std::string& itemType, Vector2 mousePosition, Camera2D& camera) {
+    //Draw item pickups and handle mouse clicks: crowbar, shovel, ect...
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
     float distanceToItemX = abs(itemPos.x - player.position.x);
     float distanceToItemY = abs(itemPos.y - player.position.y);
@@ -1324,7 +1325,7 @@ void DrawItem(Vector2 itemPos, const std::string& itemType, Vector2 mousePositio
         return;  // Item type not recognized, exit early
     }
 
-    DrawTexture(itemTextures[itemType], itemPos.x, itemPos.y, WHITE);
+    DrawTexture(itemTextures[itemType], itemPos.x, itemPos.y, WHITE); //item pickups are all 64x64
 
     Rectangle itemBounds = { itemPos.x, itemPos.y, 64, 64 };
 
@@ -1334,17 +1335,19 @@ void DrawItem(Vector2 itemPos, const std::string& itemType, Vector2 mousePositio
         if (!(*playerItemFlags[itemType])) {
             *playerItemFlags[itemType] = true; //hasShovel, hasCrowbar ect.. = true
             AddItemToInventory(inventoryNames[itemType], inventory, INVENTORY_SIZE);
+            showInventory = true;
+            //play sounds:
             if (itemType == "mac10") PlaySound(SoundManager::getInstance().GetSound("reload"));
             if (itemType == "shovel" || itemType == "crowbar") PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
             if (itemType == "watch") PlaySound(SoundManager::getInstance().GetSound("moneyUp"));
-            showInventory = true;
+           
         }
     }
 }
 
 
 
-void HandleLobbyTransition(GameCalendar& calendar){
+void HandleLobbyTransition(){
     if (over_exit && player.currentHealth > 0){
         gameState = NECROTECH;
         over_exit = false;
@@ -1370,12 +1373,12 @@ void HandleLobbyTransition(GameCalendar& calendar){
         player.isDead = false;
         player.currentHealth = player.maxHealth;
 
-        calendar.AdvanceDay();
+        gameCalendar.AdvanceDay();
 
     }
 }
 
-void HandleNecroTransition(PlayerCar& player_car, GameCalendar calendar){
+void HandleNecroTransition(PlayerCar& player_car){
     //faded out
     if (over_necro and passwordValidated && !player.isDead){
         gameState = LOBBY; //over enterance goto lobby
@@ -1386,7 +1389,7 @@ void HandleNecroTransition(PlayerCar& player_car, GameCalendar calendar){
         player.position.x = apartmentX;
         player.isDead = false;
         player.currentHealth = player.maxHealth;
-        calendar.AdvanceDay();
+        gameCalendar.AdvanceDay();
         UpdateNPCActivity(NECROTECH,APARTMENT);
 
 
@@ -1404,7 +1407,7 @@ void HandleNecroTransition(PlayerCar& player_car, GameCalendar calendar){
 
 
 
-void HandleOutsideTransition(PlayerCar& player_car, std::vector<NPC>& npcs, GameCalendar calendar) {
+void HandleOutsideTransition(PlayerCar& player_car) {
     if (move_car && !gotoWork && !gotoPark && !gotoNecro) {  // Car is moving, go to road
         gameState = ROAD;
         UpdateNPCActivity(OUTSIDE, ROAD);
@@ -1440,7 +1443,7 @@ void HandleOutsideTransition(PlayerCar& player_car, std::vector<NPC>& npcs, Game
         player.currentHealth = player.maxHealth;
 
         player.isDead = false;
-        calendar.AdvanceDay();
+        gameCalendar.AdvanceDay();
         for (NPC& npc : npcs) {
             if (npc.police) {
                 npc.agro = false;  // Turn off police aggression
@@ -1488,7 +1491,7 @@ void HandleRoadTransition(PlayerCar& player_car) {
     }
 }
 
-void HandleCemeteryTransition(PlayerCar& player_car, GameCalendar& calendar) {
+void HandleCemeteryTransition(PlayerCar& player_car) {
     reverse_road = true;
     player_car.facingLeft = false;
     move_car = false;
@@ -1508,18 +1511,18 @@ void HandleCemeteryTransition(PlayerCar& player_car, GameCalendar& calendar) {
         player.isDead = false;
         player.currentHealth = player.maxHealth;
 
-        calendar.AdvanceDay();
+        gameCalendar.AdvanceDay();
     }
 }
 
-void HandleGraveyardTransition(GameCalendar& calendar, std::vector<NPC>& ghosts){
+void HandleGraveyardTransition(std::vector<NPC>& ghosts){
     if (player.isDead){
         gameState = APARTMENT;//wake up back at your apartment with full health.
         player.position.x = apartmentX;
         player.isDead = false;
         UpdateNPCActivity(GRAVEYARD, APARTMENT);
         player.currentHealth = player.maxHealth;
-        calendar.AdvanceDay();
+        gameCalendar.AdvanceDay();
 
     }else{ //presumably over gate and fading out
         gameState = CEMETERY;
@@ -1548,7 +1551,7 @@ void HandleLotTransition() {
     UpdateNPCActivity(LOT, OUTSIDE);
 }
 
-void HandleAstralTransition(GameCalendar& calendar){
+void HandleAstralTransition(){
     if (player.isDead){ //player dies on the astral plane, reset back to apartment.
         gameState = APARTMENT;//wake up back at your apartment with full health.
         player.position = Vector2 {apartmentX, 700}; // consider the Y
@@ -1560,7 +1563,7 @@ void HandleAstralTransition(GameCalendar& calendar){
         player.currentHealth = player.maxHealth;
         UpdateNPCActivity(ASTRAL, APARTMENT);
 
-        calendar.AdvanceDay();
+        gameCalendar.AdvanceDay();
         for (NPC& ghost : astralGhosts){
             ghost.agro = false; //ghost lose agro after dying. 
 
@@ -1580,7 +1583,7 @@ void HandleAstralTransition(GameCalendar& calendar){
 
 }
 
-void HandleOfficeTransition(GameCalendar calender){
+void HandleOfficeTransition(){
     if (player.onElevator){
         gameState = LOBBY;
         UpdateNPCActivity(OFFICE, LOBBY);
@@ -1596,7 +1599,7 @@ void HandleOfficeTransition(GameCalendar calender){
     }
 }
 
-void HandleParkTransition(GameState& gamestate,PlayerCar player_car){
+void HandleParkTransition(PlayerCar player_car){
     if (player.isDead){ //player dies in park, reset to apartment.
         gameState = APARTMENT;
         player.position.x = apartmentX;
@@ -1625,7 +1628,7 @@ void HandleParkTransition(GameState& gamestate,PlayerCar player_car){
 
 }
 
-void HandleSubwayTransition(GameState& gameState){
+void HandleSubwayTransition(){
     //the car magically teleports back to the street if you take the car to the park and take the subway back. 
 
     if (subwayExit && !subwayToPark && !gotoPark){ //your at outside subway so exit to outside
@@ -1666,11 +1669,11 @@ void HandleSubwayTransition(GameState& gameState){
     }
 }
 
-void PerformStateTransition( PlayerCar& player_car, GameCalendar& calendar, std::vector<NPC>& npcs) {
+void PerformStateTransition( PlayerCar& player_car) {
     //if we are fading out, we are transitioning, switch to the next area depending on the gameState. 
     switch (gameState) {
         case OUTSIDE:
-            HandleOutsideTransition(player_car, npcs, calendar);
+            HandleOutsideTransition(player_car);
             break;
         case APARTMENT:
             HandleApartmentTransition();
@@ -1679,7 +1682,7 @@ void PerformStateTransition( PlayerCar& player_car, GameCalendar& calendar, std:
             HandleRoadTransition( player_car);
             break;
         case CEMETERY:
-            HandleCemeteryTransition(player_car, calendar);
+            HandleCemeteryTransition(player_car);
             break;
         case WORK:
             HandleWorkTransition();
@@ -1688,31 +1691,31 @@ void PerformStateTransition( PlayerCar& player_car, GameCalendar& calendar, std:
             HandleLotTransition();
             break;
         case GRAVEYARD:
-            HandleGraveyardTransition(calendar, ghosts);
+            HandleGraveyardTransition(ghosts);
             break;
 
         case ASTRAL:
-            HandleAstralTransition(calendar);
+            HandleAstralTransition();
             break;
 
         case PARK:
-            HandleParkTransition(gameState,player_car);
+            HandleParkTransition(player_car);
             break;
 
         case SUBWAY:
-            HandleSubwayTransition(gameState);
+            HandleSubwayTransition();
             break;
 
         case NECROTECH:
-            HandleNecroTransition(player_car, calendar);
+            HandleNecroTransition(player_car);
             break;
 
         case LOBBY:
-            HandleLobbyTransition(calendar);
+            HandleLobbyTransition();
             break;
 
         case OFFICE:
-            HandleOfficeTransition(calendar);
+            HandleOfficeTransition();
             break;
   
     }
@@ -1733,7 +1736,7 @@ void HandleFadeIn() {
     }
 }
 
-void HandleFadeOut(PlayerCar& player_car, GameCalendar& calendar, std::vector<NPC>& npcs) { 
+void HandleFadeOut(PlayerCar& player_car) { 
     fadeAlpha += fadeSpeed;  // Fade out gradually
     fading = true; //dont move player if fading
     if (fadeAlpha >= 1.0f) {
@@ -1745,7 +1748,7 @@ void HandleFadeOut(PlayerCar& player_car, GameCalendar& calendar, std::vector<NP
             blackoutTimer = 0.0f;  // Reset blackout timer
 
             // Transition to the next state
-            PerformStateTransition(player_car, calendar, npcs);
+            PerformStateTransition(player_car);
 
             if (!gotoWork) {  // Don't fade in when at work; fade in later
                 transitionState = FADE_IN;  // Start fading back in
@@ -1756,7 +1759,7 @@ void HandleFadeOut(PlayerCar& player_car, GameCalendar& calendar, std::vector<NP
 
 
 
-void HandleTransition(PlayerCar& player_car, GameCalendar& calendar, std::vector<NPC>& npcs) {
+void HandleTransition(PlayerCar& player_car, std::vector<NPC>& npcs) {
     //if you want to tranision to a new scene, just say FADEOUT = TRUE
     if (firstTransition) {
         fadeAlpha = 0.0f;  // Ensure it starts at 0 for the first fade
@@ -1766,7 +1769,7 @@ void HandleTransition(PlayerCar& player_car, GameCalendar& calendar, std::vector
     if (transitionState == FADE_IN) {
         HandleFadeIn();
     } else if (transitionState == FADE_OUT) {
-        HandleFadeOut(player_car, calendar, npcs);
+        HandleFadeOut(player_car);
     }
 
     // Reset player position and health on death
@@ -1896,7 +1899,7 @@ void UpdateZombieTarget(NPC& zombie, std::vector<NPC>& npcs) {
 }
 
 
-void UpdateInventoryPosition(const Camera2D& camera, GameState& gameState) {
+void UpdateInventoryPosition(const Camera2D& camera) {
     // Static inventory position, relative to the camera offset
     inventoryPositionX = camera.offset.x-80;  // Adjust the X position relative to the screen (e.g., 200 pixels left of the center)
     if (gameState == APARTMENT){
@@ -2251,7 +2254,7 @@ void MoveTraffic(GameResources resources){
     
 }
 
-void DrawApartmentUI(GameCalendar&, Vector2& mousePosition, Camera2D& camera){
+void DrawApartmentUI(Vector2& mousePosition, Camera2D& camera){
     //laptop computer interface
     Vector2 ui_pos = {screenWidth/2-100, 440};
     DrawTexture(resources.ComputerScreen, ui_pos.x, ui_pos.y, WHITE);
@@ -2312,7 +2315,7 @@ void DrawApartmentUI(GameCalendar&, Vector2& mousePosition, Camera2D& camera){
     }
 }
 
-void DrawSubwayUI(Player& player, Vector2 mousePosition, Camera2D& camera, GameState& gameState){
+void DrawSubwayUI(Player& player, Vector2 mousePosition, Camera2D& camera){
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
     Vector2 ui_pos = {3011, 600};
     int ui_width = 116;
@@ -2357,7 +2360,7 @@ void DrawSubwayUI(Player& player, Vector2 mousePosition, Camera2D& camera, GameS
 
 
 //Destinations Menu for car. Click on where you want to travel. 
-void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera, GameState& gameState){
+void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera){
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
     Vector2 ui_pos = player_car.position;
     int ui_width = 116;
@@ -2978,7 +2981,7 @@ void RenderSubway(Camera2D& camera, Vector2& mousePosition,Train& train, ShaderR
 
 
     if (player.position.x > 3001 && player.position.x < 3021 && trainAtStation){
-        DrawSubwayUI(player, mousePosition, camera, gameState); // inside draw for whatever reason
+        DrawSubwayUI(player, mousePosition, camera); // inside draw for whatever reason
         train.stopTimer = 0;//hold the train
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
             if (buttonPark && !player.enter_train){ //hovering button street or park
@@ -3341,7 +3344,7 @@ void RenderCemetery(PlayerCar& player_car, UFO& ufo, float& time, Camera2D& came
     DrawBullets(); //draw bullets in cemetery after everything else. 
 
     if (show_carUI && !move_car && player.enter_car){ //destination menu //draw UI inside mode2d
-        DrawCarUI(player_car, mousePosition, camera, gameState);
+        DrawCarUI(player_car, mousePosition, camera);
     }
     renderBoxes();
     DrawPickups();
@@ -3640,7 +3643,7 @@ void RenderGraveyard(Camera2D& camera,Vector2 mousePosition, ShaderResources& sh
 
 
 
-void RenderApartment(Vector2 mousePosition, GameCalendar& calendar, Camera2D camera, ShaderResources& shaders){
+void RenderApartment(Vector2 mousePosition, Camera2D camera, ShaderResources& shaders){
     player.position.x -= 20; //ensure over_apartment = false
     int screen_center = (screenWidth - resources.apartment.width)/2;
 
@@ -3657,7 +3660,7 @@ void RenderApartment(Vector2 mousePosition, GameCalendar& calendar, Camera2D cam
 
     
     if (showAPUI){
-        DrawApartmentUI(calendar, mousePosition, camera);
+        DrawApartmentUI(mousePosition, camera);
     }
     
     
@@ -3964,7 +3967,7 @@ void RenderPark(PlayerCar& player_car, Camera2D& camera,Vector2& mousePosition, 
     }
 
     if (show_carUI && !move_car && player.enter_car){ //destination menu //Draw inside mode2d
-        DrawCarUI(player_car, mousePosition, camera, gameState);
+        DrawCarUI(player_car, mousePosition, camera);
         //drawingCarUI
         
     }
@@ -4502,7 +4505,7 @@ void RenderNecroTech(Camera2D& camera,PlayerCar& player_car, Vector2& mousePosit
     }
 
     if (show_carUI && !move_car && player.enter_car){ //destination menu //draw UI inside mode2d
-        DrawCarUI(player_car, mousePosition, camera, gameState);
+        DrawCarUI(player_car, mousePosition, camera);
     }
 
     if (robots[0].agro && robots[0].isActive) showPasswordInterface = false; //hide interface on shots fired. 
@@ -4636,7 +4639,7 @@ void RenderOutside(Camera2D& camera, PlayerCar& player_car,MagicDoor& magicDoor,
     
     
      if (show_carUI && !move_car && player.enter_car){ //draw carUI inside Mode2d for reasons, show carUI infront of dialog box
-        DrawCarUI(player_car, mousePosition, camera, gameState); //draw dialog box behind carUI
+        DrawCarUI(player_car, mousePosition, camera); //draw dialog box behind carUI
     }  
 
     if (move_ufo){
@@ -5073,9 +5076,9 @@ void spawnNPCs(){
 
 }
 
-void DisplayDate(GameCalendar& calendar){
+void DisplayDate(){
 
-    DrawText(calendar.GetDate().c_str(), screenWidth/2 - 450, 25, 20, WHITE);
+    DrawText(gameCalendar.GetDate().c_str(), screenWidth/2 - 450, 25, 20, WHITE);
     
 }
 
@@ -5524,7 +5527,7 @@ void InitSounds(SoundManager& soundManager){
     SoundManager::getInstance().LoadMusic("StreetSounds", "assets/sounds/StreetSounds.ogg"); 
     //SoundManager::getInstance().LoadMusic("Jangwa", "assets/sounds/Jangwa.ogg");
     
-    SoundManager::getInstance().LoadMusic("NewNeon", "assets/sounds/NewestNeon.ogg");
+    SoundManager::getInstance().LoadMusic("NewNeon", "assets/sounds/NewestNeon.ogg");//TODO: find better music
     soundManager.LoadSound("carRun", "assets/sounds/CarRun.ogg");
     soundManager.LoadSound("gunShot", "assets/sounds/gunShot.ogg");   //misc sounds
     soundManager.LoadSound("BoneCrack", "assets/sounds/BoneCrack.ogg");
@@ -5638,7 +5641,7 @@ int main() {
     
     // Initialize game resources
     //GameResources resources;
-    GameCalendar calendar;
+    //GameCalendar calendar; //done in GameCalendar.cpp
     //LoadGameResources(resources);
     resources.Load();
     // Initialize shaders
@@ -5714,7 +5717,7 @@ int main() {
         
 
         if (!player.enter_car && !player.onElevator && !player.enter_train && !fading) player.UpdateMovement(resources, gameState, mousePosition, camera, platforms);  // Update player position and animation
-        UpdateInventoryPosition(camera, gameState);
+        UpdateInventoryPosition(camera);
 
         
         SoundManager::getInstance().UpdateMusic("NewNeon");
@@ -5760,7 +5763,7 @@ int main() {
         
 
         CheckBulletPlayerCollisions(); //NPCs shoot player
-        MonitorMouseClicks(calendar); 
+        MonitorMouseClicks(); 
         UpdateZombieSpawning();
         //glowEffect(glowShader, gameState); //update glow shader
 
@@ -5859,7 +5862,7 @@ int main() {
                     
                     break;
                 case APARTMENT:
-                    RenderApartment(mousePosition, calendar, camera, shaders);
+                    RenderApartment(mousePosition, camera, shaders);
                     break;
                 case ROAD:
                     RenderRoad(player_car,camera, mousePosition, shaders);
@@ -5884,7 +5887,7 @@ int main() {
                     break;
 
                 case SUBWAY:
-                    RenderSubway( camera, mousePosition, train, shaders);
+                    RenderSubway(camera, mousePosition, train, shaders);
                     break;
 
                 case NECROTECH:
@@ -5901,7 +5904,7 @@ int main() {
                     
             }
             
-            HandleTransition(player_car, calendar, npcs); //Check everyframe for gamestate transitions, inside draw to handle fadeouts
+            HandleTransition(player_car, npcs); //Check everyframe for gamestate transitions, inside draw to handle fadeouts
             
             EndTextureMode();
             

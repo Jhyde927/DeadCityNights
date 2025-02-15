@@ -40,4 +40,6 @@ enum PauseState {
     GAME_PAUSED
 };
 
+extern GameState gameState;  // Declare global gameState
+
 #endif // GAME_ENUMS_H

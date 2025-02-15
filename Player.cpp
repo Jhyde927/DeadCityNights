@@ -65,7 +65,7 @@ Player::Player() {
     dropping = false;
     dropTimer = 0.0;
     step = false;
-    shells = 20;
+    shells = 16;
     autoAmmo = 150;
     revolverAmmo = 30;
     

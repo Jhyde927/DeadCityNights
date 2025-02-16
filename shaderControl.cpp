@@ -7,9 +7,9 @@
 #include <iostream>
 
 
+ShaderResources shaders;
 
-
-void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
+void InitShaders(int screenWidth, int screenHeight) {
     // Initialize random seed
     srand(static_cast<unsigned>(time(0)));
 
@@ -209,7 +209,7 @@ void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight) {
 
 }
 
-void UnloadShaders(ShaderResources& shaders) {
+void UnloadShaders() {
     UnloadShader(shaders.glowShader);
     UnloadShader(shaders.glitchShader);
     UnloadShader(shaders.glowShader2);
@@ -219,7 +219,7 @@ void UnloadShaders(ShaderResources& shaders) {
     UnloadShader(shaders.glitchVignetteShader);
 }
 
-void UpdateShaders(ShaderResources& shaders, float deltaTime, bool fullscreen, GameState& gameState) {
+void UpdateShaders(float deltaTime, bool fullscreen, GameState& gameState) {
     // Update time for glitch shader
     float time_ = GetTime();
     float renderWidth = 1024.0f;

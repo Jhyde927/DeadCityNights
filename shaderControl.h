@@ -34,14 +34,14 @@ struct ShaderResources {
 };
 
 
-void InitShaders(ShaderResources& shaders, int screenWidth, int screenHeight);
+void InitShaders(int screenWidth, int screenHeight);
 
 
-void UnloadShaders(ShaderResources& shaders);
+void UnloadShaders();
 
 // Function to update shader variables (e.g., time)
-void UpdateShaders(ShaderResources& shaders, float deltaTime, bool fullscreen, GameState& gameState);
+void UpdateShaders(float deltaTime, bool fullscreen, GameState& gameState);
 
-
+extern ShaderResources shaders;
 
 #endif // SHADERCONTROL_H

@@ -252,21 +252,45 @@ public:
         }
     }
 
-
-
-    void UnloadAllSounds() {
+    void UnloadAllSounds() { //with safety checks, was causing seg fault on close
+        // Unload all sound effects
         for (auto& pair : sounds) {
-            if (pair.second.stream.buffer != nullptr) {  // Ensure the sound buffer is not null
+            if (pair.second.frameCount > 0) {  // Ensure the sound is valid before unloading
                 UnloadSound(pair.second);
             }
         }
         sounds.clear();
-        
+
+        // Unload all music streams
         for (auto& pair : musicTracks) {
-            UnloadMusicStream(pair.second);  // Unload all music streams
+            StopMusicStream(pair.second);  // Ensure it's stopped before unloading
+            UnloadMusicStream(pair.second);
         }
         musicTracks.clear();
+        
+        //unload voices
+        for (auto& pair : voices){
+            if (pair.second.frameCount >0){
+                UnloadSound(pair.second);
+            }
+        }
+        voices.clear();
+
+        //unload robot voices
+        for (auto& pair : robotVoices) {
+            if (pair.second.frameCount > 0){
+                UnloadSound(pair.second);
+            }
+        }
+        robotVoices.clear();
+
+        activeSounds.clear();
+
+
+
+
     }
+
 
 private:
     Sound currentVoice;        // The currently playing voice

@@ -2,6 +2,7 @@
 #include <raylib.h>
 #include <raymath.h>
 #include <vector>
+#include "Globals.h"
 #include "NPC.h"
 #include "Player.h"
 #include "GameResources.h"
@@ -162,6 +163,9 @@ std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", "", "", "",
 const int GAME_SCREEN_WIDTH = 1024;
 const int GAME_SCREEN_HEIGHT = 1024;
 
+Camera2D camera = { 0 };
+float targetZoom = 1.0f; 
+
 // Variables for password input
 std::string enteredPassword = "";
 const std::string correctPassword = "666";
@@ -205,14 +209,22 @@ std::vector<NPC>officeWorkers;
 
 std::vector<Box> boxes;
 
-
-
-
+//externs in Globals.h 
+PlayerCar player_car;
+Earth earth;
+MagicDoor magicDoor;
+MagicDoor magicDoor2;
+UFO ufo;
+Train train;
+Elevator elevator;
+Elevator elevator2;
 
 std::vector<Platform> platforms;
 
 
 GameState gameState = OUTSIDE;
+
+Vector2 mousePosition = {0, 0}; // Initialize to (0,0)
 
 TransitionState transitionState = NONE;
 float fadeAlpha = 1.0f;  // Starts fully opaque
@@ -230,83 +242,10 @@ void PrintVector2(const Vector2& vec) {
 }
 
 
-struct PlayerCar {
-    Vector2 position;
-    float carSpeed;
-    int currentFrame = 0;
-    bool facingLeft = true;
-
-};
-
-struct MagicDoor {
-    Vector2 position;
-    int currentFrame = 0;
-
-};
-
-struct Earth {
-    Vector2 position = {3500, 400};
-    int frameWidth;
-    int frameHeight;
-    int currentFrame;
-    int totalFrames;
-    float frameTime; // Time between frames in seconds
-    float frameTimer;
-};
-
-struct Elevator {
-    Vector2 position;      // Position of the elevator
-    int currentFrame;      // Current frame for animation
-    float frameTimer;      // Timer for frame updates
-    float frameTime;       // Duration of each frame
-    bool isOpen;           // Tracks if the elevator is open
-    bool isOccupied;       // Tracks if the player is on the elevator
-    int totalFrames;       // Total number of animation frames
-    int currentFloorFrame;
-    float floorFrameTimer;
-    float floorFrameTime;
-    Vector2 floorOffset;
-};
-
-struct UFO {
-    Vector2 position = {3500, 400};
-    int frameWidth;
-    int frameHeight;
-    int currentFrame;
-    int totalFrames;
-    float frameTime;
-    float frameTimer;
-
-    Vector2 basePosition;  // Original position where the UFO is placed
-    float bobAmplitudeX;   // Amplitude of side-to-side movement
-    float bobAmplitudeY;   // Amplitude of up-and-down movement
-    float bobSpeedX;       // Speed of side-to-side movement
-    float bobSpeedY;       // Speed of up-and-down movement
-    float bobOffsetX;      // Phase offset for side-to-side movement
-    float bobOffsetY;      // Phase offset for up-and-down movement
-};
-
-
-struct Train {
-    Vector2 position;
-    float speed;
-    float maxSpeed;
-    float minSpeed;
-    float stopPosition; //middle of the subway 2500
-    float acceleration;
-    float deceleration;
-    float stopDuration;
-    float postLoopWaitDuration;  // New
-    float postLoopWaitTimer;     // New
-    float stopTimer;
-    float slowDownStartX;
-    TrainState state;
-};
-
 std::vector<Elevator> elevators;
 
 
-void InitializePlayerCar(PlayerCar& player_car){
+void InitializePlayerCar(){
     player_car.position = {1710, 700-32};
     player_car.carSpeed = 100;
     player_car.currentFrame = 0;
@@ -317,7 +256,7 @@ void InitializeMagicDoor(MagicDoor& magicDoor, Vector2 position){
     magicDoor.currentFrame = 0;
 }
 
-void InitEarth(Earth& earth){
+void InitEarth(){
     earth.position = {2600, 300};
     earth.frameWidth = 48;
     earth.frameHeight = 48;
@@ -345,7 +284,7 @@ void InitElevator(Elevator& elevator, Vector2 position){
 
 
 
-void InitUFO(UFO& ufo){
+void InitUFO(){
     //animation perameters
     ufo.frameWidth = 144;
     ufo.frameHeight = 144;
@@ -366,7 +305,7 @@ void InitUFO(UFO& ufo){
     ufo.bobOffsetY = 0.0f;       // No initial phase offset
 }
 
-void InitializeTrain(Train &train) {
+void InitializeTrain() {
     // Set train parameters
     train.position = {5500.0f, 700};
     train.maxSpeed = 400;
@@ -458,10 +397,10 @@ void InitPlatforms() {
 
 
 // Function to add an item to the first available slot in the inventory
-void AddItemToInventory(const std::string& item, std::string inventory[], int inventorySize) {
+void AddItemToInventory(const std::string& item) {
     //what happens if inventory is full and we add to it? nothing?
 
-    for (int i = 0; i < inventorySize; i++) {
+    for (int i = 0; i < INVENTORY_SIZE; i++) {
         if (inventory[i].empty()) {
             inventory[i] = item;  // Add the item to the first empty slot
             break;
@@ -470,16 +409,16 @@ void AddItemToInventory(const std::string& item, std::string inventory[], int in
 }
 
 // Function to remove an item from the inventory by name
-void RemoveItemFromInventory(const std::string& item, std::string inventory[], int inventorySize) {
-    for (int i = 0; i < inventorySize; i++) {
+void RemoveItemFromInventory(const std::string& item) {
+    for (int i = 0; i < INVENTORY_SIZE; i++) {
         if (inventory[i] == item) {
             inventory[i] = "";  // Clear the item slot
 
             // Shift remaining items left to maintain order
-            for (int j = i; j < inventorySize - 1; j++) {
+            for (int j = i; j < INVENTORY_SIZE - 1; j++) {
                 inventory[j] = inventory[j + 1];
             }
-            inventory[inventorySize - 1] = "";  // Clear the last slot after shifting
+            inventory[INVENTORY_SIZE - 1] = "";  // Clear the last slot after shifting
 
             break;  // Stop after removing one occurrence
         }
@@ -750,7 +689,7 @@ void MonitorMouseClicks(){
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
         if (gameState == APARTMENT){
 
-            Vector2 mousePosition = GetMousePosition();  // Get the mouse position
+           
             Vector2 computerPos = {screenWidth/2 - 10, 587};
 
             if (buttonInternet && player.hasBadge && !showInternet){
@@ -811,7 +750,7 @@ void MonitorMouseClicks(){
             // Check if the mouse is over the texture
             if (CheckCollisionPointRec(mousePosition, textureBounds)&& !has_car_key) {
                 showInventory = true;
-                AddItemToInventory("carKeys", inventory, INVENTORY_SIZE);
+                AddItemToInventory("carKeys");
                 has_car_key = true;
                 PlaySound(SoundManager::getInstance().GetSound("Keys"));
             }
@@ -820,7 +759,7 @@ void MonitorMouseClicks(){
                 openDrawer = true;
                 PlaySound(SoundManager::getInstance().GetSound("OpenDrawer"));
                 if (!player.hasGun){
-                    AddItemToInventory("Gun", inventory, INVENTORY_SIZE);
+                    AddItemToInventory("Gun");
                     showInventory = true;
                     player.hasGun = true;
                     PlaySound(SoundManager::getInstance().GetSound("reload"));
@@ -896,8 +835,10 @@ void MonitorMouseClicks(){
 
 }
 
-void HandleKeyboardAiming(Vector2 mousePosition){
+void HandleKeyboardAiming(){
     //mousePosition is screen2world(mousePosition)
+    Vector2 WorldMousePosition = GetScreenToWorld2D(mousePosition, camera);
+    
     if (player.isAiming && IsKeyDown(KEY_F)) {
         // Handle keyboard-only aiming (e.g., using arrow keys or player movement keys)
         if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
@@ -908,7 +849,7 @@ void HandleKeyboardAiming(Vector2 mousePosition){
         }
     }else if (player.isAiming && !IsKeyDown(KEY_F)) {// If the player is not aiming with keyboard, allow mouse control to set the facing direction
         // Set facing direction based on world mouse position
-        player.facingRight = mousePosition.x > player.position.x; //facing right is true if mousepos.x > playerPos.x
+        player.facingRight = WorldMousePosition.x > player.position.x; //facing right is true if mousepos.x > playerPos.x
 
     }
 }
@@ -1264,6 +1205,7 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
         //so if you spawn zombies in the park(and dont kill them all), they will also be in the graveyard and cemetery. 
         { PARK, { &ParkNpcs, &zombies }},
         { OFFICE, {&officeWorkers, &zombies}},
+        {LOT, {&hobos}} //dont forget about hobo
 
     };
 
@@ -1334,7 +1276,7 @@ void DrawItem(Vector2 itemPos, const std::string& itemType, Vector2 mousePositio
         
         if (!(*playerItemFlags[itemType])) {
             *playerItemFlags[itemType] = true; //hasShovel, hasCrowbar ect.. = true
-            AddItemToInventory(inventoryNames[itemType], inventory, INVENTORY_SIZE);
+            AddItemToInventory(inventoryNames[itemType]);
             showInventory = true;
             //play sounds:
             if (itemType == "mac10") PlaySound(SoundManager::getInstance().GetSound("reload"));
@@ -1378,7 +1320,7 @@ void HandleLobbyTransition(){
     }
 }
 
-void HandleNecroTransition(PlayerCar& player_car){
+void HandleNecroTransition(){
     //faded out
     if (over_necro and passwordValidated && !player.isDead){
         gameState = LOBBY; //over enterance goto lobby
@@ -1599,7 +1541,7 @@ void HandleOfficeTransition(){
     }
 }
 
-void HandleParkTransition(PlayerCar player_car){
+void HandleParkTransition(){
     if (player.isDead){ //player dies in park, reset to apartment.
         gameState = APARTMENT;
         player.position.x = apartmentX;
@@ -1699,7 +1641,7 @@ void PerformStateTransition( PlayerCar& player_car) {
             break;
 
         case PARK:
-            HandleParkTransition(player_car);
+            HandleParkTransition();
             break;
 
         case SUBWAY:
@@ -1707,7 +1649,7 @@ void PerformStateTransition( PlayerCar& player_car) {
             break;
 
         case NECROTECH:
-            HandleNecroTransition(player_car);
+            HandleNecroTransition();
             break;
 
         case LOBBY:
@@ -1790,7 +1732,7 @@ void Dig(){
     //check if player is over dig spot, while clicking. Then add item to inventory
    if (player.position.x > 1860 && player.position.x < 1880 && !player.hasPills && gameState == CEMETERY){ //over dig spot
         player.hasPills = true; //if you dont have pill you can allways get more here. 
-        AddItemToInventory("pills", inventory, INVENTORY_SIZE);
+        AddItemToInventory("pills");
         showInventory = true;
         PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
         shovelTint = RED;
@@ -1800,7 +1742,7 @@ void Dig(){
         PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
         shovelTint = RED;
         if (!player.hasShotgun){
-            AddItemToInventory("shotgun", inventory, INVENTORY_SIZE);
+            AddItemToInventory("shotgun");
             player.hasShotgun = true;
             PlaySound(SoundManager::getInstance().GetSound("ShotgunReload"));
         }
@@ -1811,7 +1753,7 @@ void Dig(){
         PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
         shovelTint = RED;
         if (!player.hasMac10){
-            AddItemToInventory("mac10", inventory, INVENTORY_SIZE);
+            AddItemToInventory("mac10");
             PlaySound(SoundManager::getInstance().GetSound("reload"));
             player.hasMac10 = true;
         }
@@ -1820,7 +1762,7 @@ void Dig(){
     if (player.position.x > 82.0 && player.position.x < 102 && gameState == OUTSIDE && !player.hasPills){
         PlaySound(SoundManager::getInstance().GetSound("ShovelDig")); //far left outside
         player.hasPills = true;
-        AddItemToInventory("pills", inventory, INVENTORY_SIZE);
+        AddItemToInventory("pills");
         shovelTint = RED;
     }
 
@@ -1922,7 +1864,7 @@ void drawDeadZombie(Vector2 bodyPosition,Vector2& mouseWorldPos){
     int distance = abs(player.position.x - bodyPosition.x);
     if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){ //if key up next to body
         if (distance < 30 && !player.hasBadge){
-            AddItemToInventory("Badge", inventory, INVENTORY_SIZE);
+            AddItemToInventory("Badge");
             player.hasBadge = true;
             showInventory = true;
             show_dbox = true;
@@ -1934,7 +1876,7 @@ void drawDeadZombie(Vector2 bodyPosition,Vector2& mouseWorldPos){
     if (CheckCollisionPointRec(mouseWorldPos, bodyBounds)){ //if click on body
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)){
             if (distance < 30 && !player.hasBadge){
-                AddItemToInventory("Badge", inventory, INVENTORY_SIZE);
+                AddItemToInventory("Badge");
                 player.hasBadge = true;
                 showInventory = true;
                 show_dbox = true;
@@ -1949,18 +1891,18 @@ void drawDeadZombie(Vector2 bodyPosition,Vector2& mouseWorldPos){
 }
 
 
-void RenderInventory(std::string inventory[], int inventorySize,Vector2& mousePosition) {
+void RenderInventory() {
     int slotWidth = resources.inventorySlot.width;
     shovelTint = WHITE;
     Color gunTint = WHITE;
     Color shotgunTint = WHITE;
     Color macTint = WHITE;
 
-    int startX = (inventoryPositionX - (slotWidth * inventorySize/2));
+    int startX = (inventoryPositionX - (slotWidth * INVENTORY_SIZE/2));
     int startY = inventoryPositionY;
 
     // Draw each inventory slot 
-    for (int i = 0; i < inventorySize; i++) {
+    for (int i = 0; i < INVENTORY_SIZE; i++) {
         int x = startX + (i * (slotWidth + 10));  // Offset each slot horizontally
         int y = startY;
 
@@ -2112,7 +2054,7 @@ void RenderInventory(std::string inventory[], int inventorySize,Vector2& mousePo
                     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
                         if (player.currentHealth < player.maxHealth && player.hasPills){
                             //inventory[i] = std::string("");  // erase pills from the string
-                            RemoveItemFromInventory("pills", inventory, INVENTORY_SIZE);
+                            RemoveItemFromInventory("pills");
                             player.currentHealth = player.maxHealth;
                             player.hasPills = false;
                             PlaySound(SoundManager::getInstance().GetSound("Pills"));
@@ -2154,7 +2096,7 @@ void RenderInventory(std::string inventory[], int inventorySize,Vector2& mousePo
                 if (CheckCollisionPointRec(mousePosition, textureBounds)){
                     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
                         //inventory[i] = std::string("");  // erase drugs from the string
-                        RemoveItemFromInventory("Drugs", inventory, INVENTORY_SIZE);
+                        RemoveItemFromInventory("Drugs");
                         applyShader = true;
                         can_sell_drugs = true;
                     }
@@ -2360,7 +2302,7 @@ void DrawSubwayUI(Player& player, Vector2 mousePosition, Camera2D& camera){
 
 
 //Destinations Menu for car. Click on where you want to travel. 
-void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera){
+void DrawCarUI(PlayerCar& player_car, Camera2D& camera){
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
     Vector2 ui_pos = player_car.position;
     int ui_width = 116;
@@ -2457,7 +2399,7 @@ void DrawCarUI(PlayerCar& player_car, Vector2 mousePosition, Camera2D& camera){
 
 }
 
-void DrawMagicDoor(Player& player, MagicDoor& magicDoor, ShaderResources& shaders){
+void DrawMagicDoor(Player& player, MagicDoor& magicDoor){
         float doorFrame = 64.0;
         Rectangle sourceDoorRec = {static_cast<float>(magicDoor.currentFrame) * doorFrame, 0, static_cast<float>(doorFrame), static_cast<float>(doorFrame)};
         //BeginShaderMode(shaders.rainbowOutlineShader);
@@ -2741,7 +2683,7 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
             if (can_sell_drugs){ //can sell drugs gets reset once you take the drug
                 can_sell_drugs = false; // Dealer only has 1 drug for now. 
                 addMoney(-100);
-                AddItemToInventory("Drugs", inventory, INVENTORY_SIZE);
+                AddItemToInventory("Drugs");
                 for (NPC& npc : npcs)
                     if (npc.interacting){
                         npc.interacting = false;
@@ -2768,7 +2710,7 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
     }
     if (overLiquor && showLiquor && player.money >= 100 &&  GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY")){
         addMoney(-100);
-        AddItemToInventory("whiskey", inventory, INVENTORY_SIZE);
+        AddItemToInventory("whiskey");
         player.hasWhiskey = true;
         
     }
@@ -2886,7 +2828,7 @@ void playerOutsideInteraction(Player& player, PlayerCar& player_car){
 
 
 
-void RenderSubway(Camera2D& camera, Vector2& mousePosition,Train& train, ShaderResources& shaders){
+void RenderSubway(){
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
 
     show_dbox = false;
@@ -2904,8 +2846,7 @@ void RenderSubway(Camera2D& camera, Vector2& mousePosition,Train& train, ShaderR
     ClearBackground(customBackgroundColor);
 
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
-
-    HandleKeyboardAiming(mouseWorldPos);
+    HandleKeyboardAiming();
 
 
     if (drunk){
@@ -3008,7 +2949,7 @@ void RenderSubway(Camera2D& camera, Vector2& mousePosition,Train& train, ShaderR
     }
 
     if (showInventory){
-        RenderInventory(inventory, INVENTORY_SIZE, mousePosition);  // Render the inventory 
+        RenderInventory();  // Render the inventory 
     }
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
         DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
@@ -3042,7 +2983,7 @@ void RenderSubway(Camera2D& camera, Vector2& mousePosition,Train& train, ShaderR
 
 
 
-void RenderAstral(Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoor& magicDoor, MagicDoor& magicdoor2, ShaderResources& shaders){
+void RenderAstral(MagicDoor& magicDoor, MagicDoor& magicdoor2){
     player.gravity = 200;
     player.outline = true;//turn on outline shader in asteral plane
 
@@ -3060,8 +3001,8 @@ void RenderAstral(Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoo
     
     ClearBackground(customBackgroundColor);
 
-    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
-    HandleKeyboardAiming(worldMousePosition);
+    
+    HandleKeyboardAiming();
 
 
     if (drunk){
@@ -3089,8 +3030,8 @@ void RenderAstral(Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoo
     EndShaderMode(); ////////////////////////////SHADER OFF
     DrawEarth(earth, camera); //draw earth outside of shader. 
     
-    DrawMagicDoor(player, magicDoor, shaders);
-    DrawMagicDoor(player, magicdoor2, shaders);
+    DrawMagicDoor(player, magicDoor);
+    DrawMagicDoor(player, magicdoor2);
 
     player.DrawPlayer(resources, gameState, camera, shaders);
 
@@ -3158,7 +3099,7 @@ void RenderAstral(Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoo
     
 
     if (showInventory){
-        RenderInventory(inventory, INVENTORY_SIZE, mousePosition);  // Render the inventory 
+        RenderInventory();  // Render the inventory 
     }
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
         DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
@@ -3177,7 +3118,7 @@ void RenderAstral(Camera2D& camera, Vector2& mousePosition,Earth& earth,MagicDoo
 }
 
 
-void RenderCemetery(PlayerCar& player_car, UFO& ufo, float& time, Camera2D& camera,Vector2 mousePosition, ShaderResources& shaders){
+void RenderCemetery(float& time){
     int carMax = 2800;
     int carMin = 2765;
 
@@ -3267,8 +3208,8 @@ void RenderCemetery(PlayerCar& player_car, UFO& ufo, float& time, Camera2D& came
 
     BeginMode2D(camera);
 
-    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
-    HandleKeyboardAiming(worldMousePosition);
+    
+    HandleKeyboardAiming();
     
     // if (!IsKeyDown(KEY_F)){
     //     if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
@@ -3344,7 +3285,7 @@ void RenderCemetery(PlayerCar& player_car, UFO& ufo, float& time, Camera2D& came
     DrawBullets(); //draw bullets in cemetery after everything else. 
 
     if (show_carUI && !move_car && player.enter_car){ //destination menu //draw UI inside mode2d
-        DrawCarUI(player_car, mousePosition, camera);
+        DrawCarUI(player_car,camera);
     }
     renderBoxes();
     DrawPickups();
@@ -3353,7 +3294,7 @@ void RenderCemetery(PlayerCar& player_car, UFO& ufo, float& time, Camera2D& came
     showBigBadge();
 
     if (showInventory){
-        RenderInventory(inventory, INVENTORY_SIZE,mousePosition);  // Render the inventory 
+        RenderInventory();  // Render the inventory 
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
@@ -3398,7 +3339,7 @@ void RenderCemetery(PlayerCar& player_car, UFO& ufo, float& time, Camera2D& came
     
 }
 
-void RenderRoad(PlayerCar& player_car, Camera2D& camera, Vector2 mousePosition, ShaderResources& shaders){
+void RenderRoad(){
     if (player_car.position.x < 200 && !reverse_road){//transition to cemetery
         
         transitionState = FADE_OUT;
@@ -3480,7 +3421,7 @@ void RenderRoad(PlayerCar& player_car, Camera2D& camera, Vector2 mousePosition, 
    
 }
 
-void RenderGraveyard(Camera2D& camera,Vector2 mousePosition, ShaderResources& shaders){
+void RenderGraveyard(){
 
     float digPos = 2350.0f;
     if (player.position.x > 3437 and raiseZombies){
@@ -3495,9 +3436,8 @@ void RenderGraveyard(Camera2D& camera,Vector2 mousePosition, ShaderResources& sh
     camera.target = player.position;
     //Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera);
 
-    Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
-
-    HandleKeyboardAiming(mouseWorldPos);
+   
+    HandleKeyboardAiming();
 
     float parallaxforeground = camera.target.x * 0.4;
     float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
@@ -3556,7 +3496,7 @@ void RenderGraveyard(Camera2D& camera,Vector2 mousePosition, ShaderResources& sh
             dboxPosition = ghost.position;
             show_dbox = true;
             ghost.isActive = false;
-            RemoveItemFromInventory("watch", inventory, INVENTORY_SIZE);
+            RemoveItemFromInventory("watch");
 
 
             
@@ -3570,11 +3510,11 @@ void RenderGraveyard(Camera2D& camera,Vector2 mousePosition, ShaderResources& sh
     }
 
     DrawBullets(); //draw bullets in cemetery after everything else. 
-
     //foreforeground. infront of player
     DrawTexturePro(resources.GraveyardForeground, {0, 0, static_cast<float>(resources.GraveyardGate.width), static_cast<float>(resources.GraveyardGate.height)},
                 {1024, 70, static_cast<float>(resources.GraveyardGate.width), static_cast<float>(resources.GraveyardGate.height)}, {0, 0}, 0.0f, WHITE);
 
+    Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
     if (firstBlood && !player.hasBadge){
         drawDeadZombie(dz_pos, mouseWorldPos);
     }
@@ -3591,7 +3531,7 @@ void RenderGraveyard(Camera2D& camera,Vector2 mousePosition, ShaderResources& sh
     }
 
     if (showInventory){
-        RenderInventory(inventory, INVENTORY_SIZE, mousePosition);  // Render the inventory 
+        RenderInventory();  // Render the inventory 
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
@@ -3643,7 +3583,7 @@ void RenderGraveyard(Camera2D& camera,Vector2 mousePosition, ShaderResources& sh
 
 
 
-void RenderApartment(Vector2 mousePosition, Camera2D camera, ShaderResources& shaders){
+void RenderApartment(){
     player.position.x -= 20; //ensure over_apartment = false
     int screen_center = (screenWidth - resources.apartment.width)/2;
 
@@ -3672,7 +3612,7 @@ void RenderApartment(Vector2 mousePosition, Camera2D camera, ShaderResources& sh
     
 
     if (showInventory){
-        RenderInventory(inventory, INVENTORY_SIZE,mousePosition);
+        RenderInventory();
         
     }
 
@@ -3692,7 +3632,7 @@ void RenderApartment(Vector2 mousePosition, Camera2D camera, ShaderResources& sh
     
 }
 
-void RenderLot(Camera2D& camera, Vector2& mousePosition,ShaderResources& shaders){
+void RenderLot(){
 
     show_dbox = false; //turn off dbox if no one is interacting
     int digPos = 2600;
@@ -3742,8 +3682,8 @@ void RenderLot(Camera2D& camera, Vector2& mousePosition,ShaderResources& shaders
     BeginMode2D(camera);
 
 
-    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
-    HandleKeyboardAiming(worldMousePosition);
+   
+    HandleKeyboardAiming();
     if (drunk){
         BeginShaderMode(shaders.glowShader2);
 
@@ -3786,7 +3726,7 @@ void RenderLot(Camera2D& camera, Vector2& mousePosition,ShaderResources& shaders
 
             if (hobo.interactions == 1 && hobo.clickCount == 6 && !hasCemeteryKey){
                 //give cemetery key
-                AddItemToInventory("cemeteryKey", inventory, INVENTORY_SIZE);
+                AddItemToInventory("cemeteryKey");
                 hasCemeteryKey = true;
                 showInventory = true;
                 raiseZombies = true;
@@ -3837,13 +3777,13 @@ void RenderLot(Camera2D& camera, Vector2& mousePosition,ShaderResources& shaders
 
     if (showInventory){
          
-        RenderInventory(inventory, INVENTORY_SIZE, mousePosition);  // Render the inventory 
+        RenderInventory();  // Render the inventory 
     }
 
     DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
 }
 
-void RenderPark(PlayerCar& player_car, Camera2D& camera,Vector2& mousePosition, ShaderResources& shaders){
+void RenderPark(){
     BeginMode2D(camera);  // Begin 2D mode with the camera
     ClearBackground(customBackgroundColor);
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
@@ -3869,8 +3809,8 @@ void RenderPark(PlayerCar& player_car, Camera2D& camera,Vector2& mousePosition, 
     BeginMode2D(camera);
 
 
-    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
-    HandleKeyboardAiming(worldMousePosition);
+    
+    HandleKeyboardAiming();
     
      // Draw the background (sky)
     DrawTexturePro(resources.background, {0, 0, static_cast<float>(resources.background.width), static_cast<float>(resources.background.height)},
@@ -3967,7 +3907,7 @@ void RenderPark(PlayerCar& player_car, Camera2D& camera,Vector2& mousePosition, 
     }
 
     if (show_carUI && !move_car && player.enter_car){ //destination menu //Draw inside mode2d
-        DrawCarUI(player_car, mousePosition, camera);
+        DrawCarUI(player_car, camera);
         //drawingCarUI
         
     }
@@ -4001,7 +3941,7 @@ void RenderPark(PlayerCar& player_car, Camera2D& camera,Vector2& mousePosition, 
 
     if (showInventory){ // this could be done globally, there is never a time when we don't want to show inventory
          
-        RenderInventory(inventory, INVENTORY_SIZE, mousePosition);  // Render the inventory 
+        RenderInventory();  // Render the inventory 
     }
 
     if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)){
@@ -4048,7 +3988,7 @@ void RenderPark(PlayerCar& player_car, Camera2D& camera,Vector2& mousePosition, 
 }
 
 //Office
-void RenderOffice(Camera2D& camera,Elevator& elevator, Vector2& mousePosition, ShaderResources& shaders){
+void RenderOffice(Elevator& elevator){
     show_dbox = false;
     over_elevator = false;
     over_elevator2 = false;
@@ -4155,8 +4095,8 @@ void RenderOffice(Camera2D& camera,Elevator& elevator, Vector2& mousePosition, S
 
     DrawBullets();
     EndShaderMode(); ////////////////////////////SHADER OFF
-    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
-    HandleKeyboardAiming(worldMousePosition);
+    
+    HandleKeyboardAiming();
     renderBoxes();
     DrawPickups();
     EndMode2D();
@@ -4172,7 +4112,7 @@ void RenderOffice(Camera2D& camera,Elevator& elevator, Vector2& mousePosition, S
     DrawMoney(); //draw money after EndMode2d()
     if (showInventory){
          
-        RenderInventory(inventory, INVENTORY_SIZE, mousePosition);  // Render the inventory 
+        RenderInventory();  // Render the inventory 
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
@@ -4199,7 +4139,7 @@ void RenderOffice(Camera2D& camera,Elevator& elevator, Vector2& mousePosition, S
 }
 
 //Lobby
-void RenderLobby(Camera2D& camera,Elevator& elevator, Vector2& mousePosition, ShaderResources shaders){
+void RenderLobby(Elevator& elevator){
     show_dbox = false;   
     over_exit = false;
     over_Ebutton = false;
@@ -4378,8 +4318,8 @@ void RenderLobby(Camera2D& camera,Elevator& elevator, Vector2& mousePosition, Sh
 
     DrawBullets();
     EndShaderMode(); ////////////////////////////SHADER OFF
-    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
-    HandleKeyboardAiming(worldMousePosition);
+    
+    HandleKeyboardAiming();
     renderBoxes();
     DrawPickups();
     EndMode2D();
@@ -4396,7 +4336,7 @@ void RenderLobby(Camera2D& camera,Elevator& elevator, Vector2& mousePosition, Sh
     DrawMoney(); //draw money after EndMode2d()
     if (showInventory){
          
-        RenderInventory(inventory, INVENTORY_SIZE,mousePosition);  // Render the inventory 
+        RenderInventory();  // Render the inventory 
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
@@ -4416,7 +4356,7 @@ void RenderLobby(Camera2D& camera,Elevator& elevator, Vector2& mousePosition, Sh
 }
 
 //NecroTech
-void RenderNecroTech(Camera2D& camera,PlayerCar& player_car, Vector2& mousePosition, ShaderResources& shaders){
+void RenderNecroTech(PlayerCar& player_car){
 
     show_dbox = false;
     
@@ -4505,7 +4445,7 @@ void RenderNecroTech(Camera2D& camera,PlayerCar& player_car, Vector2& mousePosit
     }
 
     if (show_carUI && !move_car && player.enter_car){ //destination menu //draw UI inside mode2d
-        DrawCarUI(player_car, mousePosition, camera);
+        DrawCarUI(player_car, camera);
     }
 
     if (robots[0].agro && robots[0].isActive) showPasswordInterface = false; //hide interface on shots fired. 
@@ -4531,9 +4471,10 @@ void RenderNecroTech(Camera2D& camera,PlayerCar& player_car, Vector2& mousePosit
 
     DrawBullets();
     EndShaderMode(); ////////////////////////////SHADER OFF
-    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
 
-    HandleKeyboardAiming(worldMousePosition);
+
+    
+    HandleKeyboardAiming();
 
     renderBoxes();
     DrawPickups();
@@ -4550,7 +4491,7 @@ void RenderNecroTech(Camera2D& camera,PlayerCar& player_car, Vector2& mousePosit
     DrawMoney(); //draw money after EndMode2d()
     if (showInventory){
          
-        RenderInventory(inventory, INVENTORY_SIZE, mousePosition);  // Render the inventory 
+        RenderInventory();  // Render the inventory 
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
@@ -4588,7 +4529,7 @@ void RenderNecroTech(Camera2D& camera,PlayerCar& player_car, Vector2& mousePosit
 
 
 //Main Street
-void RenderOutside(Camera2D& camera, PlayerCar& player_car,MagicDoor& magicDoor, float& totalTime,  std::vector<NPC>& npcs, UFO& ufo, Vector2 mousePosition, ShaderResources& shaders) {
+void RenderOutside(MagicDoor& magicDoor, float& totalTime) {
 
     SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide or in vacant lot
     SoundManager::getInstance().PlayMusic("StreetSounds");
@@ -4609,8 +4550,8 @@ void RenderOutside(Camera2D& camera, PlayerCar& player_car,MagicDoor& magicDoor,
 
 
 
-    Vector2 worldMousePosition = GetScreenToWorld2D(mousePosition, camera); //put this after draw and it works now?
-    HandleKeyboardAiming(worldMousePosition);
+    
+    HandleKeyboardAiming(); //need mouse position based on camera coords. could we make this global?
     
     if (drunk){
         BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason. TODO: fix drunk shader, make it global and look good.
@@ -4639,7 +4580,7 @@ void RenderOutside(Camera2D& camera, PlayerCar& player_car,MagicDoor& magicDoor,
     
     
      if (show_carUI && !move_car && player.enter_car){ //draw carUI inside Mode2d for reasons, show carUI infront of dialog box
-        DrawCarUI(player_car, mousePosition, camera); //draw dialog box behind carUI
+        DrawCarUI(player_car, camera); //draw dialog box behind carUI
     }  
 
     if (move_ufo){
@@ -4742,7 +4683,7 @@ void RenderOutside(Camera2D& camera, PlayerCar& player_car,MagicDoor& magicDoor,
 
     //Draw MagicDoor
     if (applyShader){
-        DrawMagicDoor(player, magicDoor, shaders);  
+        DrawMagicDoor(player, magicDoor);  
     }
 
 
@@ -4804,7 +4745,7 @@ void RenderOutside(Camera2D& camera, PlayerCar& player_car,MagicDoor& magicDoor,
     DrawMoney(); //draw money after EndMode2d()
     if (showInventory){
          
-        RenderInventory(inventory, INVENTORY_SIZE, mousePosition);  // Render the inventory 
+        RenderInventory();  // Render the inventory 
     }
     //Draw cursor last so it's on top
     DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
@@ -4812,7 +4753,7 @@ void RenderOutside(Camera2D& camera, PlayerCar& player_car,MagicDoor& magicDoor,
 
 
 void spawnNPCs(){
-    // Create NPCs and set there starting desitnations. 
+    // Create NPCs and set there starting desitnations. //outside npcs start active
 
     float speed = 50.0f; //normal NPC speed
 
@@ -5146,14 +5087,14 @@ void debugKeys(){
     }
 
     if (IsKeyPressed(KEY_P)){
-        AddItemToInventory("Drugs", inventory, INVENTORY_SIZE);
+        AddItemToInventory("Drugs");
     }
 
     if (IsKeyPressed(KEY_K)){
         if (!has_car_key || !hasCemeteryKey){
-            AddItemToInventory("carKeys", inventory, INVENTORY_SIZE);
-            AddItemToInventory("cemeteryKey", inventory, INVENTORY_SIZE);
-            AddItemToInventory("watch", inventory, INVENTORY_SIZE);
+            AddItemToInventory("carKeys");
+            AddItemToInventory("cemeteryKey");
+            AddItemToInventory("watch");
             player.hasWatch = true;
             has_car_key = true;
             hasCemeteryKey = true;
@@ -5180,7 +5121,7 @@ void debugKeys(){
     if (IsKeyPressed(KEY_H)){
         if (!player.hasShovel){
             player.hasShovel = true;
-            AddItemToInventory("shovel", inventory, INVENTORY_SIZE);
+            AddItemToInventory("shovel");
             PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
         }
     }
@@ -5188,7 +5129,7 @@ void debugKeys(){
     if (IsKeyPressed(KEY_L)){
         if (!player.hasCrowbar){
             player.hasCrowbar = true;
-            AddItemToInventory("crowbar", inventory, INVENTORY_SIZE);
+            AddItemToInventory("crowbar");
             PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
             
         }
@@ -5197,24 +5138,24 @@ void debugKeys(){
     if (IsKeyPressed(KEY_J)){
         if (!player.hasBadge){
             player.hasBadge = true;
-            AddItemToInventory("Badge", inventory, INVENTORY_SIZE);
+            AddItemToInventory("Badge");
         }
     }
 
     if (IsKeyPressed(KEY_G)){
         if (!player.hasGun){
-            AddItemToInventory("Gun", inventory, INVENTORY_SIZE);
+            AddItemToInventory("Gun");
             player.hasGun = true;
             PlaySound(SoundManager::getInstance().GetSound("reload"));
 
         }
         if (!player.hasShotgun){
-            AddItemToInventory("shotgun", inventory, INVENTORY_SIZE);
+            AddItemToInventory("shotgun");
             player.hasShotgun = true;
         }
 
         if (!player.hasMac10){
-            AddItemToInventory("mac10", inventory, INVENTORY_SIZE);
+            AddItemToInventory("mac10");
             player.hasMac10 = true;
         }
 
@@ -5334,7 +5275,7 @@ void UptoEnter(PlayerCar& player_car, Elevator& elevator){
         if (over_medkit && gameState == LOBBY){
             if (!player.hasPills){
                 player.hasPills = true;
-                AddItemToInventory("pills", inventory, INVENTORY_SIZE);
+                AddItemToInventory("pills");
                 showInventory = true;
                
 
@@ -5397,7 +5338,7 @@ void ShowControls(){
 
 }
 
-void MainMenu(Vector2 mousePosition, PauseState& currentPauseState, Rectangle& destRect){
+void MainMenu(PauseState& currentPauseState, Rectangle& destRect){
     // Draw semi-transparent background overlay
         if (menuOpen) {
             float offset_x = 0;
@@ -5624,6 +5565,14 @@ void InitSounds(SoundManager& soundManager){
     SoundManager::getInstance().SetSoundVolume("crowbarAttack", 0.5);
 }
 
+void InitCamera() {
+    //init camera, and targetZoom, delcared in Globals.h
+        camera.offset = (Vector2){ GAME_SCREEN_WIDTH / 2.0f, GAME_SCREEN_HEIGHT / 2.0f + 188.0f }; //offset 188 from middle for bigger sky
+        camera.rotation = 0.0f;
+        camera.zoom = 1.0f;
+        targetZoom = camera.zoom;  // Sync with initial zoom
+    }
+
 
 int main() {
     InitWindow(screenWidth, screenHeight, "Adventure Game");
@@ -5639,51 +5588,33 @@ int main() {
 
     srand(static_cast<unsigned>(time(0))); //randomize seed based on time
     
-    // Initialize game resources
-    //GameResources resources;
-    //GameCalendar calendar; //done in GameCalendar.cpp
-    //LoadGameResources(resources);
     resources.Load();
     // Initialize shaders
-    ShaderResources shaders; //struct holding all the shaders. 
-    InitShaders(shaders, screenWidth, screenHeight); //refactored shader setup to shaderControl.cpp
+    InitShaders(screenWidth, screenHeight); //refactored shader setup to shaderControl.cpp
+    InitCamera(); //init global camera, declared in Globals.h
 
-    // Initialize player
-    //Player player; //initialized in player.cpp, declared extern in player.h for easy access 
-    PlayerCar player_car;
-    Earth earth;
-    MagicDoor magicDoor;
-    MagicDoor magicDoor2;
-    UFO ufo;
-    Train train;
-    Elevator elevator;
-    Elevator elevator2;
-
-
-    InitializePlayerCar(player_car);
+    //init structs decleared in Globals.h
+    InitializePlayerCar();
     InitializeMagicDoor(magicDoor,Vector2 {2089, 700});
     InitializeMagicDoor(magicDoor2, Vector2{2000, -747});
-    InitEarth(earth);
+    InitEarth();
     InitElevator(elevator, Vector2 {2446, 648});
     InitElevator(elevator2, Vector2 {3200, 648});
+    InitUFO();
+    InitializeTrain();
 
-    InitUFO(ufo);
-    spawnNPCs(); //spawn NPCs before rendering them outside
+    //Astral platforms
     InitPlatforms();
-    InitializeTrain(train);
 
+    //All boxes
     InitBoxes();
+
+    spawnNPCs(); //Create all NPCs
     
     setButtonColors(); //main menu button colors, sets globally for all rayGUI buttons
 
     elevators.push_back(elevator);
-    elevators.push_back(elevator2);
-    // Initialize the camer
-    Camera2D camera = { 0 };
-    camera.offset = (Vector2){ GAME_SCREEN_WIDTH / 2.0f, GAME_SCREEN_HEIGHT / 2.0f + 188.0f };  // Screen center + y offset 188 lower ground for bigger sky
-    camera.rotation = 0.0f;
-    camera.zoom = 1.0f;
-    float targetZoom = camera.zoom;  // Initialize targetZoom to the initial zoom value
+    elevators.push_back(elevator2); //this is fucky, put elevator2 into vector so we can access it. elevators[1]
    
     inventoryPositionX = player.position.x; //init inventory position
     inventoryPositionY = player.position.y;  
@@ -5699,7 +5630,7 @@ int main() {
     RenderTexture2D finalTexture = LoadRenderTexture(GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT);
     RenderTexture2D pauseTexture = LoadRenderTexture(screenWidth, screenHeight);
 
-    Rectangle destRect = { 0, 0, (float)GetScreenWidth(), (float)GetScreenHeight() };
+    Rectangle destRect = { 0, 0, (float)GetScreenWidth(), (float)GetScreenHeight() }; //
     UpdateDrawRectangle(&destRect);
 
     PauseState currentPauseState = GAME_RUNNING;
@@ -5711,7 +5642,7 @@ int main() {
     while (!WindowShouldClose() && !quitRequested) {
         pauseLogic(currentPauseState, pauseTexture, finalTexture);
 
-        Vector2 mousePosition = GetMousePosition();
+        mousePosition = GetMousePosition(); //update global mousePosition, declared in globals.h
 
         mousePosition = clampMouseCursor(mousePosition); //stop mouse from going offscreen when in fullscreen. 
         
@@ -5778,7 +5709,7 @@ int main() {
         totalTime += deltaTime; // used for UFO sine wave
         if (totalTime > 10000.0f) totalTime -= 10000.0f; //reset total time just in case. 
             
-        UpdateShaders(shaders, deltaTime, borderlessWindow,  gameState);
+        UpdateShaders(deltaTime, borderlessWindow,  gameState);
         SoundManager::getInstance().UpdateRandomVoices(deltaTime); //////////////////TURNED OFF VOICES for now
 
         if (windowStateChanged) { //toggle full screen    
@@ -5844,7 +5775,7 @@ int main() {
             );
             setButtonColors(); //set menu button color and text size. 
             // Draw the pause menu
-            MainMenu(mousePosition, currentPauseState, destRect); //draw main menu over the saved frame.
+            MainMenu(currentPauseState, destRect); //draw main menu over the saved frame.
 
             if (controlsMenu) ShowControls();
             EndDrawing();
@@ -5858,48 +5789,48 @@ int main() {
             
             switch (gameState){//Depending on the gameState, render the scene. 
                 case OUTSIDE:
-                    RenderOutside(camera,player_car, magicDoor, totalTime, npcs, ufo, mousePosition, shaders);
+                    RenderOutside(magicDoor, totalTime);
                     
                     break;
                 case APARTMENT:
-                    RenderApartment(mousePosition, camera, shaders);
+                    RenderApartment();
                     break;
                 case ROAD:
-                    RenderRoad(player_car,camera, mousePosition, shaders);
+                    RenderRoad();
                     break;
                 case CEMETERY:
-                    RenderCemetery(player_car, ufo, totalTime, camera,mousePosition, shaders);
+                    RenderCemetery(totalTime);
                     break;
                 case WORK:
                     ClearBackground(BLACK);//do nothing at the moment
                     break;
                 case LOT:
-                    RenderLot(camera, mousePosition, shaders);
+                    RenderLot();
                     break;
                 case GRAVEYARD:
-                    RenderGraveyard(camera, mousePosition, shaders);
+                    RenderGraveyard();
                     break;
                 case ASTRAL:
-                    RenderAstral(camera, mousePosition, earth, magicDoor, magicDoor2, shaders);
+                    RenderAstral(magicDoor, magicDoor2);
                     break;
                 case PARK:
-                    RenderPark(player_car, camera, mousePosition, shaders);
+                    RenderPark();
                     break;
 
                 case SUBWAY:
-                    RenderSubway(camera, mousePosition, train, shaders);
+                    RenderSubway();
                     break;
 
                 case NECROTECH:
-                    RenderNecroTech(camera, player_car, mousePosition, shaders);
+                    RenderNecroTech(player_car);
                     break;
 
                 case LOBBY:
-                    RenderLobby(camera, elevator, mousePosition, shaders);
+                    RenderLobby(elevator);
                     break;
 
                 case OFFICE:
-                    RenderOffice(camera,  elevator, mousePosition, shaders);
+                    RenderOffice(elevator);
                     break;
                     
             }
@@ -5978,7 +5909,7 @@ int main() {
     //UnloadGameResources(resources);
     resources.Unload();
     soundManager.UnloadAllSounds();
-    UnloadShaders(shaders);
+    UnloadShaders();
     CloseAudioDevice();
     CloseWindow();
 

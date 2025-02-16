@@ -134,7 +134,7 @@ float inventoryTargetY = 0.0f;
 float passwordTimer = 0.0;
 float DoorframeTimer = 0.0f;
 float astralThreshold = 0.5f;
-float DoorframeTime = 0.1f;
+
 float badgeTimer = 0.0f;
 float fortuneTimer = 0.0f;
 int remainingZombiesToSpawn = 0;    // Tracks remaining zombies to spawn
@@ -212,10 +212,8 @@ std::vector<NPC>officeWorkers;
 std::vector<Box> boxes; //boxes stays in main because undefined behavior do to inclusion hell. 
 
 //externs in Globals.h 
-MagicDoor magicDoor2; //make a vector of magic doors in globals.cpp
-Elevator elevator2; //same for elevators
 
-std::vector<Elevator> elevators;
+
 
 GameState gameState = OUTSIDE;
 
@@ -233,8 +231,6 @@ std::uniform_real_distribution<float> dis(0.0f, 4000.0f); // Uniform distributio
 void PrintVector2(const Vector2& vec) {
     std::cout << "(" << vec.x << ", " << vec.y << ")" << "\n";
 }
-
-
 
 
 void InitBoxes(){
@@ -278,9 +274,6 @@ void InitBoxes(){
 
 
 }
-
-
-
 
 
 
@@ -2287,7 +2280,7 @@ void DrawCarUI(PlayerCar& player_car, Camera2D& camera){
 
 }
 
-void DrawMagicDoor(Player& player, MagicDoor& magicDoor){
+void DrawMagicDoor(MagicDoor& magicDoor){
         float doorFrame = 64.0;
         Rectangle sourceDoorRec = {static_cast<float>(magicDoor.currentFrame) * doorFrame, 0, static_cast<float>(doorFrame), static_cast<float>(doorFrame)};
         //BeginShaderMode(shaders.rainbowOutlineShader);
@@ -2304,12 +2297,12 @@ void DrawMagicDoor(Player& player, MagicDoor& magicDoor){
             float deltaTime = GetFrameTime();
 
             // Update animation timer
-            DoorframeTimer += deltaTime;
+            magicDoor.frameTimer += deltaTime;
 
             // Check if it's time to move to the next frame
-            if (DoorframeTimer >= DoorframeTime)
+            if (magicDoor.frameTimer >= magicDoor.DoorframeTime)
             {
-                DoorframeTimer -= DoorframeTime;           // Reset the timer
+                magicDoor.frameTimer -= magicDoor.DoorframeTime;           // Reset the timer
                 magicDoor.currentFrame++;                    // Move to the next frame
 
                 if (magicDoor.currentFrame > 6)              // Loop back to the first frame if necessary
@@ -2871,12 +2864,12 @@ void RenderSubway(){
 
 
 
-void RenderAstral(MagicDoor& magicDoor, MagicDoor& magicdoor2){
+void RenderAstral(){
     player.gravity = 200;
     player.outline = true;//turn on outline shader in asteral plane
 
 
-    magicDoor.position.x = 2089;
+    magicDoors[0].position.x = 2089;
     camera.target = player.position;
     float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
     float parallaxClouds2 = camera.target.x * .7;
@@ -2918,8 +2911,8 @@ void RenderAstral(MagicDoor& magicDoor, MagicDoor& magicdoor2){
     EndShaderMode(); ////////////////////////////SHADER OFF
     DrawEarth(earth, camera); //draw earth outside of shader. 
     
-    DrawMagicDoor(player, magicDoor);
-    DrawMagicDoor(player, magicdoor2);
+    DrawMagicDoor(magicDoors[0]);
+    DrawMagicDoor(magicDoors[1]);
 
     player.DrawPlayer(resources, gameState, camera, shaders);
 
@@ -3871,13 +3864,13 @@ void RenderPark(){
 }
 
 //Office
-void RenderOffice(Elevator& elevator){
+void RenderOffice(){
     show_dbox = false;
     over_elevator = false;
     over_elevator2 = false;
     over_Ebutton = false;
     over_Ebutton2 = false;
-    elevator.isOccupied = false;
+    elevators[0].isOccupied = false;
     float deltaTime = GetFrameTime();
 
 
@@ -3896,7 +3889,7 @@ void RenderOffice(Elevator& elevator){
 
 
     if (player.position.x < 2488 && player.position.x > 2468){ //enter first elevator
-        if (elevator.isOpen){
+        if (elevators[0].isOpen){
             over_elevator = true;
             phrase = "Up to Enter";
             show_dbox = true;
@@ -3939,11 +3932,9 @@ void RenderOffice(Elevator& elevator){
                     {300, 0, static_cast<float>(resources.officeBackground.width), static_cast<float>(resources.officeBackground.height)}, {0, 0}, 0.0f, WHITE);
 
 
-    DrawElevator(elevator, resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
+    DrawElevator(elevators[0], resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
     DrawElevator(elevators[1], resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
-    // for (Elevator& el : elevators){ //draw multiple elevator with the same properties exept for position. 
-    //     DrawElevator(el, resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
-    // }
+
 
 
 
@@ -4022,13 +4013,14 @@ void RenderOffice(Elevator& elevator){
 }
 
 //Lobby
-void RenderLobby(Elevator& elevator){
+void RenderLobby(){
     show_dbox = false;   
     over_exit = false;
     over_Ebutton = false;
     over_elevator = false;
     over_medkit = false;
     //elevator.isOccupied = false;
+    elevators[0].isOccupied = false;
     float deltaTime = GetFrameTime();
 
     
@@ -4064,7 +4056,7 @@ void RenderLobby(Elevator& elevator){
     }
 
     if (player.position.x < 2488 && player.position.x > 2468){
-        if (elevator.isOpen){
+        if (elevators[0].isOpen){
             over_elevator = true;
             phrase = "Up to Enter";
             show_dbox = true;
@@ -4090,7 +4082,7 @@ void RenderLobby(Elevator& elevator){
     DrawTexturePro(resources.LobbyForeground, {0, 0, static_cast<float>(resources.LobbyForeground.width), static_cast<float>(resources.LobbyForeground.height)},
                     {64, 0, static_cast<float>(resources.LobbyForeground.width), static_cast<float>(resources.LobbyForeground.height)}, {0, 0}, 0.0f, WHITE);
 
-    DrawElevator(elevator, resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
+    DrawElevator(elevators[0], resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
 
 
 
@@ -4239,7 +4231,7 @@ void RenderLobby(Elevator& elevator){
 }
 
 //NecroTech
-void RenderNecroTech(PlayerCar& player_car){
+void RenderNecroTech(){
 
     show_dbox = false;
     
@@ -4412,7 +4404,7 @@ void RenderNecroTech(PlayerCar& player_car){
 
 
 //Main Street
-void RenderOutside(MagicDoor& magicDoor) {
+void RenderOutside() {
 
     SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide or in vacant lot
     SoundManager::getInstance().PlayMusic("StreetSounds");
@@ -4566,7 +4558,7 @@ void RenderOutside(MagicDoor& magicDoor) {
 
     //Draw MagicDoor
     if (applyShader){
-        DrawMagicDoor(player, magicDoor);  
+        DrawMagicDoor(magicDoors[0]);  
     }
 
 
@@ -5048,7 +5040,7 @@ void debugKeys(){
 
 
 
-void UptoEnter(PlayerCar& player_car, Elevator& elevator){
+void UptoEnter(PlayerCar& player_car){
     //enter places by pressing up 
     if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
 
@@ -5099,19 +5091,19 @@ void UptoEnter(PlayerCar& player_car, Elevator& elevator){
             transitionState = FADE_OUT; //trans to necrotech
         }
         if (over_Ebutton && gameState == LOBBY && !spawning_zombies){ //elevator button in lobby
-            if (elevator.isOpen){
-                elevator.isOpen = false;
+            if (elevators[0].isOpen){
+                elevators[0].isOpen = false;
             }else{
-                elevator.isOpen = true;
+                elevators[0].isOpen = true;
             }
             
         }
 
         if (over_Ebutton && gameState == OFFICE){ //open and close all elevators. shouldn't matter because they are offscreen. 
-            if (elevator.isOpen){
-                elevator.isOpen = false;          
+            if (elevators[0].isOpen){
+                elevators[0].isOpen = false;          
             }else{
-                elevator.isOpen = true;       
+                elevators[0].isOpen = true;       
             }
         }
 
@@ -5126,9 +5118,11 @@ void UptoEnter(PlayerCar& player_car, Elevator& elevator){
 
 
         if (over_elevator && gameState == OFFICE){
-            if (elevator.isOpen){
-                elevator.isOpen = false;
-                elevator.isOccupied = true;
+            
+            if (elevators[0].isOpen){
+                
+                elevators[0].isOpen = false;
+                elevators[0].isOccupied = true;
                 player.onElevator = true;
                 transitionState = FADE_OUT; //go to lobby
             }
@@ -5145,10 +5139,12 @@ void UptoEnter(PlayerCar& player_car, Elevator& elevator){
 
 
         if (over_elevator && gameState == LOBBY){
-            if (elevator.isOpen){
-                 elevator.isOccupied = true; //Enter elevator
+            std::cout << "over elevator\n";
+            if (elevators[0].isOpen){
+                std::cout << "closing elevato\n";
+                 elevators[0].isOccupied = true; //Enter elevator
                  player.onElevator = true;
-                 elevator.isOpen = false;    //close the door and fade out. 
+                 elevators[0].isOpen = false;    //close the door and fade out. 
                  transitionState = FADE_OUT; //goes to office 
 
             } 
@@ -5475,7 +5471,7 @@ int main() {
     InitializeMagicDoor(magicDoor,Vector2 {2089, 700});
     InitializeMagicDoor(magicDoor2, Vector2{2000, -747});
     InitEarth();
-    InitElevator(elevator, Vector2 {2446, 648});
+    InitElevator(elevator1, Vector2 {2446, 648});
     InitElevator(elevator2, Vector2 {3200, 648});
     InitUFO();
     InitializeTrain();
@@ -5489,9 +5485,6 @@ int main() {
     spawnNPCs(); //Create all NPCs
     
     setButtonColors(); //main menu button colors, sets globally for all rayGUI buttons
-
-    elevators.push_back(elevator);
-    elevators.push_back(elevator2); //this is fucky, put elevator2 into vector so we can access it. elevators[1]
    
     inventoryPositionX = player.position.x; //init inventory position
     inventoryPositionY = player.position.y;  
@@ -5514,7 +5507,7 @@ int main() {
 
     //AddItemToInventory("crowbar", inventory, INVENTORY_SIZE); //TODO: find a place to give the player the crowbar. Should it just be the shovel?
     
-
+    
     // Main game loop
     while (!WindowShouldClose() && !quitRequested) {
         pauseLogic(currentPauseState, pauseTexture, finalTexture);
@@ -5567,8 +5560,6 @@ int main() {
         crowbarAttackBoxes(boxes); //breakable boxes
 
         UpdatePickups();
-
-        
 
         CheckBulletPlayerCollisions(); //NPCs shoot player
         MonitorMouseClicks(); 
@@ -5634,13 +5625,13 @@ int main() {
             
         }
        
-        UptoEnter(player_car, elevator);//enter different areas by pressing up
+        UptoEnter(player_car);//enter different areas by pressing up
         
-
+        //renderToTexture pause pass
         if (currentPauseState == GAME_PAUSED){ //if game is paused, save the last frame of the game running, and draw it behind the menus
             BeginDrawing();
             ClearBackground(BLACK);
-            UpdateDrawRectangle(&destRect);
+            UpdateDrawRectangle(&destRect); // handles fullscreen
             // Draw the saved frame
             DrawTexturePro(
                 pauseTexture.texture,
@@ -5666,8 +5657,7 @@ int main() {
             
             switch (gameState){//Depending on the gameState, render the scene. 
                 case OUTSIDE:
-                    RenderOutside(magicDoor);
-                    
+                    RenderOutside();
                     break;
                 case APARTMENT:
                     RenderApartment();
@@ -5688,7 +5678,7 @@ int main() {
                     RenderGraveyard();
                     break;
                 case ASTRAL:
-                    RenderAstral(magicDoor, magicDoor2);
+                    RenderAstral();
                     break;
                 case PARK:
                     RenderPark();
@@ -5699,15 +5689,15 @@ int main() {
                     break;
 
                 case NECROTECH:
-                    RenderNecroTech(player_car);
+                    RenderNecroTech();
                     break;
 
                 case LOBBY:
-                    RenderLobby(elevator);
+                    RenderLobby();
                     break;
 
                 case OFFICE:
-                    RenderOffice(elevator);
+                    RenderOffice();
                     break;
                     
             }
@@ -5720,7 +5710,7 @@ int main() {
 
         }
 
-        //Render to texture //////////////////////////// Second Pass: Apply vignette shader seperate so we can stack effects. 
+        //Render to texture //////////////////////////// Second Pass: Apply vignette shader 
         BeginTextureMode(vignetteTexture);
             ClearBackground(BLACK);
             BeginShaderMode(shaders.vignetteShader);
@@ -5733,7 +5723,7 @@ int main() {
             EndShaderMode();
         EndTextureMode();
 
-
+        //Third pass
         BeginTextureMode(finalTexture);
             ClearBackground(BLACK);
             if (player.hitTimer > 0) BeginShaderMode(shaders.redVignetteShader); //apply hurt shader if hit
@@ -5765,7 +5755,7 @@ int main() {
             if (glitch) BeginShaderMode(shaders.glitchShader);
             //BeginShaderMode(shaders.oldFilmShader);
             DrawTexturePro(
-                finalTexture.texture, 
+                finalTexture.texture,  
                 (Rectangle){ 0, 0, (float)finalTexture.texture.width, -(float)finalTexture.texture.height },
                 destRect,
                 (Vector2){ 0, 0 },

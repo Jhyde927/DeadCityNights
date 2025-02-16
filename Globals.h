@@ -6,7 +6,7 @@
 #include "platform.h"
 #include <vector>
 
-
+//A place to put random structs and vectors. That isn't main. 
 
 // Declare global Camera2D
 extern Camera2D camera;
@@ -23,7 +23,9 @@ struct PlayerCar {
 
 struct MagicDoor {
     Vector2 position;
-    int currentFrame = 0;
+    int currentFrame;
+    float frameTimer;  // Each door gets its own timer
+    float DoorframeTime;
 
 };
 
@@ -87,17 +89,19 @@ struct Train {
 
 extern PlayerCar player_car;
 extern MagicDoor magicDoor;
+extern MagicDoor magicDoor2;
 extern Earth earth;
-extern Elevator elevator;
+extern Elevator elevator1;
+extern Elevator elevator2;
 extern UFO ufo;
 extern Train train;
 
 extern Vector2 mousePosition; // Global mouse position, updated in main.
-extern float totalTime; // total elapsed time, used for sin waves
+extern float totalTime; // total elapsed time, used for sine waves
 
 extern std::vector<Platform> platforms;
-
-
+extern std::vector<MagicDoor> magicDoors;
+extern std::vector<Elevator> elevators;
 
 void InitCamera();
 void InitializePlayerCar();

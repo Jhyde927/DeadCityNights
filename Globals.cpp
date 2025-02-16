@@ -4,23 +4,22 @@
 PlayerCar player_car;
 Earth earth;
 MagicDoor magicDoor;
+MagicDoor magicDoor2; //make a vector of magic doors in globals.cpp
 UFO ufo;
 Train train;
-Elevator elevator;
+Elevator elevator1;
+Elevator elevator2; //same for elevators
 
 std::vector<Platform> platforms;
+std::vector<MagicDoor> magicDoors;
+
+std::vector<Elevator> elevators;
+
 
 Camera2D camera = { 0 };
 float targetZoom = 1.0f; 
 float totalTime = 0.0f;
 Vector2 mousePosition = {0, 0}; 
-
-
-
-
-
-
-
 
 
 void InitCamera() {
@@ -43,6 +42,9 @@ void InitializePlayerCar(){
 void InitializeMagicDoor(MagicDoor& magicDoor, Vector2 position){
     magicDoor.position = position;//{2089, 700};
     magicDoor.currentFrame = 0;
+    magicDoor.frameTimer = 0.0f;
+    magicDoor.DoorframeTime = 0.1f;
+    magicDoors.push_back(magicDoor);
 }
 
 void InitEarth(){
@@ -68,8 +70,10 @@ void InitElevator(Elevator& elevator, Vector2 position){
     elevator.floorFrameTimer = 0.0; //ticks up when fading out and elevator is occupied and closed. 
     elevator.floorFrameTime= 0.18; //stops on floor 7. 0.01667 second per loop 
     elevator.floorOffset = Vector2 {32, -10}; //floorNumbers offset from elevator position
-    
+    elevators.push_back(elevator);
 }
+
+
 
 
 

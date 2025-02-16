@@ -361,16 +361,13 @@ void Player::Reload(){
         }
         
 
-    }else if (currentWeapon == SHOTGUN && shotgunBulletCount == 0){// you can't reload unless fully empty, this simplifies things. 
-        if (!isReloading && shotgunBulletCount + shells >= 1){
-            if (shells == 1){
-                shells -= 1;
-                shotgunBulletCount = 1; 
-            }else{
-                shells -= 2;
-                shotgunBulletCount = 2;
+    }else if (currentWeapon == SHOTGUN && shotgunBulletCount < 2){// you can't reload unless fully empty, this simplifies things. 
+        if (!isReloading && shells > 0) { // Ensure there are shells to reload
+            int shellsNeeded = 2 - shotgunBulletCount; // How many shells we can load
+            int shellsToUse = (shells >= shellsNeeded) ? shellsNeeded : shells; // Use available shells
 
-            }
+            shells -= shellsToUse;
+            shotgunBulletCount += shellsToUse;
 
             isReloading = true;
             shotgunReloadTime = 0.7f; //start the reload timer

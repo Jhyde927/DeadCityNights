@@ -18,6 +18,7 @@
 
 
 
+
 // Constructor 
 NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState initialAnimation, bool active, bool zombie)
 {

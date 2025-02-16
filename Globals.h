@@ -2,13 +2,15 @@
 #define GLOBALS_H
 
 #include <raylib.h>
-#include <vector>
 #include "GameEnums.h"
+#include "platform.h"
+#include <vector>
+
 
 
 // Declare global Camera2D
 extern Camera2D camera;
-extern float targetZoom; // So you can smoothly zoom in/out
+extern float targetZoom; 
 
 
 struct PlayerCar {
@@ -76,8 +78,8 @@ struct Train {
     float acceleration;
     float deceleration;
     float stopDuration;
-    float postLoopWaitDuration;  // New
-    float postLoopWaitTimer;     // New
+    float postLoopWaitDuration;
+    float postLoopWaitTimer;     
     float stopTimer;
     float slowDownStartX;
     TrainState state;
@@ -90,7 +92,23 @@ extern Elevator elevator;
 extern UFO ufo;
 extern Train train;
 
-extern Vector2 mousePosition; // Global mouse position
+extern Vector2 mousePosition; // Global mouse position, updated in main.
+extern float totalTime; // total elapsed time, used for sin waves
+
+extern std::vector<Platform> platforms;
+
+
+
+void InitCamera();
+void InitializePlayerCar();
+void InitializeMagicDoor(MagicDoor& magicDoor,Vector2 position);
+
+void InitEarth();
+void InitElevator(Elevator& elevator, Vector2 position);
+void InitUFO();
+void InitializeTrain();
+void InitPlatforms();
+
 
 
 #endif // GLOBALS_H

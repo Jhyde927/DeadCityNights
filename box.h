@@ -11,6 +11,7 @@
 #include "Inventory.h"
 
 
+
 class Box {
 public:
     Vector2 position;
@@ -27,7 +28,8 @@ public:
 
     Emitter boxEmitter; //each box has it's own emitter
 
-    
+    // ✅ **Add a Default Constructor**
+    Box() = default;
 
     Box(Vector2 pos, Texture2D tex, GameState sceneType){
         position = pos;

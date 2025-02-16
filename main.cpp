@@ -160,11 +160,10 @@ bool showInventory = false;
 const int INVENTORY_SIZE = 12;  // Define the size of the inventory
 std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", "", "", "", "", ""}; //Inventory is a fixed array for no particular reason.
 
+
 const int GAME_SCREEN_WIDTH = 1024;
 const int GAME_SCREEN_HEIGHT = 1024;
 
-Camera2D camera = { 0 };
-float targetZoom = 1.0f; 
 
 // Variables for password input
 std::string enteredPassword = "";
@@ -180,6 +179,8 @@ const int screenHeight = 1024; // is it crazy to keep the resolution square? Imp
 int offsetX = (screenWidth - gameWidth) / 2;
 Color purplishGrey = {128, 96, 128, 255};  // RGBA format: (R, G, B, A)
 
+
+//leftovers, refactor these, just define where they are used.
 Vector2 carKeysPos = {(screenWidth/2) - 100, 655}; // remember positions need to based on screenwidth incase of resolution change. 
 Vector2 drawerPos = {screenWidth/2 + 129, 730};
 Vector2 cemetery_start{2746, 700};
@@ -207,24 +208,16 @@ std::vector<NPC>lobbyNPCs;
 std::vector<NPC>lobbyMibs;
 std::vector<NPC>officeWorkers;
 
-std::vector<Box> boxes;
+
+std::vector<Box> boxes; //boxes stays in main because undefined behavior do to inclusion hell. 
 
 //externs in Globals.h 
-PlayerCar player_car;
-Earth earth;
-MagicDoor magicDoor;
-MagicDoor magicDoor2;
-UFO ufo;
-Train train;
-Elevator elevator;
-Elevator elevator2;
+MagicDoor magicDoor2; //make a vector of magic doors in globals.cpp
+Elevator elevator2; //same for elevators
 
-std::vector<Platform> platforms;
-
+std::vector<Elevator> elevators;
 
 GameState gameState = OUTSIDE;
-
-Vector2 mousePosition = {0, 0}; // Initialize to (0,0)
 
 TransitionState transitionState = NONE;
 float fadeAlpha = 1.0f;  // Starts fully opaque
@@ -242,90 +235,7 @@ void PrintVector2(const Vector2& vec) {
 }
 
 
-std::vector<Elevator> elevators;
 
-
-void InitializePlayerCar(){
-    player_car.position = {1710, 700-32};
-    player_car.carSpeed = 100;
-    player_car.currentFrame = 0;
-}
-
-void InitializeMagicDoor(MagicDoor& magicDoor, Vector2 position){
-    magicDoor.position = position;//{2089, 700};
-    magicDoor.currentFrame = 0;
-}
-
-void InitEarth(){
-    earth.position = {2600, 300};
-    earth.frameWidth = 48;
-    earth.frameHeight = 48;
-    earth.currentFrame = 0;
-    earth.totalFrames = 94;
-    earth.frameTimer = 0.0;
-    earth.frameTime = .1;
-}
-
-void InitElevator(Elevator& elevator, Vector2 position){
-    elevator.position = position;
-    elevator.currentFrame = 0;
-    elevator.frameTimer = 0.0;
-    elevator.frameTime = 0.05;
-    elevator.isOpen = false;
-    elevator.isOccupied = false;
-    elevator.totalFrames = 7;
-
-    elevator.currentFloorFrame = 0;
-    elevator.floorFrameTimer = 0.0; //ticks up when fading out and elevator is occupied and closed. 
-    elevator.floorFrameTime= 0.18; //stops on floor 7. 0.01667 second per loop 
-    elevator.floorOffset = Vector2 {32, -10}; //floorNumbers offset from elevator position
-    
-}
-
-
-
-void InitUFO(){
-    //animation perameters
-    ufo.frameWidth = 144;
-    ufo.frameHeight = 144;
-    ufo.currentFrame = 0;
-    ufo.totalFrames = 4;
-    ufo.frameTimer = 0.0;
-    ufo.frameTime = 0.1;
-
-    ufo.basePosition = { -94.0, 0.0f }; //base position stays the same. When moving UFO move base position.
-    ufo.position = ufo.basePosition;
-
-    // Set motion parameters
-    ufo.bobAmplitudeX = 5.0f;   // Moves 10 pixels left and right
-    ufo.bobAmplitudeY = 2.0f;    // Moves 5 pixels up and down
-    ufo.bobSpeedX = 1.0f;        // Side-to-side speed
-    ufo.bobSpeedY = 1.5f;        // Up-and-down speed
-    ufo.bobOffsetX = 0.0f;       // No initial phase offset
-    ufo.bobOffsetY = 0.0f;       // No initial phase offset
-}
-
-void InitializeTrain() {
-    // Set train parameters
-    train.position = {5500.0f, 700};
-    train.maxSpeed = 400;
-    train.stopPosition = 2500.0f;
-    train.speed = train.maxSpeed;
-    train.minSpeed = 0.0f;
-    train.acceleration =  300;
-    train.deceleration = 300;
-    train.stopDuration = 5;
-    train.stopTimer = 0.0f;
-    train.postLoopWaitDuration = 10.0f; // Time to wait after reaching x = 0
-    train.postLoopWaitTimer = 0.0f;
-    train.state = MovingToStation;
-
-    // Calculate the distance needed to stop
-
-
-    float stoppingDistance = (train.maxSpeed * train.maxSpeed) / (2.0f * train.deceleration);
-    train.slowDownStartX = 2500.0f + stoppingDistance;
-}
 
 void InitBoxes(){
     // boxes are stored in one big vector "boxes", and assigned to a specific scene on initiation. 
@@ -369,31 +279,9 @@ void InitBoxes(){
 
 }
 
-void InitPlatforms() {
-    //initialize platforms before drawing them in astral
-    //emplace_back: Constructs the Platform object directly in the vector without creating a temporary object.
-    
-    platforms.emplace_back(2300.0f, 675.0f, 200.0f, 20.0f, WHITE);
-    platforms.emplace_back(2500.0f, 600.0f, 150.0f, 20.0f, WHITE);
-    platforms.emplace_back(2800.0f, 550.0f, 250.0f, 20.0f, WHITE);
-    platforms.emplace_back(2600.0f, 450.0f, 150.0f, 20.0f, WHITE);
-    platforms.emplace_back(2400.0f, 400.0f, 150.0f, 20.0f, WHITE);
-    platforms.emplace_back(2100.0f, 350.0f, 200.0f, 20.0f, WHITE);
-    platforms.emplace_back(1900.0f, 300.0f, 150.0f, 20.0f, WHITE);
-    platforms.emplace_back(1600.0f, 250.0f, 200.0f, 20.0f, WHITE);
-    platforms.emplace_back(1400.0f, 150.0f, 250.0f, 20.0f, WHITE);
-    //platforms.emplace_back(1600.0f, 100.0f, 200.0f, 20.0f, WHITE);
-    platforms.emplace_back(1800.0f, 75.0f, 300.0f, 20.0f, WHITE);
-    platforms.emplace_back(2100.0f, 0.0f, 200.0f, 20.0f, WHITE);
-    platforms.emplace_back(2300.0f, -100.0f, 200.0f, 20.0f, WHITE);
-    platforms.emplace_back(2500.0f, -200.0f, 200.0f, 20.0f, WHITE);
-    platforms.emplace_back(2700.0f, -300.0f, 200.0f, 20.0f, WHITE);
-    platforms.emplace_back(2800.0f, -400.0f, 200.0f, 20.0f, WHITE);
-    platforms.emplace_back(2700.0f, -500.0f, 150.0f, 20.0f, WHITE);
-    platforms.emplace_back(2500.0f, -550.0f, 200.0f, 20.0f, WHITE);
-    platforms.emplace_back(2400.0f, -650.0f, 200.0f, 20.0f, WHITE);
-    platforms.emplace_back(1400.0f, -700.0f, 2000.0f, 20.0f, WHITE);
-}
+
+
+
 
 
 // Function to add an item to the first available slot in the inventory
@@ -1230,14 +1118,14 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
     }
 }
 
-void DrawItem(Vector2 itemPos, const std::string& itemType, Vector2 mousePosition, Camera2D& camera) {
+void DrawItem(Vector2 itemPos, const std::string& itemType) {
     //Draw item pickups and handle mouse clicks: crowbar, shovel, ect...
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
     float distanceToItemX = abs(itemPos.x - player.position.x);
     float distanceToItemY = abs(itemPos.y - player.position.y);
 
     static std::map<std::string, Texture2D> itemTextures = {
-        {"mac10", resources.Mac10pickup},
+        {"mac10", resources.Mac10pickup}, //not used
         {"shovel", resources.shovelWorld},
         {"crowbar", resources.crowbarWorld}, 
         {"watch", resources.pocketWatchWorld},
@@ -2196,7 +2084,7 @@ void MoveTraffic(GameResources resources){
     
 }
 
-void DrawApartmentUI(Vector2& mousePosition, Camera2D& camera){
+void DrawApartmentUI(){
     //laptop computer interface
     Vector2 ui_pos = {screenWidth/2-100, 440};
     DrawTexture(resources.ComputerScreen, ui_pos.x, ui_pos.y, WHITE);
@@ -2257,7 +2145,7 @@ void DrawApartmentUI(Vector2& mousePosition, Camera2D& camera){
     }
 }
 
-void DrawSubwayUI(Player& player, Vector2 mousePosition, Camera2D& camera){
+void DrawSubwayUI(){
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
     Vector2 ui_pos = {3011, 600};
     int ui_width = 116;
@@ -2460,7 +2348,7 @@ void moveUFO(UFO& ufo){
 
 }
 
-void DrawUFO(UFO& ufo, Camera2D& camera, float& time, ShaderResources& shaders){
+void DrawUFO(){
 
     float deltaTime = GetFrameTime();
     ufo.frameTimer += deltaTime;
@@ -2486,10 +2374,10 @@ void DrawUFO(UFO& ufo, Camera2D& camera, float& time, ShaderResources& shaders){
     };
 
     // Update horizontal (X-axis) movement
-    ufo.position.x = ufo.basePosition.x + ufo.bobAmplitudeX * sinf(ufo.bobSpeedX * time + ufo.bobOffsetX);
+    ufo.position.x = ufo.basePosition.x + ufo.bobAmplitudeX * sinf(ufo.bobSpeedX * totalTime + ufo.bobOffsetX);
 
     // Update vertical (Y-axis) movement
-    ufo.position.y = ufo.basePosition.y + ufo.bobAmplitudeY * sinf(ufo.bobSpeedY * time + ufo.bobOffsetY);
+    ufo.position.y = ufo.basePosition.y + ufo.bobAmplitudeY * sinf(ufo.bobSpeedY * totalTime + ufo.bobOffsetY);
 
     Vector2 UFODrawPosition = {
         ufo.position.x, 
@@ -2922,7 +2810,7 @@ void RenderSubway(){
 
 
     if (player.position.x > 3001 && player.position.x < 3021 && trainAtStation){
-        DrawSubwayUI(player, mousePosition, camera); // inside draw for whatever reason
+        DrawSubwayUI(); // inside draw for whatever reason
         train.stopTimer = 0;//hold the train
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
             if (buttonPark && !player.enter_train){ //hovering button street or park
@@ -3076,7 +2964,7 @@ void RenderAstral(MagicDoor& magicDoor, MagicDoor& magicdoor2){
     }
 
     if (!player.hasWatch){
-        DrawItem(Vector2 {2445, -745}, "watch", mousePosition, camera);
+        DrawItem(Vector2 {2445, -745}, "watch");
     }
     
     //-735
@@ -3118,7 +3006,7 @@ void RenderAstral(MagicDoor& magicDoor, MagicDoor& magicdoor2){
 }
 
 
-void RenderCemetery(float& time){
+void RenderCemetery(){
     int carMax = 2800;
     int carMin = 2765;
 
@@ -3211,11 +3099,6 @@ void RenderCemetery(float& time){
     
     HandleKeyboardAiming();
     
-    // if (!IsKeyDown(KEY_F)){
-    //     if (player.isAiming) player.facingRight = worldMousePosition.x > player.position.x;//Hack to make aiming work both ways
-    // }
-    
-    
     ClearBackground(customBackgroundColor);
     if (!move_car && !player.enter_car){
         camera.target = player.position;
@@ -3261,13 +3144,13 @@ void RenderCemetery(float& time){
 
     if (hasCemeteryKey){ // dont show UFO until later in the game
         ufo.basePosition = {3900, 400};
-        DrawUFO(ufo, camera, time, shaders);
+        DrawUFO();
     }
 
     //DrawShovelPickup(mousePosition, camera);
 
     if (!player.hasShovel){
-        DrawItem(Vector2 {1870, 700}, "shovel", mousePosition, camera);
+        DrawItem(Vector2 {1870, 700}, "shovel");
     }
 
     for (NPC& zombie : zombies){ //update and draw zombies in cemetery
@@ -3600,7 +3483,7 @@ void RenderApartment(){
 
     
     if (showAPUI){
-        DrawApartmentUI(mousePosition, camera);
+        DrawApartmentUI();
     }
     
     
@@ -3761,7 +3644,7 @@ void RenderLot(){
     //DrawCrowbarPickup(mousePosition, camera);
 
     if (!player.hasCrowbar){
-        DrawItem(Vector2 {2860, 700}, "crowbar", mousePosition, camera);
+        DrawItem(Vector2 {2860, 700}, "crowbar");
     }
     DrawBullets();
     renderBoxes();
@@ -4529,7 +4412,7 @@ void RenderNecroTech(PlayerCar& player_car){
 
 
 //Main Street
-void RenderOutside(MagicDoor& magicDoor, float& totalTime) {
+void RenderOutside(MagicDoor& magicDoor) {
 
     SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide or in vacant lot
     SoundManager::getInstance().PlayMusic("StreetSounds");
@@ -4585,7 +4468,7 @@ void RenderOutside(MagicDoor& magicDoor, float& totalTime) {
 
     if (move_ufo){
         ufoTimer -= GetFrameTime();
-        DrawUFO(ufo, camera, totalTime, shaders);
+        DrawUFO();
         moveUFO(ufo);
     }
 
@@ -5565,13 +5448,7 @@ void InitSounds(SoundManager& soundManager){
     SoundManager::getInstance().SetSoundVolume("crowbarAttack", 0.5);
 }
 
-void InitCamera() {
-    //init camera, and targetZoom, delcared in Globals.h
-        camera.offset = (Vector2){ GAME_SCREEN_WIDTH / 2.0f, GAME_SCREEN_HEIGHT / 2.0f + 188.0f }; //offset 188 from middle for bigger sky
-        camera.rotation = 0.0f;
-        camera.zoom = 1.0f;
-        targetZoom = camera.zoom;  // Sync with initial zoom
-    }
+
 
 
 int main() {
@@ -5637,7 +5514,7 @@ int main() {
 
     //AddItemToInventory("crowbar", inventory, INVENTORY_SIZE); //TODO: find a place to give the player the crowbar. Should it just be the shovel?
     
-    float totalTime = 0.0f; // time elapsed from start of game //glitch shader/ufo
+
     // Main game loop
     while (!WindowShouldClose() && !quitRequested) {
         pauseLogic(currentPauseState, pauseTexture, finalTexture);
@@ -5789,7 +5666,7 @@ int main() {
             
             switch (gameState){//Depending on the gameState, render the scene. 
                 case OUTSIDE:
-                    RenderOutside(magicDoor, totalTime);
+                    RenderOutside(magicDoor);
                     
                     break;
                 case APARTMENT:
@@ -5799,7 +5676,7 @@ int main() {
                     RenderRoad();
                     break;
                 case CEMETERY:
-                    RenderCemetery(totalTime);
+                    RenderCemetery();
                     break;
                 case WORK:
                     ClearBackground(BLACK);//do nothing at the moment

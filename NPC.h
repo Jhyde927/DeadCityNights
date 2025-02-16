@@ -8,6 +8,7 @@
 #include "Particle.h"
 
 
+
 class Player;  // Forward declaration of Player
 enum AnimationState {
     IDLE,

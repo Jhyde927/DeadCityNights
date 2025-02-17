@@ -41,6 +41,8 @@ public:
     float riseTimer;
     bool interacting;
     Vector2 destination;
+
+    float distanceToPlayer;
     
     float speed;
     bool isActive;
@@ -90,19 +92,19 @@ public:
 
     NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState initialAnimation, bool isActive, bool isZombie);
     
-    void Update(Player& player, GameState& gameState);
-    void Render(ShaderResources& shaders);
-    void ClickNPC(Vector2 mousePosition, Camera2D& camera, Player& player, GameState& gameState);
+    void Update();
+    void Render();
+    void ClickNPC();
     void SetAnimationState(AnimationState newState);
     void SetDestination(float minX, float maxX);
     bool CheckHit(Vector2 previousPosition, Vector2 bulletPosition, Vector2 bulletSize);
-    void HandleNPCInteraction(Player& player, GameState& gameState);
-    void HandlePolice(Player& player, float& distanceToPlayer);
-    void HandleZombie(Player& player, float& distanceToPlayer);
-    void HandleGhost(Player& player, float& distanceToPlayer);
-    void HandleMiB(Player& player, float& distanceToPlayer, GameState& gameState);
-    void HandleRobot(Player& player, float& distanceToPlayer);
-    void TakeDamage(int damage, Player& player);
+    void HandleNPCInteraction();
+    void HandlePolice();
+    void HandleZombie();
+    void HandleGhost();
+    void HandleMiB();
+    void HandleRobot();
+    void TakeDamage(int damage);
     void HandleAnimationLogic();
     //void MoveNPC(Player& player, GameState& gameState);
 };

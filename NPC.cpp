@@ -13,6 +13,9 @@
 #include <cstdlib>  // For rand and srand
 #include "shaderControl.h"
 #include "Particle.h"
+#include "GameEnums.h"
+#include "Globals.h"
+
 
 
 
@@ -75,7 +78,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     zRight = false;
     targetedTimer = 0.0f;
     agroZombie = false;
-
+    distanceToPlayer = 0;
 
  
 }
@@ -103,7 +106,7 @@ std::string GetRandomPhrase() {
     return phrases[randomIndex];
 }
 
-void NPC::HandleNPCInteraction(Player& player, GameState& gameState){ //Click or KEY_UP on NPC
+void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
 
         destination = position;//Stop NPC
         interacting = true;
@@ -477,7 +480,7 @@ void NPC::HandleNPCInteraction(Player& player, GameState& gameState){ //Click or
         
     }
 
-void NPC::HandleGhost(Player& player, float& distanceToPlayer){ //Also Bats. should probably rename or make it a seperate func handleBats()
+void NPC::HandleGhost(){ //Also Bats. should probably rename or make it a seperate func handleBats()
 
     float distanceY = abs(player.position.y - position.y); //flying enemies need a Y axis
     //float distanceToBat = Vector2Distance(position, player.position);
@@ -515,7 +518,7 @@ void NPC::HandleGhost(Player& player, float& distanceToPlayer){ //Also Bats. sho
 
 }
 
-void NPC::HandleZombie(Player& player, float& distanceToPlayer){
+void NPC::HandleZombie(){
     if (!isActive) return; 
     if (isZombie) hasTarget = false; //was setting hasTarget to false for police
     float distToDest = fabs(position.x - destination.x);
@@ -555,7 +558,7 @@ void NPC::HandleZombie(Player& player, float& distanceToPlayer){
 
             
             if (targetNPC->hitTimer <= 0){
-                targetNPC->TakeDamage(25, player);
+                targetNPC->TakeDamage(25);
                 if (!SoundManager::getInstance().IsSoundPlaying("boneBreak")){
                      SoundManager::getInstance().PlayPositionalSound("boneBreak", position, player.position, 200);
 
@@ -587,7 +590,7 @@ void NPC::HandleZombie(Player& player, float& distanceToPlayer){
 
 }
 
-void NPC::HandleMiB(Player& player, float& distanceToPlayer, GameState& gameState){
+void NPC::HandleMiB(){
 
     //MIB follow player up to a point then stops and waits. 
     if (gameState != LOBBY && MiB && distanceToPlayer < 1000 && !hasTarget && !attacking){
@@ -634,7 +637,7 @@ void NPC::HandleMiB(Player& player, float& distanceToPlayer, GameState& gameStat
     }
 }
 
-void NPC::HandleRobot(Player& player, float& distanceToPlayer){
+void NPC::HandleRobot(){
     attacking = false;
     //agro = true;
     if (robot && distanceToPlayer < detectionRange && agro){
@@ -668,7 +671,7 @@ void NPC::HandleRobot(Player& player, float& distanceToPlayer){
 
 }
 
-void NPC::HandlePolice(Player& player, float& distanceToPlayer){
+void NPC::HandlePolice(){
     attacking = false;
     if (police && distanceToPlayer < detectionRange && agro){ //police chase player
         hasTarget = true;
@@ -715,7 +718,7 @@ void NPC::HandlePolice(Player& player, float& distanceToPlayer){
             frameSpeed = 12;
             SetAnimationState(ATTACKING);
             if (targetNPC->isActive && currentFrame == 4){
-                targetNPC->TakeDamage(30, player);
+                targetNPC->TakeDamage(30);
                 PlaySound(SoundManager::getInstance().GetSound("BoneCrack"));
 
             }
@@ -738,7 +741,7 @@ void NPC::HandleAnimationLogic(){
     frameCounter += GetFrameTime() * frameSpeed; //accumulate frametime until it's time to switch. framecounter = time between frames, 0.0167 * 8 
     
     if (frameCounter >= 1.0f) { 
-        frameCounter -= 1.0f; //subtract 1, as to not lose any accumulated time. prevents frame skipping
+        frameCounter = 0.0f; //restet to 0, we dont want to save any frames do to lag, causes NPCs to stutter at the beginning of game. 
         currentFrame++;
 
         // Determine the number of frames based on the current animation, all animations are 7 frames except idle
@@ -781,10 +784,10 @@ void NPC::HandleAnimationLogic(){
 
 }
 
-void NPC::Update(Player& player, GameState& gameState) {
+void NPC::Update() {
     if (!isActive) return;  // Skip update if the NPC is not active
     if (!isZombie && !robot) riseTimer = 0;
-    float distance_to_player = abs(player.position.x - position.x);
+    distanceToPlayer = abs(player.position.x - position.x);
 
     bloodEmitter.UpdateParticles(GetFrameTime()); //update blood
     
@@ -797,14 +800,14 @@ void NPC::Update(Player& player, GameState& gameState) {
         isTargeted = false;
     }
 
-    if (distance_to_player >= 30){
+    if (distanceToPlayer >= 30){
         highLight = false;//Turn off highlights on any interacting NPCs when far enough way. 
         interacting = false; // maybe this is a good idea too.
     }
 
     if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
-        if (distance_to_player < 20 && !police && !isZombie){ //dont key up on police. Could accidently agro them. 
-            HandleNPCInteraction(player, gameState); //talk to NPCs
+        if (distanceToPlayer < 20 && !police && !isZombie){ //dont key up on police. Could accidently agro them. 
+            HandleNPCInteraction(); //talk to NPCs
 
         }
     }
@@ -817,7 +820,7 @@ void NPC::Update(Player& player, GameState& gameState) {
         // Update frame counter and animation logic for RISING
         frameCounter += GetFrameTime() * frameSpeed;
         if (frameCounter >= 1.0f) {
-            frameCounter -= 1.0f;
+            frameCounter = 0.0f; //0 instead of -= 1, to prevent glichiness. 
             currentFrame++;
 
         }
@@ -867,11 +870,11 @@ void NPC::Update(Player& player, GameState& gameState) {
     attacking = false;
     
 
-    if (MiB) HandleMiB(player, distance_to_player, gameState);
-    if (police) HandlePolice(player, distance_to_player); //handle distance checks and attack logic. 
-    if (isZombie) HandleZombie(player, distance_to_player);
-    if (ghost || bat) HandleGhost(player, distance_to_player); //also bats
-    if (robot) HandleRobot(player, distance_to_player);
+    if (MiB) HandleMiB();
+    if (police) HandlePolice(); //handle distance checks and attack logic. 
+    if (isZombie) HandleZombie();
+    if (ghost || bat) HandleGhost(); //also bats
+    if (robot) HandleRobot();
 
     Vector2 directionToPlayer = {
     player.position.x - position.x,
@@ -992,7 +995,7 @@ void NPC::Update(Player& player, GameState& gameState) {
     }
 }
 
-void NPC::Render(ShaderResources& shaders) {
+void NPC::Render() {
     if (!isActive) return;  // Skip rendering if the NPC is not active. NPC still exists though
 
     // Calculate the source rectangle for the current frame of the animation
@@ -1068,7 +1071,7 @@ void NPC::SetAnimationState(AnimationState newState) {
     }
 }
 
-void NPC::ClickNPC(Vector2 mousePosition, Camera2D& camera, Player& player, GameState& gameState){
+void NPC::ClickNPC(){
     if (!isActive) return; //dont click on inactive NPCs 
 
     if (talkTimer > 0){
@@ -1098,7 +1101,7 @@ void NPC::ClickNPC(Vector2 mousePosition, Camera2D& camera, Player& player, Game
         if (CheckCollisionPointRec(mouseWorldPos, npcHitbox)){
             float distance = abs(mouseWorldPos.x - player.position.x);
             if (distance < 75 && !isZombie){ // NPC must be close to interact
-                HandleNPCInteraction(player, gameState);
+                HandleNPCInteraction();
                 
             }
 
@@ -1155,7 +1158,7 @@ bool NPC::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition
 }
 
 
-void NPC::TakeDamage(int damage, Player& player) {
+void NPC::TakeDamage(int damage) {
     if (!isDying){
         health -= damage;
         hitTimer = 0.3f; // Tint the sprite red for 0.3 seconds

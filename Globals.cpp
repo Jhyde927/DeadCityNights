@@ -4,7 +4,7 @@
 PlayerCar player_car;
 Earth earth;
 MagicDoor magicDoor;
-MagicDoor magicDoor2; //make a vector of magic doors in globals.cpp
+MagicDoor magicDoor2; 
 UFO ufo;
 Train train;
 Elevator elevator1;
@@ -26,7 +26,7 @@ void InitCamera() {
 //init camera, and targetZoom, delcared in Globals.h
     int GAME_SCREEN_WIDTH = 1024;
     int GAME_SCREEN_HEIGHT = 1024;
-    camera.offset = (Vector2){ GAME_SCREEN_WIDTH / 2.0f, GAME_SCREEN_HEIGHT / 2.0f + 188.0f }; //offset 188 from middle for bigger sky
+    camera.offset = (Vector2){ GAME_SCREEN_WIDTH / 2.0f, GAME_SCREEN_HEIGHT / 2.0f + 188.0f }; //offset 188 below middle for bigger sky
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
     targetZoom = camera.zoom;  // Sync with initial zoom
@@ -70,11 +70,9 @@ void InitElevator(Elevator& elevator, Vector2 position){
     elevator.floorFrameTimer = 0.0; //ticks up when fading out and elevator is occupied and closed. 
     elevator.floorFrameTime= 0.18; //stops on floor 7. 0.01667 second per loop 
     elevator.floorOffset = Vector2 {32, -10}; //floorNumbers offset from elevator position
-    elevators.push_back(elevator);
+
+    elevators.push_back(elevator); //add to global elevators vector
 }
-
-
-
 
 
 void InitUFO(){
@@ -114,8 +112,6 @@ void InitializeTrain() {
     train.state = MovingToStation;
 
     // Calculate the distance needed to stop
-
-
     float stoppingDistance = (train.maxSpeed * train.maxSpeed) / (2.0f * train.deceleration);
     train.slowDownStartX = 2500.0f + stoppingDistance;
 }

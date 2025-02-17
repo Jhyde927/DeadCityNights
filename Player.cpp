@@ -361,7 +361,7 @@ void Player::Reload(){
         }
         
 
-    }else if (currentWeapon == SHOTGUN && shotgunBulletCount < 2){// you can't reload unless fully empty, this simplifies things. 
+    }else if (currentWeapon == SHOTGUN && shotgunBulletCount < 2){// reload anytime but full
         if (!isReloading && shells > 0) { // Ensure there are shells to reload
             int shellsNeeded = 2 - shotgunBulletCount; // How many shells we can load
             int shellsToUse = (shells >= shellsNeeded) ? shellsNeeded : shells; // Use available shells
@@ -372,8 +372,8 @@ void Player::Reload(){
             isReloading = true;
             shotgunReloadTime = 0.7f; //start the reload timer
 
-            //shotgunBulletCount = 2;
-            bulletCount = MAX_BULLETS;//shotgun uses same bullets array
+
+            bulletCount = MAX_BULLETS;//shotgun uses same bullets array //refill bullets
             PlaySound(SoundManager::getInstance().GetSound("ShotgunReload"));
 
         }
@@ -622,16 +622,12 @@ void Player::shootLogic(){
         swinging = false;
     }
 
-
-
-
     //AIMING
     isAiming = ((hasGun || hasShotgun || hasMac10) && (IsKeyDown(KEY_F) || IsKeyDown(KEY_LEFT_CONTROL) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) && !isShooting && !isReloading && AllowGuns);
 
 
     //SHOOTING REVOLVER
     if (currentWeapon == REVOLVER && AllowGuns){
-
         if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && revolverBulletCount <= 0){
             //SoundManager::getInstance().GetSound("dryFire");
             PlaySound(SoundManager::getInstance().GetSound("dryFire"));
@@ -653,13 +649,14 @@ void Player::shootLogic(){
         }
     //SHOOTING SHOTGUN
     }else if (currentWeapon == SHOTGUN && AllowGuns){
+        //Dry Fire
         if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && shotgunBulletCount <= 0){
             //SoundManager::getInstance().GetSound("dryFire");
             PlaySound(SoundManager::getInstance().GetSound("dryFire"));
 
         }
 
-
+        //Shoot shotgun
         if (hasShotgun && shotgunBulletCount > 0 && isAiming && (IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && canShoot) {
             isShooting = true;
             canShoot = false;
@@ -677,6 +674,7 @@ void Player::shootLogic(){
         }
         //SHOOTING MAC10
     }else if (currentWeapon == MAC10 && AllowGuns){
+        //dry fire
         if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && mac10BulletCount <= 0){
             //SoundManager::getInstance().GetSound("dryFire");
             PlaySound(SoundManager::getInstance().GetSound("dryFire"));

@@ -107,7 +107,7 @@ public:
         
         
         // Set current voice and play it
-        currentVoice = it->second; //second means the value, in a key value pair. 
+        currentVoice = it->second; 
         ::PlaySound(currentVoice);
         voicePlaying = true;
     }

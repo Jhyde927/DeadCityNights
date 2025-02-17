@@ -530,7 +530,7 @@ void crowbarAttack(std::vector<NPC>& enemies){
                     PlaySound(SoundManager::getInstance().GetSound("crowbarAttack"));
                     
                 }
-                zombie.TakeDamage(10, player); //2 hits to kill a zombie
+                zombie.TakeDamage(10); //2 hits to kill a zombie
                 return; //does this help?
             }
 
@@ -2013,7 +2013,7 @@ void CheckLaserNPCCollisions(std::vector<NPC>& npcs){
             for (NPC& npc : npcs){
                 if (npc.isActive && !npc.robot && npc.CheckHit(bullets[i].previousPosition, bullets[i].position, laserSize)) {
                     bullets[i].isActive = false;
-                    npc.TakeDamage(laserDamage, player);
+                    npc.TakeDamage(laserDamage);
                     break;
                 }
             }
@@ -2031,7 +2031,7 @@ void CheckBulletNPCCollisions(std::vector<NPC>& npcs) { //Bullet collision with 
                 if (npc.isActive && npc.CheckHit(bullets[i].previousPosition, bullets[i].position, bulletSize)) { //
                     // Collision detected
                     bullets[i].isActive = false;  // Deactivate the bullet
-                    npc.TakeDamage(bullets[i].damage, player);  // Bullets can do more or less damage, use the bullet's damage, it's set when firing
+                    npc.TakeDamage(bullets[i].damage);  // Bullets can do more or less damage, use the bullet's damage, it's set when firing
                     
                     break;  // Exit loop since the bullet is deactivated
                 }
@@ -2752,9 +2752,9 @@ void RenderSubway(){
     player.DrawPlayer(resources, gameState, camera, shaders); //draw player in front of background and behind train
 
     for (NPC& npc : npcs){
-        npc.Update(player, gameState);
-        npc.Render(shaders);
-        npc.ClickNPC(mousePosition, camera, player, gameState);
+        npc.Update();
+        npc.Render();
+        npc.ClickNPC();
 
         if (npc.interacting){ //Take the first one you find. only one npc should be able to interact. If you click on multiple NPCs really fast
         //the dialog box jumps around depending on the timer. Need a way to cancel all interaction except the last one. 
@@ -2933,8 +2933,8 @@ void RenderAstral(){
 
     //MOVE ENEMIES 
     for (NPC& ghost : astralGhosts){
-        ghost.Update(player, gameState);
-        ghost.Render(shaders);
+        ghost.Update();
+        ghost.Render();
         
         if (ghost.agro){
             Flocking(astralGhosts);
@@ -2948,8 +2948,8 @@ void RenderAstral(){
     }
 
     for (NPC& bat : astralBats){
-        bat.Update(player, gameState);
-        bat.Render(shaders);
+        bat.Update();
+        bat.Render();
         
         if (bat.agro){
             Flocking(astralBats);
@@ -3147,8 +3147,8 @@ void RenderCemetery(){
     }
 
     for (NPC& zombie : zombies){ //update and draw zombies in cemetery
-        zombie.Update(player, gameState);
-        zombie.Render(shaders);
+        zombie.Update();
+        zombie.Render();
 
     }
 
@@ -3348,8 +3348,8 @@ void RenderGraveyard(){
 
     }
     for (NPC& zombie : zombies){
-        zombie.Update(player, gameState);
-        zombie.Render(shaders);
+        zombie.Update();
+        zombie.Render();
 
         if (zombie.isDying && !firstBlood && gameState == GRAVEYARD){ //first zombie that is dying in the graveyard
             firstBlood = true;
@@ -3362,9 +3362,9 @@ void RenderGraveyard(){
     if (!start) show_dbox = false; //set to false to hide dbox when not over spot unless start where we first show tutorial text
 
     for (NPC& ghost: ghosts){
-        ghost.Update(player, gameState);
-        ghost.Render(shaders);
-        ghost.ClickNPC(mousePosition, camera, player, gameState);
+        ghost.Update();
+        ghost.Render();
+        ghost.ClickNPC();
         //if (ghost.health > 0) ghost.isActive = true; <- this caused some major pains
 
         if (ghost.interacting && player.hasWatch){
@@ -3585,9 +3585,9 @@ void RenderLot(){
 
     
     for (NPC& hobo : hobos){
-        hobo.Update(player, gameState);
-        hobo.Render(shaders);
-        hobo.ClickNPC(mousePosition, camera, player, gameState);
+        hobo.Update();
+        hobo.Render();
+        hobo.ClickNPC();
 
         if (hobo.interacting){ 
    
@@ -3729,9 +3729,9 @@ void RenderPark(){
     for (NPC& npc : ParkNpcs){  
         if (npc.MiB){//update mibs if cemeterykey and no zombies. Mib activates zombies, then disapears
             if (hasCemeteryKey && mibTimer > 0){//mibTimer is initially set to 3 seconds
-                npc.Update(player, gameState);
-                npc.Render(shaders);
-                npc.ClickNPC(mousePosition, camera, player, gameState);
+                npc.Update();
+                npc.Render();
+                npc.ClickNPC();
                 //mib shows up in park, interacting with him spawns zombies and he vanishes
                 if (npc.interacting){
                     dboxPosition = npc.position;
@@ -3747,18 +3747,18 @@ void RenderPark(){
             }
 
         }else if (npc.police){
-            npc.Update(player, gameState);
-            npc.Render(shaders);
-            npc.ClickNPC(mousePosition, camera, player, gameState);
+            npc.Update();
+            npc.Render();
+            npc.ClickNPC();
             UpdatePoliceTarget(npc, ParkNpcs);
 
 
 
 
         }else{//update and render all other NPCs in the Park, zombies can attack NPCs in the park
-            npc.Update(player, gameState);
-            npc.Render(shaders);
-            npc.ClickNPC(mousePosition, camera, player, gameState);
+            npc.Update();
+            npc.Render();
+            npc.ClickNPC();
             if (npc.interacting){
                 dboxPosition = npc.position;
                 show_dbox = true;
@@ -3777,8 +3777,8 @@ void RenderPark(){
     }
 
     for (NPC& zombie : zombies){
-        zombie.Update(player, gameState);
-        zombie.Render(shaders);
+        zombie.Update();
+        zombie.Render();
         UpdateZombieTarget(zombie, ParkNpcs);
     }
 
@@ -3942,9 +3942,9 @@ void RenderOffice(){
     if (!player.onElevator) player.DrawPlayer(resources, gameState, camera, shaders);
 
     for (NPC& office_npc : officeWorkers){
-        office_npc.Update(player, gameState);
-        office_npc.Render(shaders);
-        office_npc.ClickNPC(mousePosition, camera, player, gameState);
+        office_npc.Update();
+        office_npc.Render();
+        office_npc.ClickNPC();
 
         if (office_npc.interacting){
             phrase = office_npc.speech;
@@ -3962,8 +3962,8 @@ void RenderOffice(){
 
 
     for (NPC& zombie : zombies){
-        zombie.Update(player, gameState);
-        zombie.Render(shaders);
+        zombie.Update();
+        zombie.Render();
         UpdateZombieTarget(zombie, officeWorkers);
     }
 
@@ -4115,9 +4115,9 @@ void RenderLobby(){
     //DRAW ROBOTS
     for (NPC& robot : lobbyRobots){ //No lobby robots at the moment. robots are spawned in later though so keep this. 
         if (robot.isActive){
-            robot.Update(player, gameState);
-            robot.Render(shaders);
-            robot.ClickNPC(mousePosition, camera, player, gameState);
+            robot.Update();
+            robot.Render();
+            robot.ClickNPC();
 
             if (globalAgro) robot.agro = true; //if one robot is angry they all are
 
@@ -4140,9 +4140,9 @@ void RenderLobby(){
 
     for (NPC& mib : lobbyMibs){
         if (mib.isActive){
-            mib.Update(player, gameState); 
-            mib.Render(shaders);
-            mib.ClickNPC(mousePosition, camera, player, gameState);
+            mib.Update(); 
+            mib.Render();
+            mib.ClickNPC();
 
             if (globalAgro) mib.agro = true; //set other mibs to agro 
 
@@ -4171,8 +4171,8 @@ void RenderLobby(){
     //Draw lobby NPC
     for (NPC& npc : lobbyNPCs){
         if (npc.isActive){
-            npc.Update(player, gameState);
-            npc.Render(shaders);
+            npc.Update();
+            npc.Render();
 
             //Lobby NPCs can't talk, it interferes with Mib Convo
 
@@ -4185,8 +4185,8 @@ void RenderLobby(){
     }
 
     for (NPC& zombie : zombies){
-        zombie.Update(player, gameState);
-        zombie.Render(shaders);
+        zombie.Update();
+        zombie.Render();
         UpdateZombieTarget(zombie, lobbyNPCs);
     }
 
@@ -4328,9 +4328,9 @@ void RenderNecroTech(){
     //showPasswordInterface = false; //dont show interface if not interacting. 
     for (NPC& robot : robots){
         if (robot.isActive){
-            robot.Update(player, gameState);
-            robot.Render(shaders);
-            robot.ClickNPC(mousePosition, camera, player, gameState);
+            robot.Update();
+            robot.Render();
+            robot.ClickNPC();
             if (robot.interacting){
                 phrase = robot.speech;
                 show_dbox = true;
@@ -4481,8 +4481,8 @@ void RenderOutside() {
     //mibs show up after you get cemetery key. They don't do anything yet. 
     if (hasCemeteryKey){
         for (NPC& mib : mibs){
-            mib.Update(player, gameState);
-            mib.Render(shaders);
+            mib.Update();
+            mib.Render();
             
         }
 
@@ -4491,9 +4491,9 @@ void RenderOutside() {
     dealer = false;
     teller = false;
     for (NPC& npc : npcs){ //iterate NPCs, update/render, check for player interaction.
-        npc.Update(player, gameState);
-        npc.Render(shaders);
-        npc.ClickNPC(mousePosition, camera, player, gameState);
+        npc.Update();
+        npc.Render();
+        npc.ClickNPC();
 
         if (npc.interacting){ //Take the first one you find. only one npc should be able to interact. If you click on multiple NPCs really fast
         //the dialog box jumps around depending on the timer. Need a way to cancel all interaction except the last one. 

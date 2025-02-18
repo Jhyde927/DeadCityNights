@@ -15,6 +15,7 @@
 #include "Particle.h"
 #include "GameEnums.h"
 #include "Globals.h"
+#include "Grenade.h"
 
 
 
@@ -79,6 +80,9 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     targetedTimer = 0.0f;
     agroZombie = false;
     distanceToPlayer = 0;
+    cyberZombie = false;
+    animationTimer = 0.0;
+    isMoving = false;
 
  
 }
@@ -671,6 +675,61 @@ void NPC::HandleRobot(){
 
 }
 
+void NPC::HandleCyberZombie(){
+    agro = true;
+    if (distanceToPlayer < detectionRange && agro){
+        hasTarget = true;
+        destination = player.position;
+        facingRight = player.position.x > position.x;
+        speed = 75;
+
+    }
+
+    if (distanceToPlayer < 200 && agro){ //150 for longer distance, more of a chance for NPCs to get in the way
+        destination = position;
+        //shoot
+        if (can_shoot && !isDying){
+            //SoundManager::getInstance().PlayPositionalSound("laser", position, player.position, 500);
+            can_shoot = false;
+            animationTimer = 0.9;
+            SetAnimationState(ATTACKING);
+            attacking = true;
+            float speed = 200.0f;
+            Vector2 grenadeVelocity = {
+                facingRight ? speed : -speed,  // Horizontal velocity based on facing direction
+                -80.0f                             // Initial upward arc
+            };
+
+            
+
+            // Add the grenade to the global grenades vector
+            grenades.emplace_back(position + Vector2 {32, 16}, grenadeVelocity);
+            //NPCfireBullet(*this, false, 10, true); //laser = true
+            shootTimer = 3.0f;
+
+        }
+        
+    }
+
+    if (shootTimer > 0){
+        shootTimer -= GetFrameTime();
+        
+        
+    
+    }else{
+        can_shoot = true;
+        attacking = false;
+    }
+
+    if (animationTimer > 0){ //only play grenade attack animation once. 
+        animationTimer -= GetFrameTime();
+    }else{
+
+        if (!isDying && !isMoving) SetAnimationState(IDLE);
+    }
+
+}
+
 void NPC::HandlePolice(){
     attacking = false;
     if (police && distanceToPlayer < detectionRange && agro){ //police chase player
@@ -790,7 +849,7 @@ void NPC::Update() {
     distanceToPlayer = abs(player.position.x - position.x);
 
     bloodEmitter.UpdateParticles(GetFrameTime()); //update blood
-    
+
 
     if (targetedTimer > 0){ //dont stay targeted forever, go back to normal after 5 seconds. 
         targetedTimer -= GetFrameTime();
@@ -873,6 +932,7 @@ void NPC::Update() {
     if (MiB) HandleMiB();
     if (police) HandlePolice(); //handle distance checks and attack logic. 
     if (isZombie) HandleZombie();
+    if (cyberZombie) HandleCyberZombie();
     if (ghost || bat) HandleGhost(); //also bats
     if (robot) HandleRobot();
 
@@ -884,7 +944,7 @@ void NPC::Update() {
     directionToPlayer = Vector2Normalize(directionToPlayer);
 
 
-
+    isMoving = false;
 
     //NPCs choose a random position called destination. they move toward destination until they arrive then wait a random amount of time and repeat 
     if (!isDying && riseTimer <= 0 && !attacking) { //MOVE NPCs and Police and Zombies and Ghosts. 
@@ -897,11 +957,13 @@ void NPC::Update() {
                     position.x += speed * GetFrameTime();
                     facingRight = true;
                     SetAnimationState(WALK);
+                    isMoving = true;
                 
                 } else if (position.x > destination.x) {
                     position.x -= speed * GetFrameTime();
                     facingRight = false;
                     SetAnimationState(WALK);
+                    isMoving = true;
                     
                 }     
 
@@ -1174,7 +1236,7 @@ void NPC::TakeDamage(int damage) {
     } 
 
     if (!robot && !ghost){
-        bloodEmitter.SpawnBlood(5, !facingRight); //everyone bleeds, except robots and ghosts
+        bloodEmitter.SpawnBlood(5,RED, !facingRight); //everyone bleeds, except robots and ghosts
         
 
     } 
@@ -1277,7 +1339,7 @@ void NPC::TakeDamage(int damage) {
     }
 
     if (health <= 0 && !isDying && !robot){ //NPC killed by zombie
-
+        std::cout << "DIE\n";
         riseTimer = 0; 
         isDying = true;           // Start dying process   
         SetAnimationState(DEATH);  // Set to death animation

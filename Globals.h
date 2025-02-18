@@ -5,12 +5,29 @@
 #include "GameEnums.h"
 #include "platform.h"
 #include <vector>
+#include "NPC.h"
 
 //A place to put random structs and vectors. That isn't main. 
 
 // Declare global Camera2D
 extern Camera2D camera;
-extern float targetZoom; 
+extern float targetZoom;
+extern std::vector<NPC> npcs; //outside // subway
+extern std::vector<NPC> zombies; //cemetery/graveyard
+extern std::vector<NPC>hobos; //lot
+extern std::vector<NPC>ghosts; //graveyard friendly ghost
+extern std::vector<NPC>bats; //not used
+extern std::vector<NPC>mibs; //outside
+extern std::vector<NPC>astralGhosts;
+extern std::vector<NPC>astralBats;
+extern std::vector<NPC>ParkNpcs;
+extern std::vector<NPC>robots; //necrotech
+extern std::vector<NPC>lobbyRobots;
+extern std::vector<NPC>lobbyNPCs;
+extern std::vector<NPC>lobbyMibs;
+extern std::vector<NPC>officeWorkers;
+
+extern std::vector<NPC>cyberZombies;
 
 
 struct PlayerCar {
@@ -112,6 +129,7 @@ void InitElevator(Elevator& elevator, Vector2 position);
 void InitUFO();
 void InitializeTrain();
 void InitPlatforms();
+void InitBoxes();
 
 
 

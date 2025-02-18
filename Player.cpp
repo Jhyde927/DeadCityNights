@@ -9,6 +9,8 @@
 #include <vector>
 #include "platform.h"
 #include "shaderControl.h"
+#include "Globals.h"
+#include "Platform.h"
 
 
 WeaponType currentWeapon;  // To track the current weapon
@@ -402,7 +404,7 @@ void Player::Reload(){
 }
 
 
-bool Player::CheckIfOnPlatform(const std::vector<Platform>& platforms) {
+bool Player::CheckIfOnPlatform() {
     float hitboxWidth = 7.0;
     float hitboxHeight = 24.0f;
     // Create the player's collision rectangle
@@ -442,7 +444,7 @@ bool Player::CheckIfOnPlatform(const std::vector<Platform>& platforms) {
 }
 
 
-void Player::playerPhysics(float deltaTime, std::vector<Platform> platforms){
+void Player::playerPhysics(float deltaTime){
     if (enter_train) return;
     if (dropTimer > 0){ //drop through platforms for 1 second
         dropTimer -= GetFrameTime();
@@ -486,7 +488,7 @@ void Player::playerPhysics(float deltaTime, std::vector<Platform> platforms){
     isOnGround = false;
     //playerRect.y = position.y;
     if (!dropping){
-        if (CheckIfOnPlatform(platforms)){
+        if (CheckIfOnPlatform()){
             isOnGround = true;
             
             
@@ -513,7 +515,7 @@ void Player::playerPhysics(float deltaTime, std::vector<Platform> platforms){
 
 
 
-void Player::updateAnimations(GameResources& resources){
+void Player::updateAnimations(){
     if (isShooting) {
         if (currentWeapon == MAC10) frameSpeed = frameSpeed * 10;
         isRunning = false; // fixed bug where isrunning was causing framespeed to be higher so you could shoot 1.5 times as fast. 
@@ -698,7 +700,7 @@ void Player::shootLogic(){
     }  
 }
 
-void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vector2& mousePosition, Camera2D& camera, std::vector<Platform> platforms) {
+void Player::UpdateMovement() {
     isMoving = false; //reset is moving to false at the start of the frame. If it remains false all the way though to the next frame, we are not moving. 
 
     float deltaTime = GetFrameTime();
@@ -734,16 +736,16 @@ void Player::UpdateMovement(GameResources& resources,  GameState& gameState, Vec
         HandleInput(maxSpeedX); //check input before physics
     
     }
-    playerPhysics(deltaTime, platforms);
+    playerPhysics(deltaTime);
 
     
-    updateAnimations(resources);
+    updateAnimations();
 }
 
 
 
 // Method for drawing the player
-void Player::DrawPlayer(const GameResources& resources, GameState& gameState, Camera2D& camera, ShaderResources& shaders) {
+void Player::DrawPlayer() {
     Texture2D currentSheet;
     Rectangle sourceRec;
     int frameWidth = 64; // Assuming each frame is 64 pixels wide

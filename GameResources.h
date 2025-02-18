@@ -111,6 +111,8 @@ struct GameResources {
     Texture2D pocketWatch;
     Texture2D pocketWatchWorld;
     Texture2D crowbarWorld;
+    Texture2D cyberZombieSheet;
+    Texture2D grenadeSheet;
     
 
     Font defaultFont;

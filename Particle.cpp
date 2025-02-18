@@ -14,7 +14,7 @@ void Emitter::SetMaxParticles(int max) {
 }
 
 // **Blood spray effect** (limited number of particles)
-void Emitter::SpawnBlood(int amount, bool facingRight) {
+void Emitter::SpawnBlood(int amount, Color color, bool facingRight) {
     float baseAngle = facingRight ? 0.0f : 180.0f; 
 
     for (int i = 0; i < amount; i++) {
@@ -53,7 +53,7 @@ void Emitter::SpawnExplosion(int amount, Color explosionColor) {
 
         float speed = GetRandomValue(speedMin, speedMax) / 100.0f;
         if (explosionColor.r == YELLOW.r && explosionColor.g == YELLOW.g && explosionColor.b == YELLOW.b){
-            speed = speed * 2;
+            speed = speed * 4; //if the color is yellow, it's a grenade explosion and should be faster
         }
         p.velocity = { cosf(radians) * speed, sinf(radians) * speed };
 
@@ -87,6 +87,6 @@ void Emitter::DrawParticles() const {
     for (const auto& p : particles) {
         //DrawPixel(p.position.x, p.position.y, p.color);
         DrawRectangle(p.position.x, p.position.y, 2, 2, p.color); //2x2 square for thicker pixelated blood
-
+    
     }
 }

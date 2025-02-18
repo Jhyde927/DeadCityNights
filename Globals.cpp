@@ -1,6 +1,7 @@
 #include "Globals.h"
 
 
+//difine the instances of the random structs
 PlayerCar player_car;
 Earth earth;
 MagicDoor magicDoor;
@@ -8,12 +9,31 @@ MagicDoor magicDoor2;
 UFO ufo;
 Train train;
 Elevator elevator1;
-Elevator elevator2; //same for elevators
+Elevator elevator2;
 
 std::vector<Platform> platforms;
 std::vector<MagicDoor> magicDoors;
 
 std::vector<Elevator> elevators;
+
+std::vector<NPC> npcs; //outside // subway
+std::vector<NPC> zombies; //cemetery/graveyard
+std::vector<NPC>hobos; //lot
+std::vector<NPC>ghosts; //graveyard friendly ghost
+std::vector<NPC>bats; //not used
+std::vector<NPC>mibs; //outside
+std::vector<NPC>astralGhosts;
+std::vector<NPC>astralBats;
+std::vector<NPC>ParkNpcs;
+std::vector<NPC>robots; //necrotech
+std::vector<NPC>lobbyRobots;
+std::vector<NPC>lobbyNPCs;
+std::vector<NPC>lobbyMibs;
+std::vector<NPC>officeWorkers;
+
+std::vector<NPC>cyberZombies;
+
+
 
 
 Camera2D camera = { 0 };
@@ -142,5 +162,6 @@ void InitPlatforms() {
     platforms.emplace_back(2400.0f, -650.0f, 200.0f, 20.0f, WHITE);
     platforms.emplace_back(1400.0f, -700.0f, 2000.0f, 20.0f, WHITE);
 }
+
 
 

@@ -6,6 +6,7 @@
 #include "Player.h"
 #include <string>
 #include "Particle.h"
+#include "Grenade.h"
 
 
 
@@ -81,9 +82,14 @@ public:
     bool zRight;
     float targetedTimer;
     bool agroZombie;
+    bool cyberZombie;
+    float animationTimer;
+    bool isMoving;
 
     // Add an emitter for each NPC
     Emitter bloodEmitter;
+
+
   
 
     NPC* targetNPC;
@@ -102,6 +108,7 @@ public:
     void HandlePolice();
     void HandleZombie();
     void HandleGhost();
+    void HandleCyberZombie();
     void HandleMiB();
     void HandleRobot();
     void TakeDamage(int damage);

@@ -21,6 +21,7 @@
 #include "Pickup.h"
 #include "Inventory.h"
 #include "raygui.h"
+#include "Grenade.h"
 
 
 //Remember: The Law is One. 
@@ -192,28 +193,9 @@ Vector2 pstart_by_car = Vector2{1738, 700};
 Vector2 dboxPosition;
 Color ApartmentBgColor {41, 48, 63, 255};
 
-
-std::vector<NPC> npcs; //outside // subway
-std::vector<NPC> zombies; //cemetery/graveyard
-std::vector<NPC>hobos; //lot
-std::vector<NPC>ghosts; //graveyard friendly ghost
-std::vector<NPC>bats; //not used
-std::vector<NPC>mibs; //outside
-std::vector<NPC>astralGhosts;
-std::vector<NPC>astralBats;
-std::vector<NPC>ParkNpcs;
-std::vector<NPC>robots; //necrotech
-std::vector<NPC>lobbyRobots;
-std::vector<NPC>lobbyNPCs;
-std::vector<NPC>lobbyMibs;
-std::vector<NPC>officeWorkers;
-
+Emitter explosionEmitter;
 
 std::vector<Box> boxes; //boxes stays in main because undefined behavior do to inclusion hell. 
-
-//externs in Globals.h 
-
-
 
 GameState gameState = OUTSIDE;
 
@@ -225,7 +207,7 @@ bool firstTransition = true;
 // Initialize random number generator
 std::random_device rd;   // Seed for the random number engine
 std::mt19937 gen(rd());  // Mersenne Twister engine
-std::uniform_real_distribution<float> dis(0.0f, 4000.0f); // Uniform distribution between 1000 and 4000 for NPC distribution
+std::uniform_real_distribution<float> dis(0.0f, 4000.0f); // Uniform distribution between 1000 and 4000 for NPC distribution outside. 
 
 
 void PrintVector2(const Vector2& vec) {
@@ -388,6 +370,24 @@ bool AreAllNPCsDeactivated(const std::vector<NPC>& npcs) {
     });
 }
 
+
+void HandleGrenades(){
+    // Update all grenades
+
+    for (auto& grenade : grenades) {
+        grenade.Update(GetFrameTime());
+        grenade.Draw();
+   
+        
+    }
+
+    // Remove non Active grenades
+    grenades.erase(
+        std::remove_if(grenades.begin(), grenades.end(), [](const Grenade& g) { return !g.isActive; }),
+        grenades.end()
+    );
+
+}
 
 
 void DrawElevator(Elevator& elevator, Texture2D elevatorTexture, Texture2D floorTexture, int frameWidth, int frameHeight, float deltaTime) {
@@ -800,7 +800,7 @@ Vector2 GetRandomSpawnPositionX(Vector2 playerPos, float minDistance, float maxD
     // Adjust the spawn position based on the player's position and direction
     float spawnX = spawnOnRight ? playerPos.x + randomXOffset : playerPos.x - randomXOffset;
 
-    return Vector2{spawnX, playerPos.y};  // Keep the same y position as the player
+    return Vector2{spawnX, 700};  // Keep the same y position as the player
 }
 
 void StartZombieSpawn(int zombie_count){
@@ -2022,6 +2022,8 @@ void CheckLaserNPCCollisions(std::vector<NPC>& npcs){
     }
 }
 
+
+
 void CheckBulletNPCCollisions(std::vector<NPC>& npcs) { //Bullet collision with zombies, bats, and ghosts
     Vector2 bulletSize = {1, 1};  // Size of the bullet hitbox
 
@@ -2749,7 +2751,7 @@ void RenderSubway(){
     DrawTexturePro(resources.subwayForeground, {0, 0, static_cast<float>(resources.subwayForeground.width), static_cast<float>(resources.subwayForeground.height)},
                     {1024, 0, static_cast<float>(resources.subwayForeground.width), static_cast<float>(resources.subwayForeground.height)}, {0, 0}, 0.0f, WHITE);
     
-    player.DrawPlayer(resources, gameState, camera, shaders); //draw player in front of background and behind train
+    player.DrawPlayer(); //draw player in front of background and behind train
 
     for (NPC& npc : npcs){
         npc.Update();
@@ -2914,7 +2916,7 @@ void RenderAstral(){
     DrawMagicDoor(magicDoors[0]);
     DrawMagicDoor(magicDoors[1]);
 
-    player.DrawPlayer(resources, gameState, camera, shaders);
+    player.DrawPlayer();
 
 
     DrawTexturePro(resources.AstralForeground, {0, 0, static_cast<float>(resources.AstralMidground.width), static_cast<float>(resources.AstralMidground.height)},
@@ -3089,7 +3091,7 @@ void RenderCemetery(){
 
     BeginMode2D(camera);
 
-    
+
     HandleKeyboardAiming();
     
     ClearBackground(customBackgroundColor);
@@ -3130,6 +3132,8 @@ void RenderCemetery(){
     DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE);
     if (player.enter_car) EnterCar(player, player_car);
 
+    HandleGrenades();
+
     abductionBeam = false;
     if (player.position.x > 3929 && player.position.x < 3949){
         abductionBeam = true;
@@ -3146,6 +3150,8 @@ void RenderCemetery(){
         DrawItem(Vector2 {1870, 700}, "shovel");
     }
 
+
+
     for (NPC& zombie : zombies){ //update and draw zombies in cemetery
         zombie.Update();
         zombie.Render();
@@ -3155,7 +3161,7 @@ void RenderCemetery(){
 
 
     if (player.enter_car == false){// if enter car is false, dont render player or update position camera should stay focused on player pos. 
-        player.DrawPlayer(resources, gameState, camera, shaders);
+        player.DrawPlayer();
 
     }
     DrawBullets(); //draw bullets in cemetery after everything else. 
@@ -3344,7 +3350,7 @@ void RenderGraveyard(){
 
     EndShaderMode(); ////////////////////////////SHADER OFF
     if (player.enter_car == false){// if enter car is false, dont render player or update position camera should stay focused on player pos. 
-        player.DrawPlayer(resources, gameState, camera, shaders);
+        player.DrawPlayer();
 
     }
     for (NPC& zombie : zombies){
@@ -3621,20 +3627,10 @@ void RenderLot(){
     }
 
 
-    // for (Box& box : boxes){
-    //     if (box.scene == gameState){
-    //         box.Update(GetFrameTime());
-    //         box.Draw();
-
-    //     }
-        
-    // }
-
 
     
-    player.DrawPlayer(resources, gameState, camera, shaders);
+    player.DrawPlayer();
 
-    //DrawCrowbarPickup(mousePosition, camera);
 
     if (!player.hasCrowbar){
         DrawItem(Vector2 {2860, 700}, "crowbar");
@@ -3718,7 +3714,7 @@ void RenderPark(){
         SoundManager::getInstance().StopMusic("CarRun");
 
         //DRAW PLAYER
-        player.DrawPlayer(resources, gameState, camera, shaders);
+        player.DrawPlayer();
 
     }
 
@@ -3939,7 +3935,7 @@ void RenderOffice(){
 
 
     //DRAW PLAYER
-    if (!player.onElevator) player.DrawPlayer(resources, gameState, camera, shaders);
+    if (!player.onElevator) player.DrawPlayer();
 
     for (NPC& office_npc : officeWorkers){
         office_npc.Update();
@@ -4087,7 +4083,7 @@ void RenderLobby(){
 
 
     //DRAW PLAYER
-    if (!player.onElevator) player.DrawPlayer(resources, gameState, camera, shaders);
+    if (!player.onElevator) player.DrawPlayer();
 
 
 
@@ -4316,7 +4312,7 @@ void RenderNecroTech(){
     if (player.enter_car == false){// if enter car is false, dont render player or update position. camera should stay focused on player pos. 
         SoundManager::getInstance().StopMusic("CarRun");
     //DRAW PLAYER
-        player.DrawPlayer(resources, gameState, camera, shaders);
+        player.DrawPlayer();
     }
 
     if (show_carUI && !move_car && player.enter_car){ //destination menu //draw UI inside mode2d
@@ -4324,6 +4320,13 @@ void RenderNecroTech(){
     }
 
     if (robots[0].agro && robots[0].isActive) showPasswordInterface = false; //hide interface on shots fired. 
+
+    for (NPC& cZombie : cyberZombies){
+
+        cZombie.Update();
+        cZombie.Render();
+
+    }
 
     //showPasswordInterface = false; //dont show interface if not interacting. 
     for (NPC& robot : robots){
@@ -4345,6 +4348,7 @@ void RenderNecroTech(){
     }
 
     DrawBullets();
+    HandleGrenades();
     EndShaderMode(); ////////////////////////////SHADER OFF
 
 
@@ -4452,7 +4456,7 @@ void RenderOutside() {
                     {-639, 0, static_cast<float>(resources.foreground.width), static_cast<float>(resources.foreground.height)}, {0, 0}, 0.0f, WHITE);
     
 
-    
+    HandleGrenades();
     
      if (show_carUI && !move_car && player.enter_car){ //draw carUI inside Mode2d for reasons, show carUI infront of dialog box
         DrawCarUI(player_car, camera); //draw dialog box behind carUI
@@ -4487,6 +4491,8 @@ void RenderOutside() {
         }
 
     }
+
+
     
     dealer = false;
     teller = false;
@@ -4571,7 +4577,7 @@ void RenderOutside() {
         //DRAW PLAYER
         
            
-        player.DrawPlayer(resources, gameState, camera, shaders);
+        player.DrawPlayer();
             
         
     }
@@ -4887,6 +4893,15 @@ void spawnNPCs(){
 
         officeWorkers.push_back(officeWorker);
 
+    }
+
+    int cz = 1;
+    for (int i = 0; i < cz; i++){
+        Vector2 cz_pos = {static_cast<float>(2000 + i * 200), 700};
+        NPC cyberZombie = CreateNPC(resources.cyberZombieSheet, cz_pos, speed, IDLE, false, false);
+        cyberZombie.cyberZombie = true;
+        cyberZombie.isActive = true;
+        cyberZombies.push_back(cyberZombie);
     }
 
 
@@ -5517,7 +5532,7 @@ int main() {
         mousePosition = clampMouseCursor(mousePosition); //stop mouse from going offscreen when in fullscreen. 
         
 
-        if (!player.enter_car && !player.onElevator && !player.enter_train && !fading) player.UpdateMovement(resources, gameState, mousePosition, camera, platforms);  // Update player position and animation
+        if (!player.enter_car && !player.onElevator && !player.enter_train && !fading) player.UpdateMovement();  // Update player position and animation
         UpdateInventoryPosition(camera);
 
         
@@ -5540,6 +5555,7 @@ int main() {
         CheckBulletNPCCollisions(astralGhosts);
         CheckBulletNPCCollisions(bats);
         CheckBulletNPCCollisions(astralBats);
+        CheckBulletNPCCollisions(cyberZombies);
         
         CheckBulletNPCCollisions(robots); //player shoots necroTech robot
         CheckBulletNPCCollisions(lobbyRobots); //player shoots lobby robots
@@ -5556,6 +5572,7 @@ int main() {
         crowbarAttack(ghosts);
         crowbarAttack(robots);
         crowbarAttack(bats); //there are no bats, but just incase future bats
+        crowbarAttack(cyberZombies);
 
         crowbarAttackBoxes(boxes); //breakable boxes
 

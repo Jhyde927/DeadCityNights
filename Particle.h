@@ -21,7 +21,7 @@ public:
 
     Emitter(Vector2 pos);
     
-    void SpawnBlood(int amount, bool facingRight); // Blood spray in one direction, opposite of facingRight
+    void SpawnBlood(int amount, Color explosionColor, bool facingRight); // Blood spray in one direction, opposite of facingRight
     void SpawnExplosion(int amount, Color explosionColor); // Full circular explosion
 
     void UpdateParticles(float deltaTime);

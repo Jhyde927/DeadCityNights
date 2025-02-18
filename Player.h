@@ -104,14 +104,14 @@ public:
 
     // Methods
     void take_damage(int damage);
-    void UpdateMovement(GameResources& resources, GameState& gameState, Vector2& mousePosition, Camera2D& camera, std::vector<Platform> platforms);
-    void DrawPlayer(const GameResources& resources, GameState& gameState, Camera2D& camera, ShaderResources& shaders);
+    void UpdateMovement();
+    void DrawPlayer();
     void HandleInput(float speed);
     void Reload();
     void reloadLogic(float deltaTime);
-    void playerPhysics(float deltaTime, std::vector<Platform> platforms);
-    void updateAnimations(GameResources& resources);
-    bool CheckIfOnPlatform(const std::vector<Platform>& platforms);
+    void playerPhysics(float deltaTime);
+    void updateAnimations();
+    bool CheckIfOnPlatform();
     bool CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition, Vector2 bulletSize);
     void shootLogic();
  

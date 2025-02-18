@@ -109,6 +109,8 @@ void GameResources::Load() {
     pocketWatch = LoadTexture("assets/pocketWatchIcon.png");
     crowbarWorld = LoadTexture("assets/crowbarWorld.png");
     pocketWatchWorld = LoadTexture("assets/pocketWatchWorld.png");
+    cyberZombieSheet = LoadTexture("assets/cyberZombieSheet.png");
+    grenadeSheet = LoadTexture("assets/grenadeSheet.png");
 }
 
 // Unload all game resources
@@ -210,4 +212,6 @@ void GameResources::Unload() {
     UnloadTexture(pocketWatch);
     UnloadTexture(crowbarWorld);
     UnloadTexture(pocketWatchWorld);
+    UnloadTexture(cyberZombieSheet);
+    UnloadTexture(grenadeSheet);
 }

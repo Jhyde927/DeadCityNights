@@ -7,6 +7,7 @@
 #include <string>
 #include "Particle.h"
 #include "Grenade.h"
+//#include "AnimationPlayer.h"
 
 
 
@@ -28,7 +29,7 @@ public:
     Vector2 position;
     AnimationState currentAnimation;   
     Texture2D texture;
-    
+
     int currentFrame;
     float frameCounter;
     float frameSpeed;

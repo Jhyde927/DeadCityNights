@@ -1085,7 +1085,7 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
         { GRAVEYARD, { &zombies, &ghosts } },//we switch them all off when not in one of those 3 scenes. This means zombies will be retained for those scenes.
         //so if you spawn zombies in the park(and dont kill them all), they will also be in the graveyard and cemetery. 
         { PARK, { &ParkNpcs, &zombies }},
-        { OFFICE, {&officeWorkers, &zombies}},
+        { OFFICE, {&officeWorkers, &zombies, &cyberZombies}},
         {LOT, {&hobos}} //dont forget about hobo
 
     };
@@ -3932,10 +3932,17 @@ void RenderOffice(){
     DrawElevator(elevators[1], resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
 
 
-
+    HandleGrenades();
 
     //DRAW PLAYER
     if (!player.onElevator) player.DrawPlayer();
+
+    // for (NPC& cZombie : cyberZombies){
+
+    //     cZombie.Update();
+    //     cZombie.Render();
+
+    // }
 
     for (NPC& office_npc : officeWorkers){
         office_npc.Update();
@@ -4321,12 +4328,7 @@ void RenderNecroTech(){
 
     if (robots[0].agro && robots[0].isActive) showPasswordInterface = false; //hide interface on shots fired. 
 
-    for (NPC& cZombie : cyberZombies){
 
-        cZombie.Update();
-        cZombie.Render();
-
-    }
 
     //showPasswordInterface = false; //dont show interface if not interacting. 
     for (NPC& robot : robots){
@@ -4894,15 +4896,15 @@ void spawnNPCs(){
         officeWorkers.push_back(officeWorker);
 
     }
-
-    int cz = 1;
-    for (int i = 0; i < cz; i++){
-        Vector2 cz_pos = {static_cast<float>(2000 + i * 200), 700};
-        NPC cyberZombie = CreateNPC(resources.cyberZombieSheet, cz_pos, speed, IDLE, false, false);
-        cyberZombie.cyberZombie = true;
-        cyberZombie.isActive = true;
-        cyberZombies.push_back(cyberZombie);
-    }
+    //spawn cyberzombie
+    // int cz = 1;
+    // for (int i = 0; i < cz; i++){
+    //     Vector2 cz_pos = {static_cast<float>(2000 + i * 200), 700};
+    //     NPC cyberZombie = CreateNPC(resources.cyberZombieSheet, cz_pos, speed, IDLE, false, false);
+    //     cyberZombie.cyberZombie = true;
+    //     //cyberZombie.isActive = true;
+    //     cyberZombies.push_back(cyberZombie);
+    // }
 
 
 }
@@ -5225,9 +5227,9 @@ void ShowControls(){
     float offsetX = 664 - (1024.0f / 2.0f); // Offset relative to the center of the 1024x1024 window
     Vector2 controlsRectPos = { (GetScreenWidth() / 2.0f) + offsetX, 212 };
     //Vector2 controlsRectPos = { 664, 212 };
-    Vector2 controlsRectSize = { 300, 600 };
+    Vector2 controlsRectSize = { 300, 700 };
     DrawRectangle(controlsRectPos.x, controlsRectPos.y, controlsRectSize.x, controlsRectSize.y, Fade(BLACK, 0.7f)); // Semi-transparent background
-    DrawText("\nControls:\n\n\nEsc - Menu\n\nD - Move Right\n\nA - Move Left\n\nShift - Run\n\nW - Interact\n\nS - Exit Car/Apartment\n\nSpace - Jump\n\nI - Open Inventory\n\nV - Melee\n\nRightClick - Aim\n\nLeftClick - Fire\n\nM - Mute Music\n\n\n\nDebug Keys:\n\nK - Give Keys\n\nG - Give Guns\n\nH - Give Shovel\n\nP - Give Drugs", 
+    DrawText("\nControls:\n\n\nEsc - Menu\n\nD - Move Right\n\nA - Move Left\n\nShift - Run\n\nW - Interact\n\nS - Exit Car/Apartment\n\nSpace - Jump\n\nI - Open Inventory\n\nV - Melee\n\nRightClick - Aim\n\nLeftClick - Fire\n\nM - Mute Music\n\nMouseWheel - Zoom\n\n\n\nDebug Keys:\n\nK - Give Keys\n\nG - Give Guns\n\nH - Give Shovel\n\nP - Give Drugs\n\nL - Give Crowbar", 
             controlsRectPos.x + 32, controlsRectPos.y, 20, WHITE); 
 
 }

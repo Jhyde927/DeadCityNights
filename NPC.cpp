@@ -21,18 +21,16 @@
 
 
 
-
-
 // Constructor 
 NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState initialAnimation, bool active, bool zombie)
 {
     texture = npcTexture;
+
     position = startPos;
     speed = npcSpeed;
     currentAnimation = initialAnimation;
     isActive = active;
     isZombie = zombie;
-
     frameCounter = 0;
     frameSpeed = 8.0f;
     currentFrame = 0;
@@ -83,6 +81,8 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     cyberZombie = false;
     animationTimer = 0.0;
     isMoving = false;
+
+
 
  
 }
@@ -846,6 +846,9 @@ void NPC::HandleAnimationLogic(){
 void NPC::Update() {
     if (!isActive) return;  // Skip update if the NPC is not active
     if (!isZombie && !robot) riseTimer = 0;
+
+    //animation.Update(GetFrameTime());
+
     distanceToPlayer = abs(player.position.x - position.x);
 
     bloodEmitter.UpdateParticles(GetFrameTime()); //update blood
@@ -1059,7 +1062,7 @@ void NPC::Update() {
 
 void NPC::Render() {
     if (!isActive) return;  // Skip rendering if the NPC is not active. NPC still exists though
-
+    //animation.Draw(position, facingRight);
     // Calculate the source rectangle for the current frame of the animation
     int frameWidth = 64;  // Each frame is 64 pixels wide
     int frameHeight = 64; // Each frame is 64 pixels tall
@@ -1130,6 +1133,7 @@ void NPC::SetAnimationState(AnimationState newState) {
         currentAnimation = newState;
         currentFrame = 0;  // Reset to the first frame of the new animation
         frameCounter = 0.0f;  // Reset the frame counter
+        //animation.SetAnimation(newState);
     }
 }
 
@@ -1337,8 +1341,16 @@ void NPC::TakeDamage(int damage) {
         deathTimer = .85f;
 
     }
+    if (health <= 0 && !isDying && cyberZombie){
+        SoundManager::getInstance().PlayPositionalSound("zombieDeath", position, player.position, 500);
+        riseTimer = 0;
+        isDying = true;
+        SetAnimationState(DEATH);
+        deathTimer = .85f;
+        destination = position;
+    }
 
-    if (health <= 0 && !isDying && !robot){ //NPC killed by zombie
+    if (health <= 0 && !isDying && !robot && !cyberZombie){ //NPC killed by zombie
         std::cout << "DIE\n";
         riseTimer = 0; 
         isDying = true;           // Start dying process   

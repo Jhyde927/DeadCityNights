@@ -12,6 +12,7 @@
 enum class PickupType {
     SHOTGUN_AMMO,
     NINE_MM_AMMO,
+    REVOLVER_AMMO,
     MONEY,
 
 
@@ -74,8 +75,13 @@ private:
                 break;
 
             case PickupType::MONEY:
-                player.money += 100;
+                player.money += value;
                 PlaySound(SoundManager::getInstance().GetSound("moneyUp"));       
+                break;
+
+            case PickupType::REVOLVER_AMMO:
+                player.revolverAmmo += value;
+                PlaySound(SoundManager::getInstance().GetSound("reload"));
                 break;
                 
 
@@ -91,9 +97,10 @@ std::vector<Pickup> pickups;
 void SpawnPickup(Vector2 position, PickupType type, Texture2D texture) {
     int value = 0;
     switch (type) {
-        case PickupType::SHOTGUN_AMMO: value = 4; break;
-        case PickupType::NINE_MM_AMMO: value = 15; break;
+        case PickupType::SHOTGUN_AMMO: value = 8; break;
+        case PickupType::NINE_MM_AMMO: value = 30; break;
         case PickupType::MONEY: value = 100; break;
+        case PickupType::REVOLVER_AMMO: value = 18; break;
 
 
     }

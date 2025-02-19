@@ -113,6 +113,7 @@ struct GameResources {
     Texture2D crowbarWorld;
     Texture2D cyberZombieSheet;
     Texture2D grenadeSheet;
+    Texture2D special38;
     
 
     Font defaultFont;

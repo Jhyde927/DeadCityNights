@@ -74,7 +74,7 @@ void Grenade::Update(float deltaTime) {
             Rectangle playerHitbox = { player.position.x, player.position.y, player.size.x, player.size.y }; 
 
             if (CheckCollisionRecs(grenadeHitbox, playerHitbox)) {  
-                Explode(); // Immediate explosion
+                //Explode(); // Immediate explosion explode on hit
             }
 
             if (smokeTimer > 0){
@@ -120,6 +120,22 @@ void Grenade::Explode() {
 
         }
 
+        for (NPC& czom : cyberZombies){ //damage self
+            float dt = abs(czom.position.x - position.x);
+            if (dt < explosionRadius){
+                if (czom.isActive){
+                    czom.TakeDamage(100);
+                }
+            }
+        }
+
+        for (NPC& robot : robots){ //necrotech security robot
+            float dt = abs(robot.position.x - position.x);
+            if (dt < explosionRadius){
+                robot.TakeDamage(100);
+            }
+        }
+
         
     }
 }
@@ -130,7 +146,7 @@ void Grenade::Draw() {
         
         if (canSpawnSmoke){
             canSpawnSmoke = false;
-            smokeEmitter.SpawnBlood(50, WHITE, !facingRight);
+            smokeEmitter.SpawnBlood(50, WHITE, !facingRight); //smoke not working
             smokeTimer = 1.0f;
         }
         
@@ -148,7 +164,7 @@ void Grenade::Draw() {
             exEmitter.DrawParticles();
             if (showCircle){
                 showCircle = false;
-                showCircleTImer = .2;
+                showCircleTImer = .1;
                 
                 
             }

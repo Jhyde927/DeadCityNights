@@ -23,6 +23,7 @@ public:
     bool facingRight = true;
 
     Emitter exEmitter;
+    Emitter smokeEmitter;
 
 
     Grenade(Vector2 pos, Vector2 vel);  // Constructor

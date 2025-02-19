@@ -83,7 +83,7 @@ public:
                 {
                 
                 case 0:
-                    //SpawnPickup(center_pos, PickupType::SHOTGUN_AMMO, resources.shellsPickup);
+                    SpawnPickup(center_pos, PickupType::REVOLVER_AMMO, resources.special38);
                     break;
                 case 1:
                     SpawnPickup(center_pos, PickupType::SHOTGUN_AMMO, resources.shellsPickup);

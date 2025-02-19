@@ -69,7 +69,7 @@ Player::Player() {
     step = false;
     shells = 16;
     autoAmmo = 150;
-    revolverAmmo = 30;
+    revolverAmmo = 50;
     
     arriving = false;
     LastTapTimeLeft = 0;

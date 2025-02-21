@@ -51,6 +51,7 @@ bool showBadge = false;
 bool show_carUI = false;
 bool leave_apartment = false;
 bool leave_cemetery = false;
+bool sharpen = false;
 bool buttonNecro = false;
 bool buttonCemetery = false;
 bool buttonInternet = false;
@@ -1076,7 +1077,7 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
     //Activate/DeActivate NPCs depending on the game state. 
     // Map game states to multiple NPC groups
     std::map<GameState, std::vector<std::vector<NPC>*>> npcGroups = { //key = gameState, val = vector of vectors 
-        { NECROTECH, { &robots } },
+        { NECROTECH, { &robots, &cyberZombies } },
         { LOBBY, { &lobbyRobots, &lobbyNPCs, &lobbyMibs, &zombies } },  // Multiple NPC groups in LOBBY
         { ASTRAL, { &astralBats, &astralGhosts } },    
         { OUTSIDE, { &npcs, &mibs } }, //sigular mib outside
@@ -1385,8 +1386,8 @@ void HandleAstralTransition(){
         applyShader = false; //drugs ware off if you advanced the day
         player.currentHealth = player.maxHealth;
         UpdateNPCActivity(ASTRAL, APARTMENT);
-
         gameCalendar.AdvanceDay();
+
         for (NPC& ghost : astralGhosts){
             ghost.agro = false; //ghost lose agro after dying. 
 
@@ -1418,6 +1419,8 @@ void HandleOfficeTransition(){
         UpdateNPCActivity(OFFICE, APARTMENT);
         player.position.x = apartmentX;
         player.onElevator = false;
+        player.currentHealth = player.maxHealth;
+        gameCalendar.AdvanceDay();
 
     }
 }
@@ -1428,6 +1431,7 @@ void HandleParkTransition(){
         player.position.x = apartmentX;
         player.isDead = false;
         player.currentHealth = player.maxHealth;
+        gameCalendar.AdvanceDay();
         applyShader = false; //if you die, you are no longer high when respawning
         UpdateNPCActivity(PARK, APARTMENT);
 
@@ -4328,6 +4332,10 @@ void RenderNecroTech(){
 
     if (robots[0].agro && robots[0].isActive) showPasswordInterface = false; //hide interface on shots fired. 
 
+    for (NPC& cyberZombie : cyberZombies){
+        cyberZombie.Update();
+        cyberZombie.Render();
+    }
 
 
     //showPasswordInterface = false; //dont show interface if not interacting. 
@@ -4774,7 +4782,7 @@ void spawnNPCs(){
     //spawn astral ghosts, bosses of astral realm for now. 
     int ap = 2;
     for (int i = 0; i < ap; i++){
-        Vector2 ag_pos = {static_cast<float>(2220 + i * 100), -751}; // spawn at the top of the atral plane. 
+        Vector2 ag_pos = {static_cast<float>(2220 + i * 500), -751}; // spawn at the top of the atral plane. 
         NPC astralGhost = CreateNPC(resources.ghostSheet, ag_pos, speed, IDLE, false, false);
         ghost_npc.SetDestination(2000, 2200);
         astralGhost.ghost = true;
@@ -4897,14 +4905,14 @@ void spawnNPCs(){
 
     }
     //spawn cyberzombie
-    // int cz = 1;
-    // for (int i = 0; i < cz; i++){
-    //     Vector2 cz_pos = {static_cast<float>(2000 + i * 200), 700};
-    //     NPC cyberZombie = CreateNPC(resources.cyberZombieSheet, cz_pos, speed, IDLE, false, false);
-    //     cyberZombie.cyberZombie = true;
-    //     //cyberZombie.isActive = true;
-    //     cyberZombies.push_back(cyberZombie);
-    // }
+    int cz = 2;
+    for (int i = 0; i < cz; i++){
+        Vector2 cz_pos = {static_cast<float>(2000 + i * 200), 700};
+        NPC cyberZombie = CreateNPC(resources.cyberZombieSheet, cz_pos, speed, IDLE, false, false);
+        cyberZombie.cyberZombie = true;
+        //cyberZombie.isActive = true;
+        cyberZombies.push_back(cyberZombie);
+    }
 
 
 }
@@ -5768,7 +5776,7 @@ int main() {
         
         BeginDrawing();
             ClearBackground(BLACK);
-            
+            if (sharpen) BeginShaderMode(shaders.sharpenShader);
             //drunk shader is set inside render functions      
             if (applyShader) BeginShaderMode(shaders.glowShader);     //Apply various shaders before rendering to screen
             if (glitch) BeginShaderMode(shaders.glitchShader);

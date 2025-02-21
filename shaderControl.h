@@ -21,6 +21,7 @@ struct ShaderResources {
     Shader oldFilmShader;
     Shader redVignetteShader;
     Shader highlightShader;
+    Shader sharpenShader;
     
     int timeLoc;
     int glowThresholdLoc;

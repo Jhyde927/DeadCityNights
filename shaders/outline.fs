@@ -6,12 +6,14 @@ in vec4 fragColor;
 uniform sampler2D texture0;      // The texture sampler
 uniform vec4 outlineColor;       // Color of the outline
 uniform float threshold;         // Alpha threshold
+uniform bool useWhiteOutline;    // Determines if the outline is white or black
 
 out vec4 finalColor;
 
 void main() {
-    // Sample the current pixel's alpha
-    float alpha = texture(texture0, fragTexCoord).a;
+    // Sample the current pixel color and alpha
+    vec4 texColor = texture(texture0, fragTexCoord);
+    float alpha = texColor.a;
 
     if (alpha < threshold) {
         discard;  // Discard fully transparent pixels
@@ -26,10 +28,10 @@ void main() {
 
     // Offsets for neighboring pixels (up, down, left, right)
     vec2 offsets[4] = vec2[](
-        vec2(-texelSize.x, 0.0),   // Left
-        vec2(texelSize.x, 0.0),    // Right
-        vec2(0.0, -texelSize.y),   // Up
-        vec2(0.0, texelSize.y)     // Down
+        vec2(-texelSize.x/2, 0.0),   // Left
+        vec2(texelSize.x/2, 0.0),    // Right
+        vec2(0.0, -texelSize.y/2),   // Up
+        vec2(0.0, texelSize.y/2)     // Down
     );
 
     // Check neighboring pixels
@@ -42,10 +44,15 @@ void main() {
     }
 
     if (isEdge) {
-        // Edge pixel; set the outline color
-        finalColor = vec4(outlineColor.rgb, 1.0);
+        // Choose outline color based on uniform
+        vec3 finalOutlineColor = useWhiteOutline ? vec3(1.0, 1.0, 1.0) : vec3(0.0, 0.0, 0.0);
+        finalColor = vec4(finalOutlineColor, 1.0);
     } else {
-        // Interior pixel; make it transparent
-        discard;
+        if (useWhiteOutline) {
+            discard; // Discard interior pixels when using a white outline
+        } else {
+            //finalColor = texColor; // Keep original sprite color when using a black outline
+            finalColor = vec4(1.0, 1.0, 1.0, 1.0); // Make the interior completely white for black outline mode
+        }
     }
 }

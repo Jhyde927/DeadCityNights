@@ -25,7 +25,6 @@
 NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState initialAnimation, bool active, bool zombie)
 {
     texture = npcTexture;
-
     position = startPos;
     speed = npcSpeed;
     currentAnimation = initialAnimation;
@@ -81,14 +80,8 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     cyberZombie = false;
     animationTimer = 0.0;
     isMoving = false;
-
-
-
  
 }
-
-//Emitter bloodEmitter({0.0, 0.0}); 
-
 
 // Function to get a random phrase
 std::string GetRandomPhrase() {
@@ -843,6 +836,76 @@ void NPC::HandleAnimationLogic(){
 
 }
 
+void NPC::ghostMoves(){
+    if (agro && hasTarget) {
+        float deltaTime = GetFrameTime(); 
+        
+        Vector2 direction = { destination.x - position.x, destination.y - position.y };
+        float distance = sqrtf(direction.x * direction.x + direction.y * direction.y); // Get distance
+        
+        if (distance > 5.0f) { // Prevent jittering when close
+            // Normalize direction vector (gives smooth diagonal movement)
+            direction.x /= distance;
+            direction.y /= distance;
+
+            // Move ghost at a constant speed
+            float moveSpeed = 75.0f;  
+            position.x += direction.x * moveSpeed * deltaTime;
+            position.y += direction.y * moveSpeed * deltaTime;
+
+            // Set facing direction based on movement
+            if (fabs(direction.x) > 0.1f) { // Only update facing when moving significantly in X
+                facingRight = (direction.x > 0);
+            }
+
+            // Set animation state
+            if (!isDying) SetAnimationState(WALK);
+        } else {
+            // Stop moving when very close
+            SetAnimationState(IDLE);
+        }
+    } else {
+        SetAnimationState(IDLE);
+    }
+}
+
+
+// void NPC::ghostMoves(){
+//     if (agro && hasTarget) {
+//         float deltaTime = GetFrameTime(); // Get the frame time
+        
+//         Vector2 velocity = {0.0f, 0.0f};
+
+//         float yDifference = destination.y - position.y;
+//         float xDifference = destination.x - position.x;
+
+//         float yThreshold = 5.0f; // Adjust as needed
+
+//         if (fabs(yDifference) > yThreshold) {
+//             // Move vertically towards the player's Y position
+//             velocity.y = (yDifference > 0 ? 1.0f : -1.0f) * 75;
+//             // Do not move horizontally yet
+//             velocity.x = 0.0f;
+//         } else {
+//             // Once aligned in Y, move horizontally towards the player
+//             velocity.x = (xDifference > 0 ? 1.0f : -1.0f) * 75;
+//             velocity.y = 0.0f;
+
+//             // Set facing direction
+//             facingRight = (velocity.x > 0);
+//         }
+
+//         // Update position
+//         position.x += velocity.x * deltaTime;
+//         position.y += velocity.y * deltaTime;
+
+//         // Set animation state
+//         if (!isDying) SetAnimationState(WALK); // Or another appropriate state
+//     } else {
+//         SetAnimationState(IDLE);
+//     }
+// }
+
 void NPC::Update() {
     if (!isActive) return;  // Skip update if the NPC is not active
     if (!isZombie && !robot) riseTimer = 0;
@@ -988,39 +1051,7 @@ void NPC::Update() {
             
             
         }else if (bat || ghost) {
-            if (agro && hasTarget) {
-                float deltaTime = GetFrameTime(); // Get the frame time
-               
-                Vector2 velocity = {0.0f, 0.0f};
-
-                float yDifference = destination.y - position.y;
-                float xDifference = destination.x - position.x;
-
-                float yThreshold = 5.0f; // Adjust as needed
-
-                if (fabs(yDifference) > yThreshold) {
-                    // Move vertically towards the player's Y position
-                    velocity.y = (yDifference > 0 ? 1.0f : -1.0f) * 75;
-                    // Do not move horizontally yet
-                    velocity.x = 0.0f;
-                } else {
-                    // Once aligned in Y, move horizontally towards the player
-                    velocity.x = (xDifference > 0 ? 1.0f : -1.0f) * 75;
-                    velocity.y = 0.0f;
-
-                    // Set facing direction
-                    facingRight = (velocity.x > 0);
-                }
-
-                // Update position
-                position.x += velocity.x * deltaTime;
-                position.y += velocity.y * deltaTime;
-
-                // Set animation state
-                if (!isDying) SetAnimationState(WALK); // Or another appropriate state
-            } else {
-                SetAnimationState(IDLE);
-            }
+            ghostMoves(); // XY movement for ghosts and bats. 
         }
 
         // Check if destination is reached

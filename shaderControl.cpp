@@ -5,6 +5,8 @@
 #include "GameEnums.h"
 #include <raymath.h>
 #include <iostream>
+#include "Player.h"
+
 
 
 ShaderResources shaders;
@@ -25,11 +27,19 @@ void InitShaders(int screenWidth, int screenHeight) {
     shaders.oldFilmShader = LoadShader(0, "shaders/oldFilm.fs");
     shaders.redVignetteShader = LoadShader(0, "shaders/redVignette.fs");
     shaders.highlightShader = LoadShader(0, "shaders/highlight.fs");
+    shaders.sharpenShader = LoadShader(0, "shaders/sharpen.fs");
 
     
 
 
     float resolution[2] = { static_cast<float>(screenWidth), static_cast<float>(screenHeight) }; //used for everything
+
+    //sharpen Shader
+    int texelSizeLoc = GetShaderLocation(shaders.sharpenShader, "texelSize");
+
+    Vector2 texelSize = { 1.0f / screenWidth, 1.0f / screenHeight };
+    SetShaderValue(shaders.sharpenShader, texelSizeLoc, &texelSize, SHADER_UNIFORM_VEC2);
+
 
 
     float glowThreshold = 0.01f;
@@ -56,6 +66,7 @@ void InitShaders(int screenWidth, int screenHeight) {
 
     //setup outline shader
 
+
     // Get uniform locations
     int outlineColorLoc = GetShaderLocation(shaders.outlineShader, "outlineColor");
     int thresholdLoc = GetShaderLocation(shaders.outlineShader, "threshold");
@@ -66,6 +77,8 @@ void InitShaders(int screenWidth, int screenHeight) {
 
     float threshold = 0.5f;
     SetShaderValue(shaders.outlineShader, thresholdLoc, &threshold, SHADER_UNIFORM_FLOAT);
+
+
 
     //setup vignette////////////////////////////////////////////////////////////////
 
@@ -234,6 +247,17 @@ void UpdateShaders(float deltaTime, bool fullscreen, GameState& gameState) {
     //SetShaderValue(shaders.glitchShader, timeLoc4, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
 
     SetShaderValue(shaders.glitchShader, GetShaderLocation(shaders.glitchShader, "time"), &time_, SHADER_UNIFORM_FLOAT);
+
+    int useWhiteOutlineLoc = GetShaderLocation(shaders.outlineShader, "useWhiteOutline");
+    int whiteOutline = 1;
+    int blackOutline = 0;
+
+    if (gameState == OFFICE){
+        player.outline = true;
+        SetShaderValue(shaders.outlineShader, useWhiteOutlineLoc, &blackOutline, SHADER_UNIFORM_INT); //black
+    }else{
+         SetShaderValue(shaders.outlineShader, useWhiteOutlineLoc, &whiteOutline, SHADER_UNIFORM_INT);
+    }
 
 
     ///update glowShader

@@ -114,6 +114,7 @@ public:
     void HandleRobot();
     void TakeDamage(int damage);
     void HandleAnimationLogic();
+    void ghostMoves();
     //void MoveNPC(Player& player, GameState& gameState);
 };
 

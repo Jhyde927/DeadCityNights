@@ -198,7 +198,7 @@ Emitter explosionEmitter;
 
 std::vector<Box> boxes; //boxes stays in main because undefined behavior do to inclusion hell. 
 
-GameState gameState = OFFICE;
+GameState gameState = OUTSIDE;
 
 TransitionState transitionState = NONE;
 float fadeAlpha = 1.0f;  // Starts fully opaque
@@ -1087,7 +1087,8 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
         //so if you spawn zombies in the park(and dont kill them all), they will also be in the graveyard and cemetery. 
         { PARK, { &ParkNpcs, &zombies }},
         { OFFICE, {&officeWorkers, &zombies, &cyberZombies}},
-        {LOT, {&hobos}} //dont forget about hobo
+        {LOT, {&hobos}}, //dont forget about hobo
+        {LAB, {&cyberZombies, &scientists}}
 
     };
 
@@ -1414,6 +1415,7 @@ void HandleOfficeTransition(){
         UpdateNPCActivity(OFFICE, LOBBY);
         player.onElevator = false;
         can_spawn_zombies = false; //only spawn zombies once. 
+
     }else if (elevators[1].isOccupied){
         std::cout << "Goto lab";
         gameState = LAB;
@@ -1464,7 +1466,17 @@ void HandleParkTransition(){
 }
 
 void HandleLabTransition(){
-    //todo: werite transition code
+    if (elevators[1].isOccupied){
+        gameState = OFFICE;
+        player.onElevator = false;
+        UpdateNPCActivity(LAB, OFFICE);
+
+    }else if (player.isDead){
+        gameState = APARTMENT;
+        player.currentHealth = player.maxHealth;
+        player.position.x = apartmentX;
+        gameCalendar.AdvanceDay();
+    }
 }
 
 void HandleSubwayTransition(){
@@ -2350,6 +2362,31 @@ void DrawConsole(Console& console){
     Vector2 origin = {16, 16};
     //DrawTextureRec(resources.consoleSheet, sourceRec, console.position, WHITE);
     DrawTexturePro(resources.consoleSheet, sourceRec, destRec, origin, 0, WHITE);
+}
+
+void DrawMonitor(Monitor& monitor){
+    float monitorFrame = 64.0;
+    int numFrames = 2;
+      // Update animation timer
+      monitor.frameTimer += GetFrameTime();
+
+      // Check if it's time to move to the next frame
+      if (monitor.frameTimer >= monitor.frameTime)
+      {
+          monitor.frameTimer -= monitor.frameTime;           // Reset the timer
+          monitor.currentFrame++;                    // Move to the next frame
+
+          if (monitor.currentFrame > numFrames)              // Loop back to the first frame if necessary
+          {
+              monitor.currentFrame = 0; //stop at last frame when door is open. 
+          }
+      }
+
+    Rectangle sourceRec = {static_cast<float>(monitor.currentFrame) * monitorFrame, 0, static_cast<float>(monitorFrame), static_cast<float>(monitorFrame)};
+    Rectangle destRec = {monitor.position.x, monitor.position.y, 64.0f, 64.0f};
+    Vector2 origin = {32, 32};
+    
+    DrawTexturePro(resources.monitorSheet, sourceRec, destRec, origin, 0, WHITE);
 }
 
 void DrawMagicDoor(MagicDoor& magicDoor){
@@ -3939,6 +3976,22 @@ void RenderLab(){
     //elevators[1].isOccupied = false;
     //player.onElevator = false;
 
+
+    if (player.position.x < 3297 && player.position.x > 3277){
+        over_Ebutton2 = true;
+        phrase = "Call Elevator";
+        show_dbox = true;
+        dboxPosition = player.position;
+
+    }
+
+    if (player.position.x < 3245 && player.position.x > 3225 && elevators[1].isOpen){
+        over_elevator2 = true;
+        phrase = "Up to Enter";
+        show_dbox = true;
+        dboxPosition = player.position;
+    }
+
     float deltaTime = GetFrameTime();
     camera.target = player.position;
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
@@ -3946,8 +3999,6 @@ void RenderLab(){
     
     if (drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
         
-    
-
     //No parallax for lobby
     DrawTexturePro(resources.labBackground, {0, 0, static_cast<float>(resources.officeBackground.width), static_cast<float>(resources.officeBackground.height)},
                     {300, 0, static_cast<float>(resources.officeBackground.width), static_cast<float>(resources.officeBackground.height)}, {0, 0}, 0.0f, WHITE);
@@ -3963,6 +4014,15 @@ void RenderLab(){
 
     for (Console& console : consoles){
         DrawConsole(console);
+    }
+
+    for (Monitor& monitor : monitors){
+        DrawMonitor(monitor);
+    }
+
+    for (NPC& scientist : scientists){
+        scientist.Update();
+        scientist.Render();
     }
 
     HandleGrenades();
@@ -4020,10 +4080,10 @@ void RenderOffice(){
     float deltaTime = GetFrameTime();
 
 
-    // if (can_spawn_zombies){
-    //     can_spawn_zombies = false;
-    //     StartZombieSpawn(15);
-    // }
+    if (can_spawn_zombies){
+        can_spawn_zombies = false;
+        StartZombieSpawn(15);
+    }
 
     if (player.position.x < 2540 && player.position.x > 2520){ //first elevator button
         over_Ebutton = true;
@@ -5062,6 +5122,17 @@ void spawnNPCs(){
         cyberZombies.push_back(cyberZombie);
     }
 
+    //spawn scientists
+    int sc = 2;
+    for (int i = 0; i < sc; i ++){
+        Vector2 sc_pos = {static_cast<float>(2500 + i * 200), 700};
+        NPC scientist = CreateNPC(resources.scienceSheet, sc_pos, speed, IDLE, false, false); //spawn inactive
+        scientist.scientist = true;
+        scientist.SetDestination(2000, 4000);
+
+        scientists.push_back(scientist);
+    }
+
 
 }
 
@@ -5288,10 +5359,27 @@ void UptoEnter(PlayerCar& player_car){
             }
         }
 
+        if (over_Ebutton2 && gameState == LAB){
+            if (elevators[1].isOpen){
+                elevators[1].isOpen = false;
+            }else{
+                elevators[1].isOpen = true;
+            }
+        }
+
+        if (over_elevator2 && gameState == LAB){
+            if (elevators[1].isOpen){
+                elevators[1].isOpen = false;
+                elevators[1].isOccupied = true;
+                player.onElevator = true;
+                transitionState = FADE_OUT; //go to office
+
+            }
+        }
 
 
-        if (over_elevator && gameState == OFFICE){
-            
+
+        if (over_elevator && gameState == OFFICE){         
             if (elevators[0].isOpen){
                 
                 elevators[0].isOpen = false;
@@ -5522,6 +5610,20 @@ void InitLabObjects(){
     for (int i = 0; i < 4; i++){
         InitTank(Vector2 {2800.0f + i * 100, 668});
     }
+
+    for (int i = 0; i < 5; i++){
+        InitTank(Vector2 {3370.0f + i * 100, 668});
+    }
+
+    InitConsole(Vector2 {3900, 668});
+
+    InitMonitor(Vector2 {2750, 668});
+    InitMonitor(Vector2 {2126, 668});
+    InitMonitor(Vector2 {3900, 668});
+
+    for (int i = 0; i < 5; i++){
+        InitTank(Vector2 {4000.0f + i * 100, 668});
+    }
 }
 
 void InitSounds(SoundManager& soundManager){
@@ -5658,11 +5760,11 @@ int main() {
 
     //init structs decleared in Globals.h
     InitializePlayerCar();
-    InitializeMagicDoor(magicDoor,Vector2 {2089, 700});
-    InitializeMagicDoor(magicDoor2, Vector2{2000, -747});
+    InitializeMagicDoor(Vector2 {2089, 700});
+    InitializeMagicDoor(Vector2{2000, -747});
     InitEarth();
-    InitElevator(elevator1, Vector2 {2446, 648});
-    InitElevator(elevator2, Vector2 {3200, 648});
+    InitElevator(Vector2 {2446, 648});
+    InitElevator(Vector2 {3200, 648});
     InitUFO();
     InitializeTrain();
     InitLabObjects(); //laboratory tanks and console

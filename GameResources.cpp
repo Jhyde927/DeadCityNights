@@ -115,6 +115,8 @@ void GameResources::Load() {
     labBackground = LoadTexture("assets/LaboratoryBackground.png");
     tankSheet = LoadTexture("assets/tankSheet.png");
     consoleSheet = LoadTexture("assets/consoleSheet.png");
+    monitorSheet = LoadTexture("assets/monitorSheet.png");
+    scienceSheet = LoadTexture("assets/scienceSheet.png");
 }
 
 // Unload all game resources
@@ -222,4 +224,6 @@ void GameResources::Unload() {
     UnloadTexture(labBackground);
     UnloadTexture(tankSheet);
     UnloadTexture(consoleSheet);
+    UnloadTexture(monitorSheet);
+    UnloadTexture(scienceSheet);
 }

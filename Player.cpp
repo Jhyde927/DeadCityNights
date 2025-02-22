@@ -154,7 +154,7 @@ float GetRightBoundary(){
     }else if (gameState == OFFICE){
         return 3800;
     }else if (gameState == LAB){
-        return 4129;
+        return 3852;
     }
 }
 
@@ -184,7 +184,7 @@ float GetLeftBoundary(){
     }else if (gameState == OFFICE){
         return 1000;
     }else if (gameState == LAB){
-        return 842;
+        return 1575;
     }
 }
 

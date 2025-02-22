@@ -55,6 +55,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     bat = false;
     MiB = false;
     frank = false;
+    scientist = false;
     clickCount = 0;
     interactions = 0;
     talkTimer = 0.0f;
@@ -80,6 +81,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     cyberZombie = false;
     animationTimer = 0.0;
     isMoving = false;
+
  
 }
 
@@ -1072,6 +1074,8 @@ void NPC::Update() {
                 SetDestination(1600, 2500); //robots necrotech, and lobby.
             }else if (lobbyNPC){
                 SetDestination(1600, 2500); //lobby npc
+            }else if (scientist){
+                SetDestination(2400, 4000); //lab scientists
             } else{
                 SetDestination(1000, 3500);  //Pedestrians Outside, and park
                 

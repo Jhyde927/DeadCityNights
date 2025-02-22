@@ -26,6 +26,7 @@ extern std::vector<NPC>lobbyRobots;
 extern std::vector<NPC>lobbyNPCs;
 extern std::vector<NPC>lobbyMibs;
 extern std::vector<NPC>officeWorkers;
+extern std::vector<NPC>scientists;
 
 
 
@@ -40,6 +41,14 @@ struct Tank {
 };
 
 struct Console {
+    Vector2 position;
+    int currentFrame = 0;
+    float frameTimer = 0.0f;
+    float frameTime = 0.0f;
+
+};
+
+struct Monitor {
     Vector2 position;
     int currentFrame = 0;
     float frameTimer = 0.0f;
@@ -122,15 +131,10 @@ struct Train {
 };
 
 extern PlayerCar player_car;
-extern MagicDoor magicDoor;
-extern MagicDoor magicDoor2;
+
 extern Earth earth;
-extern Elevator elevator1;
-extern Elevator elevator2;
 extern UFO ufo;
 extern Train train;
-extern Tank tank;
-extern Console console;
 
 extern Vector2 mousePosition; // Global mouse position, updated in main.
 extern float totalTime; // total elapsed time, used for sine waves
@@ -141,14 +145,16 @@ extern std::vector<Elevator> elevators;
 
 extern std::vector<Tank> Tanks;
 extern std::vector<Console> consoles;
+extern std::vector<Monitor> monitors;
 
 void InitCamera();
 void InitializePlayerCar();
-void InitializeMagicDoor(MagicDoor& magicDoor,Vector2 position);
+void InitializeMagicDoor(Vector2 position);
 void InitTank(Vector2 position);
 void InitConsole(Vector2 position);
+void InitMonitor(Vector2 position);
 void InitEarth();
-void InitElevator(Elevator& elevator, Vector2 position);
+void InitElevator(Vector2 position); //do we need to pass an elevator here? or could we just create a new one in initelevators. 
 void InitUFO();
 void InitializeTrain();
 void InitPlatforms();

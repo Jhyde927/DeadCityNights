@@ -4,15 +4,18 @@
 //difine the instances of the random structs
 PlayerCar player_car;
 Earth earth;
+// MagicDoor magicDoor;
+// MagicDoor magicDoor2; 
 MagicDoor magicDoor;
-MagicDoor magicDoor2; 
 UFO ufo;
 Train train;
-Elevator elevator1;
-Elevator elevator2;
+// Elevator elevator1;
+// Elevator elevator2;
+Elevator elevator;
 
 Tank tank;
 Console console;
+Monitor monitor;
 
 std::vector<Platform> platforms;
 std::vector<MagicDoor> magicDoors;
@@ -21,6 +24,7 @@ std::vector<Elevator> elevators;
 
 std::vector<Tank> Tanks;
 std::vector<Console> consoles;
+std::vector<Monitor> monitors;
 
 std::vector<NPC> npcs; //outside // subway
 std::vector<NPC> zombies; //cemetery/graveyard
@@ -36,6 +40,7 @@ std::vector<NPC>lobbyRobots;
 std::vector<NPC>lobbyNPCs;
 std::vector<NPC>lobbyMibs;
 std::vector<NPC>officeWorkers;
+std::vector<NPC>scientists;
 
 std::vector<NPC>cyberZombies;
 
@@ -77,6 +82,18 @@ void InitConsole(Vector2 position){
 
 }
 
+void InitMonitor(Vector2 position){
+    monitor.position = position;
+    monitor.currentFrame = 0;
+    monitor.frameTimer = 0.0f;
+    monitor.frameTime = 0.1f;
+    monitors.push_back(monitor);
+}
+
+
+
+
+
 
 void InitializePlayerCar(){
     player_car.position = {1710, 700-32};
@@ -84,7 +101,7 @@ void InitializePlayerCar(){
     player_car.currentFrame = 0;
 }
 
-void InitializeMagicDoor(MagicDoor& magicDoor, Vector2 position){
+void InitializeMagicDoor(Vector2 position){
     magicDoor.position = position;//{2089, 700};
     magicDoor.currentFrame = 0;
     magicDoor.frameTimer = 0.0f;
@@ -102,7 +119,8 @@ void InitEarth(){
     earth.frameTime = .1;
 }
 
-void InitElevator(Elevator& elevator, Vector2 position){
+void InitElevator(Vector2 position){
+    //this is wrong. We are creating an elevator1 and 2 instnace when we don't have to. maybe? 
     elevator.position = position;
     elevator.currentFrame = 0;
     elevator.frameTimer = 0.0;

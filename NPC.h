@@ -86,6 +86,7 @@ public:
     bool cyberZombie;
     float animationTimer;
     bool isMoving;
+    bool scientist;
 
     // Add an emitter for each NPC
     Emitter bloodEmitter;

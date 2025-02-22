@@ -114,6 +114,9 @@ struct GameResources {
     Texture2D cyberZombieSheet;
     Texture2D grenadeSheet;
     Texture2D special38;
+    Texture2D labBackground;
+    Texture2D tankSheet;
+    Texture2D consoleSheet;
     
 
     Font defaultFont;

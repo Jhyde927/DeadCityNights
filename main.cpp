@@ -198,7 +198,7 @@ Emitter explosionEmitter;
 
 std::vector<Box> boxes; //boxes stays in main because undefined behavior do to inclusion hell. 
 
-GameState gameState = OUTSIDE;
+GameState gameState = OFFICE;
 
 TransitionState transitionState = NONE;
 float fadeAlpha = 1.0f;  // Starts fully opaque
@@ -1408,12 +1408,20 @@ void HandleAstralTransition(){
 }
 
 void HandleOfficeTransition(){
-    if (player.onElevator){
+    if (elevators[0].isOccupied){
+        std::cout << "GOTO lobby";
         gameState = LOBBY;
         UpdateNPCActivity(OFFICE, LOBBY);
         player.onElevator = false;
         can_spawn_zombies = false; //only spawn zombies once. 
-    }else if (player.isDead){
+    }else if (elevators[1].isOccupied){
+        std::cout << "Goto lab";
+        gameState = LAB;
+        UpdateNPCActivity(OFFICE, LAB);
+        player.onElevator = false;
+
+
+    } else if (player.isDead){
         //death in office return to apartment
         gameState = APARTMENT;
         UpdateNPCActivity(OFFICE, APARTMENT);
@@ -1453,6 +1461,10 @@ void HandleParkTransition(){
     }
 
 
+}
+
+void HandleLabTransition(){
+    //todo: werite transition code
 }
 
 void HandleSubwayTransition(){
@@ -1543,6 +1555,10 @@ void PerformStateTransition( PlayerCar& player_car) {
 
         case OFFICE:
             HandleOfficeTransition();
+            break;
+
+        case LAB:
+            HandleLabTransition();
             break;
   
     }
@@ -2284,6 +2300,56 @@ void DrawCarUI(PlayerCar& player_car, Camera2D& camera){
         DrawText("    Street", ui_pos.x, ui_pos.y, 16, cemetery_tint);
     }
 
+}
+
+void DrawTank(Tank& tank){
+    float tankFrame = 32.0;
+    int numFrames = 5;
+      // Update animation timer
+      tank.frameTimer += GetFrameTime();
+
+      // Check if it's time to move to the next frame
+      if (tank.frameTimer >= tank.frameTime)
+      {
+          tank.frameTimer -= tank.frameTime;           // Reset the timer
+          tank.currentFrame++;                    // Move to the next frame
+
+          if (tank.currentFrame > numFrames)              // Loop back to the first frame if necessary
+          {
+              tank.currentFrame = 0; //stop at last frame when door is open. 
+          }
+      }
+
+    Rectangle sourceRec = {static_cast<float>(tank.currentFrame) * tankFrame, 0, static_cast<float>(tankFrame), static_cast<float>(tankFrame)};
+    Rectangle destRec = {tank.position.x, tank.position.y, 96.0f, 96.0f};
+    Vector2 origin = {16, 16};
+    //DrawTextureRec(resources.tankSheet, sourceRec, tank.position, WHITE);
+    DrawTexturePro(resources.tankSheet, sourceRec, destRec, origin, 0, WHITE);
+}
+
+void DrawConsole(Console& console){
+    float consoleFrame = 32.0;
+    int numFrames = 3;
+      // Update animation timer
+      console.frameTimer += GetFrameTime();
+
+      // Check if it's time to move to the next frame
+      if (console.frameTimer >= console.frameTime)
+      {
+          console.frameTimer -= console.frameTime;           // Reset the timer
+          console.currentFrame++;                    // Move to the next frame
+
+          if (console.currentFrame > numFrames)              // Loop back to the first frame if necessary
+          {
+              console.currentFrame = 0; //stop at last frame when door is open. 
+          }
+      }
+
+    Rectangle sourceRec = {static_cast<float>(console.currentFrame) * consoleFrame, 0, static_cast<float>(consoleFrame), static_cast<float>(consoleFrame)};
+    Rectangle destRec = {console.position.x, console.position.y, 96.0f, 96.0f};
+    Vector2 origin = {16, 16};
+    //DrawTextureRec(resources.consoleSheet, sourceRec, console.position, WHITE);
+    DrawTexturePro(resources.consoleSheet, sourceRec, destRec, origin, 0, WHITE);
 }
 
 void DrawMagicDoor(MagicDoor& magicDoor){
@@ -3863,6 +3929,86 @@ void RenderPark(){
 
 }
 
+void RenderLab(){
+    player.outline = false;
+    show_dbox = false;
+    over_elevator = false;
+    over_elevator2 = false;
+    over_Ebutton = false;
+    over_Ebutton2 = false;
+    //elevators[1].isOccupied = false;
+    //player.onElevator = false;
+
+    float deltaTime = GetFrameTime();
+    camera.target = player.position;
+    BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
+    ClearBackground(customBackgroundColor);
+    
+    if (drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
+        
+    
+
+    //No parallax for lobby
+    DrawTexturePro(resources.labBackground, {0, 0, static_cast<float>(resources.officeBackground.width), static_cast<float>(resources.officeBackground.height)},
+                    {300, 0, static_cast<float>(resources.officeBackground.width), static_cast<float>(resources.officeBackground.height)}, {0, 0}, 0.0f, WHITE);
+
+
+
+    DrawElevator(elevators[1], resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
+
+    for (Tank& tank : Tanks){
+        
+        DrawTank(tank);
+    }
+
+    for (Console& console : consoles){
+        DrawConsole(console);
+    }
+
+    HandleGrenades();
+
+
+    //DRAW PLAYER
+    if (!player.onElevator) player.DrawPlayer();
+
+    DrawBullets();
+    EndShaderMode(); ////////////////////////////SHADER OFF
+    
+
+    HandleKeyboardAiming();
+    renderBoxes();
+    DrawPickups();
+    EndMode2D();
+    showBigBadge();
+
+    //draw healthbar 
+    if (player.currentHealth < 100 &&  !player.enter_car){
+        Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
+        DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
+
+    }
+
+    DrawMoney(); //draw money after EndMode2d()
+    if (showInventory){
+         
+        RenderInventory();  // Render the inventory 
+    }
+
+    if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
+        DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+    }else{
+        DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+    }
+
+    if (show_dbox){
+        DrawDialogBox(camera, 0, 0, 20);
+
+    }
+
+    if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player);
+
+}
+
 //Office
 void RenderOffice(){
     show_dbox = false;
@@ -3870,14 +4016,14 @@ void RenderOffice(){
     over_elevator2 = false;
     over_Ebutton = false;
     over_Ebutton2 = false;
-    elevators[0].isOccupied = false;
+    //elevators[0].isOccupied = false;
     float deltaTime = GetFrameTime();
 
 
-    if (can_spawn_zombies){
-        can_spawn_zombies = false;
-        StartZombieSpawn(15);
-    }
+    // if (can_spawn_zombies){
+    //     can_spawn_zombies = false;
+    //     StartZombieSpawn(15);
+    // }
 
     if (player.position.x < 2540 && player.position.x > 2520){ //first elevator button
         over_Ebutton = true;
@@ -4908,9 +5054,11 @@ void spawnNPCs(){
     int cz = 2;
     for (int i = 0; i < cz; i++){
         Vector2 cz_pos = {static_cast<float>(2000 + i * 200), 700};
-        NPC cyberZombie = CreateNPC(resources.cyberZombieSheet, cz_pos, speed, IDLE, false, false);
+        NPC cyberZombie = CreateNPC(resources.cyberZombieSheet, cz_pos, speed, IDLE, false, false);//spawn inactive
         cyberZombie.cyberZombie = true;
-        //cyberZombie.isActive = true;
+        
+        cyberZombie.maxHealth = 200;
+        cyberZombie.health = 200;
         cyberZombies.push_back(cyberZombie);
     }
 
@@ -5153,20 +5301,23 @@ void UptoEnter(PlayerCar& player_car){
             }
         }
 
-        if (over_elevator2 && gameState == OFFICE){ //go to penthouse office TODO: implement penthouse office, FADOUT will fall though to ouside necrotech i think
+        if (over_elevator2 && gameState == OFFICE){ //go to penthouse office TODO: implement penthouse office, 
             if (elevators[1].isOpen){
+                std::cout << "closing elevator2";
                 elevators[1].isOpen = false;
                 elevators[1].isOccupied = true;
                 player.onElevator = true;
+                 //go to lab
                 transitionState = FADE_OUT;
+
             }
         }
 
 
         if (over_elevator && gameState == LOBBY){
-            std::cout << "over elevator\n";
+           
             if (elevators[0].isOpen){
-                std::cout << "closing elevato\n";
+               
                  elevators[0].isOccupied = true; //Enter elevator
                  player.onElevator = true;
                  elevators[0].isOpen = false;    //close the door and fade out. 
@@ -5360,6 +5511,19 @@ Vector2 clampMouseCursor(Vector2& mousePosition){
     return mousePosition;
 }
 
+void InitLabObjects(){
+
+    for (int i = 0; i < 5; i++){
+        InitTank(Vector2 {2200.0f + i * 100, 668});
+    }
+
+    InitConsole(Vector2 {2700, 668});
+
+    for (int i = 0; i < 4; i++){
+        InitTank(Vector2 {2800.0f + i * 100, 668});
+    }
+}
+
 void InitSounds(SoundManager& soundManager){
     //We use our own custom sound manager. We have an array of sounds, and an array of musticTracks.
     SetMasterVolume(1.0f);  // Sets the master volume to maximum
@@ -5402,6 +5566,7 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadSound("jump", "assets/sounds/jump.ogg");
     soundManager.LoadSound("woodBreak", "assets/sounds/woodBreak.ogg");
     soundManager.LoadSound("moneyUp", "assets/sounds/moneyUp.ogg");
+    soundManager.LoadSound("grenadeLauncher", "assets/sounds/grenadeLauncher.ogg");
 
     soundManager.LoadSound("alarm", "assets/sounds/alarm1.ogg");
 
@@ -5500,6 +5665,7 @@ int main() {
     InitElevator(elevator2, Vector2 {3200, 648});
     InitUFO();
     InitializeTrain();
+    InitLabObjects(); //laboratory tanks and console
 
     //Astral platforms
     InitPlatforms();
@@ -5725,6 +5891,10 @@ int main() {
 
                 case OFFICE:
                     RenderOffice();
+                    break;
+
+                case LAB:
+                    RenderLab();
                     break;
                     
             }

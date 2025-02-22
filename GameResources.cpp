@@ -112,6 +112,9 @@ void GameResources::Load() {
     cyberZombieSheet = LoadTexture("assets/cyberZombieSheet.png");
     grenadeSheet = LoadTexture("assets/grenadeSheet.png");
     special38 = LoadTexture("assets/38special.png");
+    labBackground = LoadTexture("assets/LaboratoryBackground.png");
+    tankSheet = LoadTexture("assets/tankSheet.png");
+    consoleSheet = LoadTexture("assets/consoleSheet.png");
 }
 
 // Unload all game resources
@@ -216,4 +219,7 @@ void GameResources::Unload() {
     UnloadTexture(cyberZombieSheet);
     UnloadTexture(grenadeSheet);
     UnloadTexture(special38);
+    UnloadTexture(labBackground);
+    UnloadTexture(tankSheet);
+    UnloadTexture(consoleSheet);
 }

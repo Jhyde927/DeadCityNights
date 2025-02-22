@@ -696,6 +696,7 @@ void NPC::HandleCyberZombie(){
             
 
             // Add the grenade to the global grenades vector
+            PlaySound(SoundManager::getInstance().GetSound("grenadeLauncher"));
             grenades.emplace_back(position + Vector2 {32, 16}, grenadeVelocity);
             //NPCfireBullet(*this, false, 10, true); //laser = true
             shootTimer = 3.0f;

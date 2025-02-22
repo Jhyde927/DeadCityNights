@@ -11,10 +11,16 @@ Train train;
 Elevator elevator1;
 Elevator elevator2;
 
+Tank tank;
+Console console;
+
 std::vector<Platform> platforms;
 std::vector<MagicDoor> magicDoors;
 
 std::vector<Elevator> elevators;
+
+std::vector<Tank> Tanks;
+std::vector<Console> consoles;
 
 std::vector<NPC> npcs; //outside // subway
 std::vector<NPC> zombies; //cemetery/graveyard
@@ -51,6 +57,25 @@ void InitCamera() {
     camera.zoom = 1.0f;
     targetZoom = camera.zoom;  // Sync with initial zoom
     }
+
+void InitTank(Vector2 position){
+    tank.position = position;
+    tank.currentFrame = rand() % 6; //start on a random frame to offset animations. 
+    tank.frameTimer = 0.0f;
+    tank.frameTime = 0.15f;
+    Tanks.push_back(tank);
+
+
+}
+
+void InitConsole(Vector2 position){
+    console.position = position;
+    console.currentFrame = 0;
+    console.frameTimer = 0.0f;
+    console.frameTime = 0.1f;
+    consoles.push_back(console);
+
+}
 
 
 void InitializePlayerCar(){

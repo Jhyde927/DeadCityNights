@@ -10,7 +10,7 @@ void main() {
     // Define the sharpening kernel
     float kernel[9] = float[](
          0.0, -1.0,  0.0,
-        -1.0,  5.0, -1.0,
+        -1.0,  5.2, -1.0,
          0.0, -1.0,  0.0
     );
 

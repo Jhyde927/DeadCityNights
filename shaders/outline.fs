@@ -23,18 +23,25 @@ void main() {
     vec2 texSize = textureSize(texture0, 0);
     vec2 texelSize = 1.0 / texSize;
 
-    // Initialize edge detection flag
-    bool isEdge = false;
+    // Define neighbor offsets (up, down, left, right)
+    vec2 offsets[4];
 
-    // Offsets for neighboring pixels (up, down, left, right)
-    vec2 offsets[4] = vec2[](
-        vec2(-texelSize.x/2, 0.0),   // Left
-        vec2(texelSize.x/2, 0.0),    // Right
-        vec2(0.0, -texelSize.y/2),   // Up
-        vec2(0.0, texelSize.y/2)     // Down
-    );
+    if (useWhiteOutline) { 
+        // White outline (thicker)
+        offsets[0] = vec2(-texelSize.x, 0.0);   // Left
+        offsets[1] = vec2(texelSize.x, 0.0);    // Right
+        offsets[2] = vec2(0.0, -texelSize.y);   // Up
+        offsets[3] = vec2(0.0, texelSize.y);    // Down
+    } else {
+        // Black outline (thinner)
+        offsets[0] = vec2(-texelSize.x/2, 0.0);   // Left
+        offsets[1] = vec2(texelSize.x/2, 0.0);    // Right
+        offsets[2] = vec2(0.0, -texelSize.y/2);   // Up
+        offsets[3] = vec2(0.0, texelSize.y/2);    // Down
+    }
 
     // Check neighboring pixels
+    bool isEdge = false;
     for (int i = 0; i < 4; i++) {
         float neighborAlpha = texture(texture0, fragTexCoord + offsets[i]).a;
         if (neighborAlpha < threshold) {
@@ -51,7 +58,6 @@ void main() {
         if (useWhiteOutline) {
             discard; // Discard interior pixels when using a white outline
         } else {
-            //finalColor = texColor; // Keep original sprite color when using a black outline
             finalColor = vec4(1.0, 1.0, 1.0, 1.0); // Make the interior completely white for black outline mode
         }
     }

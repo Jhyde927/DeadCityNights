@@ -27,8 +27,25 @@ extern std::vector<NPC>lobbyNPCs;
 extern std::vector<NPC>lobbyMibs;
 extern std::vector<NPC>officeWorkers;
 
+
+
 extern std::vector<NPC>cyberZombies;
 
+
+struct Tank {
+    Vector2 position;
+    int currentFrame = 0;
+    float frameTimer = 0.0f;
+    float frameTime = 0.0f;
+};
+
+struct Console {
+    Vector2 position;
+    int currentFrame = 0;
+    float frameTimer = 0.0f;
+    float frameTime = 0.0f;
+
+};
 
 struct PlayerCar {
     Vector2 position;
@@ -112,6 +129,8 @@ extern Elevator elevator1;
 extern Elevator elevator2;
 extern UFO ufo;
 extern Train train;
+extern Tank tank;
+extern Console console;
 
 extern Vector2 mousePosition; // Global mouse position, updated in main.
 extern float totalTime; // total elapsed time, used for sine waves
@@ -120,10 +139,14 @@ extern std::vector<Platform> platforms;
 extern std::vector<MagicDoor> magicDoors;
 extern std::vector<Elevator> elevators;
 
+extern std::vector<Tank> Tanks;
+extern std::vector<Console> consoles;
+
 void InitCamera();
 void InitializePlayerCar();
 void InitializeMagicDoor(MagicDoor& magicDoor,Vector2 position);
-
+void InitTank(Vector2 position);
+void InitConsole(Vector2 position);
 void InitEarth();
 void InitElevator(Elevator& elevator, Vector2 position);
 void InitUFO();

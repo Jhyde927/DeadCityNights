@@ -17,6 +17,7 @@ enum GameState {
     NECROTECH,
     LOBBY,
     OFFICE,
+    LAB,
 };
 
 enum TrainState {

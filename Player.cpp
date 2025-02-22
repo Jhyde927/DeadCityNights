@@ -128,7 +128,7 @@ void Player::take_damage(int damage) {
 }
 
 
-float GetRightBoundary(GameState gameState){
+float GetRightBoundary(){
     if (gameState == OUTSIDE){
         return 4707.0f;
     }else if (gameState == CEMETERY){
@@ -153,10 +153,12 @@ float GetRightBoundary(GameState gameState){
         return 2800;
     }else if (gameState == OFFICE){
         return 3800;
+    }else if (gameState == LAB){
+        return 4129;
     }
 }
 
-float GetLeftBoundary(GameState gameState){
+float GetLeftBoundary(){
     if (gameState == OUTSIDE){
         return -94;
     }else if (gameState == CEMETERY){
@@ -181,6 +183,8 @@ float GetLeftBoundary(GameState gameState){
         return 1300;
     }else if (gameState == OFFICE){
         return 1000;
+    }else if (gameState == LAB){
+        return 842;
     }
 }
 
@@ -721,10 +725,10 @@ void Player::UpdateMovement() {
 
     //keep player in bounds
     if (!enter_train){ // player can leave boundaries on the train
-        if (position.x < GetLeftBoundary(gameState)){
-            position.x = GetLeftBoundary(gameState) + 1;
-        }else if (position.x > GetRightBoundary(gameState)){
-            position.x = GetRightBoundary(gameState)-1;
+        if (position.x < GetLeftBoundary()){
+            position.x = GetLeftBoundary() + 1;
+        }else if (position.x > GetRightBoundary()){
+            position.x = GetRightBoundary()-1;
         }
 
     }

@@ -105,6 +105,7 @@ bool menuOpen = false;
 bool controlsMenu = false;
 bool showLiquor = false;
 bool can_sell_drugs = true;
+bool canSpawnCyberZombies = true;
 bool applyShader = false;
 bool drunk = false;
 bool glitch = false;
@@ -198,7 +199,7 @@ Emitter explosionEmitter;
 
 std::vector<Box> boxes; //boxes stays in main because undefined behavior do to inclusion hell. 
 
-GameState gameState = OUTSIDE;
+GameState gameState = OFFICE;//OUTSIDE;
 
 TransitionState transitionState = NONE;
 float fadeAlpha = 1.0f;  // Starts fully opaque
@@ -849,6 +850,16 @@ void spawnFrank(Vector2 position){
     frank.SetDestination(player.position.x-100, player.position.x + 100);
     officeWorkers.push_back(frank);
 
+}
+
+void spawnCyberZombie(Vector2 position){
+    int speed = 50;
+    NPC cyberZombie = CreateNPC(resources.cyberZombieSheet, position, speed, IDLE, true, false);
+    cyberZombie.cyberZombie = true;
+    cyberZombie.maxHealth = 400;
+    cyberZombie.health = 400;
+    cyberZombie.SetDestination(player.position.x, player.position.x + 10);
+    cyberZombies.push_back(cyberZombie);
 }
 
 void spawnZombie(Vector2 position){
@@ -3992,6 +4003,11 @@ void RenderLab(){
         dboxPosition = player.position;
     }
 
+    if (player.position.x < 2702 && canSpawnCyberZombies){
+        canSpawnCyberZombies = false;
+        spawnCyberZombie(Vector2 {1500, 700});
+    }
+
     float deltaTime = GetFrameTime();
     camera.target = player.position;
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
@@ -4023,6 +4039,11 @@ void RenderLab(){
     for (NPC& scientist : scientists){
         scientist.Update();
         scientist.Render();
+    }
+
+    for (NPC& cyberZombie : cyberZombies){
+        cyberZombie.Update();
+        cyberZombie.Render();
     }
 
     HandleGrenades();
@@ -4080,10 +4101,10 @@ void RenderOffice(){
     float deltaTime = GetFrameTime();
 
 
-    if (can_spawn_zombies){
-        can_spawn_zombies = false;
-        StartZombieSpawn(15);
-    }
+    // if (can_spawn_zombies){
+    //     can_spawn_zombies = false;
+    //     StartZombieSpawn(15);
+    // }
 
     if (player.position.x < 2540 && player.position.x > 2520){ //first elevator button
         over_Ebutton = true;
@@ -4538,10 +4559,10 @@ void RenderNecroTech(){
 
     if (robots[0].agro && robots[0].isActive) showPasswordInterface = false; //hide interface on shots fired. 
 
-    for (NPC& cyberZombie : cyberZombies){
-        cyberZombie.Update();
-        cyberZombie.Render();
-    }
+    // for (NPC& cyberZombie : cyberZombies){
+    //     cyberZombie.Update();
+    //     cyberZombie.Render();
+    // }
 
 
     //showPasswordInterface = false; //dont show interface if not interacting. 
@@ -5110,15 +5131,15 @@ void spawnNPCs(){
         officeWorkers.push_back(officeWorker);
 
     }
-    //spawn cyberzombie
-    int cz = 2;
+    //spawn cyberzombie 
+    int cz = 0;// - cyber zombies spawn in later
     for (int i = 0; i < cz; i++){
         Vector2 cz_pos = {static_cast<float>(2000 + i * 200), 700};
         NPC cyberZombie = CreateNPC(resources.cyberZombieSheet, cz_pos, speed, IDLE, false, false);//spawn inactive
         cyberZombie.cyberZombie = true;
         
-        cyberZombie.maxHealth = 200;
-        cyberZombie.health = 200;
+        cyberZombie.maxHealth = 400;
+        cyberZombie.health = 400;
         cyberZombies.push_back(cyberZombie);
     }
 

@@ -694,17 +694,79 @@ NecroTech Interior:
 
 	lock player movement when entering scene some how. 
 
-	up to enter rendered in front of car UI in cemetery. again
+	up to enter rendered in front of car UI in cemetery. again fixed?
 
 	click on the badge to see the password somehow. x
+ 
+
+	dont change scenes if zombies are spawning. couldn't reproduce bug where badge doesn't show up in graveyard. x
+
+	heal sound effect
+
+	when fading out, dont update player movement x
+
+	increase size of inventory to 12, needs to move to the left about 128
+
+	make park bigger?
+
+	boxes on the right hand side of cemetery, draw a prop as well?
+
+	boxes are kept in one big vector. they are assigned the scene they will appear in on initiation. On rendering all boxes we only draw the ones assigned to the current scene. 
+
+	NPCs could be kept in one big vector like we do boxes. NPCs would have a member var called scene. they would be assigned to a certain scene. like outside, office and so one. there would be no need to iterate through muliple vectors to get the closest zombie. Huge job though. You could have it both ways while you work on the new way. 
+
+	for (NPC& npc : npcs){             
+		if (npc.scene == gameState){
+			if (npc.isActive){
+				npc.update();
+				npc.render();
+				npc.clickNPC();
+
+				if (npc.interacting){
+					phrase = npc.speech;
+				}
+			}
+
+	this would work for regular NPCs. Just need to initiate the NPCs differently. come back to it. 
 
 	put something else at the top of astral. 
+	Item for the ghost? the 2 evil ghosts at the top of astral stole the friendly ghost's item. And the item is a rusty pocket watch. Pocket watch makes sense. It's old school, has sentimental value, Could be a magic watch that lets you slow time. teleport? freeze time. click the watch and enemies stop moving for a few seconds. 
 
-	dont change scenes if zombies are spawning. couldn't reproduce bug where badge doesn't show up in graveyard. 
+	you can beat the game without ever picking up the revolver. drops should give more ammo and you should start with less. make 
+
+	limit revolver ammo x
+	Huge refactor. Made everything global instead of passing things around like a fool. 
+
+	added cyber zombie with grenade launcher. Needs a secondary attack if you get too close. Can use death2 for attack2 animation. That way no where is safe far away you get grenaded close up he'll bash you. 
+
+	Header only animation player class. tried and failed. try again later. 
+
+	revolver bullet pickup x
+
+	pickups should give more ammo x
+
+	Sharpen shader. x good but not great
 
 
+	laboratory level. -should be dark like the rest of the game. 
 
+	grenade launcher thump sound effect. x 
 
+	astral ghosts should be on either side of the player when jumping up to the platform. x could be too hard. 
+
+	outline shader in astral is too thin. shader needs edit x
+
+	cyberzombies have 200 health. Need more health
+
+	add cocaine or speed type drug to game. Activate sharpen shader when tweeking. 
+
+	implemented lab level. Maybe the tanks can break when hit by cyber zombie grenades and spawn more zombies. 
+
+	How should entering the lab level work? what happens? You take the elevator up to the lab. It starts out quiet. Just scientist walking around the tanks. once you get to the console on the left. the alarm sounds and cyber zombies start spawning. First 1 then 2 then 3. If a grenade lands next to a tank the tank cracks open and a zombie jumps out. How would we even do that? Just iterate tanks and check for collisions with grenade. for every grenade check every tank. 
+
+	start with putting cyber zombies in the lab and trigger them. Needs to be more dramatic.
+
+	office workers pants are too dark. 
 
 
 

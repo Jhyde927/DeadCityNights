@@ -32,7 +32,7 @@ void Emitter::SpawnBlood(int amount, Color color, bool facingRight) {
         p.velocity = { cosf(radians) * speed, sinf(radians) * speed };
 
         p.lifetime = particleLifetime;
-        p.color = RED;
+        p.color = color;
 
         particles.push_back(p);
     }

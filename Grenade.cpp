@@ -11,12 +11,12 @@
 std::vector<Grenade> grenades;
 
 Emitter exEmitter;
-Emitter smokeEmitter;
+
 
 float showCircleTImer = 0.0;
 float showCircle = true;
 bool canSpawnSmoke = true;
-float smokeTimer = 0.0;
+
 // Constructor: Initialize grenade position and velocity
 Grenade::Grenade(Vector2 pos, Vector2 vel) {
     position = pos;
@@ -27,8 +27,24 @@ Grenade::Grenade(Vector2 pos, Vector2 vel) {
 void Grenade::Update(float deltaTime) {
     if (isActive){
         exEmitter.UpdateParticles(GetFrameTime());
-        smokeEmitter.UpdateParticles(GetFrameTime());
-        if (exploded && explosionTimer > 0){
+
+            // Update animation timer for both grenade and explosion. 
+
+        maxFrames = exploded ? 7 : 4; //maxframes = 7 if exploded else 4
+        frameTimer += deltaTime;
+        if (frameTimer >= frameSpeed) {
+            frameTimer -= frameSpeed;
+            currentFrame++;
+            if (currentFrame >= maxFrames && !exploded) {
+                currentFrame = 0; // Loop animation
+            }
+            if (currentFrame >= maxFrames && exploded){
+                currentFrame = maxFrames-1; //stay on last frame
+            }
+
+        }
+
+        if (exploded && explosionTimer > 0){ //survive for a few moments before deActivating. 
             explosionTimer -= GetFrameTime();
         }else if (exploded && explosionTimer <= 0){
             isActive = false;
@@ -42,7 +58,7 @@ void Grenade::Update(float deltaTime) {
             position.y += velocity.y * deltaTime;
 
             // Check for ground collision (basic floor detection)
-            if (position.y >= 750.0f) { // Example ground level
+            if (position.y >= 750.0f) { 
                 position.y = 750.0f; // Keep it on ground level
             
                 if (!hasBounced) {
@@ -54,15 +70,7 @@ void Grenade::Update(float deltaTime) {
                 }
             }
 
-            // Update animation timer
-            frameTimer += deltaTime;
-            if (frameTimer >= frameSpeed) {
-                frameTimer -= frameSpeed;
-                currentFrame++;
-                if (currentFrame >= maxFrames) {
-                    currentFrame = 0; // Loop animation
-                }
-            }
+
 
             // Countdown to explosion
             lifetime -= deltaTime;
@@ -76,16 +84,6 @@ void Grenade::Update(float deltaTime) {
             if (CheckCollisionRecs(grenadeHitbox, playerHitbox)) {  
                 //Explode(); // Immediate explosion explode on hit
             }
-
-            if (smokeTimer > 0){
-                smokeTimer -= GetFrameTime();
-            }else{
-                canSpawnSmoke = true;
-            }
-
-            
-
-
         }
     }
 }
@@ -100,8 +98,8 @@ void Grenade::Explode() {
         exEmitter.SpawnExplosion(50, YELLOW);
         
         PlaySound(SoundManager::getInstance().GetSound("explosion"));
-        Vector2 centerPos = {player.position.x + 24, player.position.y + 24}; //center the hit circle on player
-        if (CheckCollisionCircles(position, explosionRadius, centerPos, 32)) {
+        Vector2 centerPos = {player.position.x + 32, player.position.y + 32}; //center the hit circle on player
+        if (CheckCollisionCircles(position, explosionRadius, centerPos, 16)) {
             player.take_damage(30);
             
             
@@ -109,8 +107,8 @@ void Grenade::Explode() {
 
         //lab scientists
         for (NPC& scientist : scientists){
-            Vector2 centerPos = {scientist.position.x + 24, scientist.position.y + 24};
-            if (CheckCollisionCircles(position, explosionRadius, centerPos, 32)) {
+            Vector2 centerPos = {scientist.position.x + 32, scientist.position.y + 32};
+            if (CheckCollisionCircles(position, explosionRadius, centerPos, 16)) {
                 if (scientist.isActive) scientist.TakeDamage(100);
                 
             }
@@ -120,8 +118,8 @@ void Grenade::Explode() {
 
 
         for (NPC& zombie : zombies){
-            Vector2 centerPos = {zombie.position.x + 24,zombie.position.y + 24};
-            if (CheckCollisionCircles(position, explosionRadius, centerPos, 32)) {
+            Vector2 centerPos = {zombie.position.x + 32,zombie.position.y + 32};
+            if (CheckCollisionCircles(position, explosionRadius, centerPos, 16)) {
                 if (zombie.isActive) zombie.TakeDamage(100);
 
             }
@@ -129,8 +127,8 @@ void Grenade::Explode() {
         }
 
         for (NPC& czom : cyberZombies){ //damage self
-            Vector2 centerPos = {czom.position.x + 24, czom.position.y + 24};
-            if (CheckCollisionCircles(position, explosionRadius, centerPos, 32)) {
+            Vector2 centerPos = {czom.position.x + 32, czom.position.y + 32};
+            if (CheckCollisionCircles(position, explosionRadius, centerPos, 16)) {
                 if (czom.isActive) czom.TakeDamage(100);
                 
             }
@@ -138,8 +136,8 @@ void Grenade::Explode() {
         }
 
         for (NPC& robot : robots){ //necrotech security robot
-            Vector2 centerPos = {robot.position.x + 24, robot.position.y + 24};
-            if (CheckCollisionCircles(position, explosionRadius, centerPos, 32)) {
+            Vector2 centerPos = {robot.position.x + 32, robot.position.y + 32};
+            if (CheckCollisionCircles(position, explosionRadius, centerPos, 16)) {
                 if (robot.isActive) robot.TakeDamage(100);
                 
             }
@@ -154,11 +152,7 @@ void Grenade::Explode() {
 void Grenade::Draw() {
     if (isActive){
         
-        if (canSpawnSmoke){
-            canSpawnSmoke = false;
-            smokeEmitter.SpawnBlood(50, WHITE, !facingRight); //smoke not working
-            smokeTimer = 1.0f;
-        }
+
         
         if (!exploded) {
             facingRight = (velocity.x > 0);
@@ -169,9 +163,14 @@ void Grenade::Draw() {
             Rectangle destRect = { position.x-16, position.y-16, 32, 32 };
             DrawTexturePro(resources.grenadeSheet, sourceRect, destRect, { 0, 0 }, 0.0f, WHITE);
             //DrawRectangle(position.x-16, position.y-16, 16, 16, RED);
-            smokeEmitter.DrawParticles();
+
         } else {
+            float frameWidth = 64;
+            float frameHeight = 64;
             exEmitter.DrawParticles();
+            Rectangle sourceRect = { currentFrame * frameWidth, 0, frameWidth, frameHeight };
+            Rectangle destRect = { position.x-32, position.y-32, frameWidth, frameHeight};
+            DrawTexturePro(resources.explosionSheet, sourceRect, destRect, { 0, 0 }, 0.0f, WHITE);
             if (showCircle){
                 showCircle = false;
                 showCircleTImer = .1;

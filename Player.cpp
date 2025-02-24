@@ -879,12 +879,9 @@ void Player::DrawPlayer() {
 
     }
 
-
-
     // Draw the player
     Color tint = (hitTimer > 0) ? RED : WHITE;
     Vector2 castPos = {(float) position.x, (float) position.y};
-    
     if (outline) BeginShaderMode(shaders.outlineShader);
     DrawTextureRec(currentSheet, sourceRec, castPos, tint);  // Draw the player based on the current state
     

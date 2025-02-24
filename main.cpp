@@ -201,7 +201,7 @@ Emitter explosionEmitter;
 
 std::vector<Box> boxes; //boxes stays in main because undefined behavior do to inclusion hell. 
 
-GameState gameState = LAB;
+GameState gameState = OUTSIDE;
 
 TransitionState transitionState = NONE;
 float fadeAlpha = 1.0f;  // Starts fully opaque
@@ -1090,7 +1090,7 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
     //Activate/DeActivate NPCs depending on the game state. 
     // Map game states to multiple NPC groups
     std::map<GameState, std::vector<std::vector<NPC>*>> npcGroups = { //key = gameState, val = vector of vectors 
-        { NECROTECH, { &robots, &cyberZombies } },
+        { NECROTECH, { &robots } },
         { LOBBY, { &lobbyRobots, &lobbyNPCs, &lobbyMibs, &zombies } },  // Multiple NPC groups in LOBBY
         { ASTRAL, { &astralBats, &astralGhosts } },    
         { OUTSIDE, { &npcs, &mibs } }, //sigular mib outside
@@ -1099,7 +1099,7 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
         { GRAVEYARD, { &zombies, &ghosts } },//we switch them all off when not in one of those 3 scenes. This means zombies will be retained for those scenes.
         //so if you spawn zombies in the park(and dont kill them all), they will also be in the graveyard and cemetery. 
         { PARK, { &ParkNpcs, &zombies }},
-        { OFFICE, {&officeWorkers, &zombies, &cyberZombies}},
+        { OFFICE, {&officeWorkers, &zombies},
         {LOT, {&hobos}}, //dont forget about hobo
         {LAB, {&cyberZombies, &scientists}}
 
@@ -4066,7 +4066,7 @@ void RenderLab(){
 
         if (scientist.trigger){
             scientist.trigger = false;
-            Vector2 spawnPos = {player.position.x + 200, 700};
+            Vector2 spawnPos = {player.position.x + 400, 700};
             Vector2 spawnPos2 = {player.position.x - 200, 700};
             spawnCyberZombie(spawnPos);
             spawnCyberZombie(spawnPos2);
@@ -4140,10 +4140,10 @@ void RenderOffice(){
     float deltaTime = GetFrameTime();
 
 
-    // if (can_spawn_zombies){
-    //     can_spawn_zombies = false;
-    //     StartZombieSpawn(15);
-    // }
+    if (can_spawn_zombies){
+        can_spawn_zombies = false;
+        StartZombieSpawn(15);
+    }
 
     if (player.position.x < 2540 && player.position.x > 2520){ //first elevator button
         over_Ebutton = true;
@@ -4287,6 +4287,7 @@ void RenderOffice(){
 
 //Lobby
 void RenderLobby(){
+    player.outline = false; //is set true in office, se set it back when exiting either to lobby or lab. 
     show_dbox = false;   
     over_exit = false;
     over_Ebutton = false;
@@ -5186,7 +5187,7 @@ void spawnNPCs(){
     int sc = 1;
     for (int i = 0; i < sc; i ++){
         Vector2 sc_pos = {static_cast<float>(2500 + i * 200), 700};
-        NPC scientist = CreateNPC(resources.scienceSheet, sc_pos, speed, IDLE, true, false); //spawn active for now, remember to set this back to false
+        NPC scientist = CreateNPC(resources.scienceSheet, sc_pos, speed, IDLE, false, false); //spawn active for now, remember to set this back to false
         scientist.scientist = true;
         scientist.SetDestination(2000, 3500);
 
@@ -5197,7 +5198,7 @@ void spawnNPCs(){
     int scj = 3;
     for (int i = 0; i < scj; i ++){
         Vector2 sc_pos = {static_cast<float>(2200 + i * 200), 700};
-        NPC scientist = CreateNPC(resources.scienceJrSheet, sc_pos, speed, IDLE, true, false); //spawn active for now, remember to set this back to false
+        NPC scientist = CreateNPC(resources.scienceJrSheet, sc_pos, speed, IDLE, false, false); //spawn active for now, remember to set this back to false
         scientist.scienceJr = true;
         scientist.SetDestination(2000, 3500);
 

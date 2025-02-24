@@ -17,13 +17,13 @@ public:
     float frameTimer = 0.0f; 
     int currentFrame = 0;
     float frameSpeed = 0.1f; // Time per frame
-    int maxFrames = 4; // Assuming 4 frames in your sprite sheet
+    int maxFrames = 4; // Assuming 4 frames 
     float explosionTimer = 0.0f; // Grenade stays alive for 300ms after exploding
     bool isActive = true;
     bool facingRight = true;
 
     Emitter exEmitter;
-    Emitter smokeEmitter;
+
 
 
     Grenade(Vector2 pos, Vector2 vel);  // Constructor

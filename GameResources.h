@@ -120,6 +120,7 @@ struct GameResources {
     Texture2D monitorSheet;
     Texture2D scienceSheet;
     Texture2D scienceJrSheet;
+    Texture2D explosionSheet;
     
 
     Font defaultFont;

@@ -1157,6 +1157,8 @@ void NPC::Render() {
     if (bat) BeginShaderMode(shaders.rainbowOutlineShader); //raindbow bats
     if (highLight && !frank) BeginShaderMode(shaders.highlightShader);//highlight when talking except for frank, for reasons. 
     DrawTextureRec(texture, sourceRec, position, tint);
+
+
     bloodEmitter.DrawParticles(); //draw blood in front of sprite, looks better IMO
     EndShaderMode();
 }

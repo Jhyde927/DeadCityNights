@@ -98,19 +98,18 @@ void Grenade::Explode() {
         exEmitter.SpawnExplosion(50, YELLOW);
         
         PlaySound(SoundManager::getInstance().GetSound("explosion"));
-        Vector2 centerPos = {player.position.x + 32, player.position.y + 32}; //center the hit circle on player
-        if (CheckCollisionCircles(position, explosionRadius, centerPos, 16)) {
+        //Vector2 centerPos = {player.position.x + 32, player.position.y + 32}; //center the hit circle on player
+        Rectangle hitBox = {position.x+24,position.y+16, 16, 24};
+        if (CheckCollisionCircleRec(position, explosionRadius, hitBox)){
             player.take_damage(30);
-            
-            
         }
 
         //lab scientists
         for (NPC& scientist : scientists){
-            Vector2 centerPos = {scientist.position.x + 32, scientist.position.y + 32};
-            if (CheckCollisionCircles(position, explosionRadius, centerPos, 16)) {
-                if (scientist.isActive) scientist.TakeDamage(100);
-                
+
+            Rectangle hitBox = {scientist.position.x+24,scientist.position.y+16, 16, 24};
+            if (CheckCollisionCircleRec(position, explosionRadius, hitBox)){
+                scientist.TakeDamage(100);
             }
 
         }
@@ -118,28 +117,25 @@ void Grenade::Explode() {
 
 
         for (NPC& zombie : zombies){
-            Vector2 centerPos = {zombie.position.x + 32,zombie.position.y + 32};
-            if (CheckCollisionCircles(position, explosionRadius, centerPos, 16)) {
-                if (zombie.isActive) zombie.TakeDamage(100);
-
+            Rectangle hitBox = {zombie.position.x+24,zombie.position.y+16, 16, 24};
+            if (CheckCollisionCircleRec(position, explosionRadius, hitBox)){
+                zombie.TakeDamage(100);
             }
 
         }
 
         for (NPC& czom : cyberZombies){ //damage self
-            Vector2 centerPos = {czom.position.x + 32, czom.position.y + 32};
-            if (CheckCollisionCircles(position, explosionRadius, centerPos, 16)) {
-                if (czom.isActive) czom.TakeDamage(100);
-                
+            Rectangle hitBox = {czom.position.x+24,czom.position.y+16, 16, 24};
+            if (CheckCollisionCircleRec(position, explosionRadius, hitBox)){
+                czom.TakeDamage(100);
             }
 
         }
 
         for (NPC& robot : robots){ //necrotech security robot
-            Vector2 centerPos = {robot.position.x + 32, robot.position.y + 32};
-            if (CheckCollisionCircles(position, explosionRadius, centerPos, 16)) {
-                if (robot.isActive) robot.TakeDamage(100);
-                
+            Rectangle hitBox = {robot.position.x+24,robot.position.y+16, 16, 24};
+            if (CheckCollisionCircleRec(position, explosionRadius, hitBox)){
+                robot.TakeDamage(100);
             }
 
         }

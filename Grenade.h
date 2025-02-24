@@ -24,8 +24,6 @@ public:
 
     Emitter exEmitter;
 
-
-
     Grenade(Vector2 pos, Vector2 vel);  // Constructor
 
     void Update(float deltaTime);  // Updates grenade physics

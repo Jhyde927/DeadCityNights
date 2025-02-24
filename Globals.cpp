@@ -4,22 +4,16 @@
 //difine the instances of the random structs
 PlayerCar player_car;
 Earth earth;
-// MagicDoor magicDoor;
-// MagicDoor magicDoor2; 
 MagicDoor magicDoor;
 UFO ufo;
 Train train;
-// Elevator elevator1;
-// Elevator elevator2;
 Elevator elevator;
-
 Tank tank;
 Console console;
 Monitor monitor;
 
 std::vector<Platform> platforms;
 std::vector<MagicDoor> magicDoors;
-
 std::vector<Elevator> elevators;
 
 std::vector<Tank> Tanks;
@@ -41,17 +35,12 @@ std::vector<NPC>lobbyNPCs;
 std::vector<NPC>lobbyMibs;
 std::vector<NPC>officeWorkers;
 std::vector<NPC>scientists;
-
 std::vector<NPC>cyberZombies;
-
-
-
 
 Camera2D camera = { 0 };
 float targetZoom = 1.0f; 
 float totalTime = 0.0f;
 Vector2 mousePosition = {0, 0}; 
-
 
 void InitCamera() {
 //init camera, and targetZoom, delcared in Globals.h
@@ -89,10 +78,6 @@ void InitMonitor(Vector2 position){
     monitor.frameTime = 0.1f;
     monitors.push_back(monitor);
 }
-
-
-
-
 
 
 void InitializePlayerCar(){

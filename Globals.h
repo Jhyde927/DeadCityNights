@@ -12,6 +12,7 @@
 // Declare global Camera2D
 extern Camera2D camera;
 extern float targetZoom;
+
 extern std::vector<NPC> npcs; //outside // subway
 extern std::vector<NPC> zombies; //cemetery/graveyard
 extern std::vector<NPC>hobos; //lot
@@ -27,9 +28,6 @@ extern std::vector<NPC>lobbyNPCs;
 extern std::vector<NPC>lobbyMibs;
 extern std::vector<NPC>officeWorkers;
 extern std::vector<NPC>scientists;
-
-
-
 extern std::vector<NPC>cyberZombies;
 
 
@@ -154,7 +152,7 @@ void InitTank(Vector2 position);
 void InitConsole(Vector2 position);
 void InitMonitor(Vector2 position);
 void InitEarth();
-void InitElevator(Vector2 position); //do we need to pass an elevator here? or could we just create a new one in initelevators. 
+void InitElevator(Vector2 position); 
 void InitUFO();
 void InitializeTrain();
 void InitPlatforms();

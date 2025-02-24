@@ -188,16 +188,27 @@ float GetLeftBoundary(){
     }
 }
 
-bool Player::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition, Vector2 bulletSize) { 
-    //raycasting for better collision detection
-    // Define a hitbox around the NPC (centered on the NPC's position)
-    float hitboxWidth = 8.0f;   // Width of the hitbox 
-    float hitboxHeight = 32.0f; // Height of the hitbox 
 
-    // Offset the hitbox so it's centered on the zombie's position
+
+
+bool Player::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition, Vector2 bulletSize) { 
+    //         ______|_______
+    //        |      32-4 x  |
+    //        |      __   16y|_
+    //        |     | 8|     | 64  the image size is 64x64. the character is in the middle of the image. 
+    //        |     |32|     | the character is 8x32. offset X by half image - half the character size, offset y by half character height.  
+    //        |     |__|     |   
+    //        |______________|
+    //              64                                                     
+    // Define a hitbox around the NPC 
+    float hitboxWidth = 8.0f;   // Width of the hitbox                    
+    float hitboxHeight = 32.0f; // Height of the hitbox                 
+    ///                                                                  
+    //                                                                    
+    // Offset the hitbox so it's centered on the zombie's position        
     Rectangle npcHitbox = {
-        position.x + 32,   // Center horizontally
-        position.y,  // Center vertically
+        position.x + 32 - 4,   // Center horizontally
+        position.y+16,  // Center vertically
         hitboxWidth,                    // Width of hitbox
         hitboxHeight                    // Height of hitbox
     };
@@ -883,6 +894,8 @@ void Player::DrawPlayer() {
     Color tint = (hitTimer > 0) ? RED : WHITE;
     Vector2 castPos = {(float) position.x, (float) position.y};
     if (outline) BeginShaderMode(shaders.outlineShader);
+    
+    
     DrawTextureRec(currentSheet, sourceRec, castPos, tint);  // Draw the player based on the current state
     
     EndShaderMode();

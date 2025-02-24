@@ -1156,8 +1156,9 @@ void NPC::Render() {
     if (ghost) tint = ColorAlpha(WHITE, ghostAlpha);//use Color alpha to change alpha of ghost on hit
     if (bat) BeginShaderMode(shaders.rainbowOutlineShader); //raindbow bats
     if (highLight && !frank) BeginShaderMode(shaders.highlightShader);//highlight when talking except for frank, for reasons. 
-    DrawTextureRec(texture, sourceRec, position, tint);
+    
 
+    DrawTextureRec(texture, sourceRec, position, tint);
 
     bloodEmitter.DrawParticles(); //draw blood in front of sprite, looks better IMO
     EndShaderMode();
@@ -1211,6 +1212,15 @@ void NPC::ClickNPC(){
 }
 
 bool NPC::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition, Vector2 bulletSize) { 
+
+//         ______________ 
+//        |      32-4 x  |
+//        |     _|_  16y |
+//        |     | 8|     |   
+//        |     |32|     |
+//        |     |__|     |   
+//        |______________|
+
     //raycasting for better collision detection
     // Define a hitbox around the NPC (centered on the NPC's position)
     float hitboxWidth = 8.0f;   // Width of the hitbox 
@@ -1218,8 +1228,8 @@ bool NPC::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition
 
     // Offset the hitbox so it's centered on the zombie's position
     Rectangle npcHitbox = {
-        position.x + 32,   // Center horizontally
-        position.y,  // Center vertically
+        position.x + 32-4,   // Center horizontally
+        position.y + 16,  // Center vertically
         hitboxWidth,                    // Width of hitbox
         hitboxHeight                    // Height of hitbox
     };

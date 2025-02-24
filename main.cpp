@@ -1133,7 +1133,7 @@ void DrawItem(Vector2 itemPos, const std::string& itemType) {
     float distanceToItemY = abs(itemPos.y - player.position.y);
 
     static std::map<std::string, Texture2D> itemTextures = {
-        {"mac10", resources.Mac10pickup}, //not used
+        {"mac10", resources.Mac10pickup}, //not used at the moment
         {"shovel", resources.shovelWorld},
         {"crowbar", resources.crowbarWorld}, 
         {"watch", resources.pocketWatchWorld},
@@ -1179,7 +1179,7 @@ void DrawItem(Vector2 itemPos, const std::string& itemType) {
             if (itemType == "shovel" || itemType == "crowbar") PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
             if (itemType == "watch") PlaySound(SoundManager::getInstance().GetSound("moneyUp"));
             if (itemType == "crowbar"){
-                crowbarDialogTimer = 5.0f;
+                crowbarDialogTimer = 5.0f; //Press V to swing crowbar, show for 5 seconds. 
             }
 
            

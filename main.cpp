@@ -1099,7 +1099,7 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
         { GRAVEYARD, { &zombies, &ghosts } },//we switch them all off when not in one of those 3 scenes. This means zombies will be retained for those scenes.
         //so if you spawn zombies in the park(and dont kill them all), they will also be in the graveyard and cemetery. 
         { PARK, { &ParkNpcs, &zombies }},
-        { OFFICE, {&officeWorkers, &zombies},
+        { OFFICE, {&officeWorkers, &zombies}},
         {LOT, {&hobos}}, //dont forget about hobo
         {LAB, {&cyberZombies, &scientists}}
 

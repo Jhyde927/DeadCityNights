@@ -137,6 +137,8 @@ float inventoryTargetY = 0.0f;
 float passwordTimer = 0.0;
 float DoorframeTimer = 0.0f;
 float astralThreshold = 0.5f;
+float crowbarDialogTimer = 0.0;
+
 
 float badgeTimer = 0.0f;
 float fortuneTimer = 0.0f;
@@ -199,7 +201,7 @@ Emitter explosionEmitter;
 
 std::vector<Box> boxes; //boxes stays in main because undefined behavior do to inclusion hell. 
 
-GameState gameState = OFFICE;//OUTSIDE;
+GameState gameState = LAB;
 
 TransitionState transitionState = NONE;
 float fadeAlpha = 1.0f;  // Starts fully opaque
@@ -1176,6 +1178,10 @@ void DrawItem(Vector2 itemPos, const std::string& itemType) {
             if (itemType == "mac10") PlaySound(SoundManager::getInstance().GetSound("reload"));
             if (itemType == "shovel" || itemType == "crowbar") PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
             if (itemType == "watch") PlaySound(SoundManager::getInstance().GetSound("moneyUp"));
+            if (itemType == "crowbar"){
+                crowbarDialogTimer = 5.0f;
+            }
+
            
         }
     }
@@ -1714,7 +1720,8 @@ Vector2 Lerp(Vector2 start, Vector2 end, float t) {
 NPC* FindClosestNPC(NPC& zombie, std::vector<NPC>& npcs) {
     //find closest npc to zombie
     NPC* closestNPC = nullptr;
-    float minDist = 1000.0f; // Large initial distance
+    float minDist = 500.0f; // Large initial distance //but not too large. 500 is max distance to give chase. otherwise we dont bother. 
+    //prevents NPCs running off screen because a zombie targeting them 1000 pixels away. 
 
     for (NPC& npc : npcs) {
         if (npc.isActive && zombie.isActive) { //make sure the zombie is also active
@@ -1742,6 +1749,7 @@ void UpdatePoliceTarget(NPC& police, std::vector<NPC>& zeds){
 
 
 void UpdateZombieTarget(NPC& zombie, std::vector<NPC>& npcs) {
+    //find the closest NPC and chase them. 
     zombie.targetNPC = FindClosestNPC(zombie, npcs);
 
     if (zombie.targetNPC != nullptr) {
@@ -2305,15 +2313,14 @@ void DrawCarUI(PlayerCar& player_car, Camera2D& camera){
         work_tint = hasWorked ? BLACK : work_tint; //turn off work option if you have recently worked. Render button black. 
         DrawText("   Work", ui_pos.x, ui_pos.y+17, 16, work_tint);
 
-        if (NecroTech) DrawText("  NecroTech", ui_pos.x, ui_pos.y+32, 16, necro_tint); //TODO: implement final level. I've been putting it off because
-        //i don't like it. Then change it. 
+        if (NecroTech) DrawText("  NecroTech", ui_pos.x, ui_pos.y+32, 16, necro_tint); 
 
 
         
 
-    }else if (gameState == CEMETERY){
+    }else if (gameState == CEMETERY){ //consider connecting things more, like park to work, or cemetery to park. 
         
-        DrawText("   Street", ui_pos.x, ui_pos.y, 16, cemetery_tint);
+        DrawText("   Street", ui_pos.x, ui_pos.y, 16, cemetery_tint); 
        //DrawText("Work", ui_pos.x, ui_pos.y+17, 16, work_tint);
 
     }else if (gameState == PARK){
@@ -2329,19 +2336,18 @@ void DrawTank(Tank& tank){
     float tankFrame = 32.0;
     int numFrames = 5;
       // Update animation timer
-      tank.frameTimer += GetFrameTime();
+    tank.frameTimer += GetFrameTime();
 
       // Check if it's time to move to the next frame
-      if (tank.frameTimer >= tank.frameTime)
-      {
-          tank.frameTimer -= tank.frameTime;           // Reset the timer
-          tank.currentFrame++;                    // Move to the next frame
+    if (tank.frameTimer >= tank.frameTime){
+        tank.frameTimer -= tank.frameTime;           // Reset the timer
+        tank.currentFrame++;                    // Move to the next frame
 
-          if (tank.currentFrame > numFrames)              // Loop back to the first frame if necessary
-          {
-              tank.currentFrame = 0; //stop at last frame when door is open. 
-          }
-      }
+        if (tank.currentFrame > numFrames)              // Loop back to the first frame if necessary
+        {
+            tank.currentFrame = 0; 
+        }
+    }
 
     Rectangle sourceRec = {static_cast<float>(tank.currentFrame) * tankFrame, 0, static_cast<float>(tankFrame), static_cast<float>(tankFrame)};
     Rectangle destRec = {tank.position.x, tank.position.y, 96.0f, 96.0f};
@@ -2671,9 +2677,19 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
     int textHeight = 32;
     int padding = 20;
     int textWidth = MeasureText(phrase.c_str(), textSize); //find the length of the string in pixels
-    if (phrase.find('\n') != std::string::npos) { //check for a \n character, if so, double the height of the box, there is never more than 2 lines
-            textHeight = 64;
+    int lineCount = 1; // Default to 1 row of text
+    std::string::size_type pos = 0;
+    std::string delimiter = "\n\n";
+    
+    // Count occurrences of "\n\n"
+    while ((pos = phrase.find(delimiter, pos)) != std::string::npos) {
+        lineCount++; // Each occurrence adds another row
+        pos += delimiter.length();
     }
+    
+    // Set text height based on the number of lines
+    textHeight = 32 * lineCount; // Assuming base height is 32
+
     DrawRectangle(screen_pos.x+5, screen_pos.y+offset, textWidth + padding, textHeight, Fade(BLACK, 0.3f));
     DrawRectangle(screen_pos.x, screen_pos.y + offset, boxWidth, boxHeight, Fade(BLACK, 0.3f));
     DrawText(phrase.c_str(), screen_pos.x+ screen_offsetX, screen_pos.y + screen_offsetY, textSize, tint); //Draw Phrase
@@ -2831,7 +2847,7 @@ void playerOutsideInteraction(Player& player, PlayerCar& player_car){
 
 void RenderSubway(){
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
-
+    //we only do this in subway and park, do we not have positional audio outside these scenes? because we are not calling this whenever zoms spawn. 
     show_dbox = false;
 
     
@@ -3491,7 +3507,7 @@ void RenderGraveyard(){
         ghost.ClickNPC();
         //if (ghost.health > 0) ghost.isActive = true; <- this caused some major pains
 
-        if (ghost.interacting && player.hasWatch){
+        if (ghost.interacting && player.hasWatch && ghost.interactions > 0 && ghost.isActive){//Need a timer to show last message for a few seconds, for no we just dont show last message. 
             phrase = "You found my pocket watch"; //TODO: write a rhyme
             dboxPosition = ghost.position;
             show_dbox = true;
@@ -3502,10 +3518,13 @@ void RenderGraveyard(){
             
         }
 
-        if (ghost.interacting && !player.hasWatch){
+        if (ghost.interacting && ghost.isActive){
             show_dbox = true;
             dboxPosition = ghost.position;
-            phrase = ghost.speech;
+            if (ghost.interactions == 0){
+                phrase = ghost.speech;
+            }
+          
         }
     }
 
@@ -3633,7 +3652,8 @@ void RenderApartment(){
 }
 
 void RenderLot(){
-
+    over_exit = false;
+    digSpot = false;
     show_dbox = false; //turn off dbox if no one is interacting
     int digPos = 2600;
     if (player.position.x < 2782 && player.position.x > 2742){
@@ -3641,14 +3661,18 @@ void RenderLot(){
         phrase = "UP TO EXIT";
         dboxPosition = player.position;
         show_dbox = true;
-    }else{
-        over_exit = false;
     }
 
     if (player.position.x > digPos - 10 && player.position.x < digPos + 10){
         digSpot = true;
-    }else{
-        digSpot = false;
+    }
+
+    if (crowbarDialogTimer > 0){
+        show_dbox = true;
+        phrase = "Press V to swing crowbar";
+        dboxPosition = player.position;
+        crowbarDialogTimer -= GetFrameTime(); //show crowbar dialog for 5 seconds. You are standing by breakable boxes with a crowbar in hand. 
+        //break the boxes. with V.
     }
 
 
@@ -3671,7 +3695,7 @@ void RenderLot(){
     int cameraMinX = 2677;
     int cameraMaxX = 3048;
     
-    if (player.position.x > 2677 && player.position.x < 3048){
+    if (player.position.x > 2677 && player.position.x < 3048){ //lock camera on player except when by edges. 
         camera.target.x = player.position.x;
 
     }else{
@@ -3688,8 +3712,6 @@ void RenderLot(){
         BeginShaderMode(shaders.glowShader2);
 
     }
-    
-
 
      // Draw the background (sky)
     DrawTexturePro(resources.background, {0, 0, static_cast<float>(resources.background.width), static_cast<float>(resources.background.height)},
@@ -3743,23 +3765,18 @@ void RenderLot(){
             // show_dbox = false;
         }
     }
-
-
-
     
-    player.DrawPlayer();
+    player.DrawPlayer(); //always draw player in the lot
 
-
-    if (!player.hasCrowbar){
+    if (!player.hasCrowbar){ //if no crowbar, draw crowbar
         DrawItem(Vector2 {2860, 700}, "crowbar");
     }
     DrawBullets();
     renderBoxes();
-    DrawPickups();
+    DrawPickups();//bullets and money
     EndMode2D();  // End 2D mode 
+
     showBigBadge();
- 
-    
 
     if (show_dbox){      
         DrawDialogBox(camera, 0, 0, 20); // draw box size of 0x0. hobo has no border box
@@ -3777,7 +3794,7 @@ void RenderPark(){
     BeginMode2D(camera);  // Begin 2D mode with the camera
     ClearBackground(customBackgroundColor);
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
-
+    //do we do this in office?
     float parallaxBackground = camera.target.x * 0.9f;  // Background moves even slower
     float ParallaxBuildings = camera.target.x * 0.7;
     float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
@@ -4003,10 +4020,10 @@ void RenderLab(){
         dboxPosition = player.position;
     }
 
-    if (player.position.x < 2702 && canSpawnCyberZombies){
-        canSpawnCyberZombies = false;
-        spawnCyberZombie(Vector2 {1500, 700});
-    }
+    // if (player.position.x < 2702 && canSpawnCyberZombies){
+    //     canSpawnCyberZombies = false;
+    //     spawnCyberZombie(Vector2 {1500, 700});
+    // }
 
     float deltaTime = GetFrameTime();
     camera.target = player.position;
@@ -4039,11 +4056,33 @@ void RenderLab(){
     for (NPC& scientist : scientists){
         scientist.Update();
         scientist.Render();
+        scientist.ClickNPC();
+
+        if (scientist.interacting && scientist.scientist){ //only the head scientist can talk
+            show_dbox = true;
+            dboxPosition = scientist.position;
+            phrase = scientist.speech;
+        }
+
+        if (scientist.trigger){
+            scientist.trigger = false;
+            Vector2 spawnPos = {player.position.x + 200, 700};
+            Vector2 spawnPos2 = {player.position.x - 200, 700};
+            spawnCyberZombie(spawnPos);
+            spawnCyberZombie(spawnPos2);
+            StartZombieSpawn(10);
+        }
     }
 
     for (NPC& cyberZombie : cyberZombies){
         cyberZombie.Update();
         cyberZombie.Render();
+    }
+
+    for (NPC& zombie : zombies){
+        zombie.Update();
+        zombie.Render();
+        UpdateZombieTarget(zombie, scientists);
     }
 
     HandleGrenades();
@@ -5144,12 +5183,23 @@ void spawnNPCs(){
     }
 
     //spawn scientists
-    int sc = 2;
+    int sc = 1;
     for (int i = 0; i < sc; i ++){
         Vector2 sc_pos = {static_cast<float>(2500 + i * 200), 700};
-        NPC scientist = CreateNPC(resources.scienceSheet, sc_pos, speed, IDLE, false, false); //spawn inactive
+        NPC scientist = CreateNPC(resources.scienceSheet, sc_pos, speed, IDLE, true, false); //spawn active for now, remember to set this back to false
         scientist.scientist = true;
-        scientist.SetDestination(2000, 4000);
+        scientist.SetDestination(2000, 3500);
+
+        scientists.push_back(scientist);
+    }
+
+    //spawn Junior scientists
+    int scj = 3;
+    for (int i = 0; i < scj; i ++){
+        Vector2 sc_pos = {static_cast<float>(2200 + i * 200), 700};
+        NPC scientist = CreateNPC(resources.scienceJrSheet, sc_pos, speed, IDLE, true, false); //spawn active for now, remember to set this back to false
+        scientist.scienceJr = true;
+        scientist.SetDestination(2000, 3500);
 
         scientists.push_back(scientist);
     }
@@ -6081,19 +6131,11 @@ int main() {
                 (Vector2){ 0, 0 },
                 0.0f,
                 WHITE
-            );
-
-            
-
-            
+            );       
         EndShaderMode();
-        EndDrawing();
-        
-        
+        EndDrawing();        
     }
-
     // Unload resources and close the window
-    //UnloadGameResources(resources);
     resources.Unload();
     soundManager.UnloadAllSounds();
     UnloadShaders();

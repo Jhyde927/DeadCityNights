@@ -600,9 +600,9 @@ void Player::shootLogic(){
 
     if (IsKeyPressed(KEY_ONE)) {
         currentWeapon = REVOLVER;
-    } else if (IsKeyPressed(KEY_TWO)) {
+    } else if (IsKeyPressed(KEY_TWO) && hasShotgun) {
         currentWeapon = SHOTGUN;
-    }else if (IsKeyPressed(KEY_THREE)){
+    }else if (IsKeyPressed(KEY_THREE) && hasMac10){
         currentWeapon = MAC10;
     }
 
@@ -884,8 +884,10 @@ void Player::DrawPlayer() {
     // Draw the player
     Color tint = (hitTimer > 0) ? RED : WHITE;
     Vector2 castPos = {(float) position.x, (float) position.y};
+    
     if (outline) BeginShaderMode(shaders.outlineShader);
     DrawTextureRec(currentSheet, sourceRec, castPos, tint);  // Draw the player based on the current state
+    
     EndShaderMode();
 
 }

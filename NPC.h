@@ -87,6 +87,7 @@ public:
     float animationTimer;
     bool isMoving;
     bool scientist;
+    bool scienceJr;
 
     // Add an emitter for each NPC
     Emitter bloodEmitter;

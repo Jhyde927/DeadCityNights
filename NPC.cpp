@@ -56,6 +56,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     MiB = false;
     frank = false;
     scientist = false;
+    scienceJr = false;
     clickCount = 0;
     interactions = 0;
     talkTimer = 0.0f;
@@ -109,9 +110,8 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
 
         destination = position;//Stop NPC
         interacting = true;
-        //idleTime = 5;
         if (dealer) idleTime = 10;
-        //if (teller) idleTime = 10;
+        
 
         if (talkTimer > 0){ //click while countdown is going// works for all NPCs? could be trouble
             talkTimer = 0; //If you click while the hobo is talking, skip the dialog by seting talk timer to 0
@@ -127,6 +127,8 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
             //Idle time is how long the NPC stays stationary before picking a new destination. 
         }
 
+
+
         if (!talked && MiB && gameState == PARK){ 
             talked = true;
             speech = "We are Watching You";
@@ -134,6 +136,37 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
             idleTime = 5;
             //zombies triggered elsewhere
 
+        }
+
+        if (!talked && scientist){
+            talked = true;
+            talkTimer = 4;
+            idleTime = 4;
+            if (interactions == 0){
+                clickCount += 1;
+                switch (clickCount)
+                {
+                    case 1:
+                        speech = "Ah... a visitor.";
+                        break;
+                    case 2:
+                        speech = "You stand in the presence of progress\n\n of perfection!";
+                        break;
+                    case 3:
+                        speech = "My children, no\n\nmy masterpieces are nearly complete!";
+                        break;
+                    case 4:
+                        speech = "Flesh and steel\n\nmindless yet obedient.\n\nSoon you will see...";
+                        break;
+                    case 5:
+                        speech = "Behold! \n\nMy cybernetically enhanced\n\nSuper soldier!";
+                        trigger = true;
+                
+                        break;
+
+                }
+            }
+           
         }
 
         if (!talked && frank && gameState == OFFICE){ //frank the office worker gives some plot
@@ -283,6 +316,7 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
                     case 4:
                         speech = "Six feet deep, my fate was spun \n\nBuried beside my smoking gun.";
                         clickCount = 0;
+                        interactions += 1;
                         break;
                 }
             }
@@ -793,10 +827,12 @@ void NPC::SetDestination(float minX, float maxX) {
 
 void NPC::HandleAnimationLogic(){
         // Update frame counter and animation logic
-    frameCounter += GetFrameTime() * frameSpeed; //accumulate frametime until it's time to switch. framecounter = time between frames, 0.0167 * 8 
+    frameCounter += GetFrameTime() * frameSpeed; //accumulate frametime until it's time to switch. 
+    //framecounter = time between frames, 0.0167 * 8 
     
     if (frameCounter >= 1.0f) { 
-        frameCounter = 0.0f; //restet to 0, we dont want to save any frames do to lag, causes NPCs to stutter at the beginning of game. 
+        frameCounter = 0.0f; //restet to 0, we dont want to save any frames do to lag,
+        // causes NPCs to stutter at the beginning of game. 
         currentFrame++;
 
         // Determine the number of frames based on the current animation, all animations are 7 frames except idle
@@ -873,41 +909,6 @@ void NPC::ghostMoves(){
 }
 
 
-// void NPC::ghostMoves(){
-//     if (agro && hasTarget) {
-//         float deltaTime = GetFrameTime(); // Get the frame time
-        
-//         Vector2 velocity = {0.0f, 0.0f};
-
-//         float yDifference = destination.y - position.y;
-//         float xDifference = destination.x - position.x;
-
-//         float yThreshold = 5.0f; // Adjust as needed
-
-//         if (fabs(yDifference) > yThreshold) {
-//             // Move vertically towards the player's Y position
-//             velocity.y = (yDifference > 0 ? 1.0f : -1.0f) * 75;
-//             // Do not move horizontally yet
-//             velocity.x = 0.0f;
-//         } else {
-//             // Once aligned in Y, move horizontally towards the player
-//             velocity.x = (xDifference > 0 ? 1.0f : -1.0f) * 75;
-//             velocity.y = 0.0f;
-
-//             // Set facing direction
-//             facingRight = (velocity.x > 0);
-//         }
-
-//         // Update position
-//         position.x += velocity.x * deltaTime;
-//         position.y += velocity.y * deltaTime;
-
-//         // Set animation state
-//         if (!isDying) SetAnimationState(WALK); // Or another appropriate state
-//     } else {
-//         SetAnimationState(IDLE);
-//     }
-// }
 
 void NPC::Update() {
     if (!isActive) return;  // Skip update if the NPC is not active
@@ -1074,8 +1075,8 @@ void NPC::Update() {
                 SetDestination(1600, 2500); //robots necrotech, and lobby.
             }else if (lobbyNPC){
                 SetDestination(1600, 2500); //lobby npc
-            }else if (scientist){
-                SetDestination(2400, 4000); //lab scientists
+            }else if (scientist || scienceJr){
+                SetDestination(2400, 3600); //lab scientists
             } else{
                 SetDestination(1000, 3500);  //Pedestrians Outside, and park
                 
@@ -1130,8 +1131,6 @@ void NPC::Render() {
         case DEATH2:
             row = 6; // seventh row for dying2
             break;
-            
-
     }
 
     Rectangle sourceRec = { //currentFrame gets cycled in handleAnimationLogic. 0-row.size()
@@ -1150,8 +1149,6 @@ void NPC::Render() {
     if (interacting){
         highLight = true;
     }
-
-    
     
     // Draw the texture at the NPC's position
     // Tint the NPC red if recently hit
@@ -1387,7 +1384,6 @@ void NPC::TakeDamage(int damage) {
     }
 
     if (health <= 0 && !isDying && !robot && !cyberZombie){ //NPC killed by zombie
-        std::cout << "DIE\n";
         riseTimer = 0; 
         isDying = true;           // Start dying process   
         SetAnimationState(DEATH);  // Set to death animation

@@ -117,6 +117,7 @@ void GameResources::Load() {
     consoleSheet = LoadTexture("assets/consoleSheet.png");
     monitorSheet = LoadTexture("assets/monitorSheet.png");
     scienceSheet = LoadTexture("assets/scienceSheet.png");
+    scienceJrSheet = LoadTexture("assets/scienceJrSheet.png");
 }
 
 // Unload all game resources
@@ -226,4 +227,5 @@ void GameResources::Unload() {
     UnloadTexture(consoleSheet);
     UnloadTexture(monitorSheet);
     UnloadTexture(scienceSheet);
+    UnloadTexture(scienceJrSheet);
 }

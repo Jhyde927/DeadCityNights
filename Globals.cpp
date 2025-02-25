@@ -37,6 +37,9 @@ std::vector<NPC>officeWorkers;
 std::vector<NPC>scientists;
 std::vector<NPC>cyberZombies;
 
+// Define the global NPC group list
+std::vector<std::vector<NPC>*> allNPCGroups;
+
 Camera2D camera = { 0 };
 float targetZoom = 1.0f; 
 float totalTime = 0.0f;
@@ -51,6 +54,16 @@ void InitCamera() {
     camera.zoom = 1.0f;
     targetZoom = camera.zoom;  // Sync with initial zoom
     }
+
+// Function to initialize allNPCGroups
+void InitializeNPCGroups() {
+    allNPCGroups = {
+        &npcs, &zombies, &hobos, &ghosts, &bats, &mibs, 
+        &astralGhosts, &astralBats, &ParkNpcs, &robots, 
+        &lobbyRobots, &lobbyNPCs, &lobbyMibs, &officeWorkers, 
+        &scientists, &cyberZombies
+    };
+}
 
 void InitTank(Vector2 position){
     tank.position = position;

@@ -1217,10 +1217,11 @@ bool NPC::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition
 //        |      32-4 x  |
 //        |     _|_  16y |
 //        |     | 8|     |   
-//        |     |32|     |
+//        |     |32|     | 64
 //        |     |__|     |   
+//        |              |   
 //        |______________|
-
+//               64
     //raycasting for better collision detection
     // Define a hitbox around the NPC (centered on the NPC's position)
     float hitboxWidth = 8.0f;   // Width of the hitbox 

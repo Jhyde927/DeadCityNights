@@ -99,7 +99,7 @@ void Grenade::Explode() {
         
         PlaySound(SoundManager::getInstance().GetSound("explosion"));
         //Vector2 centerPos = {player.position.x + 32, player.position.y + 32}; //center the hit circle on player
-        Rectangle hitBox = {position.x+24,position.y+16, 16, 24};
+        Rectangle hitBox = {player.position.x+24,player.position.y+16, 16, 24};
         if (CheckCollisionCircleRec(position, explosionRadius, hitBox)){
             player.take_damage(30);
         }

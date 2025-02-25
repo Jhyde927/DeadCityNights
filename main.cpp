@@ -53,6 +53,7 @@ bool leave_apartment = false;
 bool leave_cemetery = false;
 bool sharpen = false;
 bool buttonNecro = false;
+bool lockElevator2 = true;
 bool buttonCemetery = false;
 bool buttonInternet = false;
 bool hasCemeteryKey = false;
@@ -238,7 +239,7 @@ void InitBoxes(){
     boxes.emplace_back(Vector2 {4404, 724}, boxSheet, GRAVEYARD);
 
     //OUTSIDE
-    boxes.emplace_back(Vector2 {241, 724}, boxSheet, OUTSIDE);
+    boxes.emplace_back(Vector2 {-57, 724}, boxSheet, OUTSIDE);
     boxes.emplace_back(Vector2 {3980, 724}, boxSheet, OUTSIDE);
     boxes.emplace_back(Vector2 {4030, 724}, boxSheet, OUTSIDE);
     boxes.emplace_back(Vector2 {4080, 724}, boxSheet, OUTSIDE);
@@ -807,11 +808,12 @@ Vector2 GetRandomSpawnPositionX(Vector2 playerPos, float minDistance, float maxD
     return Vector2{spawnX, 700};  // Keep the same y position as the player
 }
 
-void StartZombieSpawn(int zombie_count){
+void StartZombieSpawn(int zombie_count, float delay){
     spawning_zombies = true;
     remainingZombiesToSpawn = zombie_count;
     spawnTimer = 0.0f; //reset timer
-    nextSpawnDelay = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 3.0f));  // Random delay between 1-4 seconds
+    // nextSpawnDelay = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / delay));  // Random delay between 1-4 seconds
+    nextSpawnDelay = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX) / (delay - 1.0f));
     //film = true;
     if (gameState != OFFICE) glitch = true; //Activate glitch shader to make things more dramatic, not in the office however, it's a bit too much. 
     
@@ -1092,7 +1094,8 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
     std::map<GameState, std::vector<std::vector<NPC>*>> npcGroups = { //key = gameState, val = vector of vectors 
         { NECROTECH, { &robots } },
         { LOBBY, { &lobbyRobots, &lobbyNPCs, &lobbyMibs, &zombies } },  // Multiple NPC groups in LOBBY
-        { ASTRAL, { &astralBats, &astralGhosts } },    
+        { ASTRAL, { &astralBats, &astralGhosts } },
+        {APARTMENT, {}},    
         { OUTSIDE, { &npcs, &mibs } }, //sigular mib outside
         { SUBWAY, { &npcs } }, //same NPCs as outside, so when going from outside to subway they are switched off then back on. 
         { CEMETERY, { &zombies } }, //zombies in the cemetery, graveyard, and park are in the same vector, because they aren't created until they spawn in. 
@@ -1101,7 +1104,7 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
         { PARK, { &ParkNpcs, &zombies }},
         { OFFICE, {&officeWorkers, &zombies}},
         {LOT, {&hobos}}, //dont forget about hobo
-        {LAB, {&cyberZombies, &scientists}}
+        {LAB, {&cyberZombies, &scientists, &zombies}}
 
     };
 
@@ -1214,7 +1217,8 @@ void HandleLobbyTransition(){
         player.position.x = apartmentX;
         player.isDead = false;
         player.currentHealth = player.maxHealth;
-
+        glitch = false;
+        remainingZombiesToSpawn = 0; //turn off zombie spawning on death
         gameCalendar.AdvanceDay();
 
     }
@@ -1232,6 +1236,8 @@ void HandleNecroTransition(){
         player.isDead = false;
         player.currentHealth = player.maxHealth;
         gameCalendar.AdvanceDay();
+        remainingZombiesToSpawn = 0;
+        glitch = false;
         UpdateNPCActivity(NECROTECH,APARTMENT);
 
 
@@ -1352,7 +1358,8 @@ void HandleCemeteryTransition(PlayerCar& player_car) {
         player.position.x = apartmentX;
         player.isDead = false;
         player.currentHealth = player.maxHealth;
-
+        glitch = false;
+        remainingZombiesToSpawn = 0;
         gameCalendar.AdvanceDay();
     }
 }
@@ -1364,6 +1371,8 @@ void HandleGraveyardTransition(std::vector<NPC>& ghosts){
         player.isDead = false;
         UpdateNPCActivity(GRAVEYARD, APARTMENT);
         player.currentHealth = player.maxHealth;
+        remainingZombiesToSpawn = 0;
+        glitch = false;
         gameCalendar.AdvanceDay();
 
     }else{ //presumably over gate and fading out
@@ -1446,8 +1455,11 @@ void HandleOfficeTransition(){
         UpdateNPCActivity(OFFICE, APARTMENT);
         player.position.x = apartmentX;
         player.onElevator = false;
+        player.isDead = false;
         player.currentHealth = player.maxHealth;
         gameCalendar.AdvanceDay();
+        remainingZombiesToSpawn = 0;
+        glitch = false;
 
     }
 }
@@ -1461,6 +1473,8 @@ void HandleParkTransition(){
         gameCalendar.AdvanceDay();
         applyShader = false; //if you die, you are no longer high when respawning
         UpdateNPCActivity(PARK, APARTMENT);
+        glitch = false;
+        remainingZombiesToSpawn = 0;
 
     }else if (overSubway){ //exit to subway
         gameState = SUBWAY;
@@ -1483,16 +1497,21 @@ void HandleParkTransition(){
 }
 
 void HandleLabTransition(){
-    if (elevators[1].isOccupied){
+    if (elevators[1].isOccupied && player.onElevator){
         gameState = OFFICE;
         player.onElevator = false;
         UpdateNPCActivity(LAB, OFFICE);
 
     }else if (player.isDead){
+        UpdateNPCActivity(LAB, APARTMENT);
         gameState = APARTMENT;
         player.currentHealth = player.maxHealth;
         player.position.x = apartmentX;
+        player.isDead = false;
         gameCalendar.AdvanceDay();
+        glitch = false;
+        remainingZombiesToSpawn = 0;
+
     }
 }
 
@@ -2954,7 +2973,7 @@ void RenderSubway(){
     }
    
     renderBoxes();
-    DrawPickups();
+    DrawPickups(); 
     EndMode2D();
     showBigBadge();
 
@@ -3153,7 +3172,7 @@ void RenderCemetery(){
     //dont spawn unless raise zombies is true. raise zombies is set to true by talking to the hobo, and finding the gun
     if (!player.enter_car && player.position.x < 1900 && !zombieWave3 && !firstHobo){ // walk to far left and zombies spawn again
         zombieWave3 = true;
-        StartZombieSpawn(10);
+        StartZombieSpawn(10, 3);
         minDistToPlayer = 50;
         maxDistToPlayer = 200;
     }
@@ -3180,11 +3199,11 @@ void RenderCemetery(){
         //zombies that spawn when you exit car
         raiseZombies = false;
         if (hasCemeteryKey){
-            StartZombieSpawn(10); //you should have the shotgun here so spawn more. 
+            StartZombieSpawn(10, 3); //you should have the shotgun here so spawn more. 
             minDistToPlayer = 50;
             maxDistToPlayer = 200;
         }else{
-            StartZombieSpawn(5);
+            StartZombieSpawn(5, 3);
             minDistToPlayer = 50;
             maxDistToPlayer = 200;
         }       
@@ -3442,7 +3461,7 @@ void RenderGraveyard(){
     float digPos = 2350.0f;
     if (player.position.x > 3437 and raiseZombies){
         raiseZombies = false;
-        StartZombieSpawn(20);
+        StartZombieSpawn(20, 3);
         minDistToPlayer = 50;
         maxDistToPlayer = 200;
     }
@@ -3974,7 +3993,7 @@ void RenderPark(){
 
     if (raiseParkZombies){
         raiseParkZombies = false;
-        StartZombieSpawn(10);
+        StartZombieSpawn(10, 3);
         minDistToPlayer = 200; //zombies can spawn further away
         maxDistToPlayer = 400;
 
@@ -4070,7 +4089,12 @@ void RenderLab(){
             Vector2 spawnPos2 = {player.position.x - 200, 700};
             spawnCyberZombie(spawnPos);
             spawnCyberZombie(spawnPos2);
-            StartZombieSpawn(10);
+            StartZombieSpawn(10, 2);
+        }
+
+        if (!scientist.isActive && scientist.CanSpawnZombie){  
+            scientist.CanSpawnZombie = false;
+            spawnZombie(scientist.position); //NPC is transformed into a zombie. 
         }
     }
 
@@ -4142,7 +4166,7 @@ void RenderOffice(){
 
     if (can_spawn_zombies){
         can_spawn_zombies = false;
-        StartZombieSpawn(15);
+        StartZombieSpawn(15, 1);
     }
 
     if (player.position.x < 2540 && player.position.x > 2520){ //first elevator button
@@ -4165,7 +4189,7 @@ void RenderOffice(){
 
     }
 
-    if (player.position.x < 3295 && player.position.x > 3275){ //second elevator button
+    if (player.position.x < 3295 && player.position.x > 3275 && !lockElevator2){ //second elevator button
         over_Ebutton2 = true;
         phrase = "Call Elevator";
         show_dbox = true;
@@ -4206,13 +4230,6 @@ void RenderOffice(){
 
     //DRAW PLAYER
     if (!player.onElevator) player.DrawPlayer();
-
-    // for (NPC& cZombie : cyberZombies){
-
-    //     cZombie.Update();
-    //     cZombie.Render();
-
-    // }
 
     for (NPC& office_npc : officeWorkers){
         office_npc.Update();
@@ -4277,6 +4294,7 @@ void RenderOffice(){
 
     if (!spawning_zombies && spawn_frank && AreAllNPCsDeactivated(zombies)){ //all spawned zombies are dead , spawn frank 
         spawn_frank = false;
+        lockElevator2 = false;
         spawnFrank(player.position + Vector2 {100, 0}); //spawn to the right of player, like he emerges from hiding. 
     
 
@@ -4371,7 +4389,7 @@ void RenderLobby(){
         spawnRobot(player.position + Vector2 {-300, 0});
         if (can_spawn_zombies){
             can_spawn_zombies = false;
-            StartZombieSpawn(10); //spawn zombies when robots spawn, spawning zombies in the lobby triggers the alarm. 
+            StartZombieSpawn(10, 3); //spawn zombies when robots spawn, spawning zombies in the lobby triggers the alarm. 
 
         }
 
@@ -5129,7 +5147,7 @@ void spawnNPCs(){
 
     }
 
-    //spawn lobby NPCs
+    //spawn lobby buisiness men NPCs
     int bmen = 3;
     for (int i = 0; i < bmen; i++){
         Vector2 b_pos = {static_cast<float>(2200 + i * 100), 700};
@@ -5163,8 +5181,11 @@ void spawnNPCs(){
 
     //spawn office workers
     int of = 4;
+
+   
     for (int i = 0; i < of; i++){
-        Vector2 o_pos = {static_cast<float>(2000 + i * 200), 700};
+        Vector2 o_pos = {static_cast<float>(1800 + i * 300), 700};
+
         NPC officeWorker = CreateNPC(resources.officeSheet, o_pos, speed, IDLE, false, false);
         officeWorker.office = true;
 
@@ -5183,7 +5204,7 @@ void spawnNPCs(){
         cyberZombies.push_back(cyberZombie);
     }
 
-    //spawn scientists
+    //spawn Mad scientist
     int sc = 1;
     for (int i = 0; i < sc; i ++){
         Vector2 sc_pos = {static_cast<float>(2500 + i * 200), 700};
@@ -5239,7 +5260,14 @@ void debugKeys(){
     //Debug keys, disable for release. 
     if (IsKeyPressed(KEY_SPACE)){
         std::cout << "Player Position: "; //print player position on key_space for debug purposes
-        PrintVector2(player.position);       
+        PrintVector2(player.position);
+        
+        //example iterate every NPC in the game:
+        // for (std::vector<NPC>* npcGroup : allNPCGroups){
+        //     for (NPC& npc : *npcGroup){
+        //         std::cout << "NPC: Health" << npc.health << "\n";
+        //     }
+        // }
         
     }
 
@@ -5841,6 +5869,7 @@ int main() {
     InitializeTrain();
     InitLabObjects(); //laboratory tanks and console
 
+    InitializeNPCGroups();
     //Astral platforms
     InitPlatforms();
 

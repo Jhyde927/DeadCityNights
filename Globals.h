@@ -30,6 +30,9 @@ extern std::vector<NPC>officeWorkers;
 extern std::vector<NPC>scientists;
 extern std::vector<NPC>cyberZombies;
 
+// Extern declaration of the master NPC group list
+extern std::vector<std::vector<NPC>*> allNPCGroups;
+
 
 struct Tank {
     Vector2 position;
@@ -157,6 +160,7 @@ void InitUFO();
 void InitializeTrain();
 void InitPlatforms();
 void InitBoxes();
+void InitializeNPCGroups();
 
 
 

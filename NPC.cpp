@@ -315,10 +315,31 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
 
                     case 4:
                         speech = "Six feet deep, my fate was spun \n\nBuried beside my smoking gun.";
+
+                        break;
+
+                    case 5:
+                        speech = "BOOOO";
                         clickCount = 0;
                         interactions += 1;
                         break;
                 }
+            }if (interactions == 1 && player.hasWatch){
+                clickCount += 1;
+                switch(clickCount){
+                    case 1:
+                        speech = "The hands of fate now spin anew\n\nA relic lost returns with you.";
+                        break;
+                    case 2:
+                        speech = "By silver light and whispered spell\n\nYou break the curse—I rise, farewell!";
+                        break;
+                        
+                    case 3:
+                        interactions = 2;
+                        //isActive = false; turned off in main. 
+                        break;
+                }
+
             }
 
 

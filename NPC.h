@@ -92,13 +92,8 @@ public:
     // Add an emitter for each NPC
     Emitter bloodEmitter;
 
-
-  
-
-    NPC* targetNPC;
+    NPC* targetNPC; //zombie's target
  
-
-
     NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState initialAnimation, bool isActive, bool isZombie);
     
     void Update();

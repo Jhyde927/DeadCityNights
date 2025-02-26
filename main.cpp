@@ -36,9 +36,9 @@ bool over_exit = false;
 bool runOnce = true;
 bool quitRequested = false;
 bool canPlaySound = true;
-float playSoundTimer = 0.0;
+float playSoundTimer = 0.0;                         //we are in too deep to fix this now. mount boolean stays for now. 
 bool streetSounds = false;
-bool over_apartment = false;
+bool over_apartment = false; 
 bool over_car = false;
 bool over_elevator = false;
 bool over_elevator2 = false;
@@ -232,15 +232,20 @@ void InitBoxes(){
 
     //CEMETERY
     boxes.emplace_back(Vector2 {3550, 724}, boxSheet, CEMETERY);
-    boxes.emplace_back(Vector2 {3600, 724}, boxSheet, CEMETERY);
+    boxes.emplace_back(Vector2 {3600, 724}, boxSheet, CEMETERY);//right
     boxes.emplace_back(Vector2 {3500, 724}, boxSheet, CEMETERY);
 
     //GRAVEYARD
-    boxes.emplace_back(Vector2 {4404, 724}, boxSheet, GRAVEYARD);
+    boxes.emplace_back(Vector2 {4404, 724}, boxSheet, GRAVEYARD);//far right
+
+    boxes.emplace_back(Vector2 {1600, 724}, boxSheet, GRAVEYARD);//far left
+    boxes.emplace_back(Vector2 {1650, 724}, boxSheet, GRAVEYARD);
+    boxes.emplace_back(Vector2 {1700, 724}, boxSheet, GRAVEYARD);
 
     //OUTSIDE
-    boxes.emplace_back(Vector2 {-57, 724}, boxSheet, OUTSIDE);
-    boxes.emplace_back(Vector2 {3980, 724}, boxSheet, OUTSIDE);
+    boxes.emplace_back(Vector2 {-57, 724}, boxSheet, OUTSIDE); //left
+
+    boxes.emplace_back(Vector2 {3980, 724}, boxSheet, OUTSIDE); //far right
     boxes.emplace_back(Vector2 {4030, 724}, boxSheet, OUTSIDE);
     boxes.emplace_back(Vector2 {4080, 724}, boxSheet, OUTSIDE);
 
@@ -2745,15 +2750,16 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
         }
     }
     if (overLiquor && showLiquor && player.money >= 100 &&  GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY")){
-        addMoney(-100);
-        AddItemToInventory("whiskey");
-        player.hasWhiskey = true;
-        
+        if (!player.hasWhiskey){
+            addMoney(-100);
+            AddItemToInventory("whiskey");
+            player.hasWhiskey = true;
+        }
     }
 
 }
 
-void EnterCar(Player& player, PlayerCar& player_car){
+void EnterCar(){
         //render headlight/breaklight and show carUI
         
     Vector2 breakLight_pos = {player_car.position.x + 88, player_car.position.y + 53};
@@ -2881,7 +2887,7 @@ void RenderSubway(){
     BeginMode2D(camera);  // Begin 2D mode with the camera
     ClearBackground(customBackgroundColor);
 
-    Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
+    //Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
     HandleKeyboardAiming();
 
 
@@ -3283,7 +3289,7 @@ void RenderCemetery(){
 
     //render player car
     DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE);
-    if (player.enter_car) EnterCar(player, player_car);
+    if (player.enter_car) EnterCar();
 
     HandleGrenades();
 
@@ -3526,23 +3532,31 @@ void RenderGraveyard(){
         ghost.ClickNPC();
         //if (ghost.health > 0) ghost.isActive = true; <- this caused some major pains
 
-        if (ghost.interacting && player.hasWatch && ghost.interactions > 0 && ghost.isActive){//Need a timer to show last message for a few seconds, for no we just dont show last message. 
-            phrase = "You found my pocket watch"; //TODO: write a rhyme
-            dboxPosition = ghost.position;
-            show_dbox = true;
-            ghost.isActive = false;
-            RemoveItemFromInventory("watch");
+        // if (ghost.interacting && player.hasWatch && ghost.interactions > 0 && ghost.isActive){//Need a timer to show last message for a few seconds, for no we just dont show last message. 
+        //     phrase = "You found my pocket watch"; //TODO: write a rhyme
+        //     dboxPosition = ghost.position;
+        //     show_dbox = true;
+        //     ghost.isActive = false;
+        //     RemoveItemFromInventory("watch");
 
 
             
-        }
+        // }
 
         if (ghost.interacting && ghost.isActive){
             show_dbox = true;
             dboxPosition = ghost.position;
-            if (ghost.interactions == 0){
-                phrase = ghost.speech;
+            phrase = ghost.speech;
+            if (ghost.interactions >= 2){
+                if (player.hasWatch){
+                    player.hasWatch = false;
+                    RemoveItemFromInventory("watch");
+                    ghost.isActive = false;
+                }
+                
+                
             }
+            
           
         }
     }
@@ -3872,7 +3886,7 @@ void RenderPark(){
 
     }
 
-    if (player.enter_car) EnterCar(player, player_car); //draws headlights and such
+    if (player.enter_car) EnterCar(); //draws headlights and such
 
     show_dbox = false;//reset box
     
@@ -4603,7 +4617,7 @@ void RenderNecroTech(){
     float CarFrameWidth = 128;
     Rectangle sourceRecCar = {player_car.currentFrame * CarFrameWidth, 0, CarFrameWidth, CarFrameWidth};
     DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE); //draw player_car
-    if (player.enter_car) EnterCar(player, player_car);
+    if (player.enter_car) EnterCar();
 
     if (player.enter_car == false){// if enter car is false, dont render player or update position. camera should stay focused on player pos. 
         SoundManager::getInstance().StopMusic("CarRun");
@@ -4863,7 +4877,7 @@ void RenderOutside() {
     }
 
 
-    if (player.enter_car) EnterCar(player, player_car);
+    if (player.enter_car) EnterCar();
    
 
     if (player.enter_car == false){// if enter car is false, dont render player or update position. camera should stay focused on player pos. 
@@ -5286,17 +5300,6 @@ void debugKeys(){
 
     }
 
-    if (IsKeyPressed(KEY_ESCAPE)){ 
-        if (!menuOpen){
-            menuOpen = true;
-
-
-        }else{
-            menuOpen = false;
-        }
-        
-    }
-
     if (IsKeyPressed(KEY_O)){
         if (!player.outline){
             player.outline = true;
@@ -5586,7 +5589,7 @@ void MainMenu(PauseState& currentPauseState, Rectangle& destRect){
         if (menuOpen) {
             float offset_x = 0;
             if (borderlessWindow) offset_x = (screenWidth - GAME_SCREEN_WIDTH)/2;
-        
+            
             // Draw semi-transparent background overlay
             DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, 0.3f));
 
@@ -5645,13 +5648,14 @@ void MainMenu(PauseState& currentPauseState, Rectangle& destRect){
                 quitRequested = true;
             }
 
-            DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); //draw cursor again overtop of buttons. 
+            DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); //draw cursor again overtop of buttons.
         }
 }
 
 void pauseLogic(PauseState& currentPauseState, RenderTexture2D& pauseTexture, RenderTexture2D& finalTexture){
     if (IsKeyPressed(KEY_ESCAPE)){
         if (currentPauseState == GAME_RUNNING){
+            menuOpen = true;
             // Save the current frame
             //capture and display the last frame when the game enters the pause state.
             BeginTextureMode(pauseTexture);
@@ -5670,6 +5674,7 @@ void pauseLogic(PauseState& currentPauseState, RenderTexture2D& pauseTexture, Re
 
         }else{
             currentPauseState = GAME_RUNNING;
+            menuOpen = false;
         }
     }
 }
@@ -5836,6 +5841,15 @@ void InitSounds(SoundManager& soundManager){
     SoundManager::getInstance().SetSoundVolume("crowbarAttack", 0.5);
 }
 
+void DrawPlayTime(float totalTime) {
+    int minutes = static_cast<int>(totalTime) / 60;
+    int seconds = static_cast<int>(totalTime) % 60;
+
+    char timerText[10];
+    sprintf(timerText, "%02d:%02d", minutes, seconds);
+    DrawText(timerText, 10, 10, 20, WHITE);
+}
+
 
 
 
@@ -5972,6 +5986,8 @@ int main() {
         float deltaTime = GetFrameTime();
         totalTime += deltaTime; // used for UFO sine wave
         if (totalTime > 10000.0f) totalTime -= 10000.0f; //reset total time just in case. 
+
+ 
             
         UpdateShaders(deltaTime, borderlessWindow,  gameState);
         SoundManager::getInstance().UpdateRandomVoices(deltaTime); //////////////////TURNED OFF VOICES for now
@@ -6011,6 +6027,9 @@ int main() {
         }
         //////////////////////////////////////////////
 
+
+
+
         //I for inventory
         if (IsKeyPressed(KEY_I)){
             if (!showInventory){
@@ -6040,6 +6059,7 @@ int main() {
             setButtonColors(); //set menu button color and text size. 
             // Draw the pause menu
             MainMenu(currentPauseState, destRect); //draw main menu over the saved frame.
+            DrawPlayTime(totalTime);
 
             if (controlsMenu) ShowControls();
             EndDrawing();

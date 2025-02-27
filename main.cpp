@@ -1145,6 +1145,7 @@ void DrawItem(Vector2 itemPos, const std::string& itemType) {
         {"shovel", resources.shovelWorld},
         {"crowbar", resources.crowbarWorld}, 
         {"watch", resources.pocketWatchWorld},
+        {"vest", resources.armorIcon},
         
         
     };
@@ -1154,6 +1155,7 @@ void DrawItem(Vector2 itemPos, const std::string& itemType) {
         {"shovel", &player.hasShovel},
         {"crowbar", &player.hasCrowbar},
         {"watch", &player.hasWatch},
+        {"vest", &player.hasArmor},
   
  
     };
@@ -1163,6 +1165,7 @@ void DrawItem(Vector2 itemPos, const std::string& itemType) {
         {"shovel", "shovel"},
         {"crowbar", "crowbar"},
         {"watch", "watch"},
+        {"vest", "vest"},
 
  
     };
@@ -1189,6 +1192,8 @@ void DrawItem(Vector2 itemPos, const std::string& itemType) {
             if (itemType == "crowbar"){
                 crowbarDialogTimer = 5.0f; //Press V to swing crowbar, show for 5 seconds. 
             }
+
+            if (itemType == "vest") player.armor = player.maxArmor;
 
            
         }
@@ -1872,7 +1877,11 @@ void RenderInventory() {
        // Draw the icon at x, y
         if (!inventory[i].empty()) { //inventory buttons are all done in the same for loop we use to draw it. Consider abstracting this somehow. 
         //chatGPT suggests using enum ItemType and struct inventoryDefinitions, just makes it more spread out and complicated.
+            if (inventory[i] == "vest"){
+                DrawTexture(resources.armorIcon, x, y, WHITE);
 
+
+            }
             if (inventory[i] == "watch"){
                 DrawTexture(resources.pocketWatch, x, y, WHITE);
 
@@ -1880,6 +1889,27 @@ void RenderInventory() {
 
             if (inventory[i] == "crowbar"){
                 DrawTexture(resources.crowbarIcon, x, y, WHITE);
+                Rectangle crowbarBounds = { 
+                    static_cast<float>(x),      
+                    static_cast<float>(y),      
+                    static_cast<float>(64),  
+                    static_cast<float>(64)  
+                };
+                if (CheckCollisionPointRec(mousePosition, crowbarBounds)){
+                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && player.canSwing && !player.isMoving){
+                        //swing crowbar
+                        player.canSwing = false;
+                        player.swinging = true;
+                        player.swingTimer = 0.5f;
+                
+                        if (rand() % 2 == 0){//multiple swing sounds
+                            PlaySound(SoundManager::getInstance().GetSound("crowbarSwing"));
+                
+                        }else{
+                            PlaySound(SoundManager::getInstance().GetSound("crowbarSwing2"));
+                        }
+                    }
+                }
             }
 
             if (inventory[i] == "carKeys"){
@@ -2611,6 +2641,7 @@ void DrawEarth(Earth& earth, Camera2D& camera){
 
 void DrawHealthBar(GameResources resources, Vector2 position, int maxHealth, int currentHealth, int barWidth, int barHeight) {
     // Calculate health percentage
+    float armorPercent = player.armor/player.maxArmor;
     float healthPercent = (float)currentHealth / maxHealth;
     Color veryLightGreen = { 150, 255, 150, 255 };  // RGBA values
     // Define bar colors
@@ -2628,6 +2659,15 @@ void DrawHealthBar(GameResources resources, Vector2 position, int maxHealth, int
     Texture2D texture = resources.healthBorder;
 
     // Define the source rectangle (the part of the texture to draw)
+    Rectangle sourceRec2 = { 0.0f, 0.0f, (float)texture.width, (float)texture.height };
+    Rectangle destRec2 = { 
+        position.x, // x position on screen
+        position.y+50, // y position on screen
+        static_cast<float>(barWidth), // width on screen
+        static_cast<float>(barHeight)  // height on screen
+    };
+
+    // Define the source rectangle (the part of the texture to draw)
     Rectangle sourceRec = { 0.0f, 0.0f, (float)texture.width, (float)texture.height };
     Rectangle destRec = { 
         position.x, // x position on screen
@@ -2642,12 +2682,17 @@ void DrawHealthBar(GameResources resources, Vector2 position, int maxHealth, int
 
     //stretch texture to fit barwidth and height,
     DrawTexturePro(texture, sourceRec, destRec, origin, rotation, borderColor);
+    DrawRectangle(position.x, position.y+50, (int)(barWidth * healthPercent), barHeight, barColor);
 
-
+    if (player.armor > 0){ //draw armor over top if armor
+        DrawTexturePro(texture, sourceRec2, destRec2, origin, 0.0, YELLOW);
+        DrawRectangle(position.x, position.y+50, (int)(barWidth * armorPercent), barHeight, YELLOW);
+        
+    }
     //DrawRectangleLines(position.x, position.y+50, barWidth, barHeight, borderColor);
 
     // Draw health bar (adjust width based on health percentage)
-    DrawRectangle(position.x, position.y+50, (int)(barWidth * healthPercent), barHeight, barColor);
+    
 }
 
 
@@ -2912,6 +2957,10 @@ void RenderSubway(){
     
     player.DrawPlayer(); //draw player in front of background and behind train
 
+    if (!player.hasArmor){
+        DrawItem(Vector2 {2000, 700},"vest");
+    }
+
     for (NPC& npc : npcs){
         npc.Update();
         npc.Render();
@@ -3133,7 +3182,7 @@ void RenderAstral(){
 
     
     //draw healthbar 
-    if (player.currentHealth < 100 &&  !player.enter_car){
+    if (!player.enter_car){
         Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
         DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
 
@@ -3530,24 +3579,14 @@ void RenderGraveyard(){
         ghost.Update();
         ghost.Render();
         ghost.ClickNPC();
-        //if (ghost.health > 0) ghost.isActive = true; <- this caused some major pains
-
-        // if (ghost.interacting && player.hasWatch && ghost.interactions > 0 && ghost.isActive){//Need a timer to show last message for a few seconds, for no we just dont show last message. 
-        //     phrase = "You found my pocket watch"; //TODO: write a rhyme
-        //     dboxPosition = ghost.position;
-        //     show_dbox = true;
-        //     ghost.isActive = false;
-        //     RemoveItemFromInventory("watch");
-
-
             
-        // }
+        
 
         if (ghost.interacting && ghost.isActive){
             show_dbox = true;
             dboxPosition = ghost.position;
             phrase = ghost.speech;
-            if (ghost.interactions >= 2){
+            if (ghost.interactions >= 2){ //take the watch back, if you seen all the dialog
                 if (player.hasWatch){
                     player.hasWatch = false;
                     RemoveItemFromInventory("watch");
@@ -3867,7 +3906,10 @@ void RenderPark(){
     DrawTexturePro(resources.ParkForeground, {0, 0, static_cast<float>(resources.ParkForeground.width), static_cast<float>(resources.foreground.height)},
                     {512, 0, static_cast<float>(resources.ParkForeground.width), static_cast<float>(resources.foreground.height)}, {0, 0}, 0.0f, WHITE);
     
-
+    if (!player.hasArmor){
+        DrawItem(Vector2 {1100, 700}, "vest");
+    }
+   
 
     //DrawPlayerCar
     if (!subwayToPark){
@@ -4019,7 +4061,7 @@ void RenderPark(){
     //DrawText("Cemetery", screenWidth/2 - 100, 60, 50, WHITE);
 
     //draw healthbar 
-    if (player.currentHealth < 100 &&  !player.enter_car){
+    if (!player.enter_car){
         Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
         DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
 
@@ -4140,7 +4182,7 @@ void RenderLab(){
     showBigBadge();
 
     //draw healthbar 
-    if (player.currentHealth < 100 &&  !player.enter_car){
+    if (!player.enter_car){
         Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
         DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
 
@@ -4281,7 +4323,7 @@ void RenderOffice(){
     showBigBadge();
 
     //draw healthbar 
-    if (player.currentHealth < 100 &&  !player.enter_car){
+    if (!player.enter_car){
         Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
         DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
 
@@ -4508,7 +4550,7 @@ void RenderLobby(){
 
 
     //draw healthbar 
-    if (player.currentHealth < 100 &&  !player.enter_car){
+    if (!player.enter_car){
         Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
         DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
 
@@ -4766,6 +4808,8 @@ void RenderOutside() {
     
 
     HandleGrenades();
+
+    
     
      if (show_carUI && !move_car && player.enter_car){ //draw carUI inside Mode2d for reasons, show carUI infront of dialog box
         DrawCarUI(player_car, camera); //draw dialog box behind carUI
@@ -4890,7 +4934,8 @@ void RenderOutside() {
             
         
     }
-    
+    renderBoxes();
+    DrawPickups();
     MoveTraffic(resources);//Draw Traffic
     EndShaderMode(); ////////////////////////////SHADER OFF
 
@@ -4904,8 +4949,8 @@ void RenderOutside() {
 
     if (player.isAiming) DrawHUD(player);
 
-    renderBoxes();
-    DrawPickups();
+    
+    
     EndMode2D();  // End 2D mode 
     showBigBadge();
 
@@ -5774,6 +5819,8 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadSound("woodBreak", "assets/sounds/woodBreak.ogg");
     soundManager.LoadSound("moneyUp", "assets/sounds/moneyUp.ogg");
     soundManager.LoadSound("grenadeLauncher", "assets/sounds/grenadeLauncher.ogg");
+    soundManager.LoadSound("armorHit", "assets/sounds/armorHit.ogg");
+    soundManager.LoadSound("armorHit2", "assets/sounds/armorHit2.ogg");
 
     soundManager.LoadSound("alarm", "assets/sounds/alarm1.ogg");
 
@@ -6146,7 +6193,7 @@ int main() {
         //Third pass
         BeginTextureMode(finalTexture);
             ClearBackground(BLACK);
-            if (player.hitTimer > 0) BeginShaderMode(shaders.redVignetteShader); //apply hurt shader if hit
+            if (player.hitTimer > 0 && player.armor <= 0) BeginShaderMode(shaders.redVignetteShader); //apply hurt shader if hit
             
                 DrawTextureRec( 
                     vignetteTexture.texture, 

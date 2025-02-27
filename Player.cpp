@@ -21,9 +21,8 @@ Player player;  // Define the player instance
 
 Player::Player() {
     position = {1922.0, 700.0};
-
     velocity = {0.0f, 0.0f};
-    size.x = 16;
+    size.x = 16; //hitbox size
     size.y = 32;
     gravity = 800.0f;    
     isOnGround = true;
@@ -38,12 +37,15 @@ Player::Player() {
     fallTimer = 0.0;
     runSpeed = 100.0f;
     maxHealth = 100;
-    currentHealth = maxHealth;
+    currentHealth = 100;
     hitTimer = 0.0f;
     reloadTimer = 0.0f;
     currentFrame = 0;
     frameCounter = 0.0f;
     frameSpeed = 12.0f;
+    armor = 0.0f;
+    maxArmor = 100.0f;
+    hasArmor = false;
     isDead = false;
     isMoving = false;
     facingRight = true;
@@ -98,10 +100,21 @@ Player::Player() {
 
 }
 
-
 void Player::take_damage(int damage) {
+
+    if (armor > 0 && can_take_damage){     
+        armor -= damage;
+        can_take_damage = false;
+        hitTimer = 0.9f;
+
+        if (rand() & 2 == 0){
+            PlaySound(SoundManager::getInstance().GetSound("armorHit2"));
+        }else{
+            PlaySound(SoundManager::getInstance().GetSound("armorHit"));
+        }
+    }
     
-    if (!enter_car){ //dont take damage if inside car
+    if (!enter_car && armor <= 0){ //dont take damage if inside car
 
         if (can_take_damage && !isDead){
             hitTimer = 0.9f; // tint the sprite red for .3 seconds
@@ -617,7 +630,7 @@ void Player::shootLogic(){
         currentWeapon = MAC10;
     }
 
-    if ((IsKeyPressed(KEY_V) || IsKeyPressed(KEY_LEFT_CONTROL)|| IsKeyPressed(KEY_RIGHT_CONTROL)) && canSwing && !isAiming && !isReloading && !isShooting && hasCrowbar){ //swing the crowbar
+    if ((IsKeyPressed(KEY_V) || IsKeyPressed(KEY_LEFT_CONTROL)|| IsKeyPressed(KEY_RIGHT_CONTROL)) && canSwing && !isAiming && !isReloading && !isShooting && hasCrowbar && !isMoving){ //swing the crowbar
         canSwing = false;
         swinging = true;
         swingTimer = 0.5f;
@@ -726,9 +739,6 @@ void Player::UpdateMovement() {
     if (IsKeyPressed(KEY_R) && AllowGuns){
         Reload();
     }
-
-
-
      
 
     maxSpeedX = isRunning ? runSpeed : walkSpeed; //if running, maxspeed = runspeed else walkspeed
@@ -891,7 +901,7 @@ void Player::DrawPlayer() {
     }
 
     // Draw the player
-    Color tint = (hitTimer > 0) ? RED : WHITE;
+    Color tint = (hitTimer > 0 && armor <= 0) ? RED : WHITE;
     Vector2 castPos = {(float) position.x, (float) position.y};
     if (outline) BeginShaderMode(shaders.outlineShader);
     

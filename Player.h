@@ -37,6 +37,11 @@ public:
     float acceleration;
     float deceleration;
 
+    float armor;
+    float maxArmor;
+    bool hasArmor;
+
+
     // Animation speeds
     float walkFrameSpeed;
     float runFrameSpeed;

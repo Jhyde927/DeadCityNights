@@ -187,7 +187,7 @@ float GetLeftBoundary(){
     }else if (gameState == ASTRAL){
         return 1064;
     }else if (gameState == PARK){
-        return 1064;
+        return 1000;
     }else if (gameState == SUBWAY){
         return 1554;
     }else if (gameState == NECROTECH){
@@ -753,6 +753,7 @@ void Player::UpdateMovement() {
         }
 
     }
+
 
 
     

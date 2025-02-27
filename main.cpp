@@ -2681,13 +2681,13 @@ void DrawHealthBar(GameResources resources, Vector2 position, int maxHealth, int
     float rotation = 0.0f;
 
     //stretch texture to fit barwidth and height,
-    DrawTexturePro(texture, sourceRec, destRec, origin, rotation, borderColor);
+    
     DrawRectangle(position.x, position.y+50, (int)(barWidth * healthPercent), barHeight, barColor);
-
-    if (player.armor > 0){ //draw armor over top if armor
-        DrawTexturePro(texture, sourceRec2, destRec2, origin, 0.0, YELLOW);
-        DrawRectangle(position.x, position.y+50, (int)(barWidth * armorPercent), barHeight, YELLOW);
+    DrawTexturePro(texture, sourceRec, destRec, origin, rotation, borderColor); //border in front
+    if (player.armor > 0){ //draw armor over top if armor //armor bar
         
+        DrawRectangle(position.x, position.y+50, (int)(barWidth * armorPercent), barHeight, BLUE);
+        DrawTexturePro(texture, sourceRec2, destRec2, origin, 0.0, WHITE);
     }
     //DrawRectangleLines(position.x, position.y+50, barWidth, barHeight, borderColor);
 
@@ -3033,7 +3033,7 @@ void RenderSubway(){
     showBigBadge();
 
     //draw healthbar 
-    if (player.currentHealth < 100 &&  !player.enter_car){
+    if (!player.enter_car){
         Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
         DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
 
@@ -3410,7 +3410,7 @@ void RenderCemetery(){
     //DrawText("Cemetery", screenWidth/2 - 100, 60, 50, WHITE);
 
     //draw healthbar 
-    if (player.currentHealth < 100 &&  !player.enter_car){
+    if (!player.enter_car){
         Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
         DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
 
@@ -3663,7 +3663,7 @@ void RenderGraveyard(){
     if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player); //always show ammo when outside of car in the cemetery
 
     //draw healthbar 
-    if (player.currentHealth < 100 &&  !player.enter_car){
+    if (!player.enter_car){
         Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
         DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
 
@@ -3907,7 +3907,7 @@ void RenderPark(){
                     {512, 0, static_cast<float>(resources.ParkForeground.width), static_cast<float>(resources.foreground.height)}, {0, 0}, 0.0f, WHITE);
     
     if (!player.hasArmor){
-        DrawItem(Vector2 {1100, 700}, "vest");
+        DrawItem(Vector2 {1050, 700}, "vest");
     }
    
 
@@ -4219,7 +4219,7 @@ void RenderOffice(){
     //elevators[0].isOccupied = false;
     float deltaTime = GetFrameTime();
 
-
+    //sound alarm and spawn in zoms immediatly 
     if (can_spawn_zombies){
         can_spawn_zombies = false;
         StartZombieSpawn(15, 1);
@@ -4712,7 +4712,7 @@ void RenderNecroTech(){
     showBigBadge();
 
     //draw healthbar 
-    if (player.currentHealth < 100 &&  !player.enter_car){
+    if (!player.enter_car){
         Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
         DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
 
@@ -4956,7 +4956,7 @@ void RenderOutside() {
 
     
     //draw healthbar 
-    if (player.currentHealth < 100 &&  !player.enter_car){
+    if (player.currentHealth < 100 && !player.enter_car){ //dont show healthbar if full health on main street, show everywhere else though. 
         Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
         DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
 
@@ -6021,7 +6021,11 @@ int main() {
         CheckBulletPlayerCollisions(); //NPCs shoot player
         MonitorMouseClicks(); 
         UpdateZombieSpawning();
-        //glowEffect(glowShader, gameState); //update glow shader
+
+        if (player.armor <= 0){ //remove vest from inventory if armor is depleted. 
+            player.hasArmor = false;
+            RemoveItemFromInventory("vest");
+        }
 
         if (playSoundTimer > 0){
             canPlaySound = false;
@@ -6170,6 +6174,7 @@ int main() {
             }
             
             HandleTransition(player_car, npcs); //Check everyframe for gamestate transitions, inside draw to handle fadeouts
+
             
             EndTextureMode();
             

@@ -7,12 +7,15 @@
 #include "platform.h"
 #include <vector>
 #include "shaderControl.h"
+#include "Particle.h"
 
 enum WeaponType {
     REVOLVER,
     SHOTGUN,
     MAC10
 };
+
+
 
 class Player {
 public:  
@@ -36,7 +39,7 @@ public:
     float maxSpeedY;
     float acceleration;
     float deceleration;
-
+    
     float armor;
     float maxArmor;
     bool hasArmor;
@@ -95,6 +98,8 @@ public:
     double tapInterval;
     float shotgunReloadTime;
     int money;
+
+    Emitter bloodEmitter;
 
     // Weapon variables
     WeaponType currentWeapon;

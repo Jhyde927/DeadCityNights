@@ -584,13 +584,16 @@ void NPC::HandleZombie(){
         
     }
 
-    if (isZombie && distanceToPlayer < 10.0f && riseTimer <= 0 && !isDying) { //zombie attack
+    if (isZombie && distanceToPlayer < 10.0f && riseTimer <= 0 && !isDying) { //zombie attack player
         attacking = true;
         destination = position;
         if (player.hitTimer <= 0){
             player.take_damage(10);
-            SoundManager::getInstance().PlayPositionalSound("boneBreak", position, player.position, 500);
-            //PlaySound(SoundManager::getInstance().GetSound("BoneCrack")); 
+            if (player.armor <= 0){ //dont play hit sfx when player has armor. 
+                PlaySound(rand() % 2 == 0 ? SoundManager::getInstance().GetSound("boneBreak") : SoundManager::getInstance().GetSound("squish"));
+                //randomly play one sound or the other. 
+            }
+
         }
         
         SetAnimationState(ATTACKING);  // Switch to attacking animation

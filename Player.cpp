@@ -11,6 +11,7 @@
 #include "shaderControl.h"
 #include "Globals.h"
 #include "Platform.h"
+#include "Particle.h"
 
 
 WeaponType currentWeapon;  // To track the current weapon
@@ -121,6 +122,9 @@ void Player::take_damage(int damage) {
         
             can_take_damage = false;
             currentHealth -= damage;
+            bloodEmitter.position = position + Vector2 {28, 16};
+            bloodEmitter.SpawnBlood(10, RED, !facingRight);
+            
 
             if (rand() % 2 == 0){
                 PlaySound(SoundManager::getInstance().GetSound("phit1"));
@@ -740,7 +744,7 @@ void Player::UpdateMovement() {
         Reload();
     }
      
-
+    bloodEmitter.UpdateParticles(deltaTime);
     maxSpeedX = isRunning ? runSpeed : walkSpeed; //if running, maxspeed = runspeed else walkspeed
     frameSpeed = isRunning ? runFrameSpeed : walkFrameSpeed;
 
@@ -905,7 +909,7 @@ void Player::DrawPlayer() {
     Color tint = (hitTimer > 0 && armor <= 0) ? RED : WHITE;
     Vector2 castPos = {(float) position.x, (float) position.y};
     if (outline) BeginShaderMode(shaders.outlineShader);
-    
+    bloodEmitter.DrawParticles();
     
     DrawTextureRec(currentSheet, sourceRec, castPos, tint);  // Draw the player based on the current state
     

@@ -1193,7 +1193,12 @@ void DrawItem(Vector2 itemPos, const std::string& itemType) {
                 crowbarDialogTimer = 5.0f; //Press V to swing crowbar, show for 5 seconds. 
             }
 
-            if (itemType == "vest") player.armor = player.maxArmor;
+            if (itemType == "vest"){
+                player.armor = player.maxArmor;
+                player.hasArmor = true;
+                PlaySound(SoundManager::getInstance().GetSound("zipper"));
+
+            } 
 
            
         }
@@ -2387,6 +2392,7 @@ void DrawCarUI(PlayerCar& player_car, Camera2D& camera){
 }
 
 void DrawTank(Tank& tank){
+    if (!IsWindowFocused) return; //don't update animations when window is not focused. 
     float tankFrame = 32.0;
     int numFrames = 5;
       // Update animation timer
@@ -3005,7 +3011,7 @@ void RenderSubway(){
         
     }
 
-
+    renderBoxes(); //render boxes behind train
     float deltaTime = GetFrameTime();
     UpdateTrain(train, deltaTime);
     DrawTexture(resources.train, train.position.x, train.position.y-27, WHITE); //draw train in front of NPCs and player
@@ -3027,7 +3033,7 @@ void RenderSubway(){
         }
     }
    
-    renderBoxes();
+
     DrawPickups(); 
     EndMode2D();
     showBigBadge();
@@ -4095,10 +4101,7 @@ void RenderLab(){
         dboxPosition = player.position;
     }
 
-    // if (player.position.x < 2702 && canSpawnCyberZombies){
-    //     canSpawnCyberZombies = false;
-    //     spawnCyberZombie(Vector2 {1500, 700});
-    // }
+
 
     float deltaTime = GetFrameTime();
     camera.target = player.position;
@@ -4283,6 +4286,11 @@ void RenderOffice(){
 
 
     HandleGrenades();
+    if (!player.hasArmor){
+        DrawItem(Vector2 {3598, 700}, "vest");
+
+    }
+    
 
     //DRAW PLAYER
     if (!player.onElevator) player.DrawPlayer();
@@ -5385,6 +5393,16 @@ void debugKeys(){
         }
     }
 
+    if (IsKeyPressed(KEY_U)){
+        if (!player.hasArmor){
+            player.hasArmor = true;
+            player.armor = player.maxArmor;
+            AddItemToInventory("vest");
+            PlaySound(SoundManager::getInstance().GetSound("zipper"));
+
+        }
+    }
+
     if (IsKeyPressed(KEY_H)){
         if (!player.hasShovel){
             player.hasShovel = true;
@@ -5821,6 +5839,8 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadSound("grenadeLauncher", "assets/sounds/grenadeLauncher.ogg");
     soundManager.LoadSound("armorHit", "assets/sounds/armorHit.ogg");
     soundManager.LoadSound("armorHit2", "assets/sounds/armorHit2.ogg");
+    soundManager.LoadSound("squish", "assets/sounds/squish.ogg");
+    soundManager.LoadSound("zipper", "assets/sounds/zipper.ogg");
 
     soundManager.LoadSound("alarm", "assets/sounds/alarm1.ogg");
 
@@ -5952,6 +5972,7 @@ int main() {
     
     RenderTexture2D targetTexture = LoadRenderTexture(GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT); //render target. Draw to rendertexture2d first
     RenderTexture2D vignetteTexture = LoadRenderTexture(GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT);
+    RenderTexture2D glitchTexture = LoadRenderTexture(GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT);
     RenderTexture2D finalTexture = LoadRenderTexture(GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT);
     RenderTexture2D pauseTexture = LoadRenderTexture(screenWidth, screenHeight);
 
@@ -6022,7 +6043,7 @@ int main() {
         MonitorMouseClicks(); 
         UpdateZombieSpawning();
 
-        if (player.armor <= 0){ //remove vest from inventory if armor is depleted. 
+        if (!player.armor){ //remove vest from inventory if armor is depleted. 
             player.hasArmor = false;
             RemoveItemFromInventory("vest");
         }
@@ -6194,6 +6215,7 @@ int main() {
                      WHITE);
             EndShaderMode();
         EndTextureMode();
+
 
         //Third pass
         BeginTextureMode(finalTexture);

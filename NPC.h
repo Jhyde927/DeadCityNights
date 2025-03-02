@@ -88,6 +88,7 @@ public:
     bool isMoving;
     bool scientist;
     bool scienceJr;
+    bool alien;
 
     // Add an emitter for each NPC
     Emitter bloodEmitter;
@@ -106,6 +107,7 @@ public:
     void HandlePolice();
     void HandleZombie();
     void HandleGhost();
+    void HandleAlien();
     void HandleCyberZombie();
     void HandleMiB();
     void HandleRobot();

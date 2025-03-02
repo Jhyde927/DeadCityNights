@@ -82,6 +82,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     cyberZombie = false;
     animationTimer = 0.0;
     isMoving = false;
+    alien = false;
 
  
 }
@@ -533,6 +534,12 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
         }
         
     }
+
+
+void NPC::HandleAlien(){
+    frameSpeed = 14;
+
+}
 
 void NPC::HandleGhost(){ //Also Bats. should probably rename or make it a seperate func handleBats()
 
@@ -1028,6 +1035,7 @@ void NPC::Update() {
     if (isZombie) HandleZombie();
     if (cyberZombie) HandleCyberZombie();
     if (ghost || bat) HandleGhost(); //also bats
+    if (alien) HandleAlien();
     if (robot) HandleRobot();
 
     Vector2 directionToPlayer = {
@@ -1101,6 +1109,8 @@ void NPC::Update() {
                 SetDestination(1600, 2500); //lobby npc
             }else if (scientist || scienceJr){
                 SetDestination(2400, 3600); //lab scientists
+            }else if (alien){
+                SetDestination(1900, 2200);
             } else{
                 SetDestination(1000, 3500);  //Pedestrians Outside, and park
                 
@@ -1123,6 +1133,7 @@ void NPC::Update() {
 
 void NPC::Render() {
     if (!isActive) return;  // Skip rendering if the NPC is not active. NPC still exists though
+
     //animation.Draw(position, facingRight);
     // Calculate the source rectangle for the current frame of the animation
     int frameWidth = 64;  // Each frame is 64 pixels wide

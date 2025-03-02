@@ -36,6 +36,7 @@ std::vector<NPC>lobbyMibs;
 std::vector<NPC>officeWorkers;
 std::vector<NPC>scientists;
 std::vector<NPC>cyberZombies;
+std::vector<NPC>aliens;
 
 // Define the global NPC group list
 std::vector<std::vector<NPC>*> allNPCGroups;
@@ -61,7 +62,7 @@ void InitializeNPCGroups() {
         &npcs, &zombies, &hobos, &ghosts, &bats, &mibs, 
         &astralGhosts, &astralBats, &ParkNpcs, &robots, 
         &lobbyRobots, &lobbyNPCs, &lobbyMibs, &officeWorkers, 
-        &scientists, &cyberZombies
+        &scientists, &cyberZombies, &aliens
     };
 }
 

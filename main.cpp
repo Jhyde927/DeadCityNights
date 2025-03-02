@@ -1109,7 +1109,8 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
         { PARK, { &ParkNpcs, &zombies }},
         { OFFICE, {&officeWorkers, &zombies}},
         {LOT, {&hobos}}, //dont forget about hobo
-        {LAB, {&cyberZombies, &scientists, &zombies}}
+        {LAB, {&cyberZombies, &scientists, &zombies}},
+        {ALIEN, {&aliens}},
 
     };
 
@@ -1268,9 +1269,6 @@ void HandleNecroTransition(){
  
 }
 
-void HandleUFOtransition(){
-    //do something
-}
 
 
 
@@ -1342,6 +1340,12 @@ void HandleApartmentTransition() {
     UpdateNPCActivity(APARTMENT, OUTSIDE);
 }
 
+void HandleUFOtransition() {
+    gameState = CEMETERY;
+    player.position.x = 3791;
+    UpdateNPCActivity(ALIEN, CEMETERY);
+}
+
 void HandleRoadTransition(PlayerCar& player_car) {
     if (!reverse_road) {
         gameState = CEMETERY;
@@ -1381,6 +1385,7 @@ void HandleCemeteryTransition(PlayerCar& player_car) {
         player.position.x = 2078;
         player.abduction = false;
         player.abductionTimer = 0.0;
+        earth.position = {1861, 650};
 
 
     } else if (player.isDead) {
@@ -3270,11 +3275,11 @@ void RenderCemetery(){
         //EndBlendMode();
     }
     
-    if (!player.enter_car && raiseZombies){
+    if (!player.enter_car && !raiseZombies){ //fixme
         //zombies that spawn when you exit car
         raiseZombies = false;
         if (hasCemeteryKey){
-            StartZombieSpawn(10, 3); //you should have the shotgun here so spawn more. 
+            StartZombieSpawn(10, 2); //you should have the shotgun here so spawn more. 
             minDistToPlayer = 50;
             maxDistToPlayer = 200;
         }else{
@@ -4096,13 +4101,27 @@ void RenderPark(){
 }
 
 void RenderUFOinterior(){
-    float deltaTime = GetFrameTime();
+    show_dbox = false;
     camera.target = player.position;
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
     ClearBackground(customBackgroundColor);
+
+    float parallaxBackground = camera.target.x * 0.8f;  // Background moves even slower
+
+    if (player.position.x < 2088 && player.position.x > 2068){
+        show_dbox = true;
+        phrase = "Up to exit UFO";
+        dboxPosition = player.position;
+        over_exit = true;
+    }
     
     if (drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
         
+    DrawTexturePro(resources.AstralBackground, {0, 0, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)},
+    {parallaxBackground-1024, -500, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)}, {0, 0}, 0.0f, WHITE);
+    
+    DrawEarth(earth, camera);
+
     //No parallax for lobby
     DrawTexturePro(resources.UFObackground, {0, 0, static_cast<float>(resources.UFObackground.width), static_cast<float>(resources.UFObackground.height)},
                     {0, 0, static_cast<float>(resources.UFObackground.width), static_cast<float>(resources.UFObackground.height)}, {0, 0}, 0.0f, WHITE);
@@ -4110,6 +4129,21 @@ void RenderUFOinterior(){
     HandleGrenades();
     //DRAW PLAYER
     if (!player.onElevator) player.DrawPlayer();
+
+
+    for (NPC& alien : aliens){
+        alien.Update();
+        alien.Render();
+        alien.ClickNPC();
+
+        if (alien.interacting){
+            phrase = alien.speech;
+        }
+    }
+
+
+
+    
     EndShaderMode(); ////////////////////////////SHADER OFF
     DrawBullets();
 
@@ -4144,6 +4178,7 @@ void RenderUFOinterior(){
     }
 
     if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player);
+
 
 }
 
@@ -5365,6 +5400,16 @@ void spawnNPCs(){
         scientists.push_back(scientist);
     }
 
+    int a = 3;
+    for (int i = 0; i < a; i++){
+        Vector2 a_pos =  {static_cast<float>(2000 + i * 200), 700};
+        NPC alien = CreateNPC(resources.alienSheet, a_pos, speed, IDLE, true, false);
+        alien.alien = true;
+        alien.SetDestination(2000, 2600);
+
+        aliens.push_back(alien);
+    }
+
 
 }
 
@@ -5571,6 +5616,10 @@ void UptoEnter(PlayerCar& player_car){
         if (over_exit && gameState == LOBBY && !spawning_zombies){ //can't leave the scene while zombies are spawning, 
         //but you can when zombies are still active wich couid cause trouble
             transitionState = FADE_OUT; //trans to necrotech
+        }
+
+        if (over_exit && gameState == ALIEN){
+            transitionState = FADE_OUT;
         }
         if (over_Ebutton && gameState == LOBBY && !spawning_zombies){ //elevator button in lobby
             if (elevators[0].isOpen){

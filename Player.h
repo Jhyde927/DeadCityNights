@@ -79,7 +79,7 @@ public:
     bool necroTechSearched;
     bool onElevator;
     bool hasPills;
-    bool step = false;
+    bool step;
     bool hasCrowbar;
     bool canSwing;
     bool swinging;

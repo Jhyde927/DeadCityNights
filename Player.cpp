@@ -173,7 +173,7 @@ float GetRightBoundary(){
     }else if (gameState == LAB){
         return 3852;
     }else if (gameState == ALIEN){
-        return 4000;
+        return 3400;
     }
 }
 

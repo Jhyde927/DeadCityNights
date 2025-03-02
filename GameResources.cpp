@@ -121,6 +121,7 @@ void GameResources::Load() {
     explosionSheet = LoadTexture("assets/explosionSheet.png");
     armorIcon = LoadTexture("assets/armor.png");
     UFObackground = LoadTexture("assets/UFObackground.png");
+    alienSheet = LoadTexture("assets/AlienSheet.png");
 }
 
 // Unload all game resources
@@ -234,4 +235,5 @@ void GameResources::Unload() {
     UnloadTexture(explosionSheet);
     UnloadTexture(armorIcon);
     UnloadTexture(UFObackground);
+    UnloadTexture(alienSheet);
 }

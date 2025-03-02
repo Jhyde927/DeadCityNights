@@ -820,7 +820,7 @@ void StartZombieSpawn(int zombie_count, float delay){
     // nextSpawnDelay = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / delay));  // Random delay between 1-4 seconds
     nextSpawnDelay = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX) / (delay - 1.0f));
     //film = true;
-    if (gameState != OFFICE) glitch = true; //Activate glitch shader to make things more dramatic, not in the office however, it's a bit too much. 
+    if (gameState != OFFICE && gameState != LAB) glitch = true; //Activate glitch shader to make things more dramatic, not in the office however, it's a bit too much. 
     
 }
 
@@ -1268,6 +1268,10 @@ void HandleNecroTransition(){
  
 }
 
+void HandleUFOtransition(){
+    //do something
+}
+
 
 
 void HandleOutsideTransition(PlayerCar& player_car) {
@@ -1367,6 +1371,18 @@ void HandleCemeteryTransition(PlayerCar& player_car) {
         UpdateNPCActivity(CEMETERY, GRAVEYARD);
         gameState = GRAVEYARD;
         raiseZombies = true;  // Queue up more zombies for graveyard
+    }else if (player.abduction){
+        UpdateNPCActivity(CEMETERY, ALIEN);
+        gameState = ALIEN;
+        glitch = false;
+        SoundManager::getInstance().ManagerStopSound("energyHum");
+        gameCalendar.AdvanceDay();
+        player.position.y = 700; //reset y
+        player.position.x = 2078;
+        player.abduction = false;
+        player.abductionTimer = 0.0;
+
+
     } else if (player.isDead) {
         UpdateNPCActivity(CEMETERY, APARTMENT);
         gameState = APARTMENT;//wake up back at your apartment with full health. 
@@ -1622,6 +1638,10 @@ void PerformStateTransition( PlayerCar& player_car) {
 
         case LAB:
             HandleLabTransition();
+            break;
+
+        case ALIEN:
+            HandleUFOtransition();
             break;
   
     }
@@ -2565,7 +2585,7 @@ void DrawUFO(){
 
     if (abductionBeam){
         //show abduction beam. if player is under UFO
-        
+        player.abduction = true;
         Rectangle sourceRec = { 0.0f, 0.0f, (float)resources.lightBar.width, (float)resources.lightBar.height };
         Rectangle destRec = { 
             ufo.position.x+37, // x position on screen
@@ -2582,6 +2602,8 @@ void DrawUFO(){
         BeginBlendMode(BLEND_ADDITIVE);
         DrawTexturePro(resources.lightBar, sourceRec, destRec, origin, rotation, WHITE);
         EndBlendMode();
+        
+
 
     
     }
@@ -3220,7 +3242,7 @@ void RenderCemetery(){
     int carMin = 2765;
 
     //UFO shows up in the begining at the far left outside, and once you have the cemetery key in the cemetery. 
-    if (hasCemeteryKey) {
+    if (hasCemeteryKey && gameState == CEMETERY) {
         //playe UFO hum when ufo is present. Use UFO.baseposition not position
 
         PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.basePosition, player.position, 800.0f);
@@ -3238,14 +3260,6 @@ void RenderCemetery(){
         maxDistToPlayer = 200;
     }
 
-    //too many zombie encounters not enough ammo, uncomment for more zombies on the right side of cemetery
-    // if (!player.enter_car && player.position.x > 3500 && !zombieWave2 && !firstHobo){ //walk too far right and zombies spawn again
-    //     zombieWave2 = true;
-    //     StartZombieSpawn(10);
-
-    //     minDistToPlayer = 50;
-    //     maxDistToPlayer = 200;
-    // }
 
     if (move_car){
         player_car.carSpeed = 100;
@@ -3351,6 +3365,12 @@ void RenderCemetery(){
     abductionBeam = false;
     if (player.position.x > 3929 && player.position.x < 3949){
         abductionBeam = true;
+
+    }
+
+    if (player.position.y < 500 && player.abduction){
+        transitionState = FADE_OUT;
+        
     }
 
     if (hasCemeteryKey){ // dont show UFO until later in the game
@@ -3360,7 +3380,7 @@ void RenderCemetery(){
 
     //DrawShovelPickup(mousePosition, camera);
 
-    if (!player.hasShovel){
+    if (!player.hasShovel && !firstHobo){ //visit the hobo before shovel appears in cemetery
         DrawItem(Vector2 {1870, 700}, "shovel");
     }
 
@@ -4072,6 +4092,58 @@ void RenderPark(){
         DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
 
     }
+
+}
+
+void RenderUFOinterior(){
+    float deltaTime = GetFrameTime();
+    camera.target = player.position;
+    BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
+    ClearBackground(customBackgroundColor);
+    
+    if (drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
+        
+    //No parallax for lobby
+    DrawTexturePro(resources.UFObackground, {0, 0, static_cast<float>(resources.UFObackground.width), static_cast<float>(resources.UFObackground.height)},
+                    {0, 0, static_cast<float>(resources.UFObackground.width), static_cast<float>(resources.UFObackground.height)}, {0, 0}, 0.0f, WHITE);
+
+    HandleGrenades();
+    //DRAW PLAYER
+    if (!player.onElevator) player.DrawPlayer();
+    EndShaderMode(); ////////////////////////////SHADER OFF
+    DrawBullets();
+
+    HandleKeyboardAiming();
+    renderBoxes();
+    DrawPickups();
+    EndMode2D();
+    showBigBadge();
+
+    //draw healthbar 
+    if (!player.enter_car){
+        Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
+        DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
+
+    }
+
+    DrawMoney(); //draw money after EndMode2d()
+    if (showInventory){
+            
+        RenderInventory();  // Render the inventory 
+    }
+
+    if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
+        DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+    }else{
+        DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+    }
+
+    if (show_dbox){
+        DrawDialogBox(camera, 0, 0, 20);
+
+    }
+
+    if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player);
 
 }
 
@@ -6190,6 +6262,10 @@ int main() {
 
                 case LAB:
                     RenderLab();
+                    break;
+
+                case ALIEN:
+                    RenderUFOinterior();
                     break;
                     
             }

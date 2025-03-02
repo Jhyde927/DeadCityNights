@@ -81,7 +81,7 @@ Player::Player() {
     runFrameSpeed = 1.5;
     walkFrameSpeed = 1;
     bulletCount = 6;
-
+    abductionTimer = 0.0;
     mac10BulletCount = 30;
     revolverBulletCount = 6;
     shotgunBulletCount = 2;  // For Shotgun
@@ -96,7 +96,7 @@ Player::Player() {
     validatedPassword = false;
     necroTechSearched = false;
     onElevator = false;
-
+    abduction = false;
     hasPills = false;
 
 }
@@ -172,6 +172,8 @@ float GetRightBoundary(){
         return 3800;
     }else if (gameState == LAB){
         return 3852;
+    }else if (gameState == ALIEN){
+        return 4000;
     }
 }
 
@@ -202,6 +204,8 @@ float GetLeftBoundary(){
         return 1000;
     }else if (gameState == LAB){
         return 1575;
+    }else if (gameState == ALIEN){
+        return 1024;
     }
 }
 
@@ -264,92 +268,94 @@ bool Player::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosit
 
 
 void Player::HandleInput(float speed){
-        double currentTime = GetTime();
-        float deltaTime = GetFrameTime();
-        // Double tap to run (for A, D, LEFT, RIGHT)
-        if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A)) {
-            if (currentTime - LastTapTimeLeft < tapInterval) {
-                isRunning = true;  // Double-tap detected, start running
-            }
-            LastTapTimeLeft = currentTime;  // Update last tap time
+    if (abduction) return; //cant move while being abducted by aliens. 
+
+    double currentTime = GetTime();
+    float deltaTime = GetFrameTime();
+    // Double tap to run (for A, D, LEFT, RIGHT)
+    if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A)) {
+        if (currentTime - LastTapTimeLeft < tapInterval) {
+            isRunning = true;  // Double-tap detected, start running
+        }
+        LastTapTimeLeft = currentTime;  // Update last tap time
+    }
+
+    if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D)) {
+        if (currentTime - LastTapTimeRight < tapInterval) {
+            isRunning = true;  // Double-tap detected, start running
+        }
+        LastTapTimeRight = currentTime;  // Update last tap time
+    }
+    
+
+    // Horizontal movement with acceleration
+    if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
+        velocity.x += acceleration * deltaTime;
+        if (velocity.x > maxSpeedX) velocity.x = maxSpeedX;
+        isMoving = true;
+        facingRight = true;
+    }
+    else if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
+        velocity.x -= acceleration * deltaTime;
+        if (velocity.x < -maxSpeedX) velocity.x = -maxSpeedX;
+        isMoving = true;
+        facingRight = false;
+    }
+    else {
+        // Apply deceleration when no input is detected //need to decelerate when aiming, shooting, also
+        if (velocity.x > 0.0f) {
+            velocity.x -= deceleration * deltaTime;
+            if (velocity.x < 0.0f) velocity.x = 0.0f;
+        } else if (velocity.x < 0.0f) {
+            velocity.x += deceleration * deltaTime;
+            if (velocity.x > 0.0f) velocity.x = 0.0f;
+        }
+    }
+
+    
+    // Jumping logic
+
+    if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)){
+        holdingDown = true;
+        if (IsKeyPressed(KEY_SPACE)){ //hold down and press space to drop through platform. 
+            isOnGround = false;
+            dropping = true;
+            jumping = true; //turn on jumping so we can turn it back off when hitting a platform. Needed to reset velocity.y
+            dropTimer = 1.0;
         }
 
-        if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D)) {
-            if (currentTime - LastTapTimeRight < tapInterval) {
-                isRunning = true;  // Double-tap detected, start running
-            }
-            LastTapTimeRight = currentTime;  // Update last tap time
-        }
-        
+    }else{
+        holdingDown = false;
+        //dropping = false;
+    }
+    
+    
+    if (IsKeyPressed(KEY_SPACE) && isOnGround && !jumping && !holdingDown) {
+        velocity.y = -jumpForce;  
+        isOnGround = false;
+        jumping = true;
+        PlaySound(SoundManager::getInstance().GetSound("jump"));
 
-        // Horizontal movement with acceleration
+    }
+
+
+
+    // Check for shift key to run
+    if ((IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) && !isAiming) {
+        isRunning = true;
+    } else if (!IsKeyDown(KEY_LEFT) && !IsKeyDown(KEY_RIGHT) && !IsKeyDown(KEY_A) && !IsKeyDown(KEY_D) && !isAiming) {
+        isRunning = false;  // Stop running if no movement keys are pressed
+    }
+
+    //change facing direction while stopped, and aiming. 
+    if (isAiming && !isReloading) {
         if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
-            velocity.x += acceleration * deltaTime;
-            if (velocity.x > maxSpeedX) velocity.x = maxSpeedX;
-            isMoving = true;
             facingRight = true;
         }
-        else if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
-            velocity.x -= acceleration * deltaTime;
-            if (velocity.x < -maxSpeedX) velocity.x = -maxSpeedX;
-            isMoving = true;
+        if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
             facingRight = false;
         }
-        else {
-            // Apply deceleration when no input is detected //need to decelerate when aiming, shooting, also
-            if (velocity.x > 0.0f) {
-                velocity.x -= deceleration * deltaTime;
-                if (velocity.x < 0.0f) velocity.x = 0.0f;
-            } else if (velocity.x < 0.0f) {
-                velocity.x += deceleration * deltaTime;
-                if (velocity.x > 0.0f) velocity.x = 0.0f;
-            }
-        }
-
-        
-        // Jumping logic
-
-        if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)){
-            holdingDown = true;
-            if (IsKeyPressed(KEY_SPACE)){ //hold down and press space to drop through platform. 
-                isOnGround = false;
-                dropping = true;
-                jumping = true; //turn on jumping so we can turn it back off when hitting a platform. Needed to reset velocity.y
-                dropTimer = 1.0;
-            }
-
-        }else{
-            holdingDown = false;
-            //dropping = false;
-        }
-       
-       
-        if (IsKeyPressed(KEY_SPACE) && isOnGround && !jumping && !holdingDown) {
-            velocity.y = -jumpForce;  
-            isOnGround = false;
-            jumping = true;
-            PlaySound(SoundManager::getInstance().GetSound("jump"));
-
-        }
-
-
-  
-        // Check for shift key to run
-        if ((IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) && !isAiming) {
-            isRunning = true;
-        } else if (!IsKeyDown(KEY_LEFT) && !IsKeyDown(KEY_RIGHT) && !IsKeyDown(KEY_A) && !IsKeyDown(KEY_D) && !isAiming) {
-            isRunning = false;  // Stop running if no movement keys are pressed
-        }
-
-        //change facing direction while stopped, and aiming. 
-        if (isAiming && !isReloading) {
-            if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
-                facingRight = true;
-            }
-            if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
-                facingRight = false;
-            }
-        }
+    }
 }
 
 void Player::reloadLogic(float deltaTime){
@@ -477,7 +483,7 @@ bool Player::CheckIfOnPlatform() {
 
 
 void Player::playerPhysics(float deltaTime){
-    if (enter_train) return;
+    if (enter_train || abduction) return;
     if (dropTimer > 0){ //drop through platforms for 1 second
         dropTimer -= GetFrameTime();
         
@@ -747,6 +753,19 @@ void Player::UpdateMovement() {
     bloodEmitter.UpdateParticles(deltaTime);
     maxSpeedX = isRunning ? runSpeed : walkSpeed; //if running, maxspeed = runspeed else walkspeed
     frameSpeed = isRunning ? runFrameSpeed : walkFrameSpeed;
+
+    if (abduction && abductionTimer <= 0){
+        abductionTimer = 7.0f;
+        
+    }
+
+    if (abductionTimer > 0){
+        abductionTimer -= deltaTime;
+        player.position.y -= walkSpeed/2 * deltaTime;
+        
+    }
+
+    
 
     //keep player in bounds
     if (!enter_train){ // player can leave boundaries on the train

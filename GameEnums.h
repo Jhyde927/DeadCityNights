@@ -18,6 +18,7 @@ enum GameState {
     LOBBY,
     OFFICE,
     LAB,
+    ALIEN,
 };
 
 enum TrainState {

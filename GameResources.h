@@ -122,6 +122,7 @@ struct GameResources {
     Texture2D scienceJrSheet;
     Texture2D explosionSheet;
     Texture2D armorIcon;
+    Texture2D UFObackground;
     
 
     Font defaultFont;

@@ -43,6 +43,8 @@ public:
     float armor;
     float maxArmor;
     bool hasArmor;
+    bool abduction;
+    float abductionTimer;
 
 
     // Animation speeds

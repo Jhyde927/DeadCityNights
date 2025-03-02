@@ -5,6 +5,7 @@
 #include <string>
 #include <raylib.h>
 #include <raymath.h>
+#include <iostream>
 
 struct ActiveSound { //for positional audio
     Sound sound;
@@ -30,6 +31,13 @@ public:
         if (robotVoices.find(name) == robotVoices.end()) {
             Sound sound = ::LoadSound(filepath.c_str());
             robotVoices[name] = sound;
+        }
+    }
+
+    void LoadAlienVoice(const std::string& name, std::string filepath) {
+        if (alienVoices.find(name) == alienVoices.end()) {
+            Sound sound = ::LoadSound(filepath.c_str());
+            alienVoices[name] = sound;
         }
     }
 
@@ -84,12 +92,22 @@ public:
         ::PlaySound(it->second);
     }
 
-    void PlayerRandomRobotVoice() {
+    void PlayRandomRobotVoice() {
         if (robotVoices.empty()) return;
 
         int randomIndex = rand() % robotVoices.size();
 
         auto it = robotVoices.begin();
+        std::advance(it, randomIndex);
+
+        ::PlaySound(it->second);
+    }
+
+    void PlayRandomAlienVoice(){
+        if (alienVoices.empty()) return;
+        
+        int randomIndex = rand() % alienVoices.size();
+        auto it = alienVoices.begin();
         std::advance(it, randomIndex);
 
         ::PlaySound(it->second);
@@ -282,8 +300,15 @@ public:
                 UnloadSound(pair.second);
             }
         }
-        robotVoices.clear();
+        //unload alein voices
+        for (auto& pair : alienVoices){
+            if (pair.second.frameCount > 0){
+                UnloadSound(pair.second);
+            }
+        }
 
+        robotVoices.clear();
+        alienVoices.clear();
         activeSounds.clear();
 
 
@@ -302,6 +327,7 @@ private:
     std::map<std::string, Music> musicTracks;  // array of music tracks
     std::map<std::string, Sound> voices; //array of voices
     std::map<std::string, Sound> robotVoices; //array of robot noises
+    std::map<std::string, Sound> alienVoices; //array of Pitched up giberish
 
     // Make constructor private to enforce Singleton pattern
     SoundManager() = default;

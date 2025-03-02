@@ -254,7 +254,7 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
             idleTime = 10;
 
            if (interactions == 0 && validPassword){
-                SoundManager::getInstance().PlayerRandomRobotVoice();
+                SoundManager::getInstance().PlayRandomRobotVoice();
                 speech = "Beep Boop";
            }
 
@@ -264,20 +264,20 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
                 clickCount += 1;
                 switch (clickCount){
                     case 1:
-                        SoundManager::getInstance().PlayerRandomRobotVoice();
+                        SoundManager::getInstance().PlayRandomRobotVoice();
                         speech = "Password?";
                         break;
                     case 2:
-                        SoundManager::getInstance().PlayerRandomRobotVoice();
+                        SoundManager::getInstance().PlayRandomRobotVoice();
                         speech = "Invalid Password";
                         break;
                     case 3:
-                        SoundManager::getInstance().PlayerRandomRobotVoice();
+                        SoundManager::getInstance().PlayRandomRobotVoice();
                         speech = "Intruder Detected!";
                         break;
                     case 4:
                         if (!validPassword){
-                            SoundManager::getInstance().PlayerRandomRobotVoice();
+                            SoundManager::getInstance().PlayRandomRobotVoice();
                             speech = "Terminate Intruder";
                             agro = true;
                             idleTime = 2;
@@ -355,6 +355,15 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
             agro = true;
         }
 
+        if (alien && !talked){
+            talked = true;
+            speech = "glip glorp";
+            talkTimer = 2;
+            idleTime = 2;
+            SoundManager::getInstance().PlayRandomAlienVoice();
+
+        }
+
 
 
         if (hobo && !talked){
@@ -366,20 +375,20 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
                 clickCount += 1;
                 switch (clickCount){
                     case 1:
-                        //SoundManager::getInstance().StartRandomVoices(1);
+                        SoundManager::getInstance().PlayRandomVoice();
                         speech = "GaaHh, what do you want?";
                         break;
                     case 2:
-                        //SoundManager::getInstance().StartRandomVoices(2);
+                        SoundManager::getInstance().PlayRandomVoice();
                         speech = "wait...\n\nyou're not like the others";
                         break;
                     case 3:
-                        //SoundManager::getInstance().StartRandomVoices(1);
+                        SoundManager::getInstance().PlayRandomVoice();
                         speech = "maybe you'll believe me";
                         break;
 
                     case 4:
-                        //SoundManager::getInstance().StartRandomVoices(2.5);
+                        SoundManager::getInstance().PlayRandomVoice();
                         speech = "I was in the graveyard last night\n\nI...saw something";
                         break;
 
@@ -389,17 +398,17 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
                         break;
 
                     case 6:
-                        //SoundManager::getInstance().StartRandomVoices(2);
+                    SoundManager::getInstance().PlayRandomVoice();
                         speech = "The DEAD were RISING\n\nfrom their GRAVES!";
                         break;
 
                     case 7:
-                        //SoundManager::getInstance().StartRandomVoices(2.5);
+                    SoundManager::getInstance().PlayRandomVoice();
                         speech = "I dropped my SHOVEL and\n\ngot the hell out of there";
                         break;
 
                     case 8:
-                        //SoundManager::getInstance().StartRandomVoices(2);
+                    SoundManager::getInstance().PlayRandomVoice();
                         speech = "I'd stay away from there\n\nif I was you";
                         break;
 
@@ -415,43 +424,43 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
                 switch(clickCount){
                     
                     case 1:
-                        //SoundManager::getInstance().StartRandomVoices(1);
+                        SoundManager::getInstance().PlayRandomVoice();
                         speech = "I see you've found my shovel";
                         break;
                     case 2:
                         speech = "You saw them too...\n\nThe Walking Dead";
-                        //SoundManager::getInstance().StartRandomVoices(2);
+                        SoundManager::getInstance().PlayRandomVoice();
                         break;
                     case 3:
-                        //SoundManager::getInstance().StartRandomVoices(2);
+                        SoundManager::getInstance().PlayRandomVoice();
                         speech = "They are gathering\n\nin the cemetery before...";
                         break;
                     case 4: 
                         speech = "I've tried to warn the police\n\nthey just laughed at me";
-                        //SoundManager::getInstance().StartRandomVoices(2);
+                        SoundManager::getInstance().PlayRandomVoice();
                         break;
                     case 5:
                         speech = "You've got to stop them\n\n before they invade the city";
-                        //SoundManager::getInstance().StartRandomVoices(2.5);
+                        SoundManager::getInstance().PlayRandomVoice();
                         break;
                     case 6:
-                        //SoundManager::getInstance().StartRandomVoices(1);
+                        SoundManager::getInstance().PlayRandomVoice();
                         speech = "Here is the KEY to the cemetery";
                         
                         break;
 
                     case 7:
                         speech = "Find the source of the zombies";
-                        //SoundManager::getInstance().StartRandomVoices(1);
+                        SoundManager::getInstance().PlayRandomVoice();
                         break;
 
                     case 8:
                         speech = "There is an old shotgun buried over there\n\nYour gonna need it";
-                        //SoundManager::getInstance().StartRandomVoices(2);
+                        SoundManager::getInstance().PlayRandomVoice();
                         break;
 
                     case 9:
-                        //SoundManager::getInstance().StartRandomVoices(1);
+                        SoundManager::getInstance().PlayRandomVoice();
                         speech = "WE ARE DOOMED!"; // repeats we are dooomed.
                         interactions = 2; //load 3rd interaction
                         clickCount = 0; //reset click count for another round
@@ -463,32 +472,32 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
                 switch(clickCount){
                     case 1:
                         speech = "Where did you find this ID card?";
-                        //SoundManager::getInstance().StartRandomVoices(1);
+                        SoundManager::getInstance().PlayRandomVoice();
                         break;
 
                     case 2:
                         speech = "NecroTech? That's my old employer";
-                        //SoundManager::getInstance().StartRandomVoices(1.5);
+                        SoundManager::getInstance().PlayRandomVoice();
                         break;
 
                     case 3:
                         speech = "I got fired when I wouldn't go along with their\n\nWorld domination plans";
-                        //SoundManager::getInstance().StartRandomVoices(2);
+                        SoundManager::getInstance().PlayRandomVoice();
                         break;
                     
                     case 4:
                         speech = "I should have known they were behind this";
-                        //SoundManager::getInstance().StartRandomVoices(1);
+                        SoundManager::getInstance().PlayRandomVoice();
                         break;
 
                     case 5:
                         speech = "You got a computer?\n\nSearch the internet";
-                        //SoundManager::getInstance().StartRandomVoices(1);
+                        SoundManager::getInstance().PlayRandomVoice();
                         break;
 
                     case 6:
                         speech = "Find NecroTech HQ\n\nPut a stop to their evil plans"; 
-                        //SoundManager::getInstance().StartRandomVoices(2.5);
+                        SoundManager::getInstance().PlayRandomVoice();
                         interactions = 3; //load the fourth interaction
                         clickCount = 0; //reset clickCount for another round. 
                         break;

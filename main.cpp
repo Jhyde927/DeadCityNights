@@ -1385,7 +1385,7 @@ void HandleCemeteryTransition(PlayerCar& player_car) {
         player.position.x = 2078;
         player.abduction = false;
         player.abductionTimer = 0.0;
-        earth.position = {1861, 650};
+        earth.position = {1830, 630};
 
 
     } else if (player.isDead) {
@@ -2591,6 +2591,7 @@ void DrawUFO(){
     if (abductionBeam){
         //show abduction beam. if player is under UFO
         player.abduction = true;
+        player.outline = true;
         Rectangle sourceRec = { 0.0f, 0.0f, (float)resources.lightBar.width, (float)resources.lightBar.height };
         Rectangle destRec = { 
             ufo.position.x+37, // x position on screen
@@ -3275,7 +3276,7 @@ void RenderCemetery(){
         //EndBlendMode();
     }
     
-    if (!player.enter_car && !raiseZombies){ //fixme
+    if (!player.enter_car && raiseZombies){ 
         //zombies that spawn when you exit car
         raiseZombies = false;
         if (hasCemeteryKey){
@@ -3283,7 +3284,7 @@ void RenderCemetery(){
             minDistToPlayer = 50;
             maxDistToPlayer = 200;
         }else{
-            StartZombieSpawn(5, 3);
+            StartZombieSpawn(5, 3); //first zombie encounter
             minDistToPlayer = 50;
             maxDistToPlayer = 200;
         }       
@@ -3374,7 +3375,7 @@ void RenderCemetery(){
     }
 
     if (player.position.y < 500 && player.abduction){
-        transitionState = FADE_OUT;
+        transitionState = FADE_OUT; //goto UFO interior 
         
     }
 
@@ -4102,6 +4103,8 @@ void RenderPark(){
 
 void RenderUFOinterior(){
     show_dbox = false;
+    over_exit = false;
+    player.outline = false;
     camera.target = player.position;
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
     ClearBackground(customBackgroundColor);
@@ -4120,9 +4123,9 @@ void RenderUFOinterior(){
     DrawTexturePro(resources.AstralBackground, {0, 0, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)},
     {parallaxBackground-1024, -500, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)}, {0, 0}, 0.0f, WHITE);
     
-    DrawEarth(earth, camera);
+    DrawEarth(earth, camera); //draw earth in front of starts and behing ship. DrawEarth has it's own parallax. 
 
-    //No parallax for lobby
+    //No parallax 
     DrawTexturePro(resources.UFObackground, {0, 0, static_cast<float>(resources.UFObackground.width), static_cast<float>(resources.UFObackground.height)},
                     {0, 0, static_cast<float>(resources.UFObackground.width), static_cast<float>(resources.UFObackground.height)}, {0, 0}, 0.0f, WHITE);
 
@@ -4138,6 +4141,8 @@ void RenderUFOinterior(){
 
         if (alien.interacting){
             phrase = alien.speech;
+            show_dbox = true;
+            dboxPosition = alien.position;
         }
     }
 
@@ -5983,25 +5988,22 @@ void InitSounds(SoundManager& soundManager){
 
     soundManager.LoadSound("zombieDeath", "assets/sounds/zombieDeath.ogg");
 
-    //random gibberish clips - removed voice 1-7
-    soundManager.LoadVoice("voice8", "assets/sounds/v1.ogg"); //load voices into sound managers's voices vector
-    soundManager.LoadVoice("voice9", "assets/sounds/v2.ogg");
-    soundManager.LoadVoice("voice10", "assets/sounds/v3.ogg");
-    soundManager.LoadVoice("voice11", "assets/sounds/v4.ogg");
-    soundManager.LoadVoice("voice12", "assets/sounds/v5.ogg");
-    soundManager.LoadVoice("voice13", "assets/sounds/v6.ogg");
-    soundManager.LoadVoice("voice14", "assets/sounds/v7.ogg");
-    soundManager.LoadVoice("voice15", "assets/sounds/v8.ogg");
-    soundManager.LoadVoice("voice16", "assets/sounds/v9.ogg");
-    soundManager.LoadVoice("voice17", "assets/sounds/v10.ogg");
-    soundManager.LoadVoice("voice18", "assets/sounds/v11.ogg");
-    soundManager.LoadVoice("voice19", "assets/sounds/v12.ogg");
-    soundManager.LoadVoice("voice20", "assets/sounds/v13.ogg");
-    soundManager.LoadVoice("voice21", "assets/sounds/v14.ogg");
-    soundManager.LoadVoice("voice22", "assets/sounds/v15.ogg");
-    soundManager.LoadVoice("voice23", "assets/sounds/v16.ogg");
-    soundManager.LoadVoice("voice24", "assets/sounds/v17.ogg");
-    soundManager.LoadVoice("voice25", "assets/sounds/v18.ogg");
+    //voices
+    soundManager.LoadVoice("voice1", "assets/sounds/AlienVoice1.ogg");
+    soundManager.LoadVoice("voice2", "assets/sounds/AlienVoice2.ogg");
+    soundManager.LoadVoice("voice3", "assets/sounds/AlienVoice3.ogg");
+    soundManager.LoadVoice("voice4", "assets/sounds/AlienVoice4.ogg");
+    soundManager.LoadVoice("voice5", "assets/sounds/AlienVoice5.ogg");
+    soundManager.LoadVoice("voice6", "assets/sounds/AlienVoice6.ogg");
+
+    //alien voices
+
+    soundManager.LoadAlienVoice("av1", "assets/sounds/PitchUp1.ogg");
+    soundManager.LoadAlienVoice("av2", "assets/sounds/PitchUp2.ogg");
+    soundManager.LoadAlienVoice("av3", "assets/sounds/PitchUp3.ogg");
+    soundManager.LoadAlienVoice("av4", "assets/sounds/PitchUp4.ogg");
+    soundManager.LoadAlienVoice("av5", "assets/sounds/PitchUp5.ogg");
+    soundManager.LoadAlienVoice("av6", "assets/sounds/PitchUp6.ogg");
 
     //robot voices
     soundManager.LoadRobotVoice("robot1", "assets/sounds/robot1.ogg");

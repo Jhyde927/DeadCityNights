@@ -768,9 +768,104 @@ NecroTech Interior:
 
 	office workers pants are too dark. 
 
+	you can still switch to the shotgun even if you don't have. which deselects the revolver, which isn't good. How did I not notice this before. 
+
+	If you have the pocket watch you can't talk to the ghost. x don't show last message, it was bad anyway. fixed x
+
+	Astral realm is too hard if you don't have the mac10. maybe thats good. Ammo situation seems good too. 
+
+	You should have to talk to a scientist before zombies invade the lab. What should he talk about? 
+	"what are you doing in here?" "let me see your security badge" ""
 
 
+	Dialogue:
 
+	"Ah... a visitor. You stand in the presence of progress, of perfection! My children—no, my masterpieces—are nearly complete! Flesh and steel, mindless yet obedient. What use is a fragile human body when it can be upgraded? Enhanced! You wouldn’t understand, but soon... soon you will see."
+
+	make frank grant access to elevator 2 x
+
+	if you die while zombies are still spawning, glitch shader continues to play. We need to clean up the scene if we leave it. x
+
+	ghost dialog is broken x
+
+	clicking the crowbar icon swings crowbar x
+
+	you can fill your inventory with liquor. Make it so you can only carry one at a time. x
+
+	20:00 minutes to complete everything in the game. x
+
+	at subtle screen shake on grenade explosions.
+
+	move traffic is behind boxes x
+
+	put a stash of 3 boxes in the graveyard far left.  x
+
+	"The hands of fate now spin anew",
+	A relic lost returns with you.
+	By silver light and whispered spell,
+	You break the curse—I rise, farewell!"
+
+	make a choice to destroy the zombies in the tanks. There is a button on the center console to destroy specimens. Animate tank explosion. maybe do the same thing in CEO office but trigger self destruct. 
+
+	put glitch shader on it's own render texture. -> Tried but glitch shader doesn't work when applied to renderTexture for some reason. 
+
+	a reward for making it through. 
+
+	body armor? x armor is a yellow bar that is drawn over the top of the green healthbar. we could use a texture,
+	but what kind of texture. Metal, iron, get a better sound effect. 
+
+	put blood emitter on player already. x
+
+	boxes are ahead of train in subway x
+
+	vest sound effect. (zipper) x
+
+	21 minutes. How can we make it longer? Finish the UFO story line. Make a UFO interior. Maybe they give you a laser gun. Make an alien NPC. shit writes it's self. A naked grey alien? jump suite. with a bubble helmet. They beam you up. then there is a slow fade in. You are frozen, you can't move. the aliens are walking back and forth. They instigate the conversation. instead of you walking up to them they walk up to you and dialog comes up. Still need to press up to advanced the dialog. what's the dialog. "We have been monitoring your activity" "We approve of your motives" " Take this weapon that could be useful to your endeavors." alien speech audio clip plays. Then they beam you down. This all takes place in the cemetery after you have the badge. So you would be back tracking to get to it. Super secret. Tell know one about this part of the game either.
+
+	draw a grey alien.
+
+	draw UFO interior. 
+
+	beam up technology. 
+
+	renderUFO(){
+		parallax background. 
+
+		for (NPC& alien : aliens){
+			alien.update();
+			alien.render();
+			alien.ClickNPC();
+
+			if (alien.interacting){
+				phrase = alien.speech;
+			}
+		}
+	}
+
+	whats first. renderUFO. scratch that we need a placeholder background. what color? Pink? Green. Everything in the game is dark blue. This area will be green. take the laboratory background and make it green. Ha reuse the earth spin sprite yet again. 
+
+	UFO interior implemented. I hate it. Redo the art. 
+
+	What item or piece of information do the aliens give you? A laser gun. That's a lot of work for a secret no one is going to find. A Teleporter. Drop the teleport in one scene then press a button to instantly travel back to that scene. Maybe it just brings to back to the apartment if you press a button. Fast travel in other words. Town portal?
+
+	New alien voice and voice for hobo. Found a good gibberish clip, cut it into six pieces for the hobo, and then pitched up the 6 clips to be the alien voice. 
+
+
+	tanks in lab now can explode and spawn a zombie. 
+
+	another elevator in lab. it would be elevator 1. 
+
+
+	UFO doesn't move when outside when you visit it in the cemetery first. - there is only one UFO. when it moves to the cemetery it is no longer on main street. Not sure how to fix that other than 2 UFOs. If you pick up the cemetery key before seeing the UFO on the left. it won't be there anymore. Maybe it makes sense that way. because if you see it first in the cemetery you can get abducted. then if you saw it again on main street after being abducted, and it just flies away. that wouldn't make sense. so I guess the answer to my conundrum is to do nothing. 
+
+	alien drugs?
+
+	Needs more characters. 
+
+	Lots of things get triggered by the cemetery key. queue zombies, open graveyard, move ufo to cemetery, where else could be trigger things. The badge opens up necrotech. 
+
+	maybe magic door one should dissapear when you go through it into astral. then the only way out is up. maybe. 
+	when you exit astral you should wake up in your apartment. 
 
 
 

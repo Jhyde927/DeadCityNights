@@ -6,9 +6,6 @@
 #include <raylib.h>  // Include Raylib to use Texture2D and Font types
 
 
-
-
-
 // Struct to hold game resources
 struct GameResources {
     Texture2D background;
@@ -124,6 +121,7 @@ struct GameResources {
     Texture2D armorIcon;
     Texture2D UFObackground;
     Texture2D alienSheet;
+    Texture2D tankExplodeSheet;
     
 
     Font defaultFont;
@@ -137,7 +135,7 @@ struct GameResources {
 
 };
 
-extern GameResources resources;  // ✅ Declare external global instance
+extern GameResources resources;  // Declare external global instance
 
 
 #endif // GAMERESOURCES_H

@@ -71,6 +71,9 @@ void InitTank(Vector2 position){
     tank.currentFrame = rand() % 6; //start on a random frame to offset animations. 
     tank.frameTimer = 0.0f;
     tank.frameTime = 0.15f;
+    tank.health = 1;
+    tank.explode = false;
+    tank.canSpawn = true;
     Tanks.push_back(tank);
 
 

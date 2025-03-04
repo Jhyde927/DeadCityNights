@@ -47,12 +47,14 @@ bool over_Ebutton2 = false;
 bool over_necro = false;
 bool over_gate = false;
 bool over_shotgun = false;
+bool over_console = false;
 bool showBadge = false;
 bool show_carUI = false;
 bool leave_apartment = false;
 bool leave_cemetery = false;
 bool sharpen = false;
 bool buttonNecro = false;
+bool showConsoleText = false;
 bool lockElevator2 = true;
 bool buttonCemetery = false;
 bool buttonInternet = false;
@@ -74,6 +76,7 @@ bool can_spawn_mibs = true;
 bool firstBlood = false;
 bool drawShovel = false;
 bool drawCrowbar = true;
+bool explodeTanks = false;
 bool drawMac10 = true;
 bool drawShotgun = true;
 bool dealerButtonAdded = false;
@@ -1670,6 +1673,8 @@ void HandleFadeIn() {
 void HandleFadeOut(PlayerCar& player_car) { 
     fadeAlpha += fadeSpeed;  // Fade out gradually
     fading = true; //dont move player if fading
+    grenades.clear(); //clear any remaining grenades when switching scenes. 
+
     if (fadeAlpha >= 1.0f) {
         fadeAlpha = 1.0f;
 
@@ -2423,14 +2428,33 @@ void DrawTank(Tank& tank){
       // Update animation timer
     tank.frameTimer += GetFrameTime();
 
+    if (tank.health <= 0 && !tank.explode){ //if hit by grenade explosion tanks can break open and spawn a zombie. 
+        tank.explode = true;
+        tank.currentFrame = 0; //start at the begining
+    }
+
+
+    if (explodeTanks){
+        explodeTanks = false;
+        for (Tank& tank : Tanks){
+            tank.explode = true;
+        }
+
+    }
+
+
       // Check if it's time to move to the next frame
     if (tank.frameTimer >= tank.frameTime){
         tank.frameTimer -= tank.frameTime;           // Reset the timer
         tank.currentFrame++;                    // Move to the next frame
 
-        if (tank.currentFrame > numFrames)              // Loop back to the first frame if necessary
+        if (tank.currentFrame > numFrames && !tank.explode)              // Loop back to the first frame if necessary
         {
             tank.currentFrame = 0; 
+        }
+
+        if (tank.currentFrame > numFrames && tank.explode){
+            tank.currentFrame = numFrames; //stay exploded
         }
     }
 
@@ -2438,7 +2462,16 @@ void DrawTank(Tank& tank){
     Rectangle destRec = {tank.position.x, tank.position.y, 96.0f, 96.0f};
     Vector2 origin = {16, 16};
     //DrawTextureRec(resources.tankSheet, sourceRec, tank.position, WHITE);
-    DrawTexturePro(resources.tankSheet, sourceRec, destRec, origin, 0, WHITE);
+    if (!tank.explode){
+        DrawTexturePro(resources.tankSheet, sourceRec, destRec, origin, 0, WHITE);
+    }else{
+        DrawTexturePro(resources.tankExplodeSheet, sourceRec, destRec, origin, 0, WHITE);
+        if (tank.canSpawn){
+            tank.canSpawn = false;
+            spawnZombie(Vector2{tank.position.x, 700}); //spawn zombie at exploded tank position. 
+        }
+    }
+    
 }
 
 void DrawConsole(Console& console){
@@ -2588,7 +2621,7 @@ void DrawUFO(){
         ufo.position.y 
     };
 
-    if (abductionBeam){
+    if (abductionBeam && gameState == CEMETERY){
         //show abduction beam. if player is under UFO
         player.abduction = true;
         player.outline = true;
@@ -2674,7 +2707,7 @@ void DrawEarth(Earth& earth, Camera2D& camera){
 
 
 void DrawHealthBar(GameResources resources, Vector2 position, int maxHealth, int currentHealth, int barWidth, int barHeight) {
-    // Calculate health percentage
+    // Calculate health percentage / amour percentage, draw both health and armor if armor. 
     float armorPercent = player.armor/player.maxArmor;
     float healthPercent = (float)currentHealth / maxHealth;
     Color veryLightGreen = { 150, 255, 150, 255 };  // RGBA values
@@ -2685,7 +2718,10 @@ void DrawHealthBar(GameResources resources, Vector2 position, int maxHealth, int
     if (healthPercent <= 0.3f){
         barColor = RED;
         borderColor = RED;
-    }else{
+    }else if (healthPercent < 0.5f && healthPercent > 0.3f){
+        barColor = YELLOW;
+        borderColor = YELLOW;
+    } else{
         barColor = veryLightGreen;
         borderColor = veryLightGreen;
     }
@@ -2716,21 +2752,15 @@ void DrawHealthBar(GameResources resources, Vector2 position, int maxHealth, int
 
     //stretch texture to fit barwidth and height,
     
-    DrawRectangle(position.x, position.y+50, (int)(barWidth * healthPercent), barHeight, barColor);
+    DrawRectangle(position.x, position.y+50, (int)(barWidth * healthPercent), barHeight, barColor); //draw behind armor
     DrawTexturePro(texture, sourceRec, destRec, origin, rotation, borderColor); //border in front
     if (player.armor > 0){ //draw armor over top if armor //armor bar
         
-        DrawRectangle(position.x, position.y+50, (int)(barWidth * armorPercent), barHeight, BLUE);
+        DrawRectangle(position.x, position.y+50, (int)(barWidth * armorPercent), barHeight, DARKGRAY);//green healthbar can show through when missing armor
         DrawTexturePro(texture, sourceRec2, destRec2, origin, 0.0, WHITE);
     }
-    //DrawRectangleLines(position.x, position.y+50, barWidth, barHeight, borderColor);
-
-    // Draw health bar (adjust width based on health percentage)
     
 }
-
-
-
 
 void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
     
@@ -3379,8 +3409,8 @@ void RenderCemetery(){
         
     }
 
-    if (hasCemeteryKey){ // dont show UFO until later in the game
-        ufo.basePosition = {3900, 400};
+    if (hasCemeteryKey){ // dont show UFO until later in the game, this moves the UFO from main street to cemetery, we need to move it back somehow. 
+        ufo.basePosition = {3900, 400}; // 2 ufos?
         DrawUFO();
     }
 
@@ -4194,6 +4224,7 @@ void RenderLab(){
     over_elevator2 = false;
     over_Ebutton = false;
     over_Ebutton2 = false;
+    over_console = false;
     //elevators[1].isOccupied = false;
     //player.onElevator = false;
 
@@ -4213,6 +4244,13 @@ void RenderLab(){
         dboxPosition = player.position;
     }
 
+    if (player.position.x < 2710 && player.position.x > 2690 && showConsoleText){
+        over_console = true;
+        phrase = "Up to Destroy the Specimens";
+        show_dbox = true;
+        dboxPosition = player.position;
+
+    }
 
 
     float deltaTime = GetFrameTime();
@@ -4231,7 +4269,9 @@ void RenderLab(){
     DrawElevator(elevators[1], resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
 
     for (Tank& tank : Tanks){
-        
+        if (explodeTanks){
+            tank.explode = true;
+        }
         DrawTank(tank);
     }
 
@@ -4261,6 +4301,7 @@ void RenderLab(){
             spawnCyberZombie(spawnPos);
             spawnCyberZombie(spawnPos2);
             StartZombieSpawn(10, 2);
+            showConsoleText = true; //dont show console text until zombies are spawned. 
         }
 
         if (!scientist.isActive && scientist.CanSpawnZombie){  
@@ -4385,8 +4426,7 @@ void RenderOffice(){
     ClearBackground(customBackgroundColor);
     
     if (drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
-        
-    
+           
 
     //No parallax for lobby
     DrawTexturePro(resources.officeBackground, {0, 0, static_cast<float>(resources.officeBackground.width), static_cast<float>(resources.officeBackground.height)},
@@ -4399,8 +4439,8 @@ void RenderOffice(){
 
     HandleGrenades();
     if (!player.hasArmor){
-        DrawItem(Vector2 {3598, 700}, "vest");
-
+        DrawItem(Vector2 {3598, 700}, "vest"); //if you don't have armor, it is drawn here, the park, and subway
+        //should we draw armor everywhere then set armor to 100 on pickup?
     }
     
 
@@ -5450,6 +5490,7 @@ void debugKeys(){
     if (IsKeyPressed(KEY_SPACE)){
         std::cout << "Player Position: "; //print player position on key_space for debug purposes
         PrintVector2(player.position);
+
         
         //example iterate every NPC in the game:
         // for (std::vector<NPC>* npcGroup : allNPCGroups){
@@ -5572,7 +5613,7 @@ void debugKeys(){
 
 
 
-void UptoEnter(PlayerCar& player_car){
+void UptoEnter(){
     //enter places by pressing up 
     if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
 
@@ -5715,6 +5756,11 @@ void UptoEnter(PlayerCar& player_car){
                
 
             }
+        }
+
+        if (over_console && !explodeTanks){
+            explodeTanks = true;
+            std::cout << "explodeTanks\n";
         }
 
     }
@@ -6235,7 +6281,7 @@ int main() {
             
         }
        
-        UptoEnter(player_car);//enter different areas by pressing up
+        UptoEnter();//enter different areas by pressing up
         
         //renderToTexture pause pass
         if (currentPauseState == GAME_PAUSED){ //if game is paused, save the last frame of the game running, and draw it behind the menus

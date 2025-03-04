@@ -30,6 +30,7 @@ public:
     void Draw();                   // Draws the grenade
     void Explode();                 // Handles explosion
 
+
 private:
     bool hasBounced = false; // Only allow one bounce
 };

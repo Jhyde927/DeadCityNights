@@ -114,8 +114,6 @@ void Grenade::Explode() {
 
         }
 
-
-
         for (NPC& zombie : zombies){
             Rectangle hitBox = {zombie.position.x+24,zombie.position.y+16, 16, 24};
             if (CheckCollisionCircleRec(position, explosionRadius, hitBox)){
@@ -140,9 +138,20 @@ void Grenade::Explode() {
 
         }
 
+        //lab tanks
+        for (Tank& tank : Tanks){
+            Rectangle hitBox = {tank.position.x+24,tank.position.y+32, 24, 64};
+            if (CheckCollisionCircleRec(position, explosionRadius, hitBox)){
+                tank.health -= 1;
+                
+            }
+        }
+
         
     }
 }
+
+
 
 // Draw the grenade
 void Grenade::Draw() {

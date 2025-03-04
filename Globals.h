@@ -40,6 +40,9 @@ struct Tank {
     int currentFrame = 0;
     float frameTimer = 0.0f;
     float frameTime = 0.0f;
+    int health;
+    bool explode;
+    bool canSpawn;
 };
 
 struct Console {

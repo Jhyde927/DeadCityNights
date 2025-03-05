@@ -56,6 +56,7 @@ bool sharpen = false;
 bool buttonNecro = false;
 bool showConsoleText = false;
 bool lockElevator2 = true;
+bool triggerOutsideZombies = false;
 bool buttonCemetery = false;
 bool buttonInternet = false;
 bool hasCemeteryKey = false;
@@ -208,7 +209,7 @@ std::vector<Box> boxes; //boxes stays in main because undefined behavior do to i
 GameState gameState = OUTSIDE;
 
 TransitionState transitionState = NONE;
-float fadeAlpha = 1.0f;  // Starts fully opaque
+float fadeAlpha = 0.0f;  // Starts fully opaque
 float fadeSpeed = 0.02f; // Speed of fade (adjust as needed)
 bool firstTransition = true;
 
@@ -566,143 +567,141 @@ void renderBoxes(){
     }
 }
 
+void OutsideCarButtons(){
+    if (player.enter_car && buttonCemetery){ //press buttons cemetery
+        move_car = true;
+        show_carUI = false;
+    }else if (player.enter_car && buttonWork){//button press work
+        //do something
+        gotoWork = true;
+        move_car = true;
+        hasWorked = true;
+    }else if (player.enter_car && buttonPark){ //button press Park
+        gotoPark = true;
+        
+        move_car = true;
+        
+    }else if (player.enter_car && buttonNecro){ //button press NecroTech
+        move_car = true;
+        gotoNecro = true;
+    }
 
+}
+
+void ApartmentLogic(){
+
+    if (buttonInternet && player.hasBadge && !showInternet){
+        showInternet = true;
+        NecroTech = true;
+        internetTimer = 5.0f;
+        player.necroTechSearched = true;
+    }else{
+        showInternet = false;
+    }
+
+    if (buttonSleep && !hasSlept){ ////Go to sleep
+        gameCalendar.AdvanceDay(); 
+        buttonSleep = false;
+        hasWorked = false;
+        hasSlept = true;
+        buyFortune = false;
+        canGiveFortune = true; //fortune teller is reset 
+        drunk = false;  //Effects ware off when you sleep
+        applyShader = false;
+        over_apartment = false;
+        glitch = false;
+        transitionState = FADE_OUT; //fades out to street for now.
+        player.currentHealth = player.maxHealth; //recover hitpoints after sleeping. 
+        for (NPC& npc : npcs){
+            if (npc.police){
+                npc.agro = false; // loose the cops after sleeping. 
+                
+            }
+        } 
+    }
+    Vector2 computerPos = {screenWidth/2 - 10, 587};
+    //Draw a rectangle over interactive objects and check for mouse collision with said rectangle. 
+    // Car key Rectangle 
+    Rectangle textureBounds = {
+        carKeysPos.x,      // X position
+        carKeysPos.y,      // Y position
+        static_cast<float>(64),  // Width of the texture
+        static_cast<float>(64)  // Height of the texture
+    };
+
+                    
+    // drawer rec
+    Rectangle drawerBounds = {
+        drawerPos.x,      // X position
+        drawerPos.y,      // Y position
+        static_cast<float>(128),  // Width of the texture
+        static_cast<float>(64)  // Height of the texture
+    };
+    // computer rec
+    Rectangle ComputerBounds = {
+        computerPos.x,      // X position
+        computerPos.y,      // Y position
+        static_cast<float>(64),  // Width of the texture
+        static_cast<float>(64)  // Height of the texture
+    };
+
+    // Check if the mouse is over the texture
+    if (CheckCollisionPointRec(mousePosition, textureBounds)&& !has_car_key) {
+        showInventory = true;
+        AddItemToInventory("carKeys");
+        has_car_key = true;
+        PlaySound(SoundManager::getInstance().GetSound("Keys"));
+    }
+
+    if (CheckCollisionPointRec(mousePosition, drawerBounds)&& !openDrawer){
+        openDrawer = true;
+        PlaySound(SoundManager::getInstance().GetSound("OpenDrawer"));
+        if (!player.hasGun){
+            AddItemToInventory("Gun");
+            showInventory = true;
+            player.hasGun = true;
+            PlaySound(SoundManager::getInstance().GetSound("reload"));
+            if (firstHobo == false){ 
+                raiseZombies = true; //only raise zombies if the player has the gun and first hobo = false
+            }
+
+        }
+        
+
+    }else if (CheckCollisionPointRec(mousePosition, drawerBounds) && openDrawer){
+        openDrawer = false;
+        PlaySound(SoundManager::getInstance().GetSound("CloseDrawer"));
+    }
+
+    if (CheckCollisionPointRec(mousePosition, ComputerBounds) && !showAPUI){
+        showAPUI = true;
+    }else{
+        if (!showInternet){
+            showAPUI = false;
+        }
+        
+    }
+
+}
 
 
 void MonitorMouseClicks(){
 
-    //monitors mouse clicks for all scenes. Consider moving item pickup left clicks here. 
-
-    //Debug mousePosition
-    // if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-    //     Vector2 mousePosition = GetMousePosition();
-    //     std::cout << "MousePos: ";
-    //     PrintVector2(mousePosition);
-    // }
-    
+    //Player_car button logic + apartment button logic 
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+
+   
         if (gameState == APARTMENT){
 
-           
-            Vector2 computerPos = {screenWidth/2 - 10, 587};
-
-            if (buttonInternet && player.hasBadge && !showInternet){
-                showInternet = true;
-                NecroTech = true;
-                internetTimer = 5.0f;
-                player.necroTechSearched = true;
-            }else{
-                showInternet = false;
-            }
-
-            if (buttonSleep && !hasSlept){ ////Go to sleep
-                gameCalendar.AdvanceDay(); 
-                buttonSleep = false;
-                hasWorked = false;
-                hasSlept = true;
-                buyFortune = false;
-                canGiveFortune = true; //fortune teller is reset 
-                drunk = false;  //Effects ware off when you sleep
-                applyShader = false;
-                over_apartment = false;
-                glitch = false;
-                transitionState = FADE_OUT; //fades out to street for now.
-                player.currentHealth = player.maxHealth; //recover hitpoints after sleeping. 
-                for (NPC& npc : npcs){
-                    if (npc.police){
-                        npc.agro = false; // loose the cops after sleeping. 
-                        
-                    }
-                } 
-            }
-            
-            //Draw a rectangle over interactive objects and check for mouse collision with said rectangle. 
-            // Car key Rectangle 
-            Rectangle textureBounds = {
-                carKeysPos.x,      // X position
-                carKeysPos.y,      // Y position
-                static_cast<float>(64),  // Width of the texture
-                static_cast<float>(64)  // Height of the texture
-            };
-
-            
-            // drawer rec
-            Rectangle drawerBounds = {
-                drawerPos.x,      // X position
-                drawerPos.y,      // Y position
-                static_cast<float>(128),  // Width of the texture
-                static_cast<float>(64)  // Height of the texture
-            };
-            // computer rec
-            Rectangle ComputerBounds = {
-                computerPos.x,      // X position
-                computerPos.y,      // Y position
-                static_cast<float>(64),  // Width of the texture
-                static_cast<float>(64)  // Height of the texture
-            };
-
-            // Check if the mouse is over the texture
-            if (CheckCollisionPointRec(mousePosition, textureBounds)&& !has_car_key) {
-                showInventory = true;
-                AddItemToInventory("carKeys");
-                has_car_key = true;
-                PlaySound(SoundManager::getInstance().GetSound("Keys"));
-            }
-
-            if (CheckCollisionPointRec(mousePosition, drawerBounds)&& !openDrawer){
-                openDrawer = true;
-                PlaySound(SoundManager::getInstance().GetSound("OpenDrawer"));
-                if (!player.hasGun){
-                    AddItemToInventory("Gun");
-                    showInventory = true;
-                    player.hasGun = true;
-                    PlaySound(SoundManager::getInstance().GetSound("reload"));
-                    if (firstHobo == false){ 
-                        raiseZombies = true; //only raise zombies if the player has the gun and first hobo = false
-                    }
-
-                }
-                
-
-            }else if (CheckCollisionPointRec(mousePosition, drawerBounds) && openDrawer){
-                openDrawer = false;
-                PlaySound(SoundManager::getInstance().GetSound("CloseDrawer"));
-            }
-
-            if (CheckCollisionPointRec(mousePosition, ComputerBounds) && !showAPUI){
-                showAPUI = true;
-            }else{
-                if (!showInternet){
-                    showAPUI = false;
-                }
-                
-            }
-
-
+           ApartmentLogic();   
 
         }else if (gameState == OUTSIDE){
-            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){ //we are already checking for mouseclick
-                if (player.enter_car && buttonCemetery){ //press buttons cemetery
-                    move_car = true;
-                    show_carUI = false;
-                }else if (player.enter_car && buttonWork){//button press work
-                    //do something
-                    gotoWork = true;
-                    move_car = true;
-                    hasWorked = true;
-                }else if (player.enter_car && buttonPark){ //button press Park
-                    gotoPark = true;
-                    
-                    move_car = true;
-                    
-                }else if (player.enter_car && buttonNecro){ //button press NecroTech
-                    move_car = true;
-                    gotoNecro = true;
-                }
-            }
 
-        }else if (gameState == CEMETERY){
-            if (player.enter_car && buttonCemetery){//button press street
+            OutsideCarButtons();
+        }
+        else if (gameState == CEMETERY){
+            //cemetery car buttons
+            if (player.enter_car && buttonCemetery){//Player is in car, hovering street button, while clicking.
             //move_car = true;
                 transitionState = FADE_OUT;
                 //dont reset yet
@@ -712,7 +711,8 @@ void MonitorMouseClicks(){
 
             }
         }else if (gameState == PARK){
-            if (player.enter_car && buttonCemetery){ //street button in park
+            //park car buttons
+            if (player.enter_car && buttonCemetery){ //street button in park clicked
                 transitionState = FADE_OUT;
             }
         }else if (gameState == SUBWAY){
@@ -720,6 +720,7 @@ void MonitorMouseClicks(){
                 //do something
             }
         }else if (gameState == NECROTECH){
+            //necrotech car button
             if (buttonCemetery){
                 transitionState = FADE_OUT;
             }
@@ -816,16 +817,6 @@ Vector2 GetRandomSpawnPositionX(Vector2 playerPos, float minDistance, float maxD
     return Vector2{spawnX, 700};  // Keep the same y position as the player
 }
 
-void StartZombieSpawn(int zombie_count, float delay){
-    spawning_zombies = true;
-    remainingZombiesToSpawn = zombie_count;
-    spawnTimer = 0.0f; //reset timer
-    // nextSpawnDelay = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / delay));  // Random delay between 1-4 seconds
-    nextSpawnDelay = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX) / (delay - 1.0f));
-    //film = true;
-    if (gameState != OFFICE && gameState != LAB) glitch = true; //Activate glitch shader to make things more dramatic, not in the office however, it's a bit too much. 
-    
-}
 
 void spawnRobot(Vector2 position){
     //spawn more robots in the lobby on first robot death
@@ -900,6 +891,18 @@ void spawnZombie(Vector2 position){
     
 }
 
+
+void StartZombieSpawn(int zombie_count, float delay){
+    spawning_zombies = true;
+    remainingZombiesToSpawn = zombie_count;
+    spawnTimer = 0.0f; //reset timer
+    // nextSpawnDelay = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / delay));  // Random delay between 1-4 seconds
+    nextSpawnDelay = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX) / (delay - 1.0f));
+    //film = true;
+    if (gameState != OFFICE && gameState != LAB) glitch = true; //Activate glitch shader to make things more dramatic, not in the office however, it's a bit too much. 
+    
+}
+
 void UpdateZombieSpawning(){
     if (remainingZombiesToSpawn > 0){
         spawnTimer += GetFrameTime();
@@ -915,7 +918,7 @@ void UpdateZombieSpawning(){
             if (gameState == OFFICE) maxDistToPlayer = 400;//spawn zombies further away, more of a chance they find a target. 
 
             Vector2 z_pos = GetRandomSpawnPositionX(player.position, minDistToPlayer, maxDistToPlayer);  // Min/max distance from player, set globally so it can change
-            int zombie_speed = 25;
+            int zombie_speed = 35;//25
             NPC zombie_npc = CreateNPC(resources.zombieSheet, z_pos, zombie_speed, RISING, true, true);
             zombie_npc.SetDestination(1000, 4000);
             zombies.push_back(zombie_npc);
@@ -1239,6 +1242,7 @@ void HandleLobbyTransition(){
         glitch = false;
         remainingZombiesToSpawn = 0; //turn off zombie spawning on death
         gameCalendar.AdvanceDay();
+        triggerOutsideZombies = true;
 
     }
 }
@@ -1459,8 +1463,8 @@ void HandleAstralTransition(){
 
         }
     }else{ //call fade out in astral, presumably magic door exit
-        gameState = OUTSIDE;
-        UpdateNPCActivity(ASTRAL, OUTSIDE);
+        gameState = APARTMENT; //wake up back at your apartment on exiting astral. 
+        UpdateNPCActivity(ASTRAL, APARTMENT);
         openMagicDoor = false; //We set it back to false when entering astral, we should set it false when leaving astral aswell
         player.gravity = 800; //reset gravity on leaving astral plane.
         player.outline = false; //set outline off when exiting astral
@@ -1499,6 +1503,7 @@ void HandleOfficeTransition(){
         gameCalendar.AdvanceDay();
         remainingZombiesToSpawn = 0;
         glitch = false;
+        triggerOutsideZombies = true;
 
     }
 }
@@ -1550,6 +1555,7 @@ void HandleLabTransition(){
         gameCalendar.AdvanceDay();
         glitch = false;
         remainingZombiesToSpawn = 0;
+        triggerOutsideZombies = true; //if you die in the lab or office or lobby it triggers zombies to invade main street. 
 
     }
 }
@@ -1695,12 +1701,8 @@ void HandleFadeOut(PlayerCar& player_car) {
 
 
 
-void HandleTransition(PlayerCar& player_car, std::vector<NPC>& npcs) {
+void HandleTransition() {
     //if you want to tranision to a new scene, just say FADEOUT = TRUE
-    if (firstTransition) {
-        fadeAlpha = 0.0f;  // Ensure it starts at 0 for the first fade
-        firstTransition = false;  // Reset flag after first transition
-    }
 
     if (transitionState == FADE_IN) {
         HandleFadeIn();
@@ -1720,6 +1722,8 @@ void HandleTransition(PlayerCar& player_car, std::vector<NPC>& npcs) {
         DrawFadeMask();
     }
 }
+
+
 
 
 void Dig(){
@@ -2323,6 +2327,13 @@ void DrawSubwayUI(){
 
 }
 
+void showFPS(){
+            //show FPS
+    int fps = GetFPS();
+    Vector2 fpos = {screenWidth/2 + 450, 930}; //bottom right
+    DrawText(std::to_string(fps).c_str(), fpos.x, fpos.y, 25, WHITE);
+}
+
 
 //Destinations Menu for car. Click on where you want to travel. 
 void DrawCarUI(PlayerCar& player_car, Camera2D& camera){
@@ -2498,6 +2509,8 @@ void DrawConsole(Console& console){
     //DrawTextureRec(resources.consoleSheet, sourceRec, console.position, WHITE);
     DrawTexturePro(resources.consoleSheet, sourceRec, destRec, origin, 0, WHITE);
 }
+
+
 
 void DrawMonitor(Monitor& monitor){
     float monitorFrame = 64.0;
@@ -2714,6 +2727,7 @@ void DrawHealthBar(GameResources resources, Vector2 position, int maxHealth, int
     // Define bar colors
     Color borderColor = veryLightGreen;  // Border color
     Color barColor = veryLightGreen;       // Color of the health bar itself
+    Color greyBlue = {80, 99, 255, 255};
 
     if (healthPercent <= 0.3f){
         barColor = RED;
@@ -2756,7 +2770,7 @@ void DrawHealthBar(GameResources resources, Vector2 position, int maxHealth, int
     DrawTexturePro(texture, sourceRec, destRec, origin, rotation, borderColor); //border in front
     if (player.armor > 0){ //draw armor over top if armor //armor bar
         
-        DrawRectangle(position.x, position.y+50, (int)(barWidth * armorPercent), barHeight, DARKGRAY);//green healthbar can show through when missing armor
+        DrawRectangle(position.x, position.y+50, (int)(barWidth * armorPercent), barHeight, greyBlue);//green healthbar can show through when missing armor
         DrawTexturePro(texture, sourceRec2, destRec2, origin, 0.0, WHITE);
     }
     
@@ -2882,8 +2896,9 @@ void EnterCar(){
     
 }
 
-void playerOutsideInteraction(Player& player, PlayerCar& player_car){
+void playerOutsideInteraction(){
     //on main street there are lots of different interactable things. Handle them here. 
+    //this doesn't handle the button press. just checks postiions. 
     int ap_min = 2246;//over apartment
     int ap_max = 2266;
     int pc_min = 1728; // over player_car
@@ -3140,7 +3155,7 @@ void RenderSubway(){
 
 void RenderAstral(){
     player.gravity = 200;
-    player.outline = true;//turn on outline shader in asteral plane
+    player.outline = true;//turn on outline shader in asteral plane, white outline
 
 
     magicDoors[0].position.x = 2089;
@@ -3185,8 +3200,10 @@ void RenderAstral(){
     EndShaderMode(); ////////////////////////////SHADER OFF
     DrawEarth(earth, camera); //draw earth outside of shader. 
     
-    DrawMagicDoor(magicDoors[0]);
-    DrawMagicDoor(magicDoors[1]);
+    // DrawMagicDoor(magicDoors[0]);
+
+    DrawMagicDoor(magicDoors[1]); //the only way out is up. 
+
 
     player.DrawPlayer();
 
@@ -3291,7 +3308,7 @@ void RenderCemetery(){
     //dont spawn unless raise zombies is true. raise zombies is set to true by talking to the hobo, and finding the gun
     if (!player.enter_car && player.position.x < 1900 && !zombieWave3 && !firstHobo){ // walk to far left and zombies spawn again
         zombieWave3 = true;
-        StartZombieSpawn(10, 3);
+        StartZombieSpawn(10, 2);
         minDistToPlayer = 50;
         maxDistToPlayer = 200;
     }
@@ -3578,8 +3595,8 @@ void RenderGraveyard(){
     float digPos = 2350.0f;
     if (player.position.x > 3437 and raiseZombies){
         raiseZombies = false;
-        StartZombieSpawn(20, 3);
-        minDistToPlayer = 50;
+        StartZombieSpawn(20, 1);
+        minDistToPlayer = 25;
         maxDistToPlayer = 200;
     }
 
@@ -4925,12 +4942,17 @@ void RenderOutside() {
     SoundManager::getInstance().PlayMusic("StreetSounds");
     PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.basePosition, player.position, 800);
 
-    playerOutsideInteraction(player, player_car);
+    playerOutsideInteraction();
 
     camera.target = player.position;
     float parallaxMidBuildings = camera.target.x * 0.4;
     float parallaxMidground = camera.target.x * 0.6f;  // Midground moves slower
     float parallaxBackground = camera.target.x * 0.8f;  // Background moves even slower
+
+    if (triggerOutsideZombies){
+        triggerOutsideZombies = false;
+        StartZombieSpawn(15, 1);
+    }
 
 
     
@@ -5047,9 +5069,21 @@ void RenderOutside() {
             }
         }else{
             dealer = false;
-        
+        }
+
+
+        if (!npc.isActive && npc.CanSpawnZombie){ //wait untill NPC is not active before raising zombie, so death animation can finish.  
+            npc.CanSpawnZombie = false;
+            
+            spawnZombie(npc.position); //NPC is transformed into a zombie. 
         }
     
+    }
+
+    for (NPC& zombie : zombies){
+        zombie.Update();
+        zombie.Render();
+        UpdateZombieTarget(zombie, npcs);
     }
 
 
@@ -5116,7 +5150,7 @@ void RenderOutside() {
 
     
     //draw healthbar 
-    if (player.currentHealth < 100 && !player.enter_car){ //dont show healthbar if full health on main street, show everywhere else though. 
+    if (showInventory){ //dont show healthbar if full health on main street, show everywhere else though. 
         Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
         DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
 
@@ -5583,6 +5617,14 @@ void debugKeys(){
         }
     }
 
+    //n
+    if (IsKeyPressed(KEY_N)){
+        if (!player.hasArmor){
+            player.hasArmor = true;
+            AddItemToInventory("vest");
+            player.armor = player.maxArmor;
+        }
+    }
     if (IsKeyPressed(KEY_J)){
         if (!player.hasBadge){
             player.hasBadge = true;
@@ -5887,32 +5929,73 @@ void MainMenu(PauseState& currentPauseState, Rectangle& destRect){
         }
 }
 
-void pauseLogic(PauseState& currentPauseState, RenderTexture2D& pauseTexture, RenderTexture2D& finalTexture){
-    if (IsKeyPressed(KEY_ESCAPE)){
-        if (currentPauseState == GAME_RUNNING){
-            menuOpen = true;
-            // Save the current frame
-            //capture and display the last frame when the game enters the pause state.
-            BeginTextureMode(pauseTexture);
-            ClearBackground(BLACK);
-            DrawTexturePro(
-                finalTexture.texture,
-                (Rectangle){0, 0, (float)finalTexture.texture.width, -(float)finalTexture.texture.height},
-                (Rectangle){0, 0, (float)screenWidth, (float)screenHeight},
-                (Vector2){0, 0},
-                0.0f,
-                WHITE
-            );
-            EndTextureMode();
+// void pauseLogic(PauseState& currentPauseState, RenderTexture2D& pauseTexture, RenderTexture2D& finalTexture){
+//     if (IsKeyPressed(KEY_ESCAPE)){
+//         if (currentPauseState == GAME_RUNNING){
+//             menuOpen = true;
+//             // Save the current frame
+//             //capture and display the last frame when the game enters the pause state.
+//             BeginTextureMode(pauseTexture);
+//             ClearBackground(BLACK);
+//             DrawTexturePro(
+//                 finalTexture.texture,
+//                 (Rectangle){0, 0, (float)finalTexture.texture.width, -(float)finalTexture.texture.height},
+//                 (Rectangle){0, 0, (float)screenWidth, (float)screenHeight},
+//                 (Vector2){0, 0},
+//                 0.0f,
+//                 WHITE
+//             );
+//             EndTextureMode();
             
-            currentPauseState = GAME_PAUSED;
+//             currentPauseState = GAME_PAUSED;
 
-        }else{
-            currentPauseState = GAME_RUNNING;
-            menuOpen = false;
-        }
+//         }else{
+//             currentPauseState = GAME_RUNNING;
+//             menuOpen = false;
+//         }
+//     }
+// }
+
+void TogglePause(PauseState& currentPauseState, RenderTexture2D& pauseTexture, RenderTexture2D& finalTexture) {
+    if (currentPauseState == GAME_RUNNING) {
+        menuOpen = true;
+
+        // Capture and display the last frame when the game enters the pause state
+        BeginTextureMode(pauseTexture);
+        ClearBackground(BLACK);
+        DrawTexturePro(
+            finalTexture.texture,
+            (Rectangle){0, 0, (float)finalTexture.texture.width, -(float)finalTexture.texture.height},
+            (Rectangle){0, 0, (float)screenWidth, (float)screenHeight},
+            (Vector2){0, 0},
+            0.0f,
+            WHITE
+        );
+        EndTextureMode();
+
+        currentPauseState = GAME_PAUSED;
+    } else {
+        currentPauseState = GAME_RUNNING;
+        menuOpen = false;
     }
 }
+
+void PauseLogic(PauseState& currentPauseState, RenderTexture2D& pauseTexture, RenderTexture2D& finalTexture) {
+    if (IsKeyPressed(KEY_ESCAPE)) {
+        TogglePause(currentPauseState, pauseTexture, finalTexture);
+    }
+}
+
+void drawMenuButton(PauseState& currentPauseState, RenderTexture2D& pauseTexture, RenderTexture2D& finalTexture){
+    Vector2 buttonPos = {960, 960};
+    Rectangle buttonBounds = {buttonPos.x, buttonPos.y, 32, 32};
+    DrawTexture(resources.menuButton, buttonBounds.x, buttonBounds.y, WHITE);
+    if (GuiButton(buttonBounds, "")){
+        TogglePause(currentPauseState, pauseTexture, finalTexture);
+
+    }
+}
+
 
 Vector2 clampMouseCursor(Vector2& mousePosition){
     int winWidth = GetScreenWidth(); 
@@ -6155,7 +6238,7 @@ int main() {
     
     // Main game loop
     while (!WindowShouldClose() && !quitRequested) {
-        pauseLogic(currentPauseState, pauseTexture, finalTexture);
+        PauseLogic(currentPauseState, pauseTexture, finalTexture);
 
         mousePosition = GetMousePosition(); //update global mousePosition, declared in globals.h
 
@@ -6300,6 +6383,7 @@ int main() {
             setButtonColors(); //set menu button color and text size. 
             // Draw the pause menu
             MainMenu(currentPauseState, destRect); //draw main menu over the saved frame.
+            drawMenuButton(currentPauseState,pauseTexture, finalTexture);
             DrawPlayTime(totalTime);
 
             if (controlsMenu) ShowControls();
@@ -6367,8 +6451,8 @@ int main() {
                     
             }
             
-            HandleTransition(player_car, npcs); //Check everyframe for gamestate transitions, inside draw to handle fadeouts
-
+            HandleTransition(); //Check everyframe for gamestate transitions, inside draw to handle fadeouts
+            drawMenuButton(currentPauseState, pauseTexture, finalTexture);
             
             EndTextureMode();
             
@@ -6404,10 +6488,7 @@ int main() {
             DrawMoney(); //render UI to texture over top of vignette shaders, outside of camera mode
             //DisplayDate(calendar);
 
-            //show FPS
-            int fps = GetFPS();
-            Vector2 fpos = {screenWidth/2 + 450, 935}; //bottom right
-            DrawText(std::to_string(fps).c_str(), fpos.x, fpos.y, 25, WHITE);
+            //showFPS();
 
         EndTextureMode();
 

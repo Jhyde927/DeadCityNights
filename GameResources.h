@@ -122,6 +122,7 @@ struct GameResources {
     Texture2D UFObackground;
     Texture2D alienSheet;
     Texture2D tankExplodeSheet;
+    Texture2D menuButton;
     
 
     Font defaultFont;

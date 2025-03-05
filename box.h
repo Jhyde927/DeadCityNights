@@ -18,11 +18,11 @@ public:
     GameState scene; //store which scene the box belongs to. 
     bool destroyed = false;
     bool canTakeDamage = true;
-    int health = 4;  // Number of hits before breaking, 
+    int health = 3;  // Number of hits before breaking, 
     Texture2D texture;
     int frameWidth = 32;  // Width of each frame
     int frameHeight = 32; // Height of each frame
-    int maxFrames = 4;    // Number of frames in the sprite sheet, it's actualy 5, but we dont use the last frame because we lowered health by 1
+    int maxFrames = 3;    // Number of frames in the sprite sheet, it's actualy 5, but we dont use the last frame because we lowered health by 2
     float cooldownTimer = 0.0;
     float damageCooldown = 0.2f;
 
@@ -50,9 +50,10 @@ public:
     } 
 
     void Draw() {
+        //boxes take 3 hits to break. the sprite sheet is still 5 frames. so use the first 3 frames. 
         //still draw the last frame of the box even after it's destroyed. 
-        int currentFrame = maxFrames - health;  // Calculate frame based on remaining health
-        if (currentFrame >= maxFrames) currentFrame = maxFrames - 1; // Clamp to last frame
+        int currentFrame = (maxFrames - health);  // Calculate frame based on remaining health
+        if (currentFrame >= maxFrames) currentFrame = maxFrames; // Clamp to last frame (third)
         
         Rectangle sourceRect = { (float)(currentFrame * frameWidth), 0, (float)frameWidth, (float)frameHeight };
         Rectangle destRect = { position.x, position.y, 24, 24 };

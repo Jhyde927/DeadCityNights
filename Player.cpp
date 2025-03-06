@@ -762,7 +762,6 @@ void Player::shootLogic(){
         }else{
             PlaySound(SoundManager::getInstance().GetSound("crowbarSwing2"));
         }
-        
 
     }
 
@@ -798,6 +797,7 @@ void Player::shootLogic(){
             FireBullet(*this, false, 25, false);
             
         }
+
     //SHOOTING SHOTGUN
     }else if (currentWeapon == SHOTGUN && AllowGuns){
         //Dry Fire
@@ -823,6 +823,7 @@ void Player::shootLogic(){
             }
 
         }
+        
         //SHOOTING MAC10
     }else if (currentWeapon == MAC10 && AllowGuns){
         //dry fire

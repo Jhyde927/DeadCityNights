@@ -174,6 +174,12 @@ std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", "", "", "",
 const int GAME_SCREEN_WIDTH = 1024;
 const int GAME_SCREEN_HEIGHT = 1024;
 
+// Sensitivity settings
+float cursorSpeed = 600.0f; // Adjust speed of cursor movement
+float deadZone = 0.2f;      // Ignore slight stick movements
+
+// Virtual cursor position (simulates the mouse)
+Vector2 virtualCursor = { 400, 300 }; // Start at screen center
 
 // Variables for password input
 std::string enteredPassword = "";
@@ -688,7 +694,7 @@ void ApartmentLogic(){
 void MonitorMouseClicks(){
 
     //Player_car button logic + apartment button logic 
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
 
    
         if (gameState == APARTMENT){
@@ -2347,9 +2353,9 @@ void DrawCarUI(PlayerCar& player_car, Camera2D& camera){
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
     Vector2 ui_pos = player_car.position;
     int ui_width = 116;
-    int ui_height = 64;
+    int ui_height = 74;
 
-    //DrawRectangle(player_car.position.x, player_car.position.y, 200, 200, WHITE);
+    //background rect
     DrawRectangle(ui_pos.x, ui_pos.y - 20, ui_width, ui_height, Fade(BLACK, .60));
     Color work_tint = WHITE;
     Color cemetery_tint = WHITE;
@@ -2438,6 +2444,49 @@ void DrawCarUI(PlayerCar& player_car, Camera2D& camera){
     }
 
 }
+
+
+void HandleGamepadMouseControl() {
+    static bool usingController = false;  // Track whether controller is active
+    static Vector2 lastMousePos = GetMousePosition(); // Store last known mouse position
+
+    // Detect mouse movement
+    Vector2 currentMousePos = GetMousePosition();
+    if (currentMousePos.x != lastMousePos.x || currentMousePos.y != lastMousePos.y) {
+        usingController = false;  // Mouse is being used
+    }
+    lastMousePos = currentMousePos;
+
+    if (IsGamepadAvailable(0)) {
+        float leftStickX = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_X);
+        float leftStickY = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_Y);
+
+        // Detect if controller is being used (apply dead zone)
+        if (fabs(leftStickX) > deadZone || fabs(leftStickY) > deadZone) {
+            usingController = true;
+        }
+
+        if (usingController) {
+            // Move virtual cursor based on left stick
+            virtualCursor.x += leftStickX * cursorSpeed * GetFrameTime();
+            virtualCursor.y += leftStickY * cursorSpeed * GetFrameTime();
+
+            // Keep cursor inside screen bounds
+            if (virtualCursor.x < 0) virtualCursor.x = 0;
+            if (virtualCursor.y < 0) virtualCursor.y = 0;
+            if (virtualCursor.x > GetScreenWidth()) virtualCursor.x = GetScreenWidth();
+            if (virtualCursor.y > GetScreenHeight()) virtualCursor.y = GetScreenHeight();
+
+            // Only move real cursor if the menu or car UI is active
+            if (player.enter_car || gameState == APARTMENT) {
+                if (!menuOpen) {
+                    SetMousePosition(virtualCursor.x, virtualCursor.y);
+                }
+            }
+        }
+    }
+}
+
 
 void DrawTank(Tank& tank){
     if (!IsWindowFocused) return; //don't update animations when window is not focused. 
@@ -6230,7 +6279,7 @@ int main() {
     // Main game loop
     while (!WindowShouldClose() && !quitRequested) {
         PauseLogic(currentPauseState, pauseTexture, finalTexture);
-
+        HandleGamepadMouseControl();
         mousePosition = GetMousePosition(); //update global mousePosition, declared in globals.h
 
         mousePosition = clampMouseCursor(mousePosition); //stop mouse from going offscreen when in fullscreen. 
@@ -6284,6 +6333,8 @@ int main() {
         CheckBulletPlayerCollisions(); //NPCs shoot player
         MonitorMouseClicks(); 
         UpdateZombieSpawning();
+
+
 
         if (!player.armor){ //remove vest from inventory if armor is depleted. 
             player.hasArmor = false;

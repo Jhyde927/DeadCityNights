@@ -20,6 +20,8 @@ WeaponType currentWeapon;  // To track the current weapon
 Player player;  // Define the player instance
 
 
+
+
 Player::Player() {
     position = {1922.0, 700.0};
     velocity = {0.0f, 0.0f};
@@ -266,43 +268,45 @@ bool Player::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosit
     return false;  // Return false if no hit occurred
 }
 
+void Player::HandleInput(float speed) {
+    if (abduction) return; // Can't move while being abducted by aliens.
 
-void Player::HandleInput(float speed){
-    if (abduction) return; //cant move while being abducted by aliens. 
-
-    double currentTime = GetTime();
+    //double currentTime = GetTime();
     float deltaTime = GetFrameTime();
-    // Double tap to run (for A, D, LEFT, RIGHT)
-    if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A)) {
-        if (currentTime - LastTapTimeLeft < tapInterval) {
-            isRunning = true;  // Double-tap detected, start running
-        }
-        LastTapTimeLeft = currentTime;  // Update last tap time
+
+    // Detect if a gamepad is connected
+    bool isControllerConnected = IsGamepadAvailable(0);
+
+    // ------------------------------
+    // MOVEMENT (Keyboard + Left Stick)
+    // ------------------------------
+    float moveX = 0.0f; // Movement direction
+    float leftStickX = 0.0f;
+
+    if (isControllerConnected) {
+        leftStickX = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_X);
     }
 
-    if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D)) {
-        if (currentTime - LastTapTimeRight < tapInterval) {
-            isRunning = true;  // Double-tap detected, start running
-        }
-        LastTapTimeRight = currentTime;  // Update last tap time
-    }
-    
+    // Keyboard movement
+    if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) moveX = 1.0f;
+    if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) moveX = -1.0f;
 
-    // Horizontal movement with acceleration
-    if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
-        velocity.x += acceleration * deltaTime;
+    // Controller movement (if above deadzone threshold)
+    float deadzone = 0.2f; // Ignore slight stick movements
+    if (fabs(leftStickX) > deadzone) {
+        moveX = leftStickX;
+    }
+
+    // Apply movement
+    if (moveX != 0) {
+        velocity.x += moveX * acceleration * deltaTime;
         if (velocity.x > maxSpeedX) velocity.x = maxSpeedX;
-        isMoving = true;
-        facingRight = true;
-    }
-    else if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
-        velocity.x -= acceleration * deltaTime;
         if (velocity.x < -maxSpeedX) velocity.x = -maxSpeedX;
+
         isMoving = true;
-        facingRight = false;
-    }
-    else {
-        // Apply deceleration when no input is detected //need to decelerate when aiming, shooting, also
+        facingRight = moveX > 0;
+    } else {
+        // Deceleration when no input
         if (velocity.x > 0.0f) {
             velocity.x -= deceleration * deltaTime;
             if (velocity.x < 0.0f) velocity.x = 0.0f;
@@ -312,51 +316,154 @@ void Player::HandleInput(float speed){
         }
     }
 
-    
-    // Jumping logic
-
-    if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)){
-        holdingDown = true;
-        if (IsKeyPressed(KEY_SPACE)){ //hold down and press space to drop through platform. 
-            isOnGround = false;
-            dropping = true;
-            jumping = true; //turn on jumping so we can turn it back off when hitting a platform. Needed to reset velocity.y
-            dropTimer = 1.0;
-        }
-
-    }else{
-        holdingDown = false;
-        //dropping = false;
-    }
-    
-    
-    if (IsKeyPressed(KEY_SPACE) && isOnGround && !jumping && !holdingDown) {
-        velocity.y = -jumpForce;  
-        isOnGround = false;
-        jumping = true;
-        PlaySound(SoundManager::getInstance().GetSound("jump"));
-
-    }
-
-
-
-    // Check for shift key to run
+    // ------------------------------
+    // RUNNING (Keyboard + Controller)
+    // ------------------------------
     if ((IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) && !isAiming) {
         isRunning = true;
-    } else if (!IsKeyDown(KEY_LEFT) && !IsKeyDown(KEY_RIGHT) && !IsKeyDown(KEY_A) && !IsKeyDown(KEY_D) && !isAiming) {
+    }
+    if (abs(leftStickX) > 0.7f) { //hold all the way left or right to run
+        isRunning = true;
+
+    }
+
+    if (moveX == 0 && !isAiming) {
         isRunning = false;  // Stop running if no movement keys are pressed
     }
 
-    //change facing direction while stopped, and aiming. 
+    // ------------------------------
+    // JUMPING (Keyboard + Controller)
+    // ------------------------------
+    float leftStickY = 0.0f;
+    if (isControllerConnected) {
+        leftStickY = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_Y);
+    }
+
+    if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN) || (isControllerConnected && leftStickY > 0.5f)) {
+        holdingDown = true;
+        if (IsKeyPressed(KEY_SPACE) || (isControllerConnected && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_UP))) {
+            isOnGround = false;
+            dropping = true;
+            jumping = true; // Needed to reset velocity.y
+            dropTimer = 1.0;
+        }
+    } else {
+        holdingDown = false;
+    }
+
+    // Regular Jump
+    if ((IsKeyPressed(KEY_SPACE) || (isControllerConnected && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_UP)))
+        && isOnGround && !jumping && !holdingDown) {
+        velocity.y = -jumpForce;
+        isOnGround = false;
+        jumping = true;
+        PlaySound(SoundManager::getInstance().GetSound("jump"));
+    }
+
+    // ------------------------------
+    // AIMING (Keyboard + Controller)
+    // ------------------------------
     if (isAiming && !isReloading) {
-        if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
+        if (moveX > 0) {
             facingRight = true;
         }
-        if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
+        if (moveX < 0) {
             facingRight = false;
         }
     }
 }
+
+
+// void Player::HandleInput(float speed){
+//     if (abduction) return; //cant move while being abducted by aliens. 
+
+//     double currentTime = GetTime();
+//     float deltaTime = GetFrameTime();
+//     // Double tap to run (for A, D, LEFT, RIGHT)
+//     if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A)) {
+//         if (currentTime - LastTapTimeLeft < tapInterval) {
+//             isRunning = true;  // Double-tap detected, start running
+//         }
+//         LastTapTimeLeft = currentTime;  // Update last tap time
+//     }
+
+//     if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D)) {
+//         if (currentTime - LastTapTimeRight < tapInterval) {
+//             isRunning = true;  // Double-tap detected, start running
+//         }
+//         LastTapTimeRight = currentTime;  // Update last tap time
+//     }
+    
+
+//     // Horizontal movement with acceleration
+//     if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
+//         velocity.x += acceleration * deltaTime;
+//         if (velocity.x > maxSpeedX) velocity.x = maxSpeedX;
+//         isMoving = true;
+//         facingRight = true;
+//     }
+//     else if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
+//         velocity.x -= acceleration * deltaTime;
+//         if (velocity.x < -maxSpeedX) velocity.x = -maxSpeedX;
+//         isMoving = true;
+//         facingRight = false;
+//     }
+//     else {
+//         // Apply deceleration when no input is detected //need to decelerate when aiming, shooting, also
+//         if (velocity.x > 0.0f) {
+//             velocity.x -= deceleration * deltaTime;
+//             if (velocity.x < 0.0f) velocity.x = 0.0f;
+//         } else if (velocity.x < 0.0f) {
+//             velocity.x += deceleration * deltaTime;
+//             if (velocity.x > 0.0f) velocity.x = 0.0f;
+//         }
+//     }
+
+    
+//     // Jumping logic
+
+//     if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)){
+//         holdingDown = true;
+//         if (IsKeyPressed(KEY_SPACE)){ //hold down and press space to drop through platform. 
+//             isOnGround = false;
+//             dropping = true;
+//             jumping = true; //turn on jumping so we can turn it back off when hitting a platform. Needed to reset velocity.y
+//             dropTimer = 1.0;
+//         }
+
+//     }else{
+//         holdingDown = false;
+//         //dropping = false;
+//     }
+    
+    
+//     if (IsKeyPressed(KEY_SPACE) && isOnGround && !jumping && !holdingDown) {
+//         velocity.y = -jumpForce;  
+//         isOnGround = false;
+//         jumping = true;
+//         PlaySound(SoundManager::getInstance().GetSound("jump"));
+
+//     }
+
+
+
+//     // Check for shift key to run
+//     if ((IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) && !isAiming) {
+//         isRunning = true;
+//     } else if (!IsKeyDown(KEY_LEFT) && !IsKeyDown(KEY_RIGHT) && !IsKeyDown(KEY_A) && !IsKeyDown(KEY_D) && !isAiming) {
+//         isRunning = false;  // Stop running if no movement keys are pressed
+//     }
+
+//     //change facing direction while stopped, and aiming. 
+//     if (isAiming && !isReloading) {
+//         if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
+//             facingRight = true;
+//         }
+//         if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
+//             facingRight = false;
+//         }
+//     }
+// }
 
 void Player::reloadLogic(float deltaTime){
     ///////////RELOAD//LOGIC///////////////
@@ -630,17 +737,21 @@ void Player::updateAnimations(){
 
 }
 
-void Player::shootLogic(){
 
-    if (IsKeyPressed(KEY_ONE)) {
+
+void Player::shootLogic(){
+    // 1,2 or 3, or D-pad left, up, right
+    if ((IsKeyPressed(KEY_ONE) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_LEFT)) && hasGun) {
         currentWeapon = REVOLVER;
-    } else if (IsKeyPressed(KEY_TWO) && hasShotgun) {
+    } else if ((IsKeyPressed(KEY_TWO) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_UP)) && hasShotgun) {
         currentWeapon = SHOTGUN;
-    }else if (IsKeyPressed(KEY_THREE) && hasMac10){
+    }else if ((IsKeyPressed(KEY_THREE) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_RIGHT)) && hasMac10){
         currentWeapon = MAC10;
     }
 
-    if ((IsKeyPressed(KEY_V) || IsKeyPressed(KEY_LEFT_CONTROL)|| IsKeyPressed(KEY_RIGHT_CONTROL)) && canSwing && !isAiming && !isReloading && !isShooting && hasCrowbar && !isMoving){ //swing the crowbar
+
+
+    if ((IsKeyPressed(KEY_V) || IsKeyPressed(KEY_LEFT_CONTROL)|| IsKeyPressed(KEY_RIGHT_CONTROL) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_TRIGGER_1)) && canSwing && !isAiming && !isReloading && !isShooting && hasCrowbar && !isMoving){ //swing the crowbar
         canSwing = false;
         swinging = true;
         swingTimer = 0.5f;
@@ -663,7 +774,7 @@ void Player::shootLogic(){
     }
 
     //AIMING
-    isAiming = ((hasGun || hasShotgun || hasMac10) && (IsKeyDown(KEY_F) || IsKeyDown(KEY_LEFT_CONTROL) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) && !isShooting && !isReloading && AllowGuns);
+    isAiming = ((hasGun || hasShotgun || hasMac10) && (IsKeyDown(KEY_F) || IsKeyDown(KEY_LEFT_CONTROL) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT) || IsGamepadButtonDown(0, GAMEPAD_BUTTON_LEFT_TRIGGER_2)) && !isShooting && !isReloading && AllowGuns);
 
 
     //SHOOTING REVOLVER
@@ -675,7 +786,7 @@ void Player::shootLogic(){
         }
 
     
-        if (hasGun && revolverBulletCount > 0 && isAiming && (IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT))) {
+        if (hasGun && revolverBulletCount > 0 && isAiming && (IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_TRIGGER_2))) {
             isShooting = true;
             canShoot = false;
             currentFrame = 0;
@@ -697,7 +808,7 @@ void Player::shootLogic(){
         }
 
         //Shoot shotgun
-        if (hasShotgun && shotgunBulletCount > 0 && isAiming && (IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) && canShoot) {
+        if (hasShotgun && shotgunBulletCount > 0 && isAiming && (IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_TRIGGER_2)) && canShoot) {
             isShooting = true;
             canShoot = false;
             currentFrame = 0;
@@ -722,7 +833,7 @@ void Player::shootLogic(){
         }
 
         //IsKeyDown for automatic fire. 
-        if (hasMac10 && mac10BulletCount > 0 && isAiming && (IsKeyDown(KEY_SPACE) || IsMouseButtonDown(MOUSE_BUTTON_LEFT)) && canShoot) {
+        if (hasMac10 && mac10BulletCount > 0 && isAiming && (IsKeyDown(KEY_SPACE) || IsMouseButtonDown(MOUSE_BUTTON_LEFT) || IsGamepadButtonDown(0, GAMEPAD_BUTTON_RIGHT_TRIGGER_2)) && canShoot) {
             isShooting = true;
             canShoot = false;
             currentFrame = 0;
@@ -746,7 +857,7 @@ void Player::UpdateMovement() {
     reloadLogic(deltaTime);
     shootLogic(); //handle key presses for shooting and switching weapons. 
     
-    if (IsKeyPressed(KEY_R) && AllowGuns){
+    if ((IsKeyPressed(KEY_R) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_LEFT)) && AllowGuns){
         Reload();
     }
      

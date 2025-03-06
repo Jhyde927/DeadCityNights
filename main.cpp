@@ -733,18 +733,25 @@ void MonitorMouseClicks(){
 void HandleKeyboardAiming(){
     //mousePosition is screen2world(mousePosition)
     Vector2 WorldMousePosition = GetScreenToWorld2D(mousePosition, camera);
+
+    float leftStickX = 0.0f;
+    float deadZone = 0.3f;
+
+    if (IsGamepadAvailable(0)) {
+        leftStickX = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_X);
+    }
     
-    if (player.isAiming && IsKeyDown(KEY_F)) {
+    if (player.isAiming && (IsKeyDown(KEY_F) || IsGamepadButtonDown(0, GAMEPAD_BUTTON_LEFT_TRIGGER_2))) {
         // Handle keyboard-only aiming (e.g., using arrow keys or player movement keys)
-        if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
+        if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT) || leftStickX > deadZone) {
             player.facingRight = true;
         }
-        if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
+        if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT) || leftStickX < -deadZone) {
             player.facingRight = false;
         }
-    }else if (player.isAiming && !IsKeyDown(KEY_F)) {// If the player is not aiming with keyboard, allow mouse control to set the facing direction
+    }else if (player.isAiming && (!IsKeyDown(KEY_F) && !IsGamepadButtonDown(0, GAMEPAD_BUTTON_LEFT_TRIGGER_2))) {// If the player is not aiming with keyboard, allow mouse control to set the facing direction
         // Set facing direction based on world mouse position
-        player.facingRight = WorldMousePosition.x > player.position.x; //facing right is true if mousepos.x > playerPos.x
+        player.facingRight = WorldMousePosition.x > player.position.x; //facing right is true if mousepos.x > playerPos.x and not holding f and trigger
 
     }
 }
@@ -1186,7 +1193,7 @@ void DrawItem(Vector2 itemPos, const std::string& itemType) {
     Rectangle itemBounds = { itemPos.x, itemPos.y, 64, 64 };
 
     if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(mouseWorldPos, itemBounds)) || 
-        (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)) && distanceToItemX < 20 && distanceToItemY < 50) {
+        (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)) && distanceToItemX < 20 && distanceToItemY < 50) {
         
         if (!(*playerItemFlags[itemType])) {
             *playerItemFlags[itemType] = true; //hasShovel, hasCrowbar ect.. = true
@@ -1862,7 +1869,7 @@ void drawDeadZombie(Vector2 bodyPosition,Vector2& mouseWorldPos){
         static_cast<float>(64)  // Height of the texture
     };
     int distance = abs(player.position.x - bodyPosition.x);
-    if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){ //if key up next to body
+    if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){ //if key up next to body
         if (distance < 30 && !player.hasBadge){
             AddItemToInventory("Badge");
             player.hasBadge = true;
@@ -3495,7 +3502,7 @@ void RenderCemetery(){
 
     }
 
-    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)){//exit car
+    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT)){//exit car
         if (player.enter_car && !move_car){
             SoundManager::getInstance().StopMusic("CarRun"); //turn off car audio when exiting car
             PlaySound(SoundManager::getInstance().GetSound("CarDoorClose"));
@@ -3716,7 +3723,7 @@ void RenderGraveyard(){
         phrase = "PRESS UP TO EXIT";
         show_dbox = true;
         dboxPosition = player.position;
-        if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
+        if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
             transitionState = FADE_OUT;
             //fadeout to cemetery. Handled in handleTransition function
         }
@@ -3791,7 +3798,7 @@ void RenderApartment(){
     }
 
     //UP DOWN OR ESCAPE TO EXIT APARTMENT
-    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S) || IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
+    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S) || IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)|| IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT)){
         transitionState = FADE_OUT;
         showInventory = false;
         PlaySound(SoundManager::getInstance().GetSound("mainDoor"));
@@ -3829,7 +3836,7 @@ void RenderLot(){
 
 
     over_lot = false;
-    if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
+    if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
         if (over_exit){
             transitionState = FADE_OUT;
 
@@ -4094,7 +4101,7 @@ void RenderPark(){
         show_dbox = true;
         dboxPosition = player.position;
         overSubway = true;
-        if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
+        if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
             transitionState = FADE_OUT;
         }
 
@@ -4105,7 +4112,7 @@ void RenderPark(){
         RenderInventory();  // Render the inventory 
     }
 
-    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)){
+    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT)){
         if (player.enter_car && !move_car){ // dont exit car if it's still moving.
             PlaySound(SoundManager::getInstance().GetSound("CarDoorClose")); 
             player.enter_car = false;
@@ -4824,7 +4831,7 @@ void RenderNecroTech(){
 
 
     //EXIT CAR
-    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)){
+    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT)){
         if (player.enter_car && !move_car){ // dont exit car if it's still moving.
             PlaySound(SoundManager::getInstance().GetSound("CarDoorClose")); 
             player.enter_car = false;
@@ -5133,7 +5140,7 @@ void RenderOutside() {
     MoveTraffic(resources);//Draw Traffic
     EndShaderMode(); ////////////////////////////SHADER OFF
 
-    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)){
+    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT)){
         if (player.enter_car && !move_car){ // dont exit car if it's still moving.
             PlaySound(SoundManager::getInstance().GetSound("CarDoorClose")); 
             player.enter_car = false;
@@ -5499,13 +5506,22 @@ void DisplayDate(){
 }
 
 
-void handleCamera(Camera2D& camera, float& targetZoom){
+void handleCamera(float& targetZoom){
         // Handle zoom input
         if (GetMouseWheelMove() > 0) {
             targetZoom += 0.1f;
         } else if (GetMouseWheelMove() < 0) {
             targetZoom -= 0.1f;
         }
+        if (IsGamepadAvailable(0)){
+            float rightStickY = GetGamepadAxisMovement(0, GAMEPAD_AXIS_RIGHT_Y);
+            if (rightStickY > 0) {
+                targetZoom -= 0.01f;
+            }else if (rightStickY < 0){
+                targetZoom += 0.01f;
+            }
+        }
+    
 
         // Smoothly interpolate the current zoom towards the target zoom
         camera.zoom = Lerp(camera.zoom, targetZoom, 0.1f);
@@ -5657,7 +5673,7 @@ void debugKeys(){
 
 void UptoEnter(){
     //enter places by pressing up 
-    if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
+    if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
 
         if (overLiquor && gameState == OUTSIDE){
             show_dbox = true;
@@ -5929,32 +5945,6 @@ void MainMenu(PauseState& currentPauseState, Rectangle& destRect){
         }
 }
 
-// void pauseLogic(PauseState& currentPauseState, RenderTexture2D& pauseTexture, RenderTexture2D& finalTexture){
-//     if (IsKeyPressed(KEY_ESCAPE)){
-//         if (currentPauseState == GAME_RUNNING){
-//             menuOpen = true;
-//             // Save the current frame
-//             //capture and display the last frame when the game enters the pause state.
-//             BeginTextureMode(pauseTexture);
-//             ClearBackground(BLACK);
-//             DrawTexturePro(
-//                 finalTexture.texture,
-//                 (Rectangle){0, 0, (float)finalTexture.texture.width, -(float)finalTexture.texture.height},
-//                 (Rectangle){0, 0, (float)screenWidth, (float)screenHeight},
-//                 (Vector2){0, 0},
-//                 0.0f,
-//                 WHITE
-//             );
-//             EndTextureMode();
-            
-//             currentPauseState = GAME_PAUSED;
-
-//         }else{
-//             currentPauseState = GAME_RUNNING;
-//             menuOpen = false;
-//         }
-//     }
-// }
 
 void TogglePause(PauseState& currentPauseState, RenderTexture2D& pauseTexture, RenderTexture2D& finalTexture) {
     if (currentPauseState == GAME_RUNNING) {
@@ -5989,11 +5979,12 @@ void PauseLogic(PauseState& currentPauseState, RenderTexture2D& pauseTexture, Re
 void drawMenuButton(PauseState& currentPauseState, RenderTexture2D& pauseTexture, RenderTexture2D& finalTexture){
     Vector2 buttonPos = {960, 960};
     Rectangle buttonBounds = {buttonPos.x, buttonPos.y, 32, 32};
-    DrawTexture(resources.menuButton, buttonBounds.x, buttonBounds.y, WHITE);
+    
     if (GuiButton(buttonBounds, "")){
         TogglePause(currentPauseState, pauseTexture, finalTexture);
 
     }
+    DrawTexture(resources.menuButton, buttonBounds.x, buttonBounds.y, WHITE);
 }
 
 
@@ -6224,7 +6215,7 @@ int main() {
     
     RenderTexture2D targetTexture = LoadRenderTexture(GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT); //render target. Draw to rendertexture2d first
     RenderTexture2D vignetteTexture = LoadRenderTexture(GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT);
-    RenderTexture2D glitchTexture = LoadRenderTexture(GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT);
+
     RenderTexture2D finalTexture = LoadRenderTexture(GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT);
     RenderTexture2D pauseTexture = LoadRenderTexture(screenWidth, screenHeight);
 
@@ -6234,7 +6225,7 @@ int main() {
     PauseState currentPauseState = GAME_RUNNING;
 
     //AddItemToInventory("crowbar", inventory, INVENTORY_SIZE); //TODO: find a place to give the player the crowbar. Should it just be the shovel?
-    
+
     
     // Main game loop
     while (!WindowShouldClose() && !quitRequested) {
@@ -6243,7 +6234,6 @@ int main() {
         mousePosition = GetMousePosition(); //update global mousePosition, declared in globals.h
 
         mousePosition = clampMouseCursor(mousePosition); //stop mouse from going offscreen when in fullscreen. 
-        
 
         if (!player.enter_car && !player.onElevator && !player.enter_train && !fading) player.UpdateMovement();  // Update player position and animation
         UpdateInventoryPosition(camera);
@@ -6391,7 +6381,7 @@ int main() {
             continue;  // Skip the rest of the loop, dont update or render the game. 
 
         }else if (currentPauseState == GAME_RUNNING){ //only update the game if it's not paused
-            handleCamera(camera, targetZoom); //Can't update zoom when paused. So handle camera only when game is running. 
+            handleCamera(targetZoom); //Can't update zoom when paused. So handle camera only when game is running. 
             GuiSetStyle(DEFAULT, TEXT_SIZE, 20); //set text size smaller for dealer and teller buttons. 
             //MULTIPASS RENDERING. Everything inside BeginTextureMode is saved to a RenderTexture2D. This makes it possible to stack shaders.   
             BeginTextureMode(targetTexture); //Render to targetTexture. First Pass/////////////////////////////

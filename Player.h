@@ -8,6 +8,7 @@
 #include <vector>
 #include "shaderControl.h"
 #include "Particle.h"
+#include <string>
 
 enum WeaponType {
     REVOLVER,
@@ -108,6 +109,8 @@ public:
     int shotgunBulletCount;
     int revolverBulletCount;
     int mac10BulletCount;
+
+
 
     // Constructor
     Player();

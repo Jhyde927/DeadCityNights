@@ -970,7 +970,7 @@ void NPC::Update() {
         interacting = false; // maybe this is a good idea too.
     }
 
-    if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
+    if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
         if (distanceToPlayer < 20 && !police && !isZombie){ //dont key up on police. Could accidently agro them. 
             HandleNPCInteraction(); //talk to NPCs
 

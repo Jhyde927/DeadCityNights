@@ -157,6 +157,8 @@ float blackoutTimer = 0.0f; // Timer to keep track of blackout period
 float minDistToPlayer = 50;
 float maxDistToPlayer = 200;
 
+int selectedSlot = -1;
+
 int gameWidth = 1024; // game resolution width
 int gameHeight = 1024; // game resolution height
 
@@ -1903,6 +1905,22 @@ void drawDeadZombie(Vector2 bodyPosition,Vector2& mouseWorldPos){
 
 }
 
+void slotSelectionLogic(){
+    if (IsGamepadAvailable(0)){
+        if (IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_RIGHT)){
+            selectedSlot += 1;
+        }else if (IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_LEFT)){
+            selectedSlot -= 1;
+        }
+
+        if (selectedSlot > 11){
+            selectedSlot = 0;
+        }else if (selectedSlot < 0){
+            selectedSlot = 11;
+        }
+    }
+}
+
 
 void RenderInventory() {
     int slotWidth = resources.inventorySlot.width;
@@ -1910,21 +1928,29 @@ void RenderInventory() {
     Color gunTint = WHITE;
     Color shotgunTint = WHITE;
     Color macTint = WHITE;
+    Color slotColor = WHITE;
+
 
     int startX = (inventoryPositionX - (slotWidth * INVENTORY_SIZE/2));
     int startY = inventoryPositionY;
+
 
     // Draw each inventory slot 
     for (int i = 0; i < INVENTORY_SIZE; i++) {
         int x = startX + (i * (slotWidth + 10));  // Offset each slot horizontally
         int y = startY;
-
+        slotColor = WHITE;
+        if (i == selectedSlot){
+            slotColor = RED;
+        }
         // Draw the inventory slot texture
-        DrawTexture(resources.inventorySlot, x, y, WHITE);
+        DrawTexture(resources.inventorySlot, x, y, slotColor);
         Color customTint = {255, 50, 50, 255}; // light red
         if (player.currentWeapon == SHOTGUN) shotgunTint = customTint;
         if (player.currentWeapon == REVOLVER) gunTint = customTint;
         if (player.currentWeapon == MAC10) macTint = customTint;
+
+
 
        // Draw the icon at x, y
         if (!inventory[i].empty()) { //inventory buttons are all done in the same for loop we use to draw it. Consider abstracting this somehow. 
@@ -1947,8 +1973,8 @@ void RenderInventory() {
                     static_cast<float>(64),  
                     static_cast<float>(64)  
                 };
-                if (CheckCollisionPointRec(mousePosition, crowbarBounds)){
-                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && player.canSwing && !player.isMoving){
+                if ((CheckCollisionPointRec(mousePosition, crowbarBounds) || selectedSlot == i)){
+                    if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)) && player.canSwing && !player.isMoving){
                         //swing crowbar
                         player.canSwing = false;
                         player.swinging = true;
@@ -1977,8 +2003,8 @@ void RenderInventory() {
                     static_cast<float>(64)  
                 };
 
-                if (CheckCollisionPointRec(mousePosition, badgeBounds)){
-                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+                if ((CheckCollisionPointRec(mousePosition, badgeBounds) || selectedSlot == i)){
+                    if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){
                         if (!showBadge){
                             showBadge = true;
                         }else{
@@ -2004,8 +2030,8 @@ void RenderInventory() {
                     static_cast<float>(64)  
                 };
 
-                if (CheckCollisionPointRec(mousePosition, RevolverBounds)){
-                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+                if ((CheckCollisionPointRec(mousePosition, RevolverBounds) || selectedSlot == i)){
+                    if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){
                         if (player.currentWeapon != REVOLVER){
                             player.currentWeapon = REVOLVER;
                         }
@@ -2022,8 +2048,8 @@ void RenderInventory() {
                     static_cast<float>(64)  
                 };
 
-                if (CheckCollisionPointRec(mousePosition, ShotGunBounds)){
-                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+                if ((CheckCollisionPointRec(mousePosition, ShotGunBounds) || selectedSlot == i)){
+                    if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){
                         if (player.currentWeapon != SHOTGUN){
                             player.currentWeapon = SHOTGUN;
                         }
@@ -2042,8 +2068,8 @@ void RenderInventory() {
                     static_cast<float>(64)  
                 };
 
-                if (CheckCollisionPointRec(mousePosition, MacBounds)){
-                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+                if ((CheckCollisionPointRec(mousePosition, MacBounds) || selectedSlot == i)){
+                    if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){
                         if (player.currentWeapon != MAC10){
                             player.currentWeapon = MAC10;
                         }
@@ -2063,8 +2089,8 @@ void RenderInventory() {
                     static_cast<float>(64)  
                 };
 
-                if (CheckCollisionPointRec(mousePosition, whiskeyBounds)){
-                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+                if ((CheckCollisionPointRec(mousePosition, whiskeyBounds) || selectedSlot == i)){
+                    if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){
                         if (player.hasWhiskey){
                             inventory[i] = std::string("");  // erase whiskey from the string
                             player.currentHealth = player.maxHealth;
@@ -2088,8 +2114,8 @@ void RenderInventory() {
                     static_cast<float>(64)  
                 };
 
-                if (CheckCollisionPointRec(mousePosition, pillBounds)){
-                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+                if ((CheckCollisionPointRec(mousePosition, pillBounds) || selectedSlot == i)){
+                    if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){
                         if (player.currentHealth < player.maxHealth && player.hasPills){
                             //inventory[i] = std::string("");  // erase pills from the string
                             RemoveItemFromInventory("pills");
@@ -2111,9 +2137,9 @@ void RenderInventory() {
                     static_cast<float>(64)  
                 };
 
-                if (CheckCollisionPointRec(mousePosition, shovelBounds)){ //dig
+                if ((CheckCollisionPointRec(mousePosition, shovelBounds) || selectedSlot == i)){ //dig
                     
-                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+                    if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){
                         Dig(); //click shovel icon to dig
                      
                     }
@@ -2131,8 +2157,8 @@ void RenderInventory() {
                     static_cast<float>(64)  
                 };
 
-                if (CheckCollisionPointRec(mousePosition, textureBounds)){
-                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+                if ((CheckCollisionPointRec(mousePosition, textureBounds) || selectedSlot == i)){
+                    if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){
                         //inventory[i] = std::string("");  // erase drugs from the string
                         RemoveItemFromInventory("Drugs");
                         applyShader = true;
@@ -2479,9 +2505,9 @@ void HandleGamepadMouseControl() {
 
             // Only move real cursor if the menu or car UI is active
             if (player.enter_car || gameState == APARTMENT) {
-                if (!menuOpen) {
-                    SetMousePosition(virtualCursor.x, virtualCursor.y);
-                }
+                
+                SetMousePosition(virtualCursor.x, virtualCursor.y);
+              
             }
         }
     }
@@ -2897,9 +2923,19 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
     DrawRectangle(screen_pos.x, screen_pos.y + offset, boxWidth, boxHeight, Fade(BLACK, 0.3f));
     DrawText(phrase.c_str(), screen_pos.x+ screen_offsetX, screen_pos.y + screen_offsetY, textSize, tint); //Draw Phrase
     
+    if (dealer && player.money >= 100){
+        if (IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
+            if (can_sell_drugs){
+                can_sell_drugs = false;
+                addMoney(-100);
+                AddItemToInventory("Drugs");
+
+            }
+        }
+    }
     //GUI buttons for certain NPC interactions. 
     if (player.money >= 100 && dealer && GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY") ) //button pressed
-        {
+        {           
             if (can_sell_drugs){ //can sell drugs gets reset once you take the drug
                 can_sell_drugs = false; // Dealer only has 1 drug for now. 
                 addMoney(-100);
@@ -2911,6 +2947,21 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
                     }
             }
         }
+
+    if (teller && !buyFortune && player.money >= 100){
+        if (IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
+            if (canGiveFortune){
+                canGiveFortune = false;
+                buyFortune = true;
+                fortuneTimer = 5;
+            }
+
+            addMoney(-100);
+            phrase = GetTellerPhrase();
+          
+
+        }
+    }
 
     if (teller && !buyFortune && player.money >= 100 &&  GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY") ){
 
@@ -6334,7 +6385,7 @@ int main() {
         MonitorMouseClicks(); 
         UpdateZombieSpawning();
 
-
+        slotSelectionLogic();
 
         if (!player.armor){ //remove vest from inventory if armor is depleted. 
             player.hasArmor = false;
@@ -6365,7 +6416,7 @@ int main() {
             
         }
         
-        if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_D) || IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)){ //tutorial text
+        if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_D) || IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT) || GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_X)){ //tutorial text
             if (start){
                 start = false; //turn off dbox if any movement
                 phrase = "UP to Enter"; //set phrase to uptoenter cause liquor store doesn't set it
@@ -6396,7 +6447,7 @@ int main() {
 
 
         //I for inventory
-        if (IsKeyPressed(KEY_I)){
+        if ((IsKeyPressed(KEY_I) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_UP))){
             if (!showInventory){
                 showInventory = true;
             }else{

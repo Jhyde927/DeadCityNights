@@ -741,11 +741,11 @@ void Player::updateAnimations(){
 
 void Player::shootLogic(){
     // 1,2 or 3, or D-pad left, up, right
-    if ((IsKeyPressed(KEY_ONE) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_LEFT)) && hasGun) {
+    if (IsKeyPressed(KEY_ONE) && hasGun) {
         currentWeapon = REVOLVER;
-    } else if ((IsKeyPressed(KEY_TWO) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_UP)) && hasShotgun) {
+    } else if (IsKeyPressed(KEY_TWO) && hasShotgun) {
         currentWeapon = SHOTGUN;
-    }else if ((IsKeyPressed(KEY_THREE) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_RIGHT)) && hasMac10){
+    }else if (IsKeyPressed(KEY_THREE) && hasMac10){
         currentWeapon = MAC10;
     }
 
@@ -823,7 +823,7 @@ void Player::shootLogic(){
             }
 
         }
-        
+
         //SHOOTING MAC10
     }else if (currentWeapon == MAC10 && AllowGuns){
         //dry fire

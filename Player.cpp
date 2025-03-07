@@ -661,6 +661,7 @@ void Player::playerPhysics(float deltaTime){
 
 
 void Player::updateAnimations(){
+    if (gameState == APARTMENT) return;
     if (isShooting) {
         if (currentWeapon == MAC10) frameSpeed = frameSpeed * 10;
         isRunning = false; // fixed bug where isrunning was causing framespeed to be higher so you could shoot 1.5 times as fast. 

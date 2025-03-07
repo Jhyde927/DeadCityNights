@@ -36,7 +36,7 @@ bool over_exit = false;
 bool runOnce = true;
 bool quitRequested = false;
 bool canPlaySound = true;
-float playSoundTimer = 0.0;                         //we are in too deep to fix this now. mount boolean stays for now. 
+float playSoundTimer = 0.0;                         //we are in too deep to fix this now. mount boolean stays.
 bool streetSounds = false;
 bool over_apartment = false; 
 bool over_car = false;
@@ -67,6 +67,7 @@ bool showInternet = false;
 bool borderlessWindow = false;
 bool windowStateChanged = false;
 bool fullscreen = false;
+bool usingController = false;  // Track whether controller is active
 bool move_ufo = false;
 bool canMoveUfo = true;
 bool globalAgro = false;
@@ -181,7 +182,7 @@ float cursorSpeed = 600.0f; // Adjust speed of cursor movement
 float deadZone = 0.2f;      // Ignore slight stick movements
 
 // Virtual cursor position (simulates the mouse)
-Vector2 virtualCursor = { 400, 300 }; // Start at screen center
+Vector2 virtualCursor = { 512, 512 }; // Start at screen center
 
 // Variables for password input
 std::string enteredPassword = "";
@@ -192,7 +193,7 @@ bool showPasswordInterface = false;
 std::string phrase = "A and D to move, hold shift to run"; //initial tutorial phrase
 
 const int screenWidth = 1024; //screen is square for gameplay reasons, we don't want to reveal to much of the screen at one time. 
-const int screenHeight = 1024; // is it crazy to keep the resolution square? Implement full screen that keeps sqaure rotation.
+const int screenHeight = 1024; // is it crazy to keep the resolution square? Implement full screen that keeps sqaure resolution.
 
 int offsetX = (screenWidth - gameWidth) / 2;
 Color purplishGrey = {128, 96, 128, 255};  // RGBA format: (R, G, B, A)
@@ -217,8 +218,8 @@ std::vector<Box> boxes; //boxes stays in main because undefined behavior do to i
 GameState gameState = OUTSIDE;
 
 TransitionState transitionState = NONE;
-float fadeAlpha = 0.0f;  // Starts fully opaque
-float fadeSpeed = 0.02f; // Speed of fade (adjust as needed)
+float fadeAlpha = 0.0f;  // Starts transparent
+float fadeSpeed = 0.02f; // Speed of fade 
 bool firstTransition = true;
 
 // Initialize random number generator
@@ -2473,7 +2474,7 @@ void DrawCarUI(PlayerCar& player_car, Camera2D& camera){
 
 
 void HandleGamepadMouseControl() {
-    static bool usingController = false;  // Track whether controller is active
+    
     static Vector2 lastMousePos = GetMousePosition(); // Store last known mouse position
 
     // Detect mouse movement
@@ -2484,6 +2485,7 @@ void HandleGamepadMouseControl() {
     lastMousePos = currentMousePos;
 
     if (IsGamepadAvailable(0)) {
+        
         float leftStickX = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_X);
         float leftStickY = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_Y);
 
@@ -2504,7 +2506,7 @@ void HandleGamepadMouseControl() {
             if (virtualCursor.y > GetScreenHeight()) virtualCursor.y = GetScreenHeight();
 
             // Only move real cursor if the menu or car UI is active
-            if (player.enter_car || gameState == APARTMENT) {
+            if (player.enter_car || gameState == APARTMENT || menuOpen) {
                 
                 SetMousePosition(virtualCursor.x, virtualCursor.y);
               
@@ -2627,7 +2629,7 @@ void DrawMagicDoor(MagicDoor& magicDoor){
         //EndShaderMode();
          
         if (player.position.x > magicDoor.position.x -10 && player.position.x < magicDoor.position.x +10){ //over magic door
-            if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)){
+            if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
                 openMagicDoor = true;
                 transitionState = FADE_OUT;
             }
@@ -3231,7 +3233,7 @@ void RenderSubway(){
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
         DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
-        DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+        if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
     if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player);
@@ -3383,7 +3385,7 @@ void RenderAstral(){
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
         DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
-        DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+        if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
    
@@ -3576,7 +3578,7 @@ void RenderCemetery(){
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
         DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
-        DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+        if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
 
@@ -3693,7 +3695,7 @@ void RenderRoad(){
     
     EndMode2D();
     showBigBadge();
-    DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D
+    if (!usingController) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D
    
 }
 
@@ -3814,7 +3816,7 @@ void RenderGraveyard(){
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
         DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
-        DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+        if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
     
@@ -4045,7 +4047,7 @@ void RenderLot(){
         RenderInventory();  // Render the inventory 
     }
 
-    DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
+    if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
 }
 
 void RenderPark(){
@@ -4224,7 +4226,7 @@ void RenderPark(){
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
         DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
-        DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+        if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
     if (show_dbox){
@@ -4328,7 +4330,7 @@ void RenderUFOinterior(){
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
         DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
-        DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+        if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
     if (show_dbox){
@@ -4477,7 +4479,7 @@ void RenderLab(){
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
         DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
-        DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+        if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
     if (show_dbox){
@@ -4622,7 +4624,7 @@ void RenderOffice(){
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
         DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
-        DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+        if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
     if (show_dbox){
@@ -4849,7 +4851,7 @@ void RenderLobby(){
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
         DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
-        DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+        if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
     if (show_dbox){
@@ -5011,7 +5013,7 @@ void RenderNecroTech(){
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
         DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
-        DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+        if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
     if (show_dbox){
@@ -5284,7 +5286,7 @@ void RenderOutside() {
         RenderInventory();  // Render the inventory 
     }
     //Draw cursor last so it's on top
-    DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
+    if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
 }
 
 
@@ -5773,7 +5775,7 @@ void debugKeys(){
 
 void UptoEnter(){
     //enter places by pressing up 
-    if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
+    if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){ //xbox A
 
         if (overLiquor && gameState == OUTSIDE){
             show_dbox = true;
@@ -5867,7 +5869,6 @@ void UptoEnter(){
 
             }
         }
-
 
 
         if (over_elevator && gameState == OFFICE){         
@@ -6003,6 +6004,40 @@ void MainMenu(PauseState& currentPauseState, Rectangle& destRect){
             Rectangle btnControlsRec = { centerX,startY + (btnHeight + spacing), btnWidth, btnHeight };
             Rectangle btnFullRec = { centerX, startY + 2*(btnHeight + spacing), btnWidth, btnHeight };
             Rectangle btnQuitRec = { centerX, startY + 3*(btnHeight + spacing), btnWidth, btnHeight };
+            
+            //gamepad select start
+            if (CheckCollisionPointRec(mousePosition, btnPlayRec) && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)) {
+                menuOpen = false;
+                currentPauseState = GAME_RUNNING;
+                controlsMenu = false;
+            }
+            // gamepad select control menu
+            if (CheckCollisionPointRec(mousePosition, btnControlsRec) && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)) {
+                if (!controlsMenu){
+                    controlsMenu = true;
+                }else{
+                    controlsMenu = false;
+                }
+                    }
+            //gamepad select fullscreen
+            if (CheckCollisionPointRec(mousePosition, btnFullRec) && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)) {
+                if (!borderlessWindow){
+                    borderlessWindow = true;
+                    offsetX = 1024;
+                    ToggleBorderlessWindowed();
+                    windowStateChanged = true;
+                
+
+                }else{
+                    borderlessWindow = false;
+                    windowStateChanged = true;
+                    ToggleBorderlessWindowed();
+                }
+            }
+            //gamepad select quit
+            if (CheckCollisionPointRec(mousePosition, btnQuitRec) && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)) {
+                quitRequested = true;
+            }
 
             // Draw buttons
             if (GuiButton(btnPlayRec, "Play")) {
@@ -6071,14 +6106,20 @@ void TogglePause(PauseState& currentPauseState, RenderTexture2D& pauseTexture, R
 }
 
 void PauseLogic(PauseState& currentPauseState, RenderTexture2D& pauseTexture, RenderTexture2D& finalTexture) {
-    if (IsKeyPressed(KEY_ESCAPE)) {
+    if (IsKeyPressed(KEY_ESCAPE) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_MIDDLE_RIGHT)) {
         TogglePause(currentPauseState, pauseTexture, finalTexture);
     }
+
+    
 }
 
 void drawMenuButton(PauseState& currentPauseState, RenderTexture2D& pauseTexture, RenderTexture2D& finalTexture){
     Vector2 buttonPos = {960, 960};
     Rectangle buttonBounds = {buttonPos.x, buttonPos.y, 32, 32};
+    //gamepad select menu button
+    if (CheckCollisionPointRec(mousePosition, buttonBounds) && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
+        TogglePause(currentPauseState, pauseTexture, finalTexture);
+    }
     
     if (GuiButton(buttonBounds, "")){
         TogglePause(currentPauseState, pauseTexture, finalTexture);
@@ -6566,7 +6607,7 @@ int main() {
         EndTextureMode();
 
 
-        //Third pass
+        //Third pass. Hurt vignette shader only  active when hit time is > 0
         BeginTextureMode(finalTexture);
             ClearBackground(BLACK);
             if (player.hitTimer > 0 && player.armor <= 0) BeginShaderMode(shaders.redVignetteShader); //apply hurt shader if hit
@@ -6591,8 +6632,9 @@ int main() {
             ClearBackground(BLACK);
             if (sharpen) BeginShaderMode(shaders.sharpenShader);
             //drunk shader is set inside render functions      
-            if (applyShader) BeginShaderMode(shaders.glowShader);     //Apply various shaders before rendering to screen
-            if (glitch) BeginShaderMode(shaders.glitchShader);
+            if (applyShader) BeginShaderMode(shaders.glowShader);     //Apply various shaders before rendering to screen, only 1 at a time
+            if (glitch) BeginShaderMode(shaders.glitchShader);        //glitch will override any earlier active shaders. 
+            if (film) BeginShaderMode(shaders.oldFilmShader);                                                      
             //BeginShaderMode(shaders.oldFilmShader);
             DrawTexturePro(
                 finalTexture.texture,  

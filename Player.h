@@ -104,6 +104,7 @@ public:
 
     Emitter bloodEmitter;
 
+
     // Weapon variables
     WeaponType currentWeapon;
     int shotgunBulletCount;

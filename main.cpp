@@ -93,6 +93,7 @@ bool playerOffsetX = 0;
 bool film = false;
 bool start = true;
 bool buttonPark = false;
+bool drawingSubwayUI = false;
 bool gotoWork = false;
 bool gotoPark = false;
 bool gotoStreet = false;
@@ -726,7 +727,7 @@ void MonitorMouseClicks(){
             }
         }else if (gameState == SUBWAY){
             if (buttonPark){
-                //do something
+                //dont fadeout until the train is moving. 
             }
         }else if (gameState == NECROTECH){
             //necrotech car button
@@ -2342,6 +2343,8 @@ void DrawSubwayUI(){
         static_cast<float>(16)  
     };
 
+
+
     if (CheckCollisionPointRec(mouseWorldPos, parkBounds)){ //middle //cemetery/street
         parkTint = RED;
         buttonPark = true;
@@ -2476,7 +2479,7 @@ void DrawCarUI(PlayerCar& player_car, Camera2D& camera){
 void HandleGamepadMouseControl() {
     
     static Vector2 lastMousePos = GetMousePosition(); // Store last known mouse position
-
+    virtualCursor = lastMousePos;
     // Detect mouse movement
     Vector2 currentMousePos = GetMousePosition();
     if (currentMousePos.x != lastMousePos.x || currentMousePos.y != lastMousePos.y) {
@@ -2506,7 +2509,7 @@ void HandleGamepadMouseControl() {
             if (virtualCursor.y > GetScreenHeight()) virtualCursor.y = GetScreenHeight();
 
             // Only move real cursor if the menu or car UI is active
-            if (player.enter_car || gameState == APARTMENT || menuOpen) {
+            if (player.enter_car || gameState == APARTMENT || menuOpen || drawingSubwayUI) {
                 
                 SetMousePosition(virtualCursor.x, virtualCursor.y);
               
@@ -3104,6 +3107,7 @@ void playerOutsideInteraction(){
 
 
 void RenderSubway(){
+    drunk = false;
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
     //we only do this in subway and park, do we not have positional audio outside these scenes? because we are not calling this whenever zoms spawn. 
     show_dbox = false;
@@ -3199,13 +3203,19 @@ void RenderSubway(){
     DrawTexture(resources.train, train.position.x, train.position.y-27, WHITE); //draw train in front of NPCs and player
 
 
-
+    drawingSubwayUI = false;
     if (player.position.x > 3001 && player.position.x < 3021 && trainAtStation){
+        drawingSubwayUI = true;
         DrawSubwayUI(); // inside draw for whatever reason
+
         train.stopTimer = 0;//hold the train
+        if (IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN) && !player.enter_train){ //board the train by pressing A 
+            player.enter_train = true;
+            player.position.x = train.position.x + 480;
+        }
+
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
             if (buttonPark && !player.enter_train){ //hovering button street or park
-                //player.ontrain = true
                 player.enter_train = true;
                 player.position.x = train.position.x + 480;
                 
@@ -3231,7 +3241,7 @@ void RenderSubway(){
         RenderInventory();  // Render the inventory 
     }
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
-        DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+        if (!usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
         if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
@@ -3245,7 +3255,7 @@ void RenderSubway(){
         show_dbox = true;
         dboxPosition = player.position;
         subwayExit = true;
-        if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)){
+        if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
             transitionState = FADE_OUT;
             
         }
@@ -3266,7 +3276,7 @@ void RenderAstral(){
     player.gravity = 200;
     player.outline = true;//turn on outline shader in asteral plane, white outline
 
-
+    earth.position = {2600, 300};
     magicDoors[0].position.x = 2089;
     camera.target = player.position;
     float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
@@ -3383,7 +3393,7 @@ void RenderAstral(){
         RenderInventory();  // Render the inventory 
     }
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
-        DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+        if (!usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
         if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
@@ -3402,7 +3412,7 @@ void RenderAstral(){
 void RenderCemetery(){
     int carMax = 2800;
     int carMin = 2765;
-
+    SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
     //UFO shows up in the begining at the far left outside, and once you have the cemetery key in the cemetery. 
     if (hasCemeteryKey && gameState == CEMETERY) {
         //playe UFO hum when ufo is present. Use UFO.baseposition not position
@@ -3576,7 +3586,7 @@ void RenderCemetery(){
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
-        DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+        if (!usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
         if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
@@ -3618,6 +3628,7 @@ void RenderCemetery(){
 }
 
 void RenderRoad(){
+    drunk = false; //sober up 
     if (player_car.position.x < 200 && !reverse_road){//transition to cemetery
         
         transitionState = FADE_OUT;
@@ -3700,7 +3711,7 @@ void RenderRoad(){
 }
 
 void RenderGraveyard(){
-
+    SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
     float digPos = 2350.0f;
     if (player.position.x > 3437 and raiseZombies){
         raiseZombies = false;
@@ -3814,7 +3825,7 @@ void RenderGraveyard(){
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
-        DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+        if (!usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
         if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
@@ -4051,6 +4062,7 @@ void RenderLot(){
 }
 
 void RenderPark(){
+    drunk = false;
     BeginMode2D(camera);  // Begin 2D mode with the camera
     ClearBackground(customBackgroundColor);
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
@@ -4224,7 +4236,7 @@ void RenderPark(){
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
-        DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+        if (!usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
         if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
@@ -4238,7 +4250,7 @@ void RenderPark(){
     if (raiseParkZombies){
         raiseParkZombies = false;
         StartZombieSpawn(10, 3);
-        minDistToPlayer = 200; //zombies can spawn further away
+        minDistToPlayer = 50; //zombies can spawn further away
         maxDistToPlayer = 400;
 
     }
@@ -4328,7 +4340,7 @@ void RenderUFOinterior(){
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
-        DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+        if (!usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
         if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
@@ -4344,6 +4356,7 @@ void RenderUFOinterior(){
 }
 
 void RenderLab(){
+    SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
     player.outline = false;
     show_dbox = false;
     over_elevator = false;
@@ -4477,7 +4490,7 @@ void RenderLab(){
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
-        DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+        if (!usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
         if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
@@ -4493,6 +4506,7 @@ void RenderLab(){
 
 //Office
 void RenderOffice(){
+    SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
     show_dbox = false;
     over_elevator = false;
     over_elevator2 = false;
@@ -4622,7 +4636,7 @@ void RenderOffice(){
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
-        DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+        if (!usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
         if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
@@ -4647,6 +4661,7 @@ void RenderOffice(){
 
 //Lobby
 void RenderLobby(){
+    SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
     player.outline = false; //is set true in office, se set it back when exiting either to lobby or lab. 
     show_dbox = false;   
     over_exit = false;
@@ -4849,7 +4864,7 @@ void RenderLobby(){
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
-        DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+        if (!usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
         if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
@@ -4866,7 +4881,7 @@ void RenderLobby(){
 
 //NecroTech
 void RenderNecroTech(){
-
+    drunk = false;
     show_dbox = false;
     
     SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide or in vacant lot
@@ -5011,7 +5026,7 @@ void RenderNecroTech(){
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
-        DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+        if (!usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
         if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
@@ -5050,7 +5065,7 @@ void RenderOutside() {
     SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide or in vacant lot
     SoundManager::getInstance().PlayMusic("StreetSounds");
     PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.basePosition, player.position, 800);
-
+    SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
     playerOutsideInteraction();
 
     camera.target = player.position;
@@ -6488,7 +6503,7 @@ int main() {
 
 
         //I for inventory
-        if ((IsKeyPressed(KEY_I) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_UP))){
+        if ((IsKeyPressed(KEY_I) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_DOWN))){
             if (!showInventory){
                 showInventory = true;
             }else{

@@ -307,6 +307,7 @@ void Player::HandleInput(float speed) {
         facingRight = moveX > 0;
     } else {
         // Deceleration when no input
+        isMoving = false;
         if (velocity.x > 0.0f) {
             velocity.x -= deceleration * deltaTime;
             if (velocity.x < 0.0f) velocity.x = 0.0f;
@@ -655,21 +656,21 @@ void Player::updateAnimations(){
 
 void Player::shootLogic(){
     // 1,2 or 3, or D-pad left, up, right
-    if (IsKeyPressed(KEY_ONE) && hasGun) {
+    if ((IsKeyPressed(KEY_ONE) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_LEFT)) && hasGun) {
         currentWeapon = REVOLVER;
-    } else if (IsKeyPressed(KEY_TWO) && hasShotgun) {
+    } else if ((IsKeyPressed(KEY_TWO) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_UP)) && hasShotgun) {
         currentWeapon = SHOTGUN;
-    }else if (IsKeyPressed(KEY_THREE) && hasMac10){
+    }else if ((IsKeyPressed(KEY_THREE) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_RIGHT)) && hasMac10){
         currentWeapon = MAC10;
     }
 
 
 
-    if ((IsKeyPressed(KEY_V) || IsKeyPressed(KEY_LEFT_CONTROL)|| IsKeyPressed(KEY_RIGHT_CONTROL) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT)) && canSwing  &&  !isReloading && !isShooting && hasCrowbar && !isMoving){ //swing the crowbar
+    if ((IsKeyPressed(KEY_V) || IsKeyPressed(KEY_LEFT_CONTROL)|| IsKeyPressed(KEY_RIGHT_CONTROL) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT)) && canSwing && !isAiming &&  !isReloading && !isShooting && hasCrowbar && !isMoving && gameState != APARTMENT){ //swing the crowbar
         canSwing = false;
         swinging = true;
         swingTimer = 0.5f;
-        isAiming = false;
+
 
         if (rand() % 2 == 0){//multiple swing sounds
             PlaySound(SoundManager::getInstance().GetSound("crowbarSwing"));
@@ -766,7 +767,7 @@ void Player::shootLogic(){
 }
 
 void Player::UpdateMovement() {
-    isMoving = false; //reset is moving to false at the start of the frame. If it remains false all the way though to the next frame, we are not moving. 
+    //isMoving = false; //reset is moving to false at the start of the frame. If it remains false all the way though to the next frame, we are not moving. 
 
     float deltaTime = GetFrameTime();
     
@@ -828,7 +829,7 @@ void Player::DrawPlayer() {
    
 
 
-    // Prioritize drawing states: Shooting > Reloading > swing > Aiming > Moving > Idle
+    // Prioritize drawing states: Shooting > Reloading > Aiming > Moving > Idle
     if (currentWeapon == REVOLVER){
     
         if (hasGun && isShooting && (AllowGuns)) { //need a way to allow guns outside cemetery at a certain point in the game. 
@@ -842,10 +843,6 @@ void Player::DrawPlayer() {
             sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
         }
-        else if (swinging && !isMoving && !isAiming && !isShooting){
-            currentSheet = resources.crowbarSheet;
-            sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
-        }   
         else if (hasGun && isAiming && !isReloading && (AllowGuns)) {
             // Aiming but not shooting: use the first frame of the shootSheet
             currentSheet = resources.shootSheet;

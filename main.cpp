@@ -1908,9 +1908,9 @@ void drawDeadZombie(Vector2 bodyPosition,Vector2& mouseWorldPos){
 
 void slotSelectionLogic(){
     if (IsGamepadAvailable(0)){
-        if (IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_RIGHT)){
+        if (IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_TRIGGER_1)){
             selectedSlot += 1;
-        }else if (IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_LEFT)){
+        }else if (IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_TRIGGER_1)){
             selectedSlot -= 1;
         }
 

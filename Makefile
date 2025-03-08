@@ -23,8 +23,10 @@
 
 .PHONY: all clean
 
+
+
 # Define required raylib variables
-PROJECT_NAME       ?= game
+PROJECT_NAME       ?= DeadCityNights
 RAYLIB_VERSION     ?= 4.5.0
 #RAYLIB_PATH        ?= ..\..
 RAYLIB_PATH ?= c:\raylib\raylib
@@ -378,7 +380,7 @@ OBJ_DIR = obj
 # Define all object files from source files
 SRC = $(call rwildcard, *.c, *.h)
 #OBJS = $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
-OBJS ?= main.cpp NPC.cpp Player.cpp Bullet.cpp GameCalendar.cpp Platform.cpp shaderControl.cpp raygui_impl.cpp Particle.cpp GameResources.cpp Globals.cpp Grenade.cpp Pickup.cpp
+OBJS ?= main.cpp NPC.cpp Player.cpp Bullet.cpp GameCalendar.cpp Platform.cpp shaderControl.cpp raygui_impl.cpp Particle.cpp GameResources.cpp Globals.cpp Grenade.cpp Pickup.cpp resource.o
 
 # For Android platform we call a custom Makefile.Android
 ifeq ($(PLATFORM),PLATFORM_ANDROID)
@@ -393,6 +395,10 @@ endif
 # NOTE: We call this Makefile target or Makefile.Android target
 all:
 	$(MAKE) $(MAKEFILE_PARAMS)
+
+#link with resource.o for custom icon
+resource.o: resource.rc DCN.ico
+	windres resource.rc -O coff -o resource.o
 
 # Project target defined by PROJECT_NAME
 # $(PROJECT_NAME): $(OBJS)

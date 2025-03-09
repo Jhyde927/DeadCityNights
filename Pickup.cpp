@@ -1,7 +1,7 @@
 #include "Pickup.h"
 #include <algorithm>
 
-// Define the global pickups vector (memory allocated here)
+// Define the global pickups vector 
 std::vector<Pickup> pickups;
 
 // Constructor definition

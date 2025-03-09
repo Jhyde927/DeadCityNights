@@ -2,6 +2,9 @@
 
 
 //difine the instances of the random structs
+
+GlobalState globalState;
+
 PlayerCar player_car;
 Earth earth;
 MagicDoor magicDoor;

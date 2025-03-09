@@ -26,7 +26,7 @@ void Platform::DrawPlatformTexture(Texture2D& texture, Rectangle& platformRect) 
         platformRect.height 
     };
 
-    // The origin is (0, 0) since we're not rotating
+   
     Vector2 origin = { 0.0f, 0.0f };
 
     // Draw the texture stretched to fit the platform rectangle

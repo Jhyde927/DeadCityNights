@@ -34,6 +34,144 @@ extern std::vector<NPC>aliens;
 // Extern declaration of the master NPC group list
 extern std::vector<std::vector<NPC>*> allNPCGroups;
 
+struct GlobalState { //store random bools and timers that have accumulated over the months. To get them out of main.
+    float apartmentX = 2256;
+    int vacantLotX = 2753;
+    int vacantExitX = 2762;
+    bool over_lot = false;
+    bool over_exit = false;
+    bool runOnce = true;
+    bool quitRequested = false;
+    bool canPlaySound = true;
+    float playSoundTimer = 0.0;                        
+    bool streetSounds = false;
+    bool over_apartment = false; 
+    bool over_car = false;
+    bool over_elevator = false;
+    bool over_elevator2 = false;
+    bool over_Ebutton = false;
+    bool over_Ebutton2 = false;
+    bool over_necro = false;
+    bool over_gate = false;
+    bool over_shotgun = false;
+    bool over_console = false;
+    bool showBadge = false;
+    bool show_carUI = false;
+    bool leave_apartment = false;
+    bool leave_cemetery = false;
+    bool sharpen = false;
+    bool buttonNecro = false;
+    bool showConsoleText = false;
+    bool lockElevator2 = true;
+    bool triggerOutsideZombies = false;
+    bool buttonCemetery = false;
+    bool buttonInternet = false;
+    bool hasCemeteryKey = false;
+    bool canGiveFortune = true;
+    bool can_spawn_zombies = true;
+    bool visitedOffice = false;
+    bool showInternet = false;
+    bool borderlessWindow = false;
+    bool windowStateChanged = false;
+    bool fullscreen = false;
+    bool usingController = false;  // Track whether controller is active
+    bool move_ufo = false;
+    bool canMoveUfo = true;
+    bool globalAgro = false;
+    bool firstHobo = true;
+    bool can_spawn_robots = true;
+    bool spawning_zombies = false;
+    bool can_spawn_mibs = true;
+    bool firstBlood = false;
+    bool drawShovel = false;
+    bool drawCrowbar = true;
+    bool explodeTanks = false;
+    bool drawMac10 = true;
+    bool drawShotgun = true;
+    bool dealerButtonAdded = false;
+    bool subwayToPark = false;
+    bool carToPark = false;
+    bool buttonWork = false;
+    bool fading = false;
+    bool over_medkit = false;
+    bool digSpot = false;
+    bool NecroTech = false;
+    bool playerOffsetX = 0;
+    bool film = false;
+    bool start = true;
+    bool buttonPark = false;
+    bool drawingSubwayUI = false;
+    bool gotoWork = false;
+    bool gotoPark = false;
+    bool gotoStreet = false;
+    bool gotoNecro = false;
+    bool debug = true; ///////////////////////////////////////DEBUG KEYS ON/OFF
+    bool hasWorked = false;
+    bool buttonSleep = false;
+    bool hasSlept = false;
+    bool showAPUI = false;
+    bool playOwl = false;
+    bool can_talk = true;
+    bool buyFortune = false;
+    bool teller = false;
+    bool dealer = false;
+    bool menuOpen = false;
+    bool controlsMenu = false;
+    bool showLiquor = false;
+    bool can_sell_drugs = true;
+    bool canSpawnCyberZombies = true;
+    bool applyShader = false;
+    bool drunk = false;
+    bool glitch = false;
+    bool openMagicDoor = false;
+    bool move_car = false;
+    bool trainAtStation = false;
+    bool reverse_road = false;
+    bool has_car_key = false;
+    bool overLiquor = false;
+    bool overSubway = false;
+    bool subwayExit = false;
+    bool openDrawer = false;
+    bool raiseZombies = false;
+    bool spawn_frank = true;
+    bool zombieWave2 = false;
+    bool zombieWave3 = false;
+    bool abductionBeam = false;
+    bool raiseParkZombies = false;
+    bool show_dbox = true;
+    float fadeAlpha = 0.0f;  // Starts transparent
+    float fadeSpeed = 0.02f; // Speed of fade 
+    float ufoTimer = 0.0;
+    float internetTimer = 0.0;
+    float inventoryPositionX = 0.0f;
+    float inventoryPositionY = 0.0f;
+    float passwordTimer = 0.0;
+    float crowbarDialogTimer = 0.0;
+    float badgeTimer = 0.0f;
+    float fortuneTimer = 0.0f;
+    int remainingZombiesToSpawn = 0;    // Tracks remaining zombies to spawn
+    float spawnTimer = 0.0f;            // Timer for spawning
+    float nextSpawnDelay = 0.0f;        // Time delay between spawns
+    float mibTimer = 3.0f;
+    float blackoutTime = 2.0f;  // Time to stay blacked out
+    float blackoutTimer = 0.0f; // Timer to keep track of blackout period
+    float minDistToPlayer = 50;
+    float maxDistToPlayer = 200;
+    int selectedSlot = -1;
+
+    //leftovers, refactor these, just define where they are used.
+    Vector2 carKeysPos = {(1024/2) - 100, 655}; // remember positions need to based on screenwidth incase of resolution change. 
+    Vector2 drawerPos = {1024/2 + 129, 730};
+    Vector2 cemetery_start{2746, 700};
+    Vector2 car_pos = {3000, 710};
+    Vector2 truck_pos = {512, 710};
+    Vector2 dz_pos = {0, 0};
+    Vector2 pc_start_pos = Vector2{1710, 668};
+    Vector2 pstart_by_car = Vector2{1738, 700};
+    Vector2 dboxPosition;
+    Color ApartmentBgColor {41, 48, 63, 255};
+
+};
 
 struct Tank {
     Vector2 position;
@@ -134,6 +272,8 @@ struct Train {
     float slowDownStartX;
     TrainState state;
 };
+
+extern GlobalState globalState;
 
 extern PlayerCar player_car;
 

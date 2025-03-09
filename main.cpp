@@ -27,140 +27,6 @@
 //Remember: The Law is One. 
 
 
-float apartmentX = 2256;
-int vacantLotX = 2753;
-int vacantExitX = 2762;
-bool over_lot = false;
-bool over_exit = false;
-//cemetery_start 1743, 700
-bool runOnce = true;
-bool quitRequested = false;
-bool canPlaySound = true;
-float playSoundTimer = 0.0;                         //we are in too deep to fix this now. mount boolean stays.
-bool streetSounds = false;
-bool over_apartment = false; 
-bool over_car = false;
-bool over_elevator = false;
-bool over_elevator2 = false;
-bool over_Ebutton = false;
-bool over_Ebutton2 = false;
-bool over_necro = false;
-bool over_gate = false;
-bool over_shotgun = false;
-bool over_console = false;
-bool showBadge = false;
-bool show_carUI = false;
-bool leave_apartment = false;
-bool leave_cemetery = false;
-bool sharpen = false;
-bool buttonNecro = false;
-bool showConsoleText = false;
-bool lockElevator2 = true;
-bool triggerOutsideZombies = false;
-bool buttonCemetery = false;
-bool buttonInternet = false;
-bool hasCemeteryKey = false;
-bool canGiveFortune = true;
-bool can_spawn_zombies = true;
-bool visitedOffice = false;
-bool showInternet = false;
-bool borderlessWindow = false;
-bool windowStateChanged = false;
-bool fullscreen = false;
-bool usingController = false;  // Track whether controller is active
-bool move_ufo = false;
-bool canMoveUfo = true;
-bool globalAgro = false;
-bool firstHobo = true;
-bool can_spawn_robots = true;
-bool spawning_zombies = false;
-bool can_spawn_mibs = true;
-bool firstBlood = false;
-bool drawShovel = false;
-bool drawCrowbar = true;
-bool explodeTanks = false;
-bool drawMac10 = true;
-bool drawShotgun = true;
-bool dealerButtonAdded = false;
-bool subwayToPark = false;
-bool carToPark = false;
-bool buttonWork = false;
-bool fading = false;
-bool over_medkit = false;
-bool digSpot = false;
-bool NecroTech = false;
-bool playerOffsetX = 0;
-bool film = false;
-bool start = true;
-bool buttonPark = false;
-bool drawingSubwayUI = false;
-bool gotoWork = false;
-bool gotoPark = false;
-bool gotoStreet = false;
-bool gotoNecro = false;
-bool debug = true; ///////////////////////////////////////DEBUG KEYS ON/OFF
-bool hasWorked = false;
-bool buttonSleep = false;
-bool hasSlept = false;
-bool showAPUI = false;
-bool playOwl = false;
-bool can_talk = true;
-bool buyFortune = false;
-bool teller = false;
-bool dealer = false;
-bool menuOpen = false;
-bool controlsMenu = false;
-bool showLiquor = false;
-bool can_sell_drugs = true;
-bool canSpawnCyberZombies = true;
-bool applyShader = false;
-bool drunk = false;
-bool glitch = false;
-bool vignette = true; //start vignette
-bool openMagicDoor = false;
-bool move_car = false;
-bool trainAtStation = false;
-bool reverse_road = false;
-bool has_car_key = false;
-bool overLiquor = false;
-bool overSubway = false;
-bool subwayExit = false;
-bool npcWalk = false;
-bool openDrawer = false;
-bool raiseZombies = false;
-bool spawn_frank = true;
-bool zombieWave2 = false;
-bool zombieWave3 = false;
-bool abductionBeam = false;
-bool raiseParkZombies = false;
-bool show_dbox = true;
-float ufoTimer = 0.0;
-float dboxTime = 10.0;
-float internetTimer = 0.0;
-float inventoryPositionX = 0.0f;
-float inventoryPositionY = 0.0f;
-float inventoryTargetX = 0.0f;
-float inventoryTargetY = 0.0f;
-float passwordTimer = 0.0;
-float DoorframeTimer = 0.0f;
-float astralThreshold = 0.5f;
-float crowbarDialogTimer = 0.0;
-
-
-float badgeTimer = 0.0f;
-float fortuneTimer = 0.0f;
-int remainingZombiesToSpawn = 0;    // Tracks remaining zombies to spawn
-float spawnTimer = 0.0f;            // Timer for spawning
-float nextSpawnDelay = 0.0f;        // Time delay between spawns
-float mibTimer = 3.0f;
-float blackoutTime = 2.0f;  // Time to stay blacked out
-float blackoutTimer = 0.0f; // Timer to keep track of blackout period
-
-float minDistToPlayer = 50;
-float maxDistToPlayer = 200;
-
-int selectedSlot = -1;
-
 int gameWidth = 1024; // game resolution width
 int gameHeight = 1024; // game resolution height
 
@@ -168,7 +34,7 @@ int gameHeight = 1024; // game resolution height
 Color customBackgroundColor = {32, 42, 63, 255};  //Same Color as sky background image. 
 Color shovelTint = WHITE;
 
-//int money = 100;
+
 int displayMoney = 100;
 bool showInventory = false;
 const int INVENTORY_SIZE = 12;  // Define the size of the inventory
@@ -197,20 +63,7 @@ const int screenWidth = 1024; //screen is square for gameplay reasons, we don't 
 const int screenHeight = 1024; // is it crazy to keep the resolution square? Implement full screen that keeps sqaure resolution.
 
 int offsetX = (screenWidth - gameWidth) / 2;
-Color purplishGrey = {128, 96, 128, 255};  // RGBA format: (R, G, B, A)
 
-
-//leftovers, refactor these, just define where they are used.
-Vector2 carKeysPos = {(screenWidth/2) - 100, 655}; // remember positions need to based on screenwidth incase of resolution change. 
-Vector2 drawerPos = {screenWidth/2 + 129, 730};
-Vector2 cemetery_start{2746, 700};
-Vector2 car_pos = {3000, 710};
-Vector2 truck_pos = {512, 710};
-Vector2 dz_pos = {0, 0};
-Vector2 pc_start_pos = Vector2{1710, 668};
-Vector2 pstart_by_car = Vector2{1738, 700};
-Vector2 dboxPosition;
-Color ApartmentBgColor {41, 48, 63, 255};
 
 Emitter explosionEmitter;
 
@@ -219,9 +72,6 @@ std::vector<Box> boxes; //boxes stays in main because undefined behavior do to i
 GameState gameState = OUTSIDE;
 
 TransitionState transitionState = NONE;
-float fadeAlpha = 0.0f;  // Starts transparent
-float fadeSpeed = 0.02f; // Speed of fade 
-bool firstTransition = true;
 
 // Initialize random number generator
 std::random_device rd;   // Seed for the random number engine
@@ -378,7 +228,7 @@ void UpdatePasswordInterface() {
                 robot.validPassword = true;
             }
 
-            passwordTimer = 2.0f;
+            globalState.passwordTimer = 2.0f;
             
         } else {
             enteredPassword = ""; // Reset on incorrect password
@@ -548,9 +398,9 @@ void crowbarAttack(std::vector<NPC>& enemies){
 
             if (CheckCollisionRecs(attackHitbox, npcHitbox) && player.currentFrame == 2){ 
                 
-                if (zombie.hitTimer <= 0 && canPlaySound){
-                    canPlaySound = false;
-                    playSoundTimer = .2;
+                if (zombie.hitTimer <= 0 && globalState.canPlaySound){
+                    globalState.canPlaySound = false;
+                    globalState.playSoundTimer = .2;
                     PlaySound(SoundManager::getInstance().GetSound("crowbarAttack"));
                     
                 }
@@ -564,7 +414,7 @@ void crowbarAttack(std::vector<NPC>& enemies){
 }
 
 void showBigBadge(){
-    if (showBadge) DrawTexture(resources.BigBadge, 512, 512, WHITE);
+    if (globalState.showBadge) DrawTexture(resources.BigBadge, 512, 512, WHITE);
 
 }
 
@@ -578,48 +428,48 @@ void renderBoxes(){
 }
 
 void OutsideCarButtons(){
-    if (player.enter_car && buttonCemetery){ //press buttons cemetery
-        move_car = true;
-        show_carUI = false;
-    }else if (player.enter_car && buttonWork){//button press work
+    if (player.enter_car && globalState.buttonCemetery){ //press buttons cemetery
+        globalState.move_car = true;
+        globalState.show_carUI = false;
+    }else if (player.enter_car && globalState.buttonWork){//button press work
         //do something
-        gotoWork = true;
-        move_car = true;
-        hasWorked = true;
-    }else if (player.enter_car && buttonPark){ //button press Park
-        gotoPark = true;
+        globalState.gotoWork = true;
+        globalState.move_car = true;
+        globalState.hasWorked = true;
+    }else if (player.enter_car && globalState.buttonPark){ //button press Park
+        globalState.gotoPark = true;
         
-        move_car = true;
+        globalState.move_car = true;
         
-    }else if (player.enter_car && buttonNecro){ //button press NecroTech
-        move_car = true;
-        gotoNecro = true;
+    }else if (player.enter_car && globalState.buttonNecro){ //button press NecroTech
+        globalState.move_car = true;
+        globalState.gotoNecro = true;
     }
 
 }
 
 void ApartmentLogic(){
 
-    if (buttonInternet && player.hasBadge && !showInternet){
-        showInternet = true;
-        NecroTech = true;
-        internetTimer = 5.0f;
+    if (globalState.buttonInternet && player.hasBadge && !globalState.showInternet){
+        globalState.showInternet = true;
+        globalState.NecroTech = true;
+        globalState.internetTimer = 5.0f;
         player.necroTechSearched = true;
     }else{
-        showInternet = false;
+        globalState.showInternet = false;
     }
 
-    if (buttonSleep && !hasSlept){ ////Go to sleep
+    if (globalState.buttonSleep && !globalState.hasSlept){ ////Go to sleep
         gameCalendar.AdvanceDay(); 
-        buttonSleep = false;
-        hasWorked = false;
-        hasSlept = true;
-        buyFortune = false;
-        canGiveFortune = true; //fortune teller is reset 
-        drunk = false;  //Effects ware off when you sleep
-        applyShader = false;
-        over_apartment = false;
-        glitch = false;
+        globalState.buttonSleep = false;
+        globalState.hasWorked = false;
+        globalState.hasSlept = true;
+        globalState.buyFortune = false;
+        globalState.canGiveFortune = true; //fortune teller is reset 
+        globalState.drunk = false;  //Effects ware off when you sleep
+        globalState.applyShader = false;
+        globalState.over_apartment = false;
+        globalState.glitch = false;
         transitionState = FADE_OUT; //fades out to street for now.
         player.currentHealth = player.maxHealth; //recover hitpoints after sleeping. 
         for (NPC& npc : npcs){
@@ -633,8 +483,8 @@ void ApartmentLogic(){
     //Draw a rectangle over interactive objects and check for mouse collision with said rectangle. 
     // Car key Rectangle 
     Rectangle textureBounds = {
-        carKeysPos.x,      // X position
-        carKeysPos.y,      // Y position
+        globalState.carKeysPos.x,      // X position
+        globalState.carKeysPos.y,      // Y position
         static_cast<float>(64),  // Width of the texture
         static_cast<float>(64)  // Height of the texture
     };
@@ -642,8 +492,8 @@ void ApartmentLogic(){
                     
     // drawer rec
     Rectangle drawerBounds = {
-        drawerPos.x,      // X position
-        drawerPos.y,      // Y position
+        globalState.drawerPos.x,      // X position
+        globalState.drawerPos.y,      // Y position
         static_cast<float>(128),  // Width of the texture
         static_cast<float>(64)  // Height of the texture
     };
@@ -656,38 +506,38 @@ void ApartmentLogic(){
     };
 
     // Check if the mouse is over the texture
-    if (CheckCollisionPointRec(mousePosition, textureBounds)&& !has_car_key) {
+    if (CheckCollisionPointRec(mousePosition, textureBounds)&& !globalState.has_car_key) {
         showInventory = true;
         AddItemToInventory("carKeys");
-        has_car_key = true;
+        globalState.has_car_key = true;
         PlaySound(SoundManager::getInstance().GetSound("Keys"));
     }
 
-    if (CheckCollisionPointRec(mousePosition, drawerBounds)&& !openDrawer){
-        openDrawer = true;
+    if (CheckCollisionPointRec(mousePosition, drawerBounds)&& !globalState.openDrawer){
+        globalState.openDrawer = true;
         PlaySound(SoundManager::getInstance().GetSound("OpenDrawer"));
         if (!player.hasGun){
             AddItemToInventory("Gun");
             showInventory = true;
             player.hasGun = true;
             PlaySound(SoundManager::getInstance().GetSound("reload"));
-            if (firstHobo == false){ 
-                raiseZombies = true; //only raise zombies if the player has the gun and first hobo = false
+            if (globalState.firstHobo == false){ 
+                globalState.raiseZombies = true; //only raise zombies if the player has the gun and first hobo = false
             }
 
         }
         
 
-    }else if (CheckCollisionPointRec(mousePosition, drawerBounds) && openDrawer){
-        openDrawer = false;
+    }else if (CheckCollisionPointRec(mousePosition, drawerBounds) && globalState.openDrawer){
+        globalState.openDrawer = false;
         PlaySound(SoundManager::getInstance().GetSound("CloseDrawer"));
     }
 
-    if (CheckCollisionPointRec(mousePosition, ComputerBounds) && !showAPUI){
-        showAPUI = true;
+    if (CheckCollisionPointRec(mousePosition, ComputerBounds) && !globalState.showAPUI){
+        globalState.showAPUI = true;
     }else{
-        if (!showInternet){
-            showAPUI = false;
+        if (!globalState.showInternet){
+            globalState.showAPUI = false;
         }
         
     }
@@ -711,27 +561,27 @@ void MonitorMouseClicks(){
         }
         else if (gameState == CEMETERY){
             //cemetery car buttons
-            if (player.enter_car && buttonCemetery){//Player is in car, hovering street button, while clicking.
+            if (player.enter_car && globalState.buttonCemetery){//Player is in car, hovering street button, while clicking.
             //move_car = true;
                 transitionState = FADE_OUT;
                 //dont reset yet
-                raiseZombies = false; //reset zombie waves. So returning player will trigger them again. 
-                zombieWave2 = false;
-                zombieWave3 = false;
+                globalState.raiseZombies = false; //reset zombie waves. So returning player will trigger them again. 
+                globalState.zombieWave2 = false;
+                globalState.zombieWave3 = false;
 
             }
         }else if (gameState == PARK){
             //park car buttons
-            if (player.enter_car && buttonCemetery){ //street button in park clicked
+            if (player.enter_car && globalState.buttonCemetery){ //street button in park clicked
                 transitionState = FADE_OUT;
             }
         }else if (gameState == SUBWAY){
-            if (buttonPark){
+            if (globalState.buttonPark){
                 //dont fadeout until the train is moving. 
             }
         }else if (gameState == NECROTECH){
             //necrotech car button
-            if (buttonCemetery){
+            if (globalState.buttonCemetery){
                 transitionState = FADE_OUT;
             }
         }
@@ -910,19 +760,19 @@ void spawnZombie(Vector2 position){
 
 
 void StartZombieSpawn(int zombie_count, float delay){
-    spawning_zombies = true;
-    remainingZombiesToSpawn = zombie_count;
-    spawnTimer = 0.0f; //reset timer
+    globalState.spawning_zombies = true;
+    globalState.remainingZombiesToSpawn = zombie_count;
+    globalState.spawnTimer = 0.0f; //reset timer
     // nextSpawnDelay = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / delay));  // Random delay between 1-4 seconds
-    nextSpawnDelay = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX) / (delay - 1.0f));
+    globalState.nextSpawnDelay = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX) / (delay - 1.0f));
     //film = true;
-    if (gameState != OFFICE && gameState != LAB) glitch = true; //Activate glitch shader to make things more dramatic, not in the office however, it's a bit too much. 
+    if (gameState != OFFICE && gameState != LAB) globalState.glitch = true; //Activate glitch shader to make things more dramatic, not in the office however, it's a bit too much. 
     
 }
 
 void UpdateZombieSpawning(){
-    if (remainingZombiesToSpawn > 0){
-        spawnTimer += GetFrameTime();
+    if (globalState.remainingZombiesToSpawn > 0){
+        globalState.spawnTimer += GetFrameTime();
 
         if (gameState == LOBBY || gameState == OFFICE){ //play alarm sound when zombies are spawning inside the building. 
             if (!SoundManager::getInstance().IsSoundPlaying("alarm")){
@@ -930,11 +780,11 @@ void UpdateZombieSpawning(){
             }
         }
 
-        if (spawnTimer >= nextSpawnDelay){ // spawn zombies at randomm position around the player
+        if (globalState.spawnTimer >= globalState.nextSpawnDelay){ // spawn zombies at randomm position around the player
         
-            if (gameState == OFFICE) maxDistToPlayer = 400;//spawn zombies further away, more of a chance they find a target. 
+            if (gameState == OFFICE) globalState.maxDistToPlayer = 400;//spawn zombies further away, more of a chance they find a target. 
 
-            Vector2 z_pos = GetRandomSpawnPositionX(player.position, minDistToPlayer, maxDistToPlayer);  // Min/max distance from player, set globally so it can change
+            Vector2 z_pos = GetRandomSpawnPositionX(player.position, globalState.minDistToPlayer, globalState.maxDistToPlayer);  // Min/max distance from player, set globally so it can change
             int zombie_speed = 35;//25
             NPC zombie_npc = CreateNPC(resources.zombieSheet, z_pos, zombie_speed, RISING, true, true);
             zombie_npc.SetDestination(1000, 4000);
@@ -957,17 +807,17 @@ void UpdateZombieSpawning(){
             }
  
             // Reset the spawn timer and set a new random delay
-            spawnTimer = 0.0f;
+            globalState.spawnTimer = 0.0f;
             float minDelay = 1.0f;
             float maxDelay = 3.0f; 
-            nextSpawnDelay = minDelay + ((float)rand() / (float)RAND_MAX) * (maxDelay - minDelay);
+            globalState.nextSpawnDelay = minDelay + ((float)rand() / (float)RAND_MAX) * (maxDelay - minDelay);
             
             // Decrease the number of zombies left to spawn
-            remainingZombiesToSpawn--;
+            globalState.remainingZombiesToSpawn--;
         }
     }else{
-        glitch = false; //glitch only runs if zombies are actively spawning.
-        spawning_zombies = false;
+        globalState.glitch = false; //glitch only runs if zombies are actively spawning.
+        globalState.spawning_zombies = false;
         //film = false;
         
     }
@@ -1005,7 +855,7 @@ void UpdateTrain(Train &train,float deltaTime) {
                 player.arriving = false;
                 
             } 
-            trainAtStation = true;
+            globalState.trainAtStation = true;
             train.stopTimer += deltaTime;
             if (train.stopTimer >= train.stopDuration) {
                 train.state = SpeedingUp;
@@ -1014,7 +864,7 @@ void UpdateTrain(Train &train,float deltaTime) {
 
         case SpeedingUp:
             
-            trainAtStation = false;
+            globalState.trainAtStation = false;
             PlayPositionalSound(SoundManager::getInstance().GetSound("TrainLeaving"), train.position, player.position, 700);
             train.speed += train.acceleration * deltaTime;
             if (train.speed >= train.maxSpeed) {
@@ -1214,7 +1064,7 @@ void DrawItem(Vector2 itemPos, const std::string& itemType) {
             if (itemType == "shovel" || itemType == "crowbar") PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
             if (itemType == "watch") PlaySound(SoundManager::getInstance().GetSound("moneyUp"));
             if (itemType == "crowbar"){
-                crowbarDialogTimer = 5.0f; //Press V to swing crowbar, show for 5 seconds. 
+                globalState.crowbarDialogTimer = 5.0f; //Press V to swing crowbar, show for 5 seconds. 
             }
 
             if (itemType == "vest"){
@@ -1232,20 +1082,20 @@ void DrawItem(Vector2 itemPos, const std::string& itemType) {
 
 
 void HandleLobbyTransition(){
-    if (over_exit && player.currentHealth > 0){
+    if (globalState.over_exit && player.currentHealth > 0){
         gameState = NECROTECH;
-        over_exit = false;
+        globalState.over_exit = false;
         player.position.x = 2138;
         UpdateNPCActivity(LOBBY, NECROTECH);//turn off NPCs in the scene you are leaving, turn on NPCs in the scene you are entering. 
     }else if (player.onElevator){
         gameState = OFFICE;
         UpdateNPCActivity(LOBBY, OFFICE); //turn on office workers
         player.onElevator = false;
-        if (!visitedOffice){
-            can_spawn_zombies = true; //queue up more zombies to be spawned in the office.
-            visitedOffice = true;
+        if (!globalState.visitedOffice){
+            globalState.can_spawn_zombies = true; //queue up more zombies to be spawned in the office.
+            globalState.visitedOffice = true;
         } else{
-            can_spawn_zombies = false; //already visited office so don't spawn anymore zombies. 
+            globalState.can_spawn_zombies = false; //already visited office so don't spawn anymore zombies. 
         }
         
 
@@ -1253,31 +1103,31 @@ void HandleLobbyTransition(){
         //death in lobby, goto apartment
         gameState = APARTMENT;
         UpdateNPCActivity(LOBBY, APARTMENT);
-        player.position.x = apartmentX;
+        player.position.x = globalState.apartmentX;
         player.isDead = false;
         player.currentHealth = player.maxHealth;
-        glitch = false;
-        remainingZombiesToSpawn = 0; //turn off zombie spawning on death
+        globalState.glitch = false;
+        globalState.remainingZombiesToSpawn = 0; //turn off zombie spawning on death
         gameCalendar.AdvanceDay();
-        triggerOutsideZombies = true;
+        globalState.triggerOutsideZombies = true;
 
     }
 }
 
 void HandleNecroTransition(){
     //faded out
-    if (over_necro and passwordValidated && !player.isDead){
+    if (globalState.over_necro and passwordValidated && !player.isDead){
         gameState = LOBBY; //over enterance goto lobby
         UpdateNPCActivity(NECROTECH,LOBBY); //turn off NPCs in the scene you are leaving, turn on NPCs in the scene you are entering. 
 
     }else if (player.isDead){
         gameState = APARTMENT;
-        player.position.x = apartmentX;
+        player.position.x = globalState.apartmentX;
         player.isDead = false;
         player.currentHealth = player.maxHealth;
         gameCalendar.AdvanceDay();
-        remainingZombiesToSpawn = 0;
-        glitch = false;
+        globalState.remainingZombiesToSpawn = 0;
+        globalState.glitch = false;
         UpdateNPCActivity(NECROTECH,APARTMENT);
 
 
@@ -1285,7 +1135,7 @@ void HandleNecroTransition(){
         gameState = OUTSIDE;
         player_car.position.x = 1710;
         player.position.x = player_car.position.x; //center of car
-        gotoNecro = false;
+        globalState.gotoNecro = false;
         UpdateNPCActivity(NECROTECH,OUTSIDE);
 
     }
@@ -1297,28 +1147,28 @@ void HandleNecroTransition(){
 
 
 void HandleOutsideTransition(PlayerCar& player_car) {
-    if (move_car && !gotoWork && !gotoPark && !gotoNecro) {  // Car is moving, go to road
+    if (globalState.move_car && !globalState.gotoWork && !globalState.gotoPark && !globalState.gotoNecro) {  // Car is moving, go to road
         gameState = ROAD;
         UpdateNPCActivity(OUTSIDE, ROAD);
         player_car.facingLeft = true;  // Leaving outside = face left
-        if (!reverse_road) {
+        if (!globalState.reverse_road) {
             player_car.position.x = 900;
         }
-    } else if (move_car && gotoWork) {  // Move car and go to work
+    } else if (globalState.move_car && globalState.gotoWork) {  // Move car and go to work
         gameState = WORK;
         UpdateNPCActivity(OUTSIDE, WORK);
         // Additional logic if needed
-    }else if (move_car && gotoPark && !gotoWork){ //move car and go to park
+    }else if (globalState.move_car && globalState.gotoPark && !globalState.gotoWork){ //move car and go to park
         gameState = PARK;
         UpdateNPCActivity(OUTSIDE, PARK);
         player_car.position.x = 1800;
         player.position.x = player_car.position.x;
-        carToPark = true; //true?
-        move_car = false;
+        globalState.carToPark = true; //true?
+        globalState.move_car = false;
 
-    }else if (gotoNecro && move_car){
+    }else if (globalState.gotoNecro && globalState.move_car){
         gameState = NECROTECH;
-        move_car = false;
+        globalState.move_car = false;
         player_car.position.x = 1623;
         player.position.x = player_car.position.x;
         UpdateNPCActivity(OUTSIDE, NECROTECH);
@@ -1328,7 +1178,7 @@ void HandleOutsideTransition(PlayerCar& player_car) {
     } else if (player.isDead) {  // Died outside, go to apartment
         gameState = APARTMENT;
         UpdateNPCActivity(OUTSIDE, APARTMENT);
-        player.position.x = apartmentX;
+        player.position.x = globalState.apartmentX;
         player.currentHealth = player.maxHealth;
 
         player.isDead = false;
@@ -1339,18 +1189,18 @@ void HandleOutsideTransition(PlayerCar& player_car) {
                 npc.attacking = false;
             }
         }
-    } else if (over_apartment) {  // Over apartment, go to apartment
+    } else if (globalState.over_apartment) {  // Over apartment, go to apartment
         gameState = APARTMENT;
         UpdateNPCActivity(OUTSIDE, APARTMENT);
-    } else if (over_lot) { // over_lot go to Vacant Lot
+    } else if (globalState.over_lot) { // over_lot go to Vacant Lot
         UpdateNPCActivity(OUTSIDE, LOT);
         gameState = LOT;
         
-    }else if (openMagicDoor){ //over magic door, go to astral
+    }else if (globalState.openMagicDoor){ //over magic door, go to astral
         UpdateNPCActivity(OUTSIDE, ASTRAL);
         gameState = ASTRAL;
-        openMagicDoor = false; //we set it back to false here because it doesn't work any other way. 
-    }else if (overSubway){
+        globalState.openMagicDoor = false; //we set it back to false here because it doesn't work any other way. 
+    }else if (globalState.overSubway){
         UpdateNPCActivity(OUTSIDE, SUBWAY);
         gameState = SUBWAY;
         player.position.x = 3100;
@@ -1360,7 +1210,7 @@ void HandleOutsideTransition(PlayerCar& player_car) {
 
 void HandleApartmentTransition() {
     gameState = OUTSIDE;  // Go back outside
-    player.position.x = apartmentX;
+    player.position.x = globalState.apartmentX;
     UpdateNPCActivity(APARTMENT, OUTSIDE);
 }
 
@@ -1371,38 +1221,38 @@ void HandleUFOtransition() {
 }
 
 void HandleRoadTransition(PlayerCar& player_car) {
-    if (!reverse_road) {
+    if (!globalState.reverse_road) {
         gameState = CEMETERY;
         player_car.position.x = 3000;
         UpdateNPCActivity(ROAD, CEMETERY);
     } else {
         gameState = OUTSIDE;
         UpdateNPCActivity(ROAD, OUTSIDE);
-        player_car.position.x = pc_start_pos.x;
+        player_car.position.x = globalState.pc_start_pos.x;
         player.position.x = 1738;
-        reverse_road = false;
-        leave_cemetery = false;
-        move_car = false;  // Prevent double fade-outs maybe
+        globalState.reverse_road = false;
+        globalState.leave_cemetery = false;
+        globalState.move_car = false;  // Prevent double fade-outs maybe
     }
 }
 
 void HandleCemeteryTransition(PlayerCar& player_car) {
-    reverse_road = true;
+    globalState.reverse_road = true;
     player_car.facingLeft = false;
-    move_car = false;
+    globalState.move_car = false;
 
     if (!player.isDead && player.enter_car) {
         gameState = ROAD;
         player_car.position.x = 100;
         UpdateNPCActivity(CEMETERY, ROAD);
-    } else if (!player.enter_car && over_gate) {
+    } else if (!player.enter_car && globalState.over_gate) {
         UpdateNPCActivity(CEMETERY, GRAVEYARD);
         gameState = GRAVEYARD;
-        raiseZombies = true;  // Queue up more zombies for graveyard
+        globalState.raiseZombies = true;  // Queue up more zombies for graveyard
     }else if (player.abduction){
         UpdateNPCActivity(CEMETERY, ALIEN);
         gameState = ALIEN;
-        glitch = false;
+        globalState.glitch = false;
         SoundManager::getInstance().ManagerStopSound("energyHum");
         gameCalendar.AdvanceDay();
         player.position.y = 700; //reset y
@@ -1415,11 +1265,11 @@ void HandleCemeteryTransition(PlayerCar& player_car) {
     } else if (player.isDead) {
         UpdateNPCActivity(CEMETERY, APARTMENT);
         gameState = APARTMENT;//wake up back at your apartment with full health. 
-        player.position.x = apartmentX;
+        player.position.x = globalState.apartmentX;
         player.isDead = false;
         player.currentHealth = player.maxHealth;
-        glitch = false;
-        remainingZombiesToSpawn = 0;
+        globalState.glitch = false;
+        globalState.remainingZombiesToSpawn = 0;
         gameCalendar.AdvanceDay();
     }
 }
@@ -1427,12 +1277,12 @@ void HandleCemeteryTransition(PlayerCar& player_car) {
 void HandleGraveyardTransition(std::vector<NPC>& ghosts){
     if (player.isDead){
         gameState = APARTMENT;//wake up back at your apartment with full health.
-        player.position.x = apartmentX;
+        player.position.x = globalState.apartmentX;
         player.isDead = false;
         UpdateNPCActivity(GRAVEYARD, APARTMENT);
         player.currentHealth = player.maxHealth;
-        remainingZombiesToSpawn = 0;
-        glitch = false;
+        globalState.remainingZombiesToSpawn = 0;
+        globalState.glitch = false;
         gameCalendar.AdvanceDay();
 
     }else{ //presumably over gate and fading out
@@ -1447,30 +1297,30 @@ void HandleGraveyardTransition(std::vector<NPC>& ghosts){
 }
 
 void HandleWorkTransition() {
-    gotoWork = false;
-    move_car = false;
-    hasWorked = true;
+    globalState.gotoWork = false;
+    globalState.move_car = false;
+    globalState.hasWorked = true;
     gameState = OUTSIDE;
-    player.position.x = pstart_by_car.x;
+    player.position.x = globalState.pstart_by_car.x;
     addMoney(100);
     UpdateNPCActivity(WORK, OUTSIDE);
 }
 
 void HandleLotTransition() {
     gameState = OUTSIDE;
-    player.position.x = vacantLotX;
+    player.position.x = globalState.vacantLotX;
     UpdateNPCActivity(LOT, OUTSIDE);
 }
 
 void HandleAstralTransition(){
     if (player.isDead){ //player dies on the astral plane, reset back to apartment.
         gameState = APARTMENT;//wake up back at your apartment with full health.
-        player.position = Vector2 {apartmentX, 700}; // consider the Y
+        player.position = Vector2 {globalState.apartmentX, 700}; // consider the Y
         player.position.y = 700; //incase player dies on a platform. reset to ground level
         player.isDead = false;
         player.gravity = 800; //reset gravity to normal. 
         player.outline = false; //set outline off when exiting astral
-        applyShader = false; //drugs ware off if you advanced the day
+        globalState.applyShader = false; //drugs ware off if you advanced the day
         player.currentHealth = player.maxHealth;
         UpdateNPCActivity(ASTRAL, APARTMENT);
         gameCalendar.AdvanceDay();
@@ -1482,11 +1332,11 @@ void HandleAstralTransition(){
     }else{ //call fade out in astral, presumably magic door exit
         gameState = APARTMENT; //wake up back at your apartment on exiting astral. 
         UpdateNPCActivity(ASTRAL, APARTMENT);
-        openMagicDoor = false; //We set it back to false when entering astral, we should set it false when leaving astral aswell
+        globalState.openMagicDoor = false; //We set it back to false when entering astral, we should set it false when leaving astral aswell
         player.gravity = 800; //reset gravity on leaving astral plane.
         player.outline = false; //set outline off when exiting astral
-        applyShader = false; //drugs ware off when exiting astral.
-        player.position = Vector2 {apartmentX, 700.0f}; //move back to ground level.  
+        globalState.applyShader = false; //drugs ware off when exiting astral.
+        player.position = Vector2 {globalState.apartmentX, 700.0f}; //move back to ground level.  
         for (NPC& ghost : astralGhosts){
             ghost.agro = false; //ghost lose agro after leaving the plane. regain agro when inside detection radius
         }
@@ -1500,7 +1350,7 @@ void HandleOfficeTransition(){
         gameState = LOBBY;
         UpdateNPCActivity(OFFICE, LOBBY);
         player.onElevator = false;
-        can_spawn_zombies = false; //only spawn zombies once. 
+        globalState.can_spawn_zombies = false; //only spawn zombies once. 
 
     }else if (elevators[1].isOccupied){
         std::cout << "Goto lab";
@@ -1513,14 +1363,14 @@ void HandleOfficeTransition(){
         //death in office return to apartment
         gameState = APARTMENT;
         UpdateNPCActivity(OFFICE, APARTMENT);
-        player.position.x = apartmentX;
+        player.position.x = globalState.apartmentX;
         player.onElevator = false;
         player.isDead = false;
         player.currentHealth = player.maxHealth;
         gameCalendar.AdvanceDay();
-        remainingZombiesToSpawn = 0;
-        glitch = false;
-        triggerOutsideZombies = true;
+        globalState.remainingZombiesToSpawn = 0;
+        globalState.glitch = false;
+        globalState.triggerOutsideZombies = true;
 
     }
 }
@@ -1528,19 +1378,19 @@ void HandleOfficeTransition(){
 void HandleParkTransition(){
     if (player.isDead){ //player dies in park, reset to apartment.
         gameState = APARTMENT;
-        player.position.x = apartmentX;
+        player.position.x = globalState.apartmentX;
         player.isDead = false;
         player.currentHealth = player.maxHealth;
         gameCalendar.AdvanceDay();
-        applyShader = false; //if you die, you are no longer high when respawning
+        globalState.applyShader = false; //if you die, you are no longer high when respawning
         UpdateNPCActivity(PARK, APARTMENT);
-        glitch = false;
-        remainingZombiesToSpawn = 0;
+        globalState.glitch = false;
+        globalState.remainingZombiesToSpawn = 0;
 
-    }else if (overSubway){ //exit to subway
+    }else if (globalState.overSubway){ //exit to subway
         gameState = SUBWAY;
         player.position.x = 3011;
-        gotoStreet = true;
+        globalState.gotoStreet = true;
         // gotoPark = false; //turn off elsewhere incase play changes there mind and goes back to park from subway
         UpdateNPCActivity(PARK, SUBWAY);
        
@@ -1548,8 +1398,8 @@ void HandleParkTransition(){
     } else{ //call fade out in park, leaving by car to outside. 
         gameState = OUTSIDE; //call fadeout in park
         player.position.x = player_car.position.x-64; //center of car
-        gotoPark = false; //reset gotopark
-        carToPark = false; //take the car back from the park and render it outside. 
+        globalState.gotoPark = false; //reset gotopark
+        globalState.carToPark = false; //take the car back from the park and render it outside. 
         UpdateNPCActivity(PARK, OUTSIDE);
 
     }
@@ -1567,12 +1417,12 @@ void HandleLabTransition(){
         UpdateNPCActivity(LAB, APARTMENT);
         gameState = APARTMENT;
         player.currentHealth = player.maxHealth;
-        player.position.x = apartmentX;
+        player.position.x = globalState.apartmentX;
         player.isDead = false;
         gameCalendar.AdvanceDay();
-        glitch = false;
-        remainingZombiesToSpawn = 0;
-        triggerOutsideZombies = true; //if you die in the lab or office or lobby it triggers zombies to invade main street. 
+        globalState.glitch = false;
+        globalState.remainingZombiesToSpawn = 0;
+        globalState.triggerOutsideZombies = true; //if you die in the lab or office or lobby it triggers zombies to invade main street. 
 
     }
 }
@@ -1580,40 +1430,40 @@ void HandleLabTransition(){
 void HandleSubwayTransition(){
     //the car magically teleports back to the street if you take the car to the park and take the subway back. 
 
-    if (subwayExit && !subwayToPark && !gotoPark){ //your at outside subway so exit to outside
+    if (globalState.subwayExit && !globalState.subwayToPark && !globalState.gotoPark){ //your at outside subway so exit to outside
         gameState = OUTSIDE;
         player.position.x = 4579;
         UpdateNPCActivity(SUBWAY, OUTSIDE);
-        gotoPark = false;
+        globalState.gotoPark = false;
     }
 
-    if (subwayExit && (subwayToPark || gotoPark)){ //your at the parksubway so exit to park, either took the train or drove. 
+    if (globalState.subwayExit && (globalState.subwayToPark || globalState.gotoPark)){ //your at the parksubway so exit to park, either took the train or drove. 
         gameState = PARK;
         UpdateNPCActivity(SUBWAY, PARK);
     }
 
-    if (player.enter_train && !subwayToPark && !carToPark){ //Riding train to park
+    if (player.enter_train && !globalState.subwayToPark && !globalState.carToPark){ //Riding train to park
         player.enter_train = false;
-        subwayToPark = true; //travel to park from subway, 
+        globalState.subwayToPark = true; //travel to park from subway, 
         gameState = PARK;
         player.position.x = 3000;
         UpdateNPCActivity(SUBWAY, PARK);
 
-    }else if (player.enter_train && subwayToPark){ //Riding train to outside
+    }else if (player.enter_train && globalState.subwayToPark){ //Riding train to outside
         player.enter_train = false;
-        subwayToPark = false;
+        globalState.subwayToPark = false;
         gameState = OUTSIDE;
-        gotoPark = false;
-        gotoStreet = false;
+        globalState.gotoPark = false;
+        globalState.gotoStreet = false;
         player.position.x = 4500;
         UpdateNPCActivity(SUBWAY, OUTSIDE);
 
-    }else if (player.enter_train && carToPark){ //riding train to outside
+    }else if (player.enter_train && globalState.carToPark){ //riding train to outside
         player.enter_train = false;
-        carToPark = false; //car magically teleports back to to the street following the player, simplifying things drastically
+        globalState.carToPark = false; //car magically teleports back to to the street following the player, simplifying things drastically
         gameState = OUTSIDE;
         UpdateNPCActivity(SUBWAY, OUTSIDE);
-        gotoStreet = false;
+        globalState.gotoStreet = false;
         player.position.x = 4500;
     }
 }
@@ -1679,37 +1529,37 @@ void PerformStateTransition( PlayerCar& player_car) {
 }
 
 void DrawFadeMask() {
-    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, fadeAlpha)); //fade to black
+    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, globalState.fadeAlpha)); //fade to black
 }
 
 
 
 void HandleFadeIn() {
-    fadeAlpha -= fadeSpeed;  // Fade in gradually
-    if (fadeAlpha <= 0.0f) {
-        fadeAlpha = 0.0f;
+    globalState.fadeAlpha -= globalState.fadeSpeed;  // Fade in gradually
+    if (globalState.fadeAlpha <= 0.0f) {
+        globalState.fadeAlpha = 0.0f;
         transitionState = NONE;  // Fade-in complete
-        fading = false; //player may move again. 
+        globalState.fading = false; //player may move again. 
     }
 }
 
 void HandleFadeOut(PlayerCar& player_car) { 
-    fadeAlpha += fadeSpeed;  // Fade out gradually
-    fading = true; //dont move player if fading
+    globalState.fadeAlpha += globalState.fadeSpeed;  // Fade out gradually
+    globalState.fading = true; //dont move player if fading
     grenades.clear(); //clear any remaining grenades when switching scenes. 
 
-    if (fadeAlpha >= 1.0f) {
-        fadeAlpha = 1.0f;
+    if (globalState.fadeAlpha >= 1.0f) {
+        globalState.fadeAlpha = 1.0f;
 
         // Start blackout timer when fully faded out
-        blackoutTimer += GetFrameTime();
-        if (blackoutTimer >= blackoutTime) {
-            blackoutTimer = 0.0f;  // Reset blackout timer
+        globalState.blackoutTimer += GetFrameTime();
+        if (globalState.blackoutTimer >= globalState.blackoutTime) {
+            globalState.blackoutTimer = 0.0f;  // Reset blackout timer
 
             // Transition to the next state
             PerformStateTransition(player_car);
 
-            if (!gotoWork) {  // Don't fade in when at work; fade in later
+            if (!globalState.gotoWork) {  // Don't fade in when at work; fade in later
                 transitionState = FADE_IN;  // Start fading back in
             }
         }
@@ -1753,7 +1603,7 @@ void Dig(){
         shovelTint = RED;
     }
 
-    if (digSpot && gameState == LOT){
+    if (globalState.digSpot && gameState == LOT){
         PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
         shovelTint = RED;
         if (!player.hasShotgun){
@@ -1764,7 +1614,7 @@ void Dig(){
 
     }
 
-    if (digSpot && gameState == GRAVEYARD){
+    if (globalState.digSpot && gameState == GRAVEYARD){
         PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
         shovelTint = RED;
         if (!player.hasMac10){
@@ -1860,11 +1710,11 @@ void UpdateZombieTarget(NPC& zombie, std::vector<NPC>& npcs) {
 
 void UpdateInventoryPosition(const Camera2D& camera) {
     // Static inventory position, relative to the camera offset
-    inventoryPositionX = camera.offset.x-80;  // Adjust the X position relative to the screen (e.g., 200 pixels left of the center)
+    globalState.inventoryPositionX = camera.offset.x-80;  // Adjust the X position relative to the screen (e.g., 200 pixels left of the center)
     if (gameState == APARTMENT){
-        inventoryPositionY = camera.offset.y + 228;
+        globalState.inventoryPositionY = camera.offset.y + 228;
     }else{
-        inventoryPositionY = camera.offset.y + 228;  // Adjust the Y position (e.g., 300 pixels below the center)
+        globalState.inventoryPositionY = camera.offset.y + 228;  // Adjust the Y position (e.g., 300 pixels below the center)
     }
     
 }
@@ -1884,10 +1734,10 @@ void drawDeadZombie(Vector2 bodyPosition,Vector2& mouseWorldPos){
             AddItemToInventory("Badge");
             player.hasBadge = true;
             showInventory = true;
-            show_dbox = true;
+            globalState.show_dbox = true;
             phrase = "ID card of an employee\n\nA company named NecroTech";
-            badgeTimer = 7.0; //show text for 7 seconds
-            dboxPosition = player.position;
+            globalState.badgeTimer = 7.0; //show text for 7 seconds
+            globalState.dboxPosition = player.position;
         }
     }
     if (CheckCollisionPointRec(mouseWorldPos, bodyBounds)){ //if click on body
@@ -1896,10 +1746,10 @@ void drawDeadZombie(Vector2 bodyPosition,Vector2& mouseWorldPos){
                 AddItemToInventory("Badge");
                 player.hasBadge = true;
                 showInventory = true;
-                show_dbox = true;
+                globalState.show_dbox = true;
                 phrase = "ID card of an employee\n\nA company named NecroTech";
-                badgeTimer = 7.0;
-                dboxPosition = player.position;
+                globalState.badgeTimer = 7.0;
+                globalState.dboxPosition = player.position;
             }
         }
         
@@ -1910,15 +1760,15 @@ void drawDeadZombie(Vector2 bodyPosition,Vector2& mouseWorldPos){
 void slotSelectionLogic(){
     if (IsGamepadAvailable(0)){
         if (IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_TRIGGER_1)){
-            selectedSlot += 1;
+            globalState.selectedSlot += 1;
         }else if (IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_TRIGGER_1)){
-            selectedSlot -= 1;
+            globalState.selectedSlot -= 1;
         }
 
-        if (selectedSlot > 11){
-            selectedSlot = 0;
-        }else if (selectedSlot < 0){
-            selectedSlot = 11;
+        if (globalState.selectedSlot > 11){
+            globalState.selectedSlot = 0;
+        }else if (globalState.selectedSlot < 0){
+            globalState.selectedSlot = 11;
         }
     }
 }
@@ -1933,8 +1783,8 @@ void RenderInventory() {
     Color slotColor = WHITE;
 
 
-    int startX = (inventoryPositionX - (slotWidth * INVENTORY_SIZE/2));
-    int startY = inventoryPositionY;
+    int startX = (globalState.inventoryPositionX - (slotWidth * INVENTORY_SIZE/2));
+    int startY = globalState.inventoryPositionY;
 
 
     // Draw each inventory slot 
@@ -1942,7 +1792,7 @@ void RenderInventory() {
         int x = startX + (i * (slotWidth + 10));  // Offset each slot horizontally
         int y = startY;
         slotColor = WHITE;
-        if (i == selectedSlot){
+        if (i == globalState.selectedSlot){
             slotColor = RED;
         }
         // Draw the inventory slot texture
@@ -1975,7 +1825,7 @@ void RenderInventory() {
                     static_cast<float>(64),  
                     static_cast<float>(64)  
                 };
-                if ((CheckCollisionPointRec(mousePosition, crowbarBounds) || selectedSlot == i)){
+                if ((CheckCollisionPointRec(mousePosition, crowbarBounds) || globalState.selectedSlot == i)){
                     if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)) && player.canSwing && !player.isMoving){
                         //swing crowbar
                         player.canSwing = false;
@@ -2005,12 +1855,12 @@ void RenderInventory() {
                     static_cast<float>(64)  
                 };
 
-                if ((CheckCollisionPointRec(mousePosition, badgeBounds) || selectedSlot == i)){
+                if ((CheckCollisionPointRec(mousePosition, badgeBounds) || globalState.selectedSlot == i)){
                     if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){
-                        if (!showBadge){
-                            showBadge = true;
+                        if (!globalState.showBadge){
+                            globalState.showBadge = true;
                         }else{
-                            showBadge = false;
+                            globalState.showBadge = false;
                         }
                     }
                 }
@@ -2032,7 +1882,7 @@ void RenderInventory() {
                     static_cast<float>(64)  
                 };
 
-                if ((CheckCollisionPointRec(mousePosition, RevolverBounds) || selectedSlot == i)){
+                if ((CheckCollisionPointRec(mousePosition, RevolverBounds) || globalState.selectedSlot == i)){
                     if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){
                         if (player.currentWeapon != REVOLVER){
                             player.currentWeapon = REVOLVER;
@@ -2050,7 +1900,7 @@ void RenderInventory() {
                     static_cast<float>(64)  
                 };
 
-                if ((CheckCollisionPointRec(mousePosition, ShotGunBounds) || selectedSlot == i)){
+                if ((CheckCollisionPointRec(mousePosition, ShotGunBounds) || globalState.selectedSlot == i)){
                     if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){
                         if (player.currentWeapon != SHOTGUN){
                             player.currentWeapon = SHOTGUN;
@@ -2070,7 +1920,7 @@ void RenderInventory() {
                     static_cast<float>(64)  
                 };
 
-                if ((CheckCollisionPointRec(mousePosition, MacBounds) || selectedSlot == i)){
+                if ((CheckCollisionPointRec(mousePosition, MacBounds) || globalState.selectedSlot == i)){
                     if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){
                         if (player.currentWeapon != MAC10){
                             player.currentWeapon = MAC10;
@@ -2091,13 +1941,13 @@ void RenderInventory() {
                     static_cast<float>(64)  
                 };
 
-                if ((CheckCollisionPointRec(mousePosition, whiskeyBounds) || selectedSlot == i)){
+                if ((CheckCollisionPointRec(mousePosition, whiskeyBounds) || globalState.selectedSlot == i)){
                     if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){
                         if (player.hasWhiskey){
                             inventory[i] = std::string("");  // erase whiskey from the string
                             player.currentHealth = player.maxHealth;
                             player.hasWhiskey = false;
-                            drunk = true;
+                            globalState.drunk = true;
                             PlaySound(SoundManager::getInstance().GetSound("gulp"));
 
                         }
@@ -2116,7 +1966,7 @@ void RenderInventory() {
                     static_cast<float>(64)  
                 };
 
-                if ((CheckCollisionPointRec(mousePosition, pillBounds) || selectedSlot == i)){
+                if ((CheckCollisionPointRec(mousePosition, pillBounds) || globalState.selectedSlot == i)){
                     if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){
                         if (player.currentHealth < player.maxHealth && player.hasPills){
                             //inventory[i] = std::string("");  // erase pills from the string
@@ -2139,7 +1989,7 @@ void RenderInventory() {
                     static_cast<float>(64)  
                 };
 
-                if ((CheckCollisionPointRec(mousePosition, shovelBounds) || selectedSlot == i)){ //dig
+                if ((CheckCollisionPointRec(mousePosition, shovelBounds) || globalState.selectedSlot == i)){ //dig
                     
                     if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){
                         Dig(); //click shovel icon to dig
@@ -2159,12 +2009,12 @@ void RenderInventory() {
                     static_cast<float>(64)  
                 };
 
-                if ((CheckCollisionPointRec(mousePosition, textureBounds) || selectedSlot == i)){
+                if ((CheckCollisionPointRec(mousePosition, textureBounds) || globalState.selectedSlot == i)){
                     if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){
                         //inventory[i] = std::string("");  // erase drugs from the string
                         RemoveItemFromInventory("Drugs");
-                        applyShader = true;
-                        can_sell_drugs = true;
+                        globalState.applyShader = true;
+                        globalState.can_sell_drugs = true;
                     }
                 }
             }
@@ -2252,15 +2102,15 @@ void DrawHUD(const Player& player) {
 void MoveTraffic(GameResources resources){
     
     int car_start = 5500;
-    car_pos.x -= 150 * GetFrameTime();
-    truck_pos.x += 150 * GetFrameTime();
+    globalState.car_pos.x -= 150 * GetFrameTime();
+    globalState.truck_pos.x += 150 * GetFrameTime();
 
-    if (car_pos.x < -500) car_pos.x = car_start; //Loop back to car_start
+    if (globalState.car_pos.x < -500) globalState.car_pos.x = car_start; //Loop back to car_start
  
-    if (truck_pos.x > 5500) truck_pos.x = -500;
+    if (globalState.truck_pos.x > 5500) globalState.truck_pos.x = -500;
     
-    DrawTexture(resources.car, car_pos.x, car_pos.y, WHITE);
-    DrawTexture(resources.truck, truck_pos.x, truck_pos.y + 32, WHITE);
+    DrawTexture(resources.car, globalState.car_pos.x, globalState.car_pos.y, WHITE);
+    DrawTexture(resources.truck, globalState.truck_pos.x, globalState.truck_pos.y + 32, WHITE);
     
 }
 
@@ -2289,29 +2139,29 @@ void DrawApartmentUI(){
     if (CheckCollisionPointRec(mousePosition, textureBounds)){
         tint = RED;
         
-        buttonSleep = true;
+        globalState.buttonSleep = true;
     }else{
-        buttonSleep = false;
+        globalState.buttonSleep = false;
     }
 
     if (CheckCollisionPointRec(mousePosition, internetBounds)){
         Itint = RED;
-        buttonInternet = true;
+        globalState.buttonInternet = true;
 
     }else{
-        buttonInternet = false;
+        globalState.buttonInternet = false;
     }
 
 
 
-    if (hasSlept) tint = BLACK;
+    if (globalState.hasSlept) tint = BLACK;
     
-    if (internetTimer > 0){
-        internetTimer -= GetFrameTime();
+    if (globalState.internetTimer > 0){
+        globalState.internetTimer -= GetFrameTime();
     }
 
-    if (showInternet){
-        if (internetTimer > 0){
+    if (globalState.showInternet){
+        if (globalState.internetTimer > 0){
             DrawText("\n\nSEARCHING...\n\nNECRO-TECH", TextPos.x+12, TextPos.y-20, 20, WHITE);
         }else{
             DrawText("Adress: \n\n 123 Paper St", TextPos.x, TextPos.y, 20, WHITE);
@@ -2347,12 +2197,12 @@ void DrawSubwayUI(){
 
     if (CheckCollisionPointRec(mouseWorldPos, parkBounds)){ //middle //cemetery/street
         parkTint = RED;
-        buttonPark = true;
+        globalState.buttonPark = true;
     }else{
-        buttonPark = false;
+        globalState.buttonPark = false;
     }
 
-    if (gotoStreet){
+    if (globalState.gotoStreet){
         DrawText("   Street", ui_pos.x, ui_pos.y, fontSize, parkTint);
 
     }else{
@@ -2422,30 +2272,30 @@ void DrawCarUI(PlayerCar& player_car, Camera2D& camera){
 
     if (CheckCollisionPointRec(mouseWorldPos, textureBounds)){ //middle //cemetery/street
         cemetery_tint = RED;
-        buttonCemetery = true;
+        globalState.buttonCemetery = true;
     }else{
-        buttonCemetery = false;
+        globalState.buttonCemetery = false;
     }
 
-    if (CheckCollisionPointRec(mouseWorldPos, workBounds) && !hasWorked && gameState == OUTSIDE){ //bottom Work
+    if (CheckCollisionPointRec(mouseWorldPos, workBounds) && !globalState.hasWorked && gameState == OUTSIDE){ //bottom Work
         work_tint = RED;
-        buttonWork = true;
+        globalState.buttonWork = true;
     }else{
-        buttonWork = false;
+        globalState.buttonWork = false;
     }
 
     if (CheckCollisionPointRec(mouseWorldPos, ParkBounds)){ //top Park
         tavern_tint = RED;
-        buttonPark = true;  
+        globalState.buttonPark = true;  
     }else{
-        buttonPark = false;
+        globalState.buttonPark = false;
     }
 
     if (CheckCollisionPointRec(mouseWorldPos, NecroBounds)){ //very bottom NecroTech
         necro_tint = RED;
-        buttonNecro = true;  
+        globalState.buttonNecro = true;  
     }else{
-        buttonNecro = false;
+        globalState.buttonNecro = false;
     }
 
 
@@ -2453,10 +2303,10 @@ void DrawCarUI(PlayerCar& player_car, Camera2D& camera){
         DrawText("   Park", ui_pos.x, ui_pos.y-17, 16, tavern_tint);
         DrawText("   Cemetery", ui_pos.x, ui_pos.y, 16, cemetery_tint);
 
-        work_tint = hasWorked ? BLACK : work_tint; //turn off work option if you have recently worked. Render button black. 
+        work_tint = globalState.hasWorked ? BLACK : work_tint; //turn off work option if you have recently worked. Render button black. 
         DrawText("   Work", ui_pos.x, ui_pos.y+17, 16, work_tint);
 
-        if (NecroTech) DrawText("  NecroTech", ui_pos.x, ui_pos.y+32, 16, necro_tint); 
+        if (globalState.NecroTech) DrawText("  NecroTech", ui_pos.x, ui_pos.y+32, 16, necro_tint); 
 
 
         
@@ -2483,7 +2333,7 @@ void HandleGamepadMouseControl() {
     // Detect mouse movement
     Vector2 currentMousePos = GetMousePosition();
     if (currentMousePos.x != lastMousePos.x || currentMousePos.y != lastMousePos.y) {
-        usingController = false;  // Mouse is being used
+        globalState.usingController = false;  // Mouse is being used
     }
     lastMousePos = currentMousePos;
 
@@ -2494,10 +2344,10 @@ void HandleGamepadMouseControl() {
 
         // Detect if controller is being used (apply dead zone)
         if (fabs(leftStickX) > deadZone || fabs(leftStickY) > deadZone) {
-            usingController = true;
+            globalState.usingController = true;
         }
 
-        if (usingController) {
+        if (globalState.usingController) {
             // Move virtual cursor based on left stick
             virtualCursor.x += leftStickX * cursorSpeed * GetFrameTime();
             virtualCursor.y += leftStickY * cursorSpeed * GetFrameTime();
@@ -2509,7 +2359,7 @@ void HandleGamepadMouseControl() {
             if (virtualCursor.y > GetScreenHeight()) virtualCursor.y = GetScreenHeight();
 
             // Only move real cursor if the menu or car UI is active
-            if (player.enter_car || gameState == APARTMENT || menuOpen || drawingSubwayUI) {
+            if (player.enter_car || gameState == APARTMENT || globalState.menuOpen || globalState.drawingSubwayUI) {
                 
                 SetMousePosition(virtualCursor.x, virtualCursor.y);
               
@@ -2532,8 +2382,8 @@ void DrawTank(Tank& tank){
     }
 
 
-    if (explodeTanks){
-        explodeTanks = false;
+    if (globalState.explodeTanks){
+        globalState.explodeTanks = false;
         for (Tank& tank : Tanks){
             tank.explode = true;
         }
@@ -2633,11 +2483,11 @@ void DrawMagicDoor(MagicDoor& magicDoor){
          
         if (player.position.x > magicDoor.position.x -10 && player.position.x < magicDoor.position.x +10){ //over magic door
             if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
-                openMagicDoor = true;
+                globalState.openMagicDoor = true;
                 transitionState = FADE_OUT;
             }
         }
-        if (openMagicDoor){
+        if (globalState.openMagicDoor){
             float deltaTime = GetFrameTime();
 
             // Update animation timer
@@ -2659,18 +2509,18 @@ void DrawMagicDoor(MagicDoor& magicDoor){
 }
 
 void moveUFO(UFO& ufo){
-    if (canMoveUfo){
+    if (globalState.canMoveUfo){
         //UFO drops down from the sky, hovers a few seconds, then darts off super fast.
         float deltaTime = GetFrameTime();
         int moveSpeed = 100;
         int stopPos = 400;
 
         
-        if (ufo.basePosition.y < stopPos && move_ufo && ufoTimer > 0){ //go from starting position to 400 y and wait for timer
+        if (ufo.basePosition.y < stopPos && globalState.move_ufo && globalState.ufoTimer > 0){ //go from starting position to 400 y and wait for timer
             ufo.basePosition.y += moveSpeed * deltaTime;
             ufo.basePosition.x = player.position.x-32;
         
-        }else if (ufoTimer <= 0){ //times up, shoot to the left fast
+        }else if (globalState.ufoTimer <= 0){ //times up, shoot to the left fast
             ufo.basePosition.x -= 2000 * deltaTime;
             ufo.basePosition.y -= 2000 * deltaTime;
             
@@ -2678,7 +2528,7 @@ void moveUFO(UFO& ufo){
 
         if (ufo.basePosition.x < -1000){
             ufo.basePosition = {-94.0, -200.0}; // reset ufo position if too far left.
-            canMoveUfo = false;
+            globalState.canMoveUfo = false;
 
         }
     }
@@ -2721,7 +2571,7 @@ void DrawUFO(){
         ufo.position.y 
     };
 
-    if (abductionBeam && gameState == CEMETERY){
+    if (globalState.abductionBeam && gameState == CEMETERY){
         //show abduction beam. if player is under UFO
         player.abduction = true;
         player.outline = true;
@@ -2869,15 +2719,15 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
     int screen_offsetX = 16;
     int screen_offsetY = -55;
 
-    if (fortuneTimer > 0){
+    if (globalState.fortuneTimer > 0){
         //nothing can interupt your fortune. 
-;        fortuneTimer -= GetFrameTime();
+;        globalState.fortuneTimer -= GetFrameTime();
     }
-    Vector2 screen_pos = GetWorldToScreen2D(dboxPosition, camera); // position to draw text and rectangle at. position is set to npc position
+    Vector2 screen_pos = GetWorldToScreen2D(globalState.dboxPosition, camera); // position to draw text and rectangle at. position is set to npc position
     //different NPCs have different sized Dialog boxes. Adjust size and offsets before drawing. 
     Color tint = WHITE;
     if (gameState == OUTSIDE || gameState == SUBWAY){
-        if (dealer){
+        if (globalState.dealer){
             boxWidth = 256;
             boxHeight = 128;
             offset = -135;
@@ -2885,7 +2735,7 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
             screen_offsetY = -128;
 
         }
-        if (teller){
+        if (globalState.teller){
             boxWidth = 300;
             boxHeight = 128;
             offset = -135;
@@ -2894,7 +2744,7 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
         
         }
 
-        if (overLiquor){
+        if (globalState.overLiquor){
             
             boxWidth = 300;
             boxHeight = 128;
@@ -2903,7 +2753,7 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
             screen_offsetY = -128;
         }
 
-        if (teller && buyFortune && fortuneTimer <= 0){
+        if (globalState.teller && globalState.buyFortune && globalState.fortuneTimer <= 0){
             phrase = "Namaste";
         }
 
@@ -2928,10 +2778,10 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
     DrawRectangle(screen_pos.x, screen_pos.y + offset, boxWidth, boxHeight, Fade(BLACK, 0.3f));
     DrawText(phrase.c_str(), screen_pos.x+ screen_offsetX, screen_pos.y + screen_offsetY, textSize, tint); //Draw Phrase
     
-    if (dealer && player.money >= 100){
+    if (globalState.dealer && player.money >= 100){
         if (IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
-            if (can_sell_drugs){
-                can_sell_drugs = false;
+            if (globalState.can_sell_drugs){
+                globalState.can_sell_drugs = false;
                 addMoney(-100);
                 AddItemToInventory("Drugs");
 
@@ -2939,10 +2789,10 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
         }
     }
     //GUI buttons for certain NPC interactions. 
-    if (player.money >= 100 && dealer && GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY") ) //button pressed
+    if (player.money >= 100 && globalState.dealer && GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY") ) //button pressed
         {           
-            if (can_sell_drugs){ //can sell drugs gets reset once you take the drug
-                can_sell_drugs = false; // Dealer only has 1 drug for now. 
+            if (globalState.can_sell_drugs){ //can sell drugs gets reset once you take the drug
+                globalState.can_sell_drugs = false; // Dealer only has 1 drug for now. 
                 addMoney(-100);
                 AddItemToInventory("Drugs");
                 for (NPC& npc : npcs)
@@ -2953,12 +2803,12 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
             }
         }
 
-    if (teller && !buyFortune && player.money >= 100){
+    if (globalState.teller && !globalState.buyFortune && player.money >= 100){
         if (IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
-            if (canGiveFortune){
-                canGiveFortune = false;
-                buyFortune = true;
-                fortuneTimer = 5;
+            if (globalState.canGiveFortune){
+                globalState.canGiveFortune = false;
+                globalState.buyFortune = true;
+                globalState.fortuneTimer = 5;
             }
 
             addMoney(-100);
@@ -2968,12 +2818,12 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
         }
     }
 
-    if (teller && !buyFortune && player.money >= 100 &&  GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY") ){
+    if (globalState.teller && !globalState.buyFortune && player.money >= 100 &&  GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY") ){
 
-        if (canGiveFortune){
-            canGiveFortune = false;
-            buyFortune = true;
-            fortuneTimer = 5;
+        if (globalState.canGiveFortune){
+            globalState.canGiveFortune = false;
+            globalState.buyFortune = true;
+            globalState.fortuneTimer = 5;
             
             addMoney(-100);
             phrase = GetTellerPhrase();
@@ -2984,7 +2834,7 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
                 } 
         }
     }
-    if (overLiquor && showLiquor && player.money >= 100 &&  GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY")){
+    if (globalState.overLiquor && globalState.showLiquor && player.money >= 100 &&  GuiButton((Rectangle){ screen_pos.x+16, screen_pos.y-64, 64,48 }, "BUY")){
         if (!player.hasWhiskey){
             addMoney(-100);
             AddItemToInventory("whiskey");
@@ -3003,7 +2853,7 @@ void EnterCar(){
     DrawTextureV(resources.breakLight, breakLight_pos, WHITE);
     DrawTextureV(resources.lightBeam, light_pos, WHITE);
     EndBlendMode();
-    show_carUI = true;    
+    globalState.show_carUI = true;    
 
     
 }
@@ -3020,15 +2870,15 @@ void playerOutsideInteraction(){
     int dist = abs(player.position.x - ap_max);
 
     if (dist > 1000){ //get far enough away from the apartment and you can sleep again. 
-        hasSlept = false;
+        globalState.hasSlept = false;
     }
 
 
 
-    int lot_min = vacantLotX - 20;
-    int lot_max = vacantLotX + 20;
+    int lot_min = globalState.vacantLotX - 20;
+    int lot_max = globalState.vacantLotX + 20;
 
-    if (player_car.position.x < road_min && move_car){
+    if (player_car.position.x < road_min && globalState.move_car){
         transitionState = FADE_OUT;
         
         //player_car.position = Vector2 {900, 700 - 32};
@@ -3037,69 +2887,69 @@ void playerOutsideInteraction(){
 
 
 
-    if (!start) show_dbox = false; // reset to false so it can fall through unless start where we first show tutorial text
-    over_apartment = false;
-    over_lot = false;
-    over_car = false;
-    overLiquor = false;
-    overSubway = false;
+    if (!globalState.start) globalState.show_dbox = false; // reset to false so it can fall through unless start where we first show tutorial text
+    globalState.over_apartment = false;
+    globalState.over_lot = false;
+    globalState.over_car = false;
+    globalState.overLiquor = false;
+    globalState.overSubway = false;
 
     
 
     //consider abstracting this into a seperate function. is_interacting, return true if any of these checks 
-    if (player.position.x > pc_min && player.position.x < pc_max && has_car_key && !player.enter_car){ //over_car with keys
-        over_car = true;
-        if (fortuneTimer <= 0) phrase = "PRESS UP TO ENTER"; //Don't interupt the fortune teller
-        show_dbox = true;
-        dboxPosition = player.position;
+    if (player.position.x > pc_min && player.position.x < pc_max && globalState.has_car_key && !player.enter_car){ //over_car with keys
+        globalState.over_car = true;
+        if (globalState.fortuneTimer <= 0) phrase = "PRESS UP TO ENTER"; //Don't interupt the fortune teller
+        globalState.show_dbox = true;
+        globalState.dboxPosition = player.position;
         
         
     }
 
     
     if (player.position.x > lot_min && player.position.x < lot_max){ //over_lot
-        over_lot = true;
-        if (fortuneTimer <= 0) phrase = "PRESS UP TO ENTER";
-        dboxPosition = player.position;
+        globalState.over_lot = true;
+        if (globalState.fortuneTimer <= 0) phrase = "PRESS UP TO ENTER";
+        globalState.dboxPosition = player.position;
         
-        show_dbox = true;
+        globalState.show_dbox = true;
 
     }
     
     if (player.position.x > ap_min  && player.position.x < ap_max){ //over_apartment
-        over_apartment = true;
-        if (fortuneTimer <= 0) phrase = "PRESS UP TO ENTER";
-        dboxPosition = player.position;
-        dboxPosition.y = player.position.y + 10;
-        show_dbox = true;
+        globalState.over_apartment = true;
+        if (globalState.fortuneTimer <= 0) phrase = "PRESS UP TO ENTER";
+        globalState.dboxPosition = player.position;
+        globalState.dboxPosition.y = player.position.y + 10;
+        globalState.show_dbox = true;
         
     }
 
     if (player.position.x > 1124 && player.position.x < 1144){
-        overLiquor = true;
-        if (!showLiquor && fortuneTimer <=0){
+        globalState.overLiquor = true;
+        if (!globalState.showLiquor && globalState.fortuneTimer <=0){
             phrase = "Up to Enter";
         }
         //dont set phrase here, because it will override showing whiskey button. 
-        dboxPosition = player.position;
-        show_dbox = true;
+        globalState.dboxPosition = player.position;
+        globalState.show_dbox = true;
     }
 
     
-    if (player.position.x < 64 && !move_ufo && gameState == OUTSIDE){
-        move_ufo = true;
-        ufoTimer = 10; //it takes 10 seconds for the UFO to move into position and hover before shooting off. 
+    if (player.position.x < 64 && !globalState.move_ufo && gameState == OUTSIDE){
+        globalState.move_ufo = true;
+        globalState.ufoTimer = 10; //it takes 10 seconds for the UFO to move into position and hover before shooting off. 
         std::cout << "Moving UFO";
 
     }
 
     if (player.position.x > 4579 && player.position.x < 4599){
-        overSubway = true;
-        if (!showLiquor && fortuneTimer <=0){
+        globalState.overSubway = true;
+        if (!globalState.showLiquor && globalState.fortuneTimer <=0){
             phrase = "PRESS UP TO ENTER SUBWAY";
         }
-        dboxPosition = player.position;
-        show_dbox = true;
+        globalState.dboxPosition = player.position;
+        globalState.show_dbox = true;
     }
 
 }
@@ -3107,10 +2957,10 @@ void playerOutsideInteraction(){
 
 
 void RenderSubway(){
-    drunk = false;
+    globalState.drunk = false;
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
     //we only do this in subway and park, do we not have positional audio outside these scenes? because we are not calling this whenever zoms spawn. 
-    show_dbox = false;
+    globalState.show_dbox = false;
 
     
     float parallaxBackground = camera.target.x * 0.5f;  // Background moves even slower
@@ -3128,7 +2978,7 @@ void RenderSubway(){
     HandleKeyboardAiming();
 
 
-    if (drunk){
+    if (globalState.drunk){
         BeginShaderMode(shaders.glowShader2);
 
     }
@@ -3160,38 +3010,38 @@ void RenderSubway(){
 
         if (npc.interacting){ //Take the first one you find. only one npc should be able to interact. If you click on multiple NPCs really fast
         //the dialog box jumps around depending on the timer. Need a way to cancel all interaction except the last one. 
-            dboxPosition = npc.position;   
-            show_dbox = true;   //dialogBox
+            globalState.dboxPosition = npc.position;   
+            globalState.show_dbox = true;   //dialogBox
             if (npc.dealer){
                 phrase = "I gOt wHat YoU NEEd\n\nDrugs: $100";
-                dealer = true;
+                globalState.dealer = true;
                 showInventory = true;
 
             }else if (npc.teller){
-                if (!buyFortune){
+                if (!globalState.buyFortune){
                     phrase = "Fortune: $100";
-                    teller = true;
+                    globalState.teller = true;
 
-                }else if (buyFortune){
-                    if (fortuneTimer <= 0){
+                }else if (globalState.buyFortune){
+                    if (globalState.fortuneTimer <= 0){
                         phrase = npc.speech;
                     }
                     
-                    teller = true;
+                    globalState.teller = true;
                 }
                 
 
             } else{
-                if (fortuneTimer <= 0 && !teller && !dealer){
+                if (globalState.fortuneTimer <= 0 && !globalState.teller && !globalState.dealer){
                     phrase = npc.speech; //randomized speech
-                    dealer = false;
+                    globalState.dealer = false;
 
                 }
              
             }
         }else{
-            dealer = false;
-            teller = false;
+            globalState.dealer = false;
+            globalState.teller = false;
         
         }
         
@@ -3203,9 +3053,9 @@ void RenderSubway(){
     DrawTexture(resources.train, train.position.x, train.position.y-27, WHITE); //draw train in front of NPCs and player
 
 
-    drawingSubwayUI = false;
-    if (player.position.x > 3001 && player.position.x < 3021 && trainAtStation){
-        drawingSubwayUI = true;
+    globalState.drawingSubwayUI = false;
+    if (player.position.x > 3001 && player.position.x < 3021 && globalState.trainAtStation){
+        globalState.drawingSubwayUI = true;
         DrawSubwayUI(); // inside draw for whatever reason
 
         train.stopTimer = 0;//hold the train
@@ -3215,7 +3065,7 @@ void RenderSubway(){
         }
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-            if (buttonPark && !player.enter_train){ //hovering button street or park
+            if (globalState.buttonPark && !player.enter_train){ //hovering button street or park
                 player.enter_train = true;
                 player.position.x = train.position.x + 480;
                 
@@ -3241,27 +3091,27 @@ void RenderSubway(){
         RenderInventory();  // Render the inventory 
     }
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
-        if (!usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+        if (!globalState.usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
-        if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+        if (!globalState.usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
     if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player);
 
-    subwayExit = false;
+    globalState.subwayExit = false;
     if ((player.position.x > 3700 && player.position.x < 3720 || player.position.x > 1900 && player.position.x < 1920)&& gameState == SUBWAY){ //far right or far left of subway, both have exit
 
         phrase = "Up TO EXIT SUBWAY";
-        show_dbox = true;
-        dboxPosition = player.position;
-        subwayExit = true;
+        globalState.show_dbox = true;
+        globalState.dboxPosition = player.position;
+        globalState.subwayExit = true;
         if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
             transitionState = FADE_OUT;
             
         }
     }
 
-    if (show_dbox){
+    if (globalState.show_dbox){
         DrawDialogBox(camera, 0, 0, 20);
     }
 
@@ -3284,7 +3134,7 @@ void RenderAstral(){
     float parallaxClouds = camera.target.x * .8;
     float parallaxBackground = camera.target.x * 0.9f;  // Background moves even slower 
     
-    show_dbox = false;
+    globalState.show_dbox = false;
     
     BeginMode2D(camera);
     
@@ -3294,7 +3144,7 @@ void RenderAstral(){
     HandleKeyboardAiming();
 
 
-    if (drunk){
+    if (globalState.drunk){
         BeginShaderMode(shaders.glowShader2);
 
     }
@@ -3392,15 +3242,15 @@ void RenderAstral(){
         RenderInventory();  // Render the inventory 
     }
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
-        if (!usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+        if (!globalState.usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
-        if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+        if (!globalState.usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
    
     if ((player.hasGun || player.hasShotgun || player.hasMac10) && !player.enter_car) DrawHUD(player);
 
-    if (show_dbox){
+    if (globalState.show_dbox){
         DrawDialogBox(camera, 0, 0, 20);
     }
 
@@ -3413,26 +3263,26 @@ void RenderCemetery(){
     int carMin = 2765;
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
     //UFO shows up in the begining at the far left outside, and once you have the cemetery key in the cemetery. 
-    if (hasCemeteryKey && gameState == CEMETERY) {
+    if (globalState.hasCemeteryKey && gameState == CEMETERY) {
         //playe UFO hum when ufo is present. Use UFO.baseposition not position
 
         PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.basePosition, player.position, 800.0f);
         
     }
     
-    playOwl = false; //reset owl
+    globalState.playOwl = false; //reset owl
 
     
     //dont spawn unless raise zombies is true. raise zombies is set to true by talking to the hobo, and finding the gun
-    if (!player.enter_car && player.position.x < 1900 && !zombieWave3 && !firstHobo){ // walk to far left and zombies spawn again
-        zombieWave3 = true;
+    if (!player.enter_car && player.position.x < 1900 && !globalState.zombieWave3 && !globalState.firstHobo){ // walk to far left and zombies spawn again
+        globalState.zombieWave3 = true;
         StartZombieSpawn(10, 2);
-        minDistToPlayer = 50;
-        maxDistToPlayer = 200;
+        globalState.minDistToPlayer = 50;
+        globalState.maxDistToPlayer = 200;
     }
 
 
-    if (move_car){
+    if (globalState.move_car){
         player_car.carSpeed = 100;
         
         player_car.position.x -= player_car.carSpeed * GetFrameTime();
@@ -3441,48 +3291,48 @@ void RenderCemetery(){
         //EndBlendMode();
     }
     
-    if (!player.enter_car && raiseZombies){ 
+    if (!player.enter_car && globalState.raiseZombies){ 
         //zombies that spawn when you exit car
-        raiseZombies = false;
-        if (hasCemeteryKey){
+        globalState.raiseZombies = false;
+        if (globalState.hasCemeteryKey){
             StartZombieSpawn(10, 2); //you should have the shotgun here so spawn more. 
-            minDistToPlayer = 50;
-            maxDistToPlayer = 200;
+            globalState.minDistToPlayer = 50;
+            globalState.maxDistToPlayer = 200;
         }else{
             StartZombieSpawn(5, 3); //first zombie encounter
-            minDistToPlayer = 50;
-            maxDistToPlayer = 200;
+            globalState.minDistToPlayer = 50;
+            globalState.maxDistToPlayer = 200;
         }       
     }
 
-    show_dbox = false;
-    over_gate = false;
-    over_car = false;
+    globalState.show_dbox = false;
+    globalState.over_gate = false;
+    globalState.over_car = false;
     //Cemetery Gate
-    if (player.position.x > 3069 && player.position.x < 3089 && !hasCemeteryKey){
+    if (player.position.x > 3069 && player.position.x < 3089 && !globalState.hasCemeteryKey){
         phrase = "Locked";
-        show_dbox = true;
-        dboxPosition = player.position;
+        globalState.show_dbox = true;
+        globalState.dboxPosition = player.position;
     }
 
 
-    if (player.position.x > 3069 && player.position.x < 3089 && hasCemeteryKey){
+    if (player.position.x > 3069 && player.position.x < 3089 && globalState.hasCemeteryKey){
             phrase = "UP TO ENTER";
-            over_gate = true;
-            show_dbox = true;
-            dboxPosition = player.position;
+            globalState.over_gate = true;
+            globalState.show_dbox = true;
+            globalState.dboxPosition = player.position;
 
     }
     
-    if (player_car.position.x < carMin && !leave_cemetery){
-        move_car = false;
+    if (player_car.position.x < carMin && !globalState.leave_cemetery){
+        globalState.move_car = false;
     }
 
    if (player.position.x > carMin && player.position.x < carMax){
-        over_car = true;
+        globalState.over_car = true;
         phrase = "UP TO ENTER";
-        show_dbox = true;
-        dboxPosition = player.position;
+        globalState.show_dbox = true;
+        globalState.dboxPosition = player.position;
         
    }
 
@@ -3494,7 +3344,7 @@ void RenderCemetery(){
     HandleKeyboardAiming();
     
     ClearBackground(customBackgroundColor);
-    if (!move_car && !player.enter_car){
+    if (!globalState.move_car && !player.enter_car){
         camera.target = player.position;
     }
     
@@ -3502,7 +3352,7 @@ void RenderCemetery(){
     float parallaxTrees = camera.target.x * .8;
     float parallaxBackground = camera.target.x * 0.9f;  // Background moves even slower 
 
-    if (drunk){
+    if (globalState.drunk){
         BeginShaderMode(shaders.glowShader2);
 
     } 
@@ -3533,9 +3383,9 @@ void RenderCemetery(){
 
     HandleGrenades();
 
-    abductionBeam = false;
+    globalState.abductionBeam = false;
     if (player.position.x > 3929 && player.position.x < 3949){
-        abductionBeam = true;
+        globalState.abductionBeam = true;
 
     }
 
@@ -3544,14 +3394,14 @@ void RenderCemetery(){
         
     }
 
-    if (hasCemeteryKey){ // dont show UFO until later in the game, this moves the UFO from main street to cemetery, we need to move it back somehow. 
+    if (globalState.hasCemeteryKey){ // dont show UFO until later in the game, this moves the UFO from main street to cemetery, we need to move it back somehow. 
         ufo.basePosition = {3900, 400}; // 2 ufos?
         DrawUFO();
     }
 
     //DrawShovelPickup(mousePosition, camera);
 
-    if (!player.hasShovel && !firstHobo){ //visit the hobo before shovel appears in cemetery
+    if (!player.hasShovel && !globalState.firstHobo){ //visit the hobo before shovel appears in cemetery
         DrawItem(Vector2 {1870, 700}, "shovel");
     }
 
@@ -3571,7 +3421,7 @@ void RenderCemetery(){
     }
     DrawBullets(); //draw bullets in cemetery after everything else. 
 
-    if (show_carUI && !move_car && player.enter_car){ //destination menu //draw UI inside mode2d
+    if (globalState.show_carUI && !globalState.move_car && player.enter_car){ //destination menu //draw UI inside mode2d
         DrawCarUI(player_car,camera);
     }
     renderBoxes();
@@ -3585,17 +3435,17 @@ void RenderCemetery(){
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
-        if (!usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+        if (!globalState.usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
-        if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+        if (!globalState.usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
 
-    if (show_dbox && !player.enter_car){
+    if (globalState.show_dbox && !player.enter_car){
         DrawDialogBox(camera, 0, 0, 20);
     }
 
-    if (over_gate && hasCemeteryKey){
+    if (globalState.over_gate && globalState.hasCemeteryKey){
         DrawDialogBox(camera, 0, 0, 20);
 
     }
@@ -3614,7 +3464,7 @@ void RenderCemetery(){
     }
 
     if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT)){//exit car
-        if (player.enter_car && !move_car){
+        if (player.enter_car && !globalState.move_car){
             SoundManager::getInstance().StopMusic("CarRun"); //turn off car audio when exiting car
             PlaySound(SoundManager::getInstance().GetSound("CarDoorClose"));
             player.enter_car = false;
@@ -3627,28 +3477,28 @@ void RenderCemetery(){
 }
 
 void RenderRoad(){
-    drunk = false; //sober up 
-    if (player_car.position.x < 200 && !reverse_road){//transition to cemetery
+    globalState.drunk = false; //sober up 
+    if (player_car.position.x < 200 && !globalState.reverse_road){//transition to cemetery
         
         transitionState = FADE_OUT;
-        move_car = true;
+        globalState.move_car = true;
 
-    if (!firstHobo && !playOwl){ // only play owl sound if zombies are going to spawn
-        playOwl = true;
+    if (!globalState.firstHobo && !globalState.playOwl){ // only play owl sound if zombies are going to spawn
+        globalState.playOwl = true;
         PlaySound(SoundManager::getInstance().GetSound("Owl"));
     }
 
     }
-    if (player_car.position.x > 800 && reverse_road){
+    if (player_car.position.x > 800 && globalState.reverse_road){
         transitionState = FADE_OUT;
 
     }
 
 
-    hasSlept = false; // player can sleep if they have traveled.
-    hasWorked = false; //player can go to work if he has traveled. 
+    globalState.hasSlept = false; // player can sleep if they have traveled.
+    globalState.hasWorked = false; //player can go to work if he has traveled. 
 
-    if (drunk){
+    if (globalState.drunk){
         BeginShaderMode(shaders.glowShader2);
 
     }
@@ -3659,7 +3509,7 @@ void RenderRoad(){
     camera.target = Vector2 {512, 700};
     player_car.carSpeed = 200;
 
-    if (!reverse_road){
+    if (!globalState.reverse_road){
         player_car.position.x -= player_car.carSpeed * GetFrameTime();
     }else{
         
@@ -3682,7 +3532,7 @@ void RenderRoad(){
         Vector2 light_pos;
         float light_scale = 1.0f; // Default scale
 
-        if (!reverse_road){
+        if (!globalState.reverse_road){
             //light positions when not reversing
             breakLight_pos = {player_car.position.x + 88, player_car.position.y + 53};
             light_pos = {player_car.position.x - 225, player_car.position.y + 32};
@@ -3705,18 +3555,18 @@ void RenderRoad(){
     
     EndMode2D();
     showBigBadge();
-    if (!usingController) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D
+    if (!globalState.usingController) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D
    
 }
 
 void RenderGraveyard(){
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
     float digPos = 2350.0f;
-    if (player.position.x > 3437 and raiseZombies){
-        raiseZombies = false;
+    if (player.position.x > 3437 and globalState.raiseZombies){
+        globalState.raiseZombies = false;
         StartZombieSpawn(20, 1);
-        minDistToPlayer = 25;
-        maxDistToPlayer = 200;
+        globalState.minDistToPlayer = 25;
+        globalState.maxDistToPlayer = 200;
     }
 
 
@@ -3733,7 +3583,7 @@ void RenderGraveyard(){
     float parallaxBackground = camera.target.x * 0.9f;  // Background moves even slower 
     
 
-    if (drunk){
+    if (globalState.drunk){
         BeginShaderMode(shaders.glowShader2);
 
     }
@@ -3763,15 +3613,15 @@ void RenderGraveyard(){
         zombie.Update();
         zombie.Render();
 
-        if (zombie.isDying && !firstBlood && gameState == GRAVEYARD){ //first zombie that is dying in the graveyard
-            firstBlood = true;
-            dz_pos = zombie.position;
+        if (zombie.isDying && !globalState.firstBlood && gameState == GRAVEYARD){ //first zombie that is dying in the graveyard
+            globalState.firstBlood = true;
+            globalState.dz_pos = zombie.position;
             
         }
     }
 
 
-    if (!start) show_dbox = false; //set to false to hide dbox when not over spot unless start where we first show tutorial text
+    if (!globalState.start) globalState.show_dbox = false; //set to false to hide dbox when not over spot unless start where we first show tutorial text
 
     for (NPC& ghost: ghosts){
         ghost.Update();
@@ -3781,8 +3631,8 @@ void RenderGraveyard(){
         
 
         if (ghost.interacting && ghost.isActive){
-            show_dbox = true;
-            dboxPosition = ghost.position;
+            globalState.show_dbox = true;
+            globalState.dboxPosition = ghost.position;
             phrase = ghost.speech;
             if (ghost.interactions >= 2){ //take the watch back, if you seen all the dialog
                 if (player.hasWatch){
@@ -3804,8 +3654,8 @@ void RenderGraveyard(){
                 {1024, 70, static_cast<float>(resources.GraveyardGate.width), static_cast<float>(resources.GraveyardGate.height)}, {0, 0}, 0.0f, WHITE);
 
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
-    if (firstBlood && !player.hasBadge){
-        drawDeadZombie(dz_pos, mouseWorldPos);
+    if (globalState.firstBlood && !player.hasBadge){
+        drawDeadZombie(globalState.dz_pos, mouseWorldPos);
     }
     renderBoxes();
     DrawPickups();
@@ -3813,10 +3663,10 @@ void RenderGraveyard(){
     showBigBadge();
     
 
-    if (badgeTimer > 0){ //show badge explanation
-        show_dbox = true;
+    if (globalState.badgeTimer > 0){ //show badge explanation
+        globalState.show_dbox = true;
         DrawDialogBox(camera, 0, 0, 20);
-        badgeTimer -= GetFrameTime();
+        globalState.badgeTimer -= GetFrameTime();
     }
 
     if (showInventory){
@@ -3824,17 +3674,17 @@ void RenderGraveyard(){
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
-        if (!usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+        if (!globalState.usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
-        if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+        if (!globalState.usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
     
     if (player.position.x > 3067 && player.position.x < 3087){
 
         phrase = "PRESS UP TO EXIT";
-        show_dbox = true;
-        dboxPosition = player.position;
+        globalState.show_dbox = true;
+        globalState.dboxPosition = player.position;
         if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
             transitionState = FADE_OUT;
             //fadeout to cemetery. Handled in handleTransition function
@@ -3843,16 +3693,16 @@ void RenderGraveyard(){
     }
 
     if (player.position.x > digPos - 10 && player.position.x < digPos + 10){
-        digSpot = true;
+        globalState.digSpot = true;
         phrase = "Dig";
-        show_dbox = true;
-        dboxPosition = player.position;
+        globalState.show_dbox = true;
+        globalState.dboxPosition = player.position;
         
     }else{
-        digSpot = false;
+        globalState.digSpot = false;
     }
 
-    if (show_dbox){
+    if (globalState.show_dbox){
         DrawDialogBox(camera, 0, 0, 20);
 
     }
@@ -3876,27 +3726,27 @@ void RenderApartment(){
     player.position.x -= 20; //ensure over_apartment = false
     int screen_center = (screenWidth - resources.apartment.width)/2;
 
-    if (drunk){
+    if (globalState.drunk){
         BeginShaderMode(shaders.glowShader2);
 
     }
     
 
-    ClearBackground(ApartmentBgColor);
+    ClearBackground(globalState.ApartmentBgColor);
 
     DrawTexture(resources.apartment, screen_center, 0, WHITE);
     EndShaderMode(); ////////////////////////////SHADER OFF
 
     
-    if (showAPUI){
+    if (globalState.showAPUI){
         DrawApartmentUI();
     }
     
     
     
     //DrawText("Apartment", screenWidth/2 - 128, 60, 50, WHITE);
-    if (!has_car_key){
-        DrawTexture(resources.carKey, carKeysPos.x, carKeysPos.y, WHITE);
+    if (!globalState.has_car_key){
+        DrawTexture(resources.carKey, globalState.carKeysPos.x, globalState.carKeysPos.y, WHITE);
     }
     
 
@@ -3905,8 +3755,8 @@ void RenderApartment(){
         
     }
 
-    if (openDrawer){
-        DrawTexture(resources.OpenDrawer, drawerPos.x, drawerPos.y, WHITE);
+    if (globalState.openDrawer){
+        DrawTexture(resources.OpenDrawer, globalState.drawerPos.x, globalState.drawerPos.y, WHITE);
     }
 
     //UP DOWN OR ESCAPE TO EXIT APARTMENT
@@ -3922,34 +3772,36 @@ void RenderApartment(){
 }
 
 void RenderLot(){
-    over_exit = false;
-    digSpot = false;
-    show_dbox = false; //turn off dbox if no one is interacting
+    globalState.dealer = false; // incase of interacting with dealer while entering lot
+    globalState.teller = false;
+    globalState.over_exit = false;
+    globalState.digSpot = false;
+    globalState.show_dbox = false; //turn off dbox if no one is interacting
     int digPos = 2600;
     if (player.position.x < 2782 && player.position.x > 2742){
-        over_exit = true;
+        globalState.over_exit = true;
         phrase = "UP TO EXIT";
-        dboxPosition = player.position;
-        show_dbox = true;
+        globalState.dboxPosition = player.position;
+        globalState.show_dbox = true;
     }
 
     if (player.position.x > digPos - 10 && player.position.x < digPos + 10){
-        digSpot = true;
+        globalState.digSpot = true;
     }
 
-    if (crowbarDialogTimer > 0){
-        show_dbox = true;
+    if (globalState.crowbarDialogTimer > 0){
+        globalState.show_dbox = true;
         phrase = "Press V to swing crowbar";
-        dboxPosition = player.position;
-        crowbarDialogTimer -= GetFrameTime(); //show crowbar dialog for 5 seconds. You are standing by breakable boxes with a crowbar in hand. 
+        globalState.dboxPosition = player.position;
+        globalState.crowbarDialogTimer -= GetFrameTime(); //show crowbar dialog for 5 seconds. You are standing by breakable boxes with a crowbar in hand. 
         //break the boxes. with V.
     }
 
 
 
-    over_lot = false;
+    globalState.over_lot = false;
     if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
-        if (over_exit){
+        if (globalState.over_exit){
             transitionState = FADE_OUT;
 
         }
@@ -3978,7 +3830,7 @@ void RenderLot(){
 
    
     HandleKeyboardAiming();
-    if (drunk){
+    if (globalState.drunk){
         BeginShaderMode(shaders.glowShader2);
 
     }
@@ -4007,27 +3859,27 @@ void RenderLot(){
 
         if (hobo.interacting){ 
    
-            if (firstHobo){ // only raise zombie and draw shovel if you have talked the hobo
-                firstHobo = false;
+            if (globalState.firstHobo){ // only raise zombie and draw shovel if you have talked the hobo
+                globalState.firstHobo = false;
                 
-                drawShovel = true; //shovel isn't in cemetery until you talk to hobo.
+                globalState.drawShovel = true; //shovel isn't in cemetery until you talk to hobo.
                 if (player.hasGun){
-                    raiseZombies = true; // zombies don't spawn until you talk to hobo. 
+                    globalState.raiseZombies = true; // zombies don't spawn until you talk to hobo. 
                 }
             }
 
-            if (hobo.interactions == 1 && hobo.clickCount == 6 && !hasCemeteryKey){
+            if (hobo.interactions == 1 && hobo.clickCount == 6 && !globalState.hasCemeteryKey){
                 //give cemetery key
                 AddItemToInventory("cemeteryKey");
-                hasCemeteryKey = true;
+                globalState.hasCemeteryKey = true;
                 showInventory = true;
-                raiseZombies = true;
+                globalState.raiseZombies = true;
                 PlaySound(SoundManager::getInstance().GetSound("Keys"));
             }
 
-            dboxPosition = hobo.position;
-            dealer = false; // dealer gets left on somewhere
-            show_dbox = true;   //dialogBox
+            globalState.dboxPosition = hobo.position;
+            globalState.dealer = false; // dealer gets left on somewhere
+            globalState.show_dbox = true;   //dialogBox
         
             phrase = hobo.speech;
                       
@@ -4048,7 +3900,7 @@ void RenderLot(){
 
     showBigBadge();
 
-    if (show_dbox){      
+    if (globalState.show_dbox){      
         DrawDialogBox(camera, 0, 0, 20); // draw box size of 0x0. hobo has no border box
     }  
 
@@ -4057,11 +3909,11 @@ void RenderLot(){
         RenderInventory();  // Render the inventory 
     }
 
-    if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
+    if (!globalState.usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
 }
 
 void RenderPark(){
-    drunk = false;
+    globalState.drunk = false;
     BeginMode2D(camera);  // Begin 2D mode with the camera
     ClearBackground(customBackgroundColor);
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
@@ -4069,16 +3921,16 @@ void RenderPark(){
     float parallaxBackground = camera.target.x * 0.9f;  // Background moves even slower
     float ParallaxBuildings = camera.target.x * 0.7;
     float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
-    over_car = false;
-    if (player.position.x > player_car.position.x && player.position.x < player_car.position.x +30 && !subwayToPark){
-        over_car = true;
+    globalState.over_car = false;
+    if (player.position.x > player_car.position.x && player.position.x < player_car.position.x +30 && !globalState.subwayToPark){
+        globalState.over_car = true;
     }
     
 
     camera.target.x = player.position.x;
     
 
-    if (drunk){
+    if (globalState.drunk){
         BeginShaderMode(shaders.glowShader2);
 
     }
@@ -4111,7 +3963,7 @@ void RenderPark(){
    
 
     //DrawPlayerCar
-    if (!subwayToPark){
+    if (!globalState.subwayToPark){
         float CarFrameWidth = 128.0;
         Rectangle sourceRecCar = {player_car.currentFrame * CarFrameWidth, 0, CarFrameWidth, CarFrameWidth};
         DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE); //draw player_car
@@ -4129,22 +3981,22 @@ void RenderPark(){
 
     if (player.enter_car) EnterCar(); //draws headlights and such
 
-    show_dbox = false;//reset box
+    globalState.show_dbox = false;//reset box
     
     for (NPC& npc : ParkNpcs){  
         if (npc.MiB){//update mibs if cemeterykey and no zombies. Mib activates zombies, then disapears
-            if (hasCemeteryKey && mibTimer > 0){//mibTimer is initially set to 3 seconds
+            if (globalState.hasCemeteryKey && globalState.mibTimer > 0){//mibTimer is initially set to 3 seconds
                 npc.Update();
                 npc.Render();
                 npc.ClickNPC();
                 //mib shows up in park, interacting with him spawns zombies and he vanishes
                 if (npc.interacting){
-                    dboxPosition = npc.position;
-                    show_dbox = true;   //dialogBox
-                    raiseParkZombies = true;
-                    mibTimer -= GetFrameTime(); //mib timer tics down when interacting for 3 seconds then deactivate 
+                    globalState.dboxPosition = npc.position;
+                    globalState.show_dbox = true;   //dialogBox
+                    globalState.raiseParkZombies = true;
+                    globalState.mibTimer -= GetFrameTime(); //mib timer tics down when interacting for 3 seconds then deactivate 
                     phrase = npc.speech;//WE are Watching You
-                    if (mibTimer <= 0){
+                    if (globalState.mibTimer <= 0){
                         npc.isActive = false;
                     }
                 }
@@ -4165,8 +4017,8 @@ void RenderPark(){
             npc.Render();
             npc.ClickNPC();
             if (npc.interacting){
-                dboxPosition = npc.position;
-                show_dbox = true;
+                globalState.dboxPosition = npc.position;
+                globalState.show_dbox = true;
                 phrase = npc.speech;
             }
             if (!npc.isActive && npc.CanSpawnZombie){ //wait untill NPC is not active before raising zombie, so death animation can finish.  
@@ -4187,7 +4039,7 @@ void RenderPark(){
         UpdateZombieTarget(zombie, ParkNpcs);
     }
 
-    if (show_carUI && !move_car && player.enter_car){ //destination menu //Draw inside mode2d
+    if (globalState.show_carUI && !globalState.move_car && player.enter_car){ //destination menu //Draw inside mode2d
         DrawCarUI(player_car, camera);
         //drawingCarUI
         
@@ -4208,12 +4060,12 @@ void RenderPark(){
     showBigBadge();
 
     DrawMoney(); //draw money after EndMode2d()
-    overSubway = false;
+    globalState.overSubway = false;
     if (player.position.x > 2025 && player.position.x < 2045 && gameState == PARK){
         phrase = "Up TO ENTER SUBWAY";
-        show_dbox = true;
-        dboxPosition = player.position;
-        overSubway = true;
+        globalState.show_dbox = true;
+        globalState.dboxPosition = player.position;
+        globalState.overSubway = true;
         if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
             transitionState = FADE_OUT;
         }
@@ -4226,7 +4078,7 @@ void RenderPark(){
     }
 
     if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT)){
-        if (player.enter_car && !move_car){ // dont exit car if it's still moving.
+        if (player.enter_car && !globalState.move_car){ // dont exit car if it's still moving.
             PlaySound(SoundManager::getInstance().GetSound("CarDoorClose")); 
             player.enter_car = false;
             player_car.currentFrame = 0;
@@ -4235,22 +4087,22 @@ void RenderPark(){
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
-        if (!usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+        if (!globalState.usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
-        if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+        if (!globalState.usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
-    if (show_dbox){
+    if (globalState.show_dbox){
         DrawDialogBox(camera, 0, 0, 20);
 
     }
 
 
-    if (raiseParkZombies){
-        raiseParkZombies = false;
+    if (globalState.raiseParkZombies){
+        globalState.raiseParkZombies = false;
         StartZombieSpawn(10, 3);
-        minDistToPlayer = 50; //zombies can spawn further away
-        maxDistToPlayer = 400;
+        globalState.minDistToPlayer = 50; //zombies can spawn further away
+        globalState.maxDistToPlayer = 400;
 
     }
 
@@ -4269,8 +4121,8 @@ void RenderPark(){
 }
 
 void RenderUFOinterior(){
-    show_dbox = false;
-    over_exit = false;
+    globalState.show_dbox = false;
+    globalState.over_exit = false;
     player.outline = false;
     camera.target = player.position;
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
@@ -4279,13 +4131,13 @@ void RenderUFOinterior(){
     float parallaxBackground = camera.target.x * 0.8f;  // Background moves even slower
 
     if (player.position.x < 2088 && player.position.x > 2068){
-        show_dbox = true;
+        globalState.show_dbox = true;
         phrase = "Up to exit UFO";
-        dboxPosition = player.position;
-        over_exit = true;
+        globalState.dboxPosition = player.position;
+        globalState.over_exit = true;
     }
     
-    if (drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
+    if (globalState.drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
         
     DrawTexturePro(resources.AstralBackground, {0, 0, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)},
     {parallaxBackground-1024, -500, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)}, {0, 0}, 0.0f, WHITE);
@@ -4308,8 +4160,8 @@ void RenderUFOinterior(){
 
         if (alien.interacting){
             phrase = alien.speech;
-            show_dbox = true;
-            dboxPosition = alien.position;
+            globalState.show_dbox = true;
+            globalState.dboxPosition = alien.position;
         }
     }
 
@@ -4339,12 +4191,12 @@ void RenderUFOinterior(){
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
-        if (!usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+        if (!globalState.usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
-        if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+        if (!globalState.usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
-    if (show_dbox){
+    if (globalState.show_dbox){
         DrawDialogBox(camera, 0, 0, 20);
 
     }
@@ -4357,36 +4209,36 @@ void RenderUFOinterior(){
 void RenderLab(){
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
     player.outline = false;
-    show_dbox = false;
-    over_elevator = false;
-    over_elevator2 = false;
-    over_Ebutton = false;
-    over_Ebutton2 = false;
-    over_console = false;
+    globalState.show_dbox = false;
+    globalState.over_elevator = false;
+    globalState.over_elevator2 = false;
+    globalState.over_Ebutton = false;
+    globalState.over_Ebutton2 = false;
+    globalState.over_console = false;
     //elevators[1].isOccupied = false;
     //player.onElevator = false;
 
 
     if (player.position.x < 3297 && player.position.x > 3277){
-        over_Ebutton2 = true;
+        globalState.over_Ebutton2 = true;
         phrase = "Call Elevator";
-        show_dbox = true;
-        dboxPosition = player.position;
+        globalState.show_dbox = true;
+        globalState.dboxPosition = player.position;
 
     }
 
     if (player.position.x < 3245 && player.position.x > 3225 && elevators[1].isOpen){
-        over_elevator2 = true;
+        globalState.over_elevator2 = true;
         phrase = "Up to Enter";
-        show_dbox = true;
-        dboxPosition = player.position;
+        globalState.show_dbox = true;
+        globalState.dboxPosition = player.position;
     }
 
-    if (player.position.x < 2710 && player.position.x > 2690 && showConsoleText){
-        over_console = true;
+    if (player.position.x < 2710 && player.position.x > 2690 && globalState.showConsoleText){
+        globalState.over_console = true;
         phrase = "Up to Destroy the Specimens";
-        show_dbox = true;
-        dboxPosition = player.position;
+        globalState.show_dbox = true;
+        globalState.dboxPosition = player.position;
 
     }
 
@@ -4396,7 +4248,7 @@ void RenderLab(){
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
     ClearBackground(customBackgroundColor);
     
-    if (drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
+    if (globalState.drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
         
     //No parallax for lobby
     DrawTexturePro(resources.labBackground, {0, 0, static_cast<float>(resources.officeBackground.width), static_cast<float>(resources.officeBackground.height)},
@@ -4407,7 +4259,7 @@ void RenderLab(){
     DrawElevator(elevators[1], resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
 
     for (Tank& tank : Tanks){
-        if (explodeTanks){
+        if (globalState.explodeTanks){
             tank.explode = true;
         }
         DrawTank(tank);
@@ -4427,8 +4279,8 @@ void RenderLab(){
         scientist.ClickNPC();
 
         if (scientist.interacting && scientist.scientist){ //only the head scientist can talk
-            show_dbox = true;
-            dboxPosition = scientist.position;
+            globalState.show_dbox = true;
+            globalState.dboxPosition = scientist.position;
             phrase = scientist.speech;
         }
 
@@ -4439,7 +4291,7 @@ void RenderLab(){
             spawnCyberZombie(spawnPos);
             spawnCyberZombie(spawnPos2);
             StartZombieSpawn(10, 2);
-            showConsoleText = true; //dont show console text until zombies are spawned. 
+            globalState.showConsoleText = true; //dont show console text until zombies are spawned. 
         }
 
         if (!scientist.isActive && scientist.CanSpawnZombie){  
@@ -4489,12 +4341,12 @@ void RenderLab(){
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
-        if (!usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+        if (!globalState.usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
-        if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+        if (!globalState.usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
-    if (show_dbox){
+    if (globalState.show_dbox){
         DrawDialogBox(camera, 0, 0, 20);
 
     }
@@ -4506,54 +4358,54 @@ void RenderLab(){
 //Office
 void RenderOffice(){
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
-    show_dbox = false;
-    over_elevator = false;
-    over_elevator2 = false;
-    over_Ebutton = false;
-    over_Ebutton2 = false;
+    globalState.show_dbox = false;
+    globalState.over_elevator = false;
+    globalState.over_elevator2 = false;
+    globalState.over_Ebutton = false;
+    globalState.over_Ebutton2 = false;
     //elevators[0].isOccupied = false;
     float deltaTime = GetFrameTime();
 
     //sound alarm and spawn in zoms immediatly 
-    if (can_spawn_zombies){
-        can_spawn_zombies = false;
+    if (globalState.can_spawn_zombies){
+        globalState.can_spawn_zombies = false;
         StartZombieSpawn(15, 1);
     }
 
     if (player.position.x < 2540 && player.position.x > 2520){ //first elevator button
-        over_Ebutton = true;
+        globalState.over_Ebutton = true;
         phrase = "Call Elevator";
-        show_dbox = true;
-        dboxPosition = player.position;
+        globalState.show_dbox = true;
+        globalState.dboxPosition = player.position;
     
     }
 
 
     if (player.position.x < 2488 && player.position.x > 2468){ //enter first elevator
         if (elevators[0].isOpen){
-            over_elevator = true;
+            globalState.over_elevator = true;
             phrase = "Up to Enter";
-            show_dbox = true;
-            dboxPosition = player.position;
+            globalState.show_dbox = true;
+            globalState.dboxPosition = player.position;
 
         } 
 
     }
 
-    if (player.position.x < 3295 && player.position.x > 3275 && !lockElevator2){ //second elevator button
-        over_Ebutton2 = true;
+    if (player.position.x < 3295 && player.position.x > 3275 && !globalState.lockElevator2){ //second elevator button
+        globalState.over_Ebutton2 = true;
         phrase = "Call Elevator";
-        show_dbox = true;
-        dboxPosition = player.position;
+        globalState.show_dbox = true;
+        globalState.dboxPosition = player.position;
     
     }
 
     if (player.position.x < 3295-52 && player.position.x > 3275-52){ //Enter second elevator 
         if (elevators[1].isOpen){
-            over_elevator2 = true;
+            globalState.over_elevator2 = true;
             phrase = "Up to Enter";
-            show_dbox = true;
-            dboxPosition = player.position;
+            globalState.show_dbox = true;
+            globalState.dboxPosition = player.position;
 
         }
 
@@ -4564,7 +4416,7 @@ void RenderOffice(){
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
     ClearBackground(customBackgroundColor);
     
-    if (drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
+    if (globalState.drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
            
 
     //No parallax for lobby
@@ -4593,13 +4445,13 @@ void RenderOffice(){
 
         if (office_npc.interacting){
             phrase = office_npc.speech;
-            show_dbox = true;
-            dboxPosition = office_npc.position;
+            globalState.show_dbox = true;
+            globalState.dboxPosition = office_npc.position;
 
             
         }
 
-        if (!office_npc.isActive && office_npc.CanSpawnZombie && !can_spawn_zombies){ //wait for can_spawn_zombies the global var triggered by no active robots. 
+        if (!office_npc.isActive && office_npc.CanSpawnZombie && !globalState.can_spawn_zombies){ //wait for can_spawn_zombies the global var triggered by no active robots. 
             office_npc.CanSpawnZombie = false;
             spawnZombie(office_npc.position); //NPC is transformed into a zombie. 
         }
@@ -4635,80 +4487,75 @@ void RenderOffice(){
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
-        if (!usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+        if (!globalState.usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
-        if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+        if (!globalState.usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
-    if (show_dbox){
+    if (globalState.show_dbox){
         DrawDialogBox(camera, 0, 0, 20);
 
     }
 
     if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player); //always show ammo when outside of car in the cemetery or NecroT
 
-    if (!spawning_zombies && spawn_frank && AreAllNPCsDeactivated(zombies)){ //all spawned zombies are dead , spawn frank 
-        spawn_frank = false;
-        lockElevator2 = false;
+    if (!globalState.spawning_zombies && globalState.spawn_frank && AreAllNPCsDeactivated(zombies)){ //all spawned zombies are dead , spawn frank 
+        globalState.spawn_frank = false;
+        globalState.lockElevator2 = false;
         spawnFrank(player.position + Vector2 {100, 0}); //spawn to the right of player, like he emerges from hiding. 
-    
 
     }
-
-
 }
 
 //Lobby
 void RenderLobby(){
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
     player.outline = false; //is set true in office, se set it back when exiting either to lobby or lab. 
-    show_dbox = false;   
-    over_exit = false;
-    over_Ebutton = false;
-    over_elevator = false;
-    over_medkit = false;
+    globalState.show_dbox = false;   
+    globalState.over_exit = false;
+    globalState.over_Ebutton = false;
+    globalState.over_elevator = false;
+    globalState.over_medkit = false;
     //elevator.isOccupied = false;
     elevators[0].isOccupied = false;
     float deltaTime = GetFrameTime();
 
-    
     if (player.position.x < 2051 && player.position.x > 2031){
-        over_medkit = true;
+        globalState.over_medkit = true;
         phrase = "Pills Here";
-        show_dbox = true;
-        dboxPosition = player.position;
+        globalState.show_dbox = true;
+        globalState.dboxPosition = player.position;
     }
 
-
     if (player.position.x < 2770 && player.position.x > 2750){ //exit lobby to necrotech exterior, triggered in uptoEnter()
-        over_exit = true;
+        globalState.over_exit = true;
         phrase = "UP TO EXIT";
-        show_dbox = true;
-        dboxPosition = player.position;
+        globalState.show_dbox = true;
+        globalState.dboxPosition = player.position;
         
     }
 
     if (player.position.x < 1330 && player.position.x > 1310){ //exit lobby to necrotech exterior, triggered in uptoEnter()
-        over_exit = true;
+        globalState.over_exit = true;
         phrase = "UP TO EXIT";
-        show_dbox = true;
-        dboxPosition = player.position;
+        globalState.show_dbox = true;
+        globalState.dboxPosition = player.position;
     }
 
     if (player.position.x < 2539 && player.position.x > 2519){
-        over_Ebutton = true;
+        globalState.over_Ebutton = true;
         phrase = "Call Elevator";
-        show_dbox = true;
-        dboxPosition = player.position;
+        globalState.show_dbox = true;
+        globalState.dboxPosition = player.position;
 
     }
 
     if (player.position.x < 2488 && player.position.x > 2468){
         if (elevators[0].isOpen){
-            over_elevator = true;
+            globalState.over_elevator = true;
             phrase = "Up to Enter";
-            show_dbox = true;
-            dboxPosition = player.position;
+            globalState.show_dbox = true;
+            globalState.dboxPosition = player.position;
 
         } 
 
@@ -4718,43 +4565,34 @@ void RenderLobby(){
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
     ClearBackground(customBackgroundColor);
     
-    if (drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
+    if (globalState.drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
         
-    
-
     //No parallax for lobby
     DrawTexturePro(resources.subwayBackground, {0, 0, static_cast<float>(resources.subwayBackground.width), static_cast<float>(resources.subwayBackground.height)},
                     {0, 0, static_cast<float>(resources.subwayBackground.width), static_cast<float>(resources.subwayBackground.height)}, {0, 0}, 0.0f, WHITE);
-
   
     DrawTexturePro(resources.LobbyForeground, {0, 0, static_cast<float>(resources.LobbyForeground.width), static_cast<float>(resources.LobbyForeground.height)},
                     {64, 0, static_cast<float>(resources.LobbyForeground.width), static_cast<float>(resources.LobbyForeground.height)}, {0, 0}, 0.0f, WHITE);
 
     DrawElevator(elevators[0], resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
 
-
-
     //DRAW PLAYER
     if (!player.onElevator) player.DrawPlayer();
 
-
-
-    if (AreAllNPCsDeactivated(lobbyMibs) && can_spawn_robots){ //if all the lobby mibs are dead, spawn robots and zombies
-        can_spawn_robots = false;
+    if (AreAllNPCsDeactivated(lobbyMibs) && globalState.can_spawn_robots){ //if all the lobby mibs are dead, spawn robots and zombies
+        globalState.can_spawn_robots = false;
         spawnRobot(player.position + Vector2 {300, 0});
         spawnRobot(player.position + Vector2 {-300, 0});
-        if (can_spawn_zombies){
-            can_spawn_zombies = false;
+        if (globalState.can_spawn_zombies){
+            globalState.can_spawn_zombies = false;
             StartZombieSpawn(10, 3); //spawn zombies when robots spawn, spawning zombies in the lobby triggers the alarm. 
 
         }
 
     }
 
-
-
-    if (globalAgro && can_spawn_mibs){
-        can_spawn_mibs = false;
+    if (globalState.globalAgro && globalState.can_spawn_mibs){
+        globalState.can_spawn_mibs = false;
         //spawnMib(resources, player, player.position + Vector2 {300, 0});
         spawnMib(player.position + Vector2 {-300, 0});
         
@@ -4767,7 +4605,7 @@ void RenderLobby(){
             robot.Render();
             robot.ClickNPC();
 
-            if (globalAgro) robot.agro = true; //if one robot is angry they all are
+            if (globalState.globalAgro) robot.agro = true; //if one robot is angry they all are
 
             if (robot.agro){
                 robot.destination = player.position;
@@ -4776,8 +4614,8 @@ void RenderLobby(){
 
             if (robot.interacting && !robot.agro){
                 phrase = robot.speech;
-                show_dbox = true;
-                dboxPosition = player.position;
+                globalState.show_dbox = true;
+                globalState.dboxPosition = player.position;
             
             }
 
@@ -4792,12 +4630,12 @@ void RenderLobby(){
             mib.Render();
             mib.ClickNPC();
 
-            if (globalAgro) mib.agro = true; //set other mibs to agro 
+            if (globalState.globalAgro) mib.agro = true; //set other mibs to agro 
 
             if (mib.interacting && !mib.agro){
                 phrase = mib.speech;
-                show_dbox = true;
-                dboxPosition = mib.position;
+                globalState.show_dbox = true;
+                globalState.dboxPosition = mib.position;
 
             }
 
@@ -4807,12 +4645,8 @@ void RenderLobby(){
                 mib.destination = player.position;
                 mib.facingRight = player.position.x > mib.position.x;
                 Flocking(lobbyMibs); //only flock if agro. flocking = repulsion force. 
-                globalAgro = true; //if 1 mib is agro, alert everyone else. 
-
-
-            
+                globalState.globalAgro = true; //if 1 mib is agro, alert everyone else. 
             }
-
         }
     }
 
@@ -4863,12 +4697,12 @@ void RenderLobby(){
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
-        if (!usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+        if (!globalState.usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
-        if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+        if (!globalState.usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
-    if (show_dbox){
+    if (globalState.show_dbox){
         DrawDialogBox(camera, 0, 0, 20);
 
     }
@@ -4880,8 +4714,8 @@ void RenderLobby(){
 
 //NecroTech
 void RenderNecroTech(){
-    drunk = false;
-    show_dbox = false;
+    globalState.drunk = false;
+    globalState.show_dbox = false;
     
     SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide or in vacant lot
 
@@ -4890,26 +4724,26 @@ void RenderNecroTech(){
     float parallaxMidground = camera.target.x * 0.6f;  // Midground moves slower
     float parallaxBackground = camera.target.x * 1.0f;  // Background moves even slower
 
-    over_car = false;
+    globalState.over_car = false;
     if (player.position.x > player_car.position.x && player.position.x < player_car.position.x +30){
-        over_car = true;
+        globalState.over_car = true;
     }
 
 
     //Over building entrance
-    over_necro = false;
+    globalState.over_necro = false;
     showPasswordInterface = false; //you can interact with either the door or the robot outside, to enter password. 
     if (player.position.x < 2144 && player.position.x > 2124){
         if (passwordValidated){
-            over_necro = true;
+            globalState.over_necro = true;
             phrase = "UP TO ENTER";
-            show_dbox = true;
-            dboxPosition = player.position;
+            globalState.show_dbox = true;
+            globalState.dboxPosition = player.position;
 
         }else{
             phrase = "LOCKED";
-            show_dbox = true;
-            dboxPosition = player.position;
+            globalState.show_dbox = true;
+            globalState.dboxPosition = player.position;
             showPasswordInterface = true; //show password UI when over door
         }
 
@@ -4921,7 +4755,7 @@ void RenderNecroTech(){
    
     ClearBackground(customBackgroundColor);
     
-    if (drunk){
+    if (globalState.drunk){
         BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
         //player.outline = true;
 
@@ -4948,7 +4782,7 @@ void RenderNecroTech(){
 
     //EXIT CAR
     if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT)){
-        if (player.enter_car && !move_car){ // dont exit car if it's still moving.
+        if (player.enter_car && !globalState.move_car){ // dont exit car if it's still moving.
             PlaySound(SoundManager::getInstance().GetSound("CarDoorClose")); 
             player.enter_car = false;
             player_car.currentFrame = 0;
@@ -4967,7 +4801,7 @@ void RenderNecroTech(){
         player.DrawPlayer();
     }
 
-    if (show_carUI && !move_car && player.enter_car){ //destination menu //draw UI inside mode2d
+    if (globalState.show_carUI && !globalState.move_car && player.enter_car){ //destination menu //draw UI inside mode2d
         DrawCarUI(player_car, camera);
     }
 
@@ -4987,8 +4821,8 @@ void RenderNecroTech(){
             robot.ClickNPC();
             if (robot.interacting){
                 phrase = robot.speech;
-                show_dbox = true;
-                dboxPosition = robot.position;
+                globalState.show_dbox = true;
+                globalState.dboxPosition = robot.position;
                 showPasswordInterface = true;
 
 
@@ -5025,38 +4859,35 @@ void RenderNecroTech(){
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
-        if (!usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+        if (!globalState.usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
     }else{
-        if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+        if (!globalState.usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
     }
 
-    if (show_dbox){
+    if (globalState.show_dbox){
         DrawDialogBox(camera, 0, 0, 20);
 
     }
 
     if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player); //always show ammo when outside of car in the cemetery or NecroT
 
-    if (passwordTimer > 0){
-        passwordTimer -= GetFrameTime();
+    if (globalState.passwordTimer > 0){
+        globalState.passwordTimer -= GetFrameTime();
     }
 
     //This delays turning off password interface so player has time to read the message. Make this logic better. 
-    if (!passwordValidated && showPasswordInterface && passwordTimer <= 0){
+    if (!passwordValidated && showPasswordInterface && globalState.passwordTimer <= 0){
         UpdatePasswordInterface(); //show password interface
         RenderPasswordInterface();
 
-    }else if (passwordValidated && showPasswordInterface && passwordTimer > 0){
+    }else if (passwordValidated && showPasswordInterface && globalState.passwordTimer > 0){
         RenderPasswordInterface(); //show interface for a few seconds before not rendering it. 
     }else{
         //don't render nothin
     }
 
-
-
 }
     
-
 
 //Main Street
 void RenderOutside() {
@@ -5072,23 +4903,18 @@ void RenderOutside() {
     float parallaxMidground = camera.target.x * 0.6f;  // Midground moves slower
     float parallaxBackground = camera.target.x * 0.8f;  // Background moves even slower
 
-    if (triggerOutsideZombies){
-        triggerOutsideZombies = false;
+    if (globalState.triggerOutsideZombies){
+        globalState.triggerOutsideZombies = false;
         StartZombieSpawn(15, 1);
     }
-
-
     
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
     //Outside of Mode2D is screen space coords. 
     ClearBackground(customBackgroundColor);
-
-
-
     
     HandleKeyboardAiming(); //need mouse position based on camera coords. could we make this global?
     
-    if (drunk){
+    if (globalState.drunk){
         BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason. TODO: fix drunk shader, make it global and look good.
         //player.outline = true;
 
@@ -5116,32 +4942,32 @@ void RenderOutside() {
 
     
     
-     if (show_carUI && !move_car && player.enter_car){ //draw carUI inside Mode2d for reasons, show carUI infront of dialog box
+     if (globalState.show_carUI && !globalState.move_car && player.enter_car){ //draw carUI inside Mode2d for reasons, show carUI infront of dialog box
         DrawCarUI(player_car, camera); //draw dialog box behind carUI
     }  
 
-    if (move_ufo){
-        ufoTimer -= GetFrameTime();
+    if (globalState.move_ufo){
+        globalState.ufoTimer -= GetFrameTime();
         DrawUFO();
         moveUFO(ufo);
     }
 
-    abductionBeam = false;
+    globalState.abductionBeam = false;
     if (player.position.x > ufo.position.x && player.position.x < ufo.position.x + 64){
         if (ufo.position.y > 395){ //if the UFO is low enough, and the player is under, show beam.
-            abductionBeam = true;
+            globalState.abductionBeam = true;
         }
         
     }
 
-    if (move_car){
+    if (globalState.move_car){
         player_car.position.x -= player_car.carSpeed * GetFrameTime();
     }else{
         player_car.position = Vector2{1710, 668};
     }
 
     //mibs show up after you get cemetery key. They don't do anything yet. 
-    if (hasCemeteryKey){
+    if (globalState.hasCemeteryKey){
         for (NPC& mib : mibs){
             mib.Update();
             mib.Render();
@@ -5150,10 +4976,8 @@ void RenderOutside() {
 
     }
 
-
-    
-    dealer = false;
-    teller = false;
+    globalState.dealer = false;
+    globalState.teller = false;
     for (NPC& npc : npcs){ //iterate NPCs, update/render, check for player interaction.
         npc.Update();
         npc.Render();
@@ -5161,37 +4985,37 @@ void RenderOutside() {
 
         if (npc.interacting){ //Take the first one you find. only one npc should be able to interact. If you click on multiple NPCs really fast
         //the dialog box jumps around depending on the timer. Need a way to cancel all interaction except the last one. 
-            dboxPosition = npc.position;   
-            show_dbox = true;   //dialogBox
+            globalState.dboxPosition = npc.position;   
+            globalState.show_dbox = true;   //dialogBox
             if (npc.dealer){
                 phrase = "I gOt wHat YoU NEEd\n\nDrugs: $100";
-                dealer = true;
+                globalState.dealer = true;
                 showInventory = true;
 
             }else if (npc.teller){
-                if (!buyFortune){
+                if (!globalState.buyFortune){
                     phrase = "Fortune: $100";
-                    teller = true;
+                    globalState.teller = true;
 
-                }else if (buyFortune){
-                    if (fortuneTimer <= 0){
+                }else if (globalState.buyFortune){
+                    if (globalState.fortuneTimer <= 0){
                         phrase = npc.speech;
                     }
                     
-                    teller = true;
+                    globalState.teller = true;
                 }
                 
 
             } else{
-                if (fortuneTimer <= 0 && !teller && !dealer){
+                if (globalState.fortuneTimer <= 0 && !globalState.teller && !globalState.dealer){
                     phrase = npc.speech; //randomized speech
-                    dealer = false;
+                    globalState.dealer = false;
 
                 }
              
             }
         }else{
-            dealer = false;
+            globalState.dealer = false;
         }
 
 
@@ -5218,13 +5042,11 @@ void RenderOutside() {
     DrawTexture(resources.lightCone, 456, 610, WHITE);
     DrawTexture(resources.lightCone, 4550, 610, WHITE);
     EndBlendMode();
-    
-
 
     DrawBullets();
 
     //DrawPlayerCar
-    if (!carToPark){ //you took the car to the park and the subway back, car is still at the park
+    if (!globalState.carToPark){ //you took the car to the park and the subway back, car is still at the park
         float CarFrameWidth = 128;
         Rectangle sourceRecCar = {player_car.currentFrame * CarFrameWidth, 0, CarFrameWidth, CarFrameWidth};
         DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE); //draw player_car
@@ -5233,7 +5055,7 @@ void RenderOutside() {
 
 
     //Draw MagicDoor
-    if (applyShader){
+    if (globalState.applyShader){
         DrawMagicDoor(magicDoors[0]);  
     }
 
@@ -5257,7 +5079,7 @@ void RenderOutside() {
     EndShaderMode(); ////////////////////////////SHADER OFF
 
     if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT)){
-        if (player.enter_car && !move_car){ // dont exit car if it's still moving.
+        if (player.enter_car && !globalState.move_car){ // dont exit car if it's still moving.
             PlaySound(SoundManager::getInstance().GetSound("CarDoorClose")); 
             player.enter_car = false;
             player_car.currentFrame = 0;
@@ -5279,9 +5101,9 @@ void RenderOutside() {
 
     }
    
-    if (show_dbox && !player.enter_car){
+    if (globalState.show_dbox && !player.enter_car){
 
-        if (over_lot || over_apartment || over_car || start || overLiquor || overSubway){
+        if (globalState.over_lot || globalState.over_apartment || globalState.over_car || globalState.start || globalState.overLiquor || globalState.overSubway){
             DrawDialogBox(camera, 0, 0, 20);
             
             
@@ -5300,7 +5122,7 @@ void RenderOutside() {
         RenderInventory();  // Render the inventory 
     }
     //Draw cursor last so it's on top
-    if (!usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
+    if (!globalState.usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
 }
 
 
@@ -5668,15 +5490,15 @@ void debugKeys(){
     }
 
     if (IsKeyPressed(KEY_EQUAL)){
-        if (!borderlessWindow){
-            borderlessWindow = true;
+        if (!globalState.borderlessWindow){
+            globalState. borderlessWindow = true;
             ToggleBorderlessWindowed();
-            windowStateChanged = true;
+            globalState.windowStateChanged = true;
         
 
         }else{
-            borderlessWindow = false;
-            windowStateChanged = true;
+            globalState.borderlessWindow = false;
+            globalState.windowStateChanged = true;
             ToggleBorderlessWindowed();
         }
 
@@ -5695,23 +5517,23 @@ void debugKeys(){
     }
 
     if (IsKeyPressed(KEY_K)){
-        if (!has_car_key || !hasCemeteryKey){
+        if (!globalState.has_car_key || !globalState.hasCemeteryKey){
             AddItemToInventory("carKeys");
             AddItemToInventory("cemeteryKey");
             AddItemToInventory("watch");
             player.hasWatch = true;
-            has_car_key = true;
-            hasCemeteryKey = true;
+            globalState.has_car_key = true;
+            globalState.hasCemeteryKey = true;
             
-            raiseZombies = true; // giving yourself keys also triggers zombies if you talk to the hobo first. 
+            globalState.raiseZombies = true; // giving yourself keys also triggers zombies if you talk to the hobo first. 
             
             PlaySound(SoundManager::getInstance().GetSound("Keys"));
 
         }
     }
     if (IsKeyPressed(KEY_N)){
-        if (!NecroTech){
-            NecroTech = true;
+        if (!globalState.NecroTech){
+            globalState.NecroTech = true;
             player.necroTechSearched = true;
         }
     }
@@ -5791,57 +5613,57 @@ void UptoEnter(){
     //enter places by pressing up 
     if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){ //xbox A
 
-        if (overLiquor && gameState == OUTSIDE){
-            show_dbox = true;
-            showLiquor = true;
+        if (globalState.overLiquor && gameState == OUTSIDE){
+            globalState.show_dbox = true;
+            globalState.showLiquor = true;
             
             phrase = "Whiskey: $100";
         }
 
-        if (over_apartment && gameState == OUTSIDE){
+        if (globalState.over_apartment && gameState == OUTSIDE){
             transitionState = FADE_OUT; //Transition to apartment
             PlaySound(SoundManager::getInstance().GetSound("mainDoor"));
-            over_apartment = false;
+            globalState.over_apartment = false;
             showInventory = false;
             //player.position.x = 512; //move player, to move inventory to the middle of the screen. 
             
         }
         //enter car for both outside and cemetery and Park
-        if (over_car && !player.enter_car && has_car_key){
+        if (globalState.over_car && !player.enter_car && globalState.has_car_key){
             //player inside idling car
             SoundManager::getInstance().PlayMusic("CarRun");
             //PlayPositionalSound(SoundManager::getInstance().GetSound("carRun"), player_car.position, player.position, 800);
             PlaySound(SoundManager::getInstance().GetSound("CarStart"));
             PlaySound(SoundManager::getInstance().GetSound("CarDoorOpen"));
             player.enter_car = true;
-            over_car = false;
+            globalState.over_car = false;
             player_car.currentFrame = 1;
-            show_dbox = false;
+            globalState.show_dbox = false;
 
 
         }
-        if (over_lot && gameState == OUTSIDE){ //over_lot = true
+        if (globalState.over_lot && gameState == OUTSIDE){ //over_lot = true
             transitionState = FADE_OUT;//transition to lot
         }
-        if (over_gate && gameState == CEMETERY && !spawning_zombies){
+        if (globalState.over_gate && gameState == CEMETERY && !globalState.spawning_zombies){
             transitionState = FADE_OUT; //transition to graveyard
             
         }
-        if (overSubway && gameState == OUTSIDE){
+        if (globalState.overSubway && gameState == OUTSIDE){
             transitionState = FADE_OUT; //trans to subway
         }
-        if (over_necro && gameState == NECROTECH){
+        if (globalState.over_necro && gameState == NECROTECH){
             transitionState = FADE_OUT; //trans to lobby
         }
-        if (over_exit && gameState == LOBBY && !spawning_zombies){ //can't leave the scene while zombies are spawning, 
+        if (globalState.over_exit && gameState == LOBBY && !globalState.spawning_zombies){ //can't leave the scene while zombies are spawning, 
         //but you can when zombies are still active wich couid cause trouble
             transitionState = FADE_OUT; //trans to necrotech
         }
 
-        if (over_exit && gameState == ALIEN){
+        if (globalState.over_exit && gameState == ALIEN){
             transitionState = FADE_OUT;
         }
-        if (over_Ebutton && gameState == LOBBY && !spawning_zombies){ //elevator button in lobby
+        if (globalState.over_Ebutton && gameState == LOBBY && !globalState.spawning_zombies){ //elevator button in lobby
             if (elevators[0].isOpen){
                 elevators[0].isOpen = false;
             }else{
@@ -5850,7 +5672,7 @@ void UptoEnter(){
             
         }
 
-        if (over_Ebutton && gameState == OFFICE){ //open and close all elevators. shouldn't matter because they are offscreen. 
+        if (globalState.over_Ebutton && gameState == OFFICE){ //open and close all elevators. shouldn't matter because they are offscreen. 
             if (elevators[0].isOpen){
                 elevators[0].isOpen = false;          
             }else{
@@ -5858,7 +5680,7 @@ void UptoEnter(){
             }
         }
 
-        if (over_Ebutton2 && gameState == OFFICE){ //over ebutton2, open second elevator
+        if (globalState.over_Ebutton2 && gameState == OFFICE){ //over ebutton2, open second elevator
             if (elevators[1].isOpen){
                 elevators[1].isOpen = false;
             }else{
@@ -5866,7 +5688,7 @@ void UptoEnter(){
             }
         }
 
-        if (over_Ebutton2 && gameState == LAB){
+        if (globalState.over_Ebutton2 && gameState == LAB){
             if (elevators[1].isOpen){
                 elevators[1].isOpen = false;
             }else{
@@ -5874,7 +5696,7 @@ void UptoEnter(){
             }
         }
 
-        if (over_elevator2 && gameState == LAB){
+        if (globalState.over_elevator2 && gameState == LAB){
             if (elevators[1].isOpen){
                 elevators[1].isOpen = false;
                 elevators[1].isOccupied = true;
@@ -5885,7 +5707,7 @@ void UptoEnter(){
         }
 
 
-        if (over_elevator && gameState == OFFICE){         
+        if (globalState.over_elevator && gameState == OFFICE){         
             if (elevators[0].isOpen){
                 
                 elevators[0].isOpen = false;
@@ -5895,7 +5717,7 @@ void UptoEnter(){
             }
         }
 
-        if (over_elevator2 && gameState == OFFICE){ //go to penthouse office TODO: implement penthouse office, 
+        if (globalState.over_elevator2 && gameState == OFFICE){ //go to penthouse office TODO: implement penthouse office, 
             if (elevators[1].isOpen){
                 std::cout << "closing elevator2";
                 elevators[1].isOpen = false;
@@ -5908,7 +5730,7 @@ void UptoEnter(){
         }
 
 
-        if (over_elevator && gameState == LOBBY){
+        if (globalState.over_elevator && gameState == LOBBY){
            
             if (elevators[0].isOpen){
                
@@ -5921,7 +5743,7 @@ void UptoEnter(){
 
         }
 
-        if (over_medkit && gameState == LOBBY){
+        if (globalState.over_medkit && gameState == LOBBY){
             if (!player.hasPills){
                 player.hasPills = true;
                 AddItemToInventory("pills");
@@ -5931,8 +5753,8 @@ void UptoEnter(){
             }
         }
 
-        if (over_console && !explodeTanks){
-            explodeTanks = true;
+        if (globalState.over_console && !globalState.explodeTanks){
+            globalState.explodeTanks = true;
             std::cout << "explodeTanks\n";
         }
 
@@ -5999,9 +5821,9 @@ void ShowControls(){
 
 void MainMenu(PauseState& currentPauseState, Rectangle& destRect){
     // Draw semi-transparent background overlay
-        if (menuOpen) {
+        if (globalState.menuOpen) {
             float offset_x = 0;
-            if (borderlessWindow) offset_x = (screenWidth - GAME_SCREEN_WIDTH)/2;
+            if (globalState.borderlessWindow) offset_x = (screenWidth - GAME_SCREEN_WIDTH)/2;
             
             // Draw semi-transparent background overlay
             DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, 0.3f));
@@ -6026,73 +5848,73 @@ void MainMenu(PauseState& currentPauseState, Rectangle& destRect){
             
             //gamepad select start
             if (CheckCollisionPointRec(mousePosition, btnPlayRec) && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)) {
-                menuOpen = false;
+                globalState.menuOpen = false;
                 currentPauseState = GAME_RUNNING;
-                controlsMenu = false;
+                globalState.controlsMenu = false;
             }
             // gamepad select control menu
             if (CheckCollisionPointRec(mousePosition, btnControlsRec) && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)) {
-                if (!controlsMenu){
-                    controlsMenu = true;
+                if (!globalState.controlsMenu){
+                    globalState.controlsMenu = true;
                 }else{
-                    controlsMenu = false;
+                    globalState.controlsMenu = false;
                 }
                     }
             //gamepad select fullscreen
             if (CheckCollisionPointRec(mousePosition, btnFullRec) && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)) {
-                if (!borderlessWindow){
-                    borderlessWindow = true;
+                if (!globalState.borderlessWindow){
+                    globalState.borderlessWindow = true;
                     offsetX = 1024;
                     ToggleBorderlessWindowed();
-                    windowStateChanged = true;
+                    globalState.windowStateChanged = true;
                 
 
                 }else{
-                    borderlessWindow = false;
-                    windowStateChanged = true;
+                    globalState.borderlessWindow = false;
+                    globalState.windowStateChanged = true;
                     ToggleBorderlessWindowed();
                 }
             }
             //gamepad select quit
             if (CheckCollisionPointRec(mousePosition, btnQuitRec) && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)) {
-                quitRequested = true;
+                globalState.quitRequested = true;
             }
 
             // Draw buttons
             if (GuiButton(btnPlayRec, "Play")) {
                 // Close menu, resume game
-                menuOpen = false;
+                globalState.menuOpen = false;
                 currentPauseState = GAME_RUNNING;
-                controlsMenu = false; //disable controls menu, maybe leave it up and have a x button to close controls page
+                globalState.controlsMenu = false; //disable controls menu, maybe leave it up and have a x button to close controls page
             }
 
             if (GuiButton(btnControlsRec, "Controls")){
-                if (!controlsMenu){
-                    controlsMenu = true;
+                if (!globalState.controlsMenu){
+                    globalState.controlsMenu = true;
                 }else{
-                    controlsMenu = false;
+                    globalState.controlsMenu = false;
                 }
 
             }
 
             if (GuiButton(btnFullRec, "FullScreen")) {
-                if (!borderlessWindow){
-                    borderlessWindow = true;
+                if (!globalState.borderlessWindow){
+                    globalState.borderlessWindow = true;
                     offsetX = 1024;
                     ToggleBorderlessWindowed();
-                    windowStateChanged = true;
+                    globalState.windowStateChanged = true;
                 
 
                 }else{
-                    borderlessWindow = false;
-                    windowStateChanged = true;
+                    globalState.borderlessWindow = false;
+                    globalState.windowStateChanged = true;
                     ToggleBorderlessWindowed();
                 }
             }
 
             if (GuiButton(btnQuitRec, "Quit")) {
                 // Close the window
-                quitRequested = true;
+                globalState.quitRequested = true;
             }
 
             DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); //draw cursor again overtop of buttons.
@@ -6102,7 +5924,7 @@ void MainMenu(PauseState& currentPauseState, Rectangle& destRect){
 
 void TogglePause(PauseState& currentPauseState, RenderTexture2D& pauseTexture, RenderTexture2D& finalTexture) {
     if (currentPauseState == GAME_RUNNING) {
-        menuOpen = true;
+        globalState.menuOpen = true;
 
         // Capture and display the last frame when the game enters the pause state
         BeginTextureMode(pauseTexture);
@@ -6120,7 +5942,7 @@ void TogglePause(PauseState& currentPauseState, RenderTexture2D& pauseTexture, R
         currentPauseState = GAME_PAUSED;
     } else {
         currentPauseState = GAME_RUNNING;
-        menuOpen = false;
+        globalState.menuOpen = false;
     }
 }
 
@@ -6158,7 +5980,7 @@ Vector2 clampMouseCursor(Vector2& mousePosition){
     if (mouseX < 0) mouseX = 0;
     if (mouseX > winWidth - 1) mouseX = winWidth - 1;
 
-    if (borderlessWindow){ //lock the cursor to the window only when in fullscreen AKA borderless window. 
+    if (globalState.borderlessWindow){ //lock the cursor to the window only when in fullscreen AKA borderless window. 
         if (mouseX > winWidth){
             mouseX = winWidth - 1;
             SetMousePosition(mouseX, mouseY); //SetMousePosition overrides the mouse, keeping the cursor inside the screen. 
@@ -6364,10 +6186,10 @@ int main() {
     
     setButtonColors(); //main menu button colors, sets globally for all rayGUI buttons
    
-    inventoryPositionX = player.position.x; //init inventory position
-    inventoryPositionY = player.position.y;  
+    globalState.inventoryPositionX = player.position.x; //init inventory position
+    globalState.inventoryPositionY = player.position.y;  
     SetTargetFPS(60);
-    dboxPosition = player.position;
+    globalState.dboxPosition = player.position;
 
     //GuiSetFont(RubicBold); // Set the loaded font as the default GUI font
 
@@ -6383,19 +6205,19 @@ int main() {
     UpdateDrawRectangle(&destRect);
 
     PauseState currentPauseState = GAME_RUNNING;
-    //currentPauseState = GAME_RUNNING;
+
     //AddItemToInventory("crowbar", inventory, INVENTORY_SIZE); //TODO: find a place to give the player the crowbar. Should it just be the shovel?
 
     
     // Main game loop
-    while (!WindowShouldClose() && !quitRequested) {
+    while (!WindowShouldClose() && !globalState.quitRequested) {
         PauseLogic(currentPauseState, pauseTexture, finalTexture);
         HandleGamepadMouseControl();
         mousePosition = GetMousePosition(); //update global mousePosition, declared in globals.h
 
         mousePosition = clampMouseCursor(mousePosition); //stop mouse from going offscreen when in fullscreen. 
 
-        if (!player.enter_car && !player.onElevator && !player.enter_train && !fading && currentPauseState == GAME_RUNNING) player.UpdateMovement();  // Update player position and animation
+        if (!player.enter_car && !player.onElevator && !player.enter_train && !globalState.fading && currentPauseState == GAME_RUNNING) player.UpdateMovement();  // Update player position and animation
         UpdateInventoryPosition(camera);
 
         
@@ -6452,11 +6274,11 @@ int main() {
             RemoveItemFromInventory("vest");
         }
 
-        if (playSoundTimer > 0){
-            canPlaySound = false;
-            playSoundTimer -= GetFrameTime();
+        if (globalState.playSoundTimer > 0){
+            globalState.canPlaySound = false;
+            globalState.playSoundTimer -= GetFrameTime();
         }else{
-            canPlaySound = true;
+            globalState.canPlaySound = true;
         }
         
         float deltaTime = GetFrameTime();
@@ -6465,20 +6287,20 @@ int main() {
 
  
             
-        UpdateShaders(deltaTime, borderlessWindow,  gameState);
+        UpdateShaders(deltaTime, globalState.borderlessWindow,  gameState);
         SoundManager::getInstance().UpdateRandomVoices(deltaTime); //////////////////TURNED OFF VOICES for now
 
-        if (windowStateChanged) { //toggle full screen    
+        if (globalState.windowStateChanged) { //toggle full screen    
             UpdateDrawRectangle(&destRect); 
-            windowStateChanged = false;
+            globalState.windowStateChanged = false;
 
 
             
         }
         
         if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_D) || IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT) || GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_X)){ //tutorial text
-            if (start){
-                start = false; //turn off dbox if any movement
+            if (globalState.start){
+                globalState.start = false; //turn off dbox if any movement
                 phrase = "UP to Enter"; //set phrase to uptoenter cause liquor store doesn't set it
 
             }
@@ -6497,14 +6319,11 @@ int main() {
         }
 
         ////DEBUG/////////////////DEBUG///////////
-        if (debug){
+        if (globalState.debug){
             debugKeys();
 
         }
         //////////////////////////////////////////////
-
-
-
 
         //I for inventory
         if ((IsKeyPressed(KEY_I) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_DOWN))){
@@ -6538,7 +6357,7 @@ int main() {
             drawMenuButton(currentPauseState,pauseTexture, finalTexture);
             DrawPlayTime(totalTime);
 
-            if (controlsMenu) ShowControls();
+            if (globalState.controlsMenu) ShowControls();
             EndDrawing();
             continue;  // Skip the rest of the loop, dont update or render the game. 
 
@@ -6649,11 +6468,11 @@ int main() {
         
         BeginDrawing();
             ClearBackground(BLACK);
-            if (sharpen) BeginShaderMode(shaders.sharpenShader);
+            if (globalState.sharpen) BeginShaderMode(shaders.sharpenShader);
             //drunk shader is set inside render functions      
-            if (applyShader) BeginShaderMode(shaders.glowShader);     //Apply various shaders before rendering to screen, only 1 at a time
-            if (glitch) BeginShaderMode(shaders.glitchShader);        //glitch will override any earlier active shaders. 
-            if (film) BeginShaderMode(shaders.oldFilmShader);                                                      
+            if (globalState.applyShader) BeginShaderMode(shaders.glowShader);     //Apply various shaders before rendering to screen, only 1 at a time
+            if (globalState.glitch) BeginShaderMode(shaders.glitchShader);        //glitch will override any earlier active shaders. 
+            if (globalState.film) BeginShaderMode(shaders.oldFilmShader);                                                      
             //BeginShaderMode(shaders.oldFilmShader);
             DrawTexturePro(
                 finalTexture.texture,  

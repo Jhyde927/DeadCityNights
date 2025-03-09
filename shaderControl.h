@@ -10,6 +10,7 @@
 
 // Structure to hold all shaders and related variables
 struct ShaderResources {
+
     Shader glowShader;
     Shader glitchShader;
     Shader glowShader2;

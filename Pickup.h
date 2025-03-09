@@ -20,7 +20,7 @@ public:
     Vector2 position;
     PickupType type;
     bool isCollected = false;
-    float pickupRadius = 24.0f;
+    float pickupRadius = 16.0f;
     Texture2D texture;
     int value; // Amount of ammo/money
 

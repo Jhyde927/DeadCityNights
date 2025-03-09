@@ -94,7 +94,8 @@ public:
     Emitter bloodEmitter;
 
     NPC* targetNPC; //zombie's target
- 
+    
+    //Constructor
     NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState initialAnimation, bool isActive, bool isZombie);
     
     void Update();
@@ -114,7 +115,7 @@ public:
     void TakeDamage(int damage);
     void HandleAnimationLogic();
     void ghostMoves();
-    //void MoveNPC(Player& player, GameState& gameState);
+    
 };
 
 #endif

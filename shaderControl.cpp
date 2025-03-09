@@ -230,6 +230,10 @@ void UnloadShaders() {
     UnloadShader(shaders.rainbowOutlineShader);
     UnloadShader(shaders.vignetteShader);
     UnloadShader(shaders.glitchVignetteShader);
+    UnloadShader(shaders.oldFilmShader);
+    UnloadShader(shaders.sharpenShader);
+    
+
 }
 
 void UpdateShaders(float deltaTime, bool fullscreen, GameState& gameState) {
@@ -252,7 +256,7 @@ void UpdateShaders(float deltaTime, bool fullscreen, GameState& gameState) {
     int whiteOutline = 1;
     int blackOutline = 0;
 
-    if (gameState == OFFICE){
+    if (gameState == OFFICE){ //outline the player in black when in the office. 
         player.outline = true;
         SetShaderValue(shaders.outlineShader, useWhiteOutlineLoc, &blackOutline, SHADER_UNIFORM_INT); //black
     }else{
@@ -273,11 +277,6 @@ void UpdateShaders(float deltaTime, bool fullscreen, GameState& gameState) {
 
     }
 
-    // if (gameState == OFFICE){ //dont show outline in office, it looks better this way. 
-    //     float outlineColor[4] = {0.0, 0.0, 0.0, 0.0}; //black
-    //     int outlineColorLoc = GetShaderLocation(shaders.outlineShader, "outlineColor");
-    //     SetShaderValue(shaders.highlightShader, outlineColorLoc, outlineColor, SHADER_UNIFORM_VEC4);
-    // }
 
 
     // Calculate the oscillating glow threshold using a sine wave

@@ -3276,7 +3276,7 @@ void RenderAstral(){
     player.gravity = 200;
     player.outline = true;//turn on outline shader in asteral plane, white outline
 
-    earth.position = {2600, 300};
+    earth.position = {2600, 300}; //earth may move to another spot when visiting the ETs. Ensure it's in the right spot when rendering astral. DrawEarth handles the actual parallax draw position. 
     magicDoors[0].position.x = 2089;
     camera.target = player.position;
     float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
@@ -3300,7 +3300,6 @@ void RenderAstral(){
     }
     
 
-
     // Draw the background layers
     DrawTexturePro(resources.AstralBackground, {0, 0, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)},
                     {parallaxBackground-1024, -2000, static_cast<float>(resources.AstralBackground.width), static_cast<float>(resources.AstralBackground.height)}, {0, 0}, 0.0f, WHITE);
@@ -3319,9 +3318,9 @@ void RenderAstral(){
     EndShaderMode(); ////////////////////////////SHADER OFF
     DrawEarth(earth, camera); //draw earth outside of shader. 
     
-    // DrawMagicDoor(magicDoors[0]);
-
-    DrawMagicDoor(magicDoors[1]); //the only way out is up. 
+    
+    //got rid of door on ground level //the only way out is up. 
+    DrawMagicDoor(magicDoors[1]); 
 
 
     player.DrawPlayer();
@@ -5985,11 +5984,16 @@ void setButtonColors(){
 void ShowControls(){
     float offsetX = 664 - (1024.0f / 2.0f); // Offset relative to the center of the 1024x1024 window
     Vector2 controlsRectPos = { (GetScreenWidth() / 2.0f) + offsetX, 212 };
+    Vector2 controlsRecPos2 =  { (GetScreenWidth() / 2.0f) - (offsetX * 3), 212 };
     //Vector2 controlsRectPos = { 664, 212 };
     Vector2 controlsRectSize = { 300, 700 };
+    DrawRectangle(controlsRecPos2.x, controlsRecPos2.y, controlsRectSize.x, controlsRectSize.y-250, Fade(BLACK, 0.7f));
     DrawRectangle(controlsRectPos.x, controlsRectPos.y, controlsRectSize.x, controlsRectSize.y, Fade(BLACK, 0.7f)); // Semi-transparent background
-    DrawText("\nControls:\n\n\nEsc - Menu\n\nD - Move Right\n\nA - Move Left\n\nShift - Run\n\nW - Interact\n\nS - Exit Car/Apartment\n\nSpace - Jump\n\nI - Open Inventory\n\nV - Melee\n\nRightClick - Aim\n\nLeftClick - Fire\n\nM - Mute Music\n\nMouseWheel - Zoom\n\n\n\nDebug Keys:\n\nK - Give Keys\n\nG - Give Guns\n\nH - Give Shovel\n\nP - Give Drugs\n\nL - Give Crowbar", 
+    DrawText("\nKeyboard:\n\n\nEsc - Menu\n\nD - Move Right\n\nA - Move Left\n\nShift - Run\n\nW - Interact\n\nS - Exit Car/Apartment\n\nSpace - Jump\n\nI - Open Inventory\n\nV - Melee\n\nRightClick - Aim\n\nLeftClick - Fire\n\nM - Mute Music\n\nMouseWheel - Zoom\n\n1,2,3 - Switch Weapons\n\n\n\nDebug Keys:\n\nK - Give Keys\n\nG - Give Guns\n\nH - Give Shovel\n\nP - Give Drugs\n\nL - Give Crowbar", 
             controlsRectPos.x + 32, controlsRectPos.y, 20, WHITE); 
+
+    DrawText("\nGamepad:\n\n\nStart - Menu\n\nLeftStick - Move\n\nA - Interact\n\nB - Exit Car/Apartment\n\nY - Jump\n\nD-pad Down - Open Inven\n\nB - Melee\n\nLeftTrigger - Aim\n\nRightTrigger - Fire\n\nRightStick - Zoom\n\nBumpers - scroll inven\n\nD-pad - Switch Weapons", 
+        controlsRecPos2.x + 32, controlsRecPos2.y, 20, WHITE); 
 
 }
 
@@ -6379,7 +6383,7 @@ int main() {
     UpdateDrawRectangle(&destRect);
 
     PauseState currentPauseState = GAME_RUNNING;
-
+    //currentPauseState = GAME_RUNNING;
     //AddItemToInventory("crowbar", inventory, INVENTORY_SIZE); //TODO: find a place to give the player the crowbar. Should it just be the shovel?
 
     
@@ -6391,7 +6395,7 @@ int main() {
 
         mousePosition = clampMouseCursor(mousePosition); //stop mouse from going offscreen when in fullscreen. 
 
-        if (!player.enter_car && !player.onElevator && !player.enter_train && !fading) player.UpdateMovement();  // Update player position and animation
+        if (!player.enter_car && !player.onElevator && !player.enter_train && !fading && currentPauseState == GAME_RUNNING) player.UpdateMovement();  // Update player position and animation
         UpdateInventoryPosition(camera);
 
         

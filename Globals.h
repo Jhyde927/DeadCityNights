@@ -34,7 +34,7 @@ extern std::vector<NPC>aliens;
 // Extern declaration of the master NPC group list
 extern std::vector<std::vector<NPC>*> allNPCGroups;
 
-struct GlobalState { //store random bools and timers that have accumulated over the months. To get them out of main.
+struct GlobalState { //store random bools and timers that have accumulated over the months. just prefix everything with globalState
     float apartmentX = 2256;
     int vacantLotX = 2753;
     int vacantExitX = 2762;
@@ -158,6 +158,7 @@ struct GlobalState { //store random bools and timers that have accumulated over 
     float minDistToPlayer = 50;
     float maxDistToPlayer = 200;
     int selectedSlot = -1;
+    int displayMoney = 100;
 
     //leftovers, refactor these, just define where they are used.
     Vector2 carKeysPos = {(1024/2) - 100, 655}; // remember positions need to based on screenwidth incase of resolution change. 
@@ -170,6 +171,12 @@ struct GlobalState { //store random bools and timers that have accumulated over 
     Vector2 pstart_by_car = Vector2{1738, 700};
     Vector2 dboxPosition;
     Color ApartmentBgColor {41, 48, 63, 255};
+    Color customBackgroundColor = {32, 42, 63, 255};  //Same Color as sky background image. 
+    // Variables for password input
+    std::string enteredPassword = "";
+    const std::string correctPassword = "666";
+    bool passwordValidated = false;
+    bool showPasswordInterface = false;
 
 };
 

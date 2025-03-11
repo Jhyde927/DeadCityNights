@@ -13,7 +13,8 @@
 enum WeaponType {
     REVOLVER,
     SHOTGUN,
-    MAC10
+    MAC10,
+    RAYGUN
 };
 
 
@@ -63,6 +64,7 @@ public:
     bool canShoot;
     bool hasWatch;
     bool hasGun;
+    bool hasRaygun;
     bool hasShotgun;
     bool hasMac10;
     bool hasShovel;
@@ -85,8 +87,11 @@ public:
     bool canSwing;
     bool swinging;
     float swingTimer;
+    bool chargeSoundPlayed;
 
     // Timers & counters
+    float chargeTimer;
+    int raygunSize;
     float dropTimer;
     int bulletCount;
     int shells;

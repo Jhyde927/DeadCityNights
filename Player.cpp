@@ -59,6 +59,7 @@ Player::Player() {
     canShoot = true;
     hasWatch = false;
     hasGun = false;
+    hasRaygun = false;
     hasShotgun = false;
     hasMac10 = false;
     outline = false;
@@ -75,8 +76,9 @@ Player::Player() {
     shells = 16;
     autoAmmo = 150;
     revolverAmmo = 50;
-    
+    raygunSize = 1;
     arriving = false;
+    chargeTimer = 0.0f;
     LastTapTimeLeft = 0;
     LastTapTimeRight = 0;
     tapInterval = 0.3;
@@ -100,6 +102,8 @@ Player::Player() {
     onElevator = false;
     abduction = false;
     hasPills = false;
+    chargeSoundPlayed = false;
+    
 
 }
 
@@ -372,6 +376,8 @@ void Player::HandleInput(float speed) {
             facingRight = false;
         }
     }
+
+    
 }
 
 
@@ -625,7 +631,7 @@ void Player::updateAnimations(){
                 canShoot = true;
             }
         }
-    } else if (isMoving) {
+    } else if (isMoving && !isAiming) {
         frameCounter += GetFrameTime() * frameSpeed;
         int numFrames = (maxSpeedX == runSpeed) ? (resources.runSheet.width / 64) : (resources.walkSheet.width / 64);
 
@@ -662,6 +668,8 @@ void Player::shootLogic(){
         currentWeapon = SHOTGUN;
     }else if ((IsKeyPressed(KEY_THREE) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_RIGHT)) && hasMac10){
         currentWeapon = MAC10;
+    }else if (IsKeyPressed(KEY_FOUR) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_DOWN) && hasRaygun){
+        currentWeapon = RAYGUN;
     }
 
 
@@ -689,7 +697,7 @@ void Player::shootLogic(){
     }
 
     //AIMING
-    isAiming = ((hasGun || hasShotgun || hasMac10) && (IsKeyDown(KEY_F) || IsKeyDown(KEY_LEFT_CONTROL) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT) || IsGamepadButtonDown(0, GAMEPAD_BUTTON_LEFT_TRIGGER_2)) && !isShooting && !isReloading && AllowGuns);
+    isAiming = ((hasGun || hasShotgun || hasMac10 || hasRaygun) && (IsKeyDown(KEY_F) || IsKeyDown(KEY_LEFT_CONTROL) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT) || IsGamepadButtonDown(0, GAMEPAD_BUTTON_LEFT_TRIGGER_2)) && !isShooting && !isReloading && AllowGuns);
 
 
     //SHOOTING REVOLVER
@@ -710,7 +718,7 @@ void Player::shootLogic(){
             //SoundManager::getInstance().GetSound("gunShot");  // Access the sound directly
             PlaySound(SoundManager::getInstance().GetSound("gunShot")); 
 
-            FireBullet(*this, false, 25, false);
+            FireBullet(*this, false, 25, false, false);
             
         }
 
@@ -734,7 +742,7 @@ void Player::shootLogic(){
             PlaySound(SoundManager::getInstance().GetSound("ShotGun"));
             // Shotgun fires multiple bullets (spread effect)
             for (int i = 0; i < 3; i++) {  // Simulate shotgun spread with 3 bullets
-                FireBullet(*this, true, 25, false);  // Modify FireBullet to allow spread by adjusting directions
+                FireBullet(*this, true, 25, false, false);  // Modify FireBullet to allow spread by adjusting directions
 
             }
 
@@ -759,11 +767,51 @@ void Player::shootLogic(){
 
             PlaySound(SoundManager::getInstance().GetSound("Mac10"));
                 
-            FireBullet(*this, true, 20, false);  //mac10 does less damage. 10 instead of 25. it's a 9mm bullet instead of a 44 revolver, or shotgun pellet
+            FireBullet(*this, true, 20, false, false);  //mac10 does less damage. 10 instead of 25. it's a 9mm bullet instead of a 44 revolver, or shotgun pellet
             
 
         }
-    }  
+    }else if (currentWeapon == RAYGUN && AllowGuns){
+        //no dry fire
+        if (hasRaygun  && isAiming && (IsKeyDown(KEY_SPACE) || IsMouseButtonDown(MOUSE_BUTTON_LEFT) || IsGamepadButtonDown(0, GAMEPAD_BUTTON_RIGHT_TRIGGER_2)) && canShoot) {
+            chargeTimer += GetFrameTime();
+
+            if (!chargeSoundPlayed){
+                PlaySound(SoundManager::getInstance().GetSound("chargeUp"));
+                chargeSoundPlayed = true;
+
+            }
+            
+        }
+
+        if (isAiming && canShoot){
+            if (IsKeyReleased(KEY_SPACE) || IsMouseButtonReleased(MOUSE_BUTTON_LEFT) || IsGamepadButtonReleased(0, GAMEPAD_BUTTON_RIGHT_TRIGGER_2)){
+                SoundManager::getInstance().ManagerStopSound("chargeUp");
+                PlaySound(SoundManager::getInstance().GetSound("raygunFire"));
+                chargeSoundPlayed = false;
+                isShooting = true;
+                canShoot = false;
+                currentFrame = 0;
+                frameCounter = 0.0f;
+                //infinite bullets
+                int rayDamage = 20;
+                if (chargeTimer > 2){
+                    rayDamage = 200;
+                } 
+                else if (chargeTimer > 1){
+                    rayDamage = 100;
+                } 
+                else if (chargeTimer > 0.5){
+                    rayDamage = 50;
+                }
+                //play laser sound. 
+
+                FireBullet(*this, false, rayDamage, false, true);
+                chargeTimer = 0;
+
+            } 
+        }    
+    }   
 }
 
 void Player::UpdateMovement() {
@@ -914,6 +962,41 @@ void Player::DrawPlayer() {
         else if (hasMac10 && isAiming && !isReloading && (AllowGuns)) {
             // Aiming but not shooting: use the first frame of the shootSheet
             currentSheet = resources.shootSheetAuto;
+            sourceRec = { 0, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };  // First frame for aiming
+
+        }
+        else if (jumping){
+            currentSheet = resources.jumpSheet;
+            sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
+
+        } 
+        else if (isMoving) {
+            // Walking or running animation
+            currentSheet = isRunning ? resources.runSheet : resources.walkSheet;  // Use runSheet if running, else walkSheet
+            sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
+        } 
+        else {
+            // Idle pose
+            currentSheet = resources.manTexture;  // Idle pose
+            sourceRec = { 0, 0, static_cast<float>(currentSheet.width), static_cast<float>(currentSheet.height) };
+        }
+    }
+    else if (currentWeapon == RAYGUN){
+    
+        if (hasRaygun && isShooting && (AllowGuns)) { //need a way to allow guns outside cemetery at a certain point in the game. 
+            currentSheet = resources.shootRaygunSheet;
+            sourceRec = { static_cast<float>(currentFrame * frameWidth), 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
+
+        }
+        else if (hasRaygun && isReloading && (AllowGuns)){
+        
+            currentSheet = resources.reloadSheetAuto;
+            sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
+
+        }
+        else if (hasRaygun && isAiming && !isReloading && (AllowGuns)) {
+            // Aiming but not shooting: use the first frame of the shootSheet
+            currentSheet = resources.shootRaygunSheet;
             sourceRec = { 0, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };  // First frame for aiming
 
         }

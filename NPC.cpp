@@ -44,11 +44,11 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     riseTimer = 0.9f;
     interacting = false;
     talked = false;
+    agro = false;
+    attacking = false;
     speech = " ";
     dealer = false;
     police = false;
-    agro = false;
-    attacking = false;
     hobo = false;
     ghost = false;
     teller = false;
@@ -57,6 +57,9 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     frank = false;
     scientist = false;
     scienceJr = false;
+    cyberZombie = false;
+    alien = false;
+    robot = false;
     clickCount = 0;
     interactions = 0;
     talkTimer = 0.0f;
@@ -69,7 +72,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     detectionRange = 300.0f;  // Set detection range for zombies
     detectionRangeBat = 150;
     highLight = false;
-    robot = false;
+
     can_shoot = true;
     shootTimer = 0.0f;
     validPassword = false;
@@ -79,10 +82,10 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     targetedTimer = 0.0f;
     agroZombie = false;
     distanceToPlayer = 0;
-    cyberZombie = false;
+
     animationTimer = 0.0;
     isMoving = false;
-    alien = false;
+
 
  
 }

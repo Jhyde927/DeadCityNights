@@ -124,6 +124,10 @@ void GameResources::Load() {
     alienSheet = LoadTexture("assets/AlienSheet.png");
     tankExplodeSheet = LoadTexture("assets/tankExplodeSheet.png");
     menuButton = LoadTexture("assets/MenuButton.png");
+    shootRaygunSheet = LoadTexture("assets/shootRaygunSheet.png");
+    raygunIcon = LoadTexture("assets/rayGun.png");
+    raygunPickup = LoadTexture("assets/raygunPickup.png");
+    light64 = LoadTexture("assets/Light(64).png");
 }
 
 // Unload all game resources
@@ -240,4 +244,8 @@ void GameResources::Unload() {
     UnloadTexture(alienSheet);
     UnloadTexture(tankExplodeSheet);
     UnloadTexture(menuButton);
+    UnloadTexture(shootRaygunSheet);
+    UnloadTexture(raygunIcon);
+    UnloadTexture(raygunPickup);
+    UnloadTexture(light64);
 }

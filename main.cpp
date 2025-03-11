@@ -24,54 +24,30 @@
 #include "Grenade.h"
 
 
-//Remember: The Law is One. 
-
-
-int gameWidth = 1024; // game resolution width
-int gameHeight = 1024; // game resolution height
-
-
-Color customBackgroundColor = {32, 42, 63, 255};  //Same Color as sky background image. 
-Color shovelTint = WHITE;
-
-
-int displayMoney = 100;
 bool showInventory = false;
 const int INVENTORY_SIZE = 12;  // Define the size of the inventory
 std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", "", "", "", "", ""}; //Inventory is a fixed array for no particular reason.
 
-
 const int GAME_SCREEN_WIDTH = 1024;
 const int GAME_SCREEN_HEIGHT = 1024;
 
-// Sensitivity settings
-float cursorSpeed = 600.0f; // Adjust speed of cursor movement
+float cursorSpeed = 900.0f; // Adjust speed of cursor movement
 float deadZone = 0.2f;      // Ignore slight stick movements
-
 // Virtual cursor position (simulates the mouse)
 Vector2 virtualCursor = { 512, 512 }; // Start at screen center
-
-// Variables for password input
-std::string enteredPassword = "";
-const std::string correctPassword = "666";
-bool passwordValidated = false;
-bool showPasswordInterface = false;
 
 std::string phrase = "A and D to move, hold shift to run"; //initial tutorial phrase
 
 const int screenWidth = 1024; //screen is square for gameplay reasons, we don't want to reveal to much of the screen at one time. 
-const int screenHeight = 1024; // is it crazy to keep the resolution square? Implement full screen that keeps sqaure resolution.
+const int screenHeight = 1024; // is it crazy to keep the resolution square?
 
-int offsetX = (screenWidth - gameWidth) / 2;
-
-
-Emitter explosionEmitter;
+//Emitter explosionEmitter; //what is this for? grenades have there own explosions right?
 
 std::vector<Box> boxes; //boxes stays in main because undefined behavior do to inclusion hell. 
 
-GameState gameState = OUTSIDE;
+GameState gameState = OUTSIDE; //start outside. on main street. 
 
-TransitionState transitionState = NONE;
+TransitionState transitionState = NONE; //state for transitioning scenes. 
 
 // Initialize random number generator
 std::random_device rd;   // Seed for the random number engine
@@ -131,8 +107,6 @@ void InitBoxes(){
 
 }
 
-
-
 // Function to add an item to the first available slot in the inventory
 void AddItemToInventory(const std::string& item) {
     //what happens if inventory is full and we add to it? nothing?
@@ -185,13 +159,13 @@ void RenderPasswordInterface() {
     for (int i = 0; i < 3; i++) {
         int x = startX + i * (slotWidth + 10);
         DrawRectangle(x, startY, slotWidth, slotHeight, BLACK);
-        if (i < enteredPassword.size()) {
-            DrawText(std::string(1, enteredPassword[i]).c_str(), x + 15, startY + 15, 40, WHITE);
+        if (i < globalState.enteredPassword.size()) {
+            DrawText(std::string(1, globalState.enteredPassword[i]).c_str(), x + 15, startY + 15, 40, WHITE);
         }
     }
 
     // Prompt message
-    if (!passwordValidated) {
+    if (!globalState.passwordValidated) {
         DrawText("Enter 3-digit password:", startX, startY - 40, 20, WHITE);
     } else {
         DrawText("Access Granted!", startX, startY - 40, 20, GREEN);
@@ -202,22 +176,22 @@ void UpdatePasswordInterface() {
     // Handle digit input (main number keys and numpad keys)
     int key = GetKeyPressed();
     if ((key >= KEY_ZERO && key <= KEY_NINE) || (key >= KEY_KP_0 && key <= KEY_KP_9)) {
-        if (enteredPassword.size() < 3) {
+        if (globalState.enteredPassword.size() < 3) {
             // Normalize input: for numpad keys, subtract `KEY_KP_0` to get the digit
             int digit = (key >= KEY_KP_0 && key <= KEY_KP_9) ? key - KEY_KP_0 : key - KEY_ZERO;
-            enteredPassword += std::to_string(digit);
+            globalState.enteredPassword += std::to_string(digit);
         }
     }
 
     // Handle backspace for correction
-    if (IsKeyPressed(KEY_BACKSPACE) && !enteredPassword.empty()) {
-        enteredPassword.pop_back();
+    if (IsKeyPressed(KEY_BACKSPACE) && !globalState.enteredPassword.empty()) {
+        globalState.enteredPassword.pop_back();
     }
 
     // Validate password once all 3 digits are entered
-    if (enteredPassword.size() == 3) {
-        if (enteredPassword == correctPassword && !passwordValidated) {
-            passwordValidated = true;
+    if (globalState.enteredPassword.size() == 3) {
+        if (globalState.enteredPassword == globalState.correctPassword && !globalState.passwordValidated) {
+            globalState.passwordValidated = true;
             player.validatedPassword = true;
             
             for (NPC& robot : robots){ //set validPassword to true for all robots. once password is entered. 
@@ -231,7 +205,7 @@ void UpdatePasswordInterface() {
             globalState.passwordTimer = 2.0f;
             
         } else {
-            enteredPassword = ""; // Reset on incorrect password
+            globalState.enteredPassword = ""; // Reset on incorrect password
             robots[0].idleTime = 0;
             //play a sound
         }
@@ -653,14 +627,14 @@ void addMoney(int amount){
 
 
 void DrawMoney(){
-    std::string smoney = "$ " + std::to_string(displayMoney);
+    std::string smoney = "$ " + std::to_string(globalState.displayMoney);
 
     DrawText(smoney.c_str(), screenWidth/2+400, 25, 30, WHITE);
     //Animate money ticking up or down. 
-    if (displayMoney < player.money){
-        displayMoney++;
-    }else if (displayMoney > player.money){
-        displayMoney--;
+    if (globalState.displayMoney < player.money){
+        globalState.displayMoney++;
+    }else if (globalState.displayMoney > player.money){
+        globalState.displayMoney--;
     }
 }
 
@@ -1020,6 +994,7 @@ void DrawItem(Vector2 itemPos, const std::string& itemType) {
         {"crowbar", resources.crowbarWorld}, 
         {"watch", resources.pocketWatchWorld},
         {"vest", resources.armorIcon},
+        {"raygun", resources.raygunPickup},
         
         
     };
@@ -1030,6 +1005,7 @@ void DrawItem(Vector2 itemPos, const std::string& itemType) {
         {"crowbar", &player.hasCrowbar},
         {"watch", &player.hasWatch},
         {"vest", &player.hasArmor},
+        {"raygun", &player.hasRaygun},
   
  
     };
@@ -1040,6 +1016,7 @@ void DrawItem(Vector2 itemPos, const std::string& itemType) {
         {"crowbar", "crowbar"},
         {"watch", "watch"},
         {"vest", "vest"},
+        {"raygun", "raygun"},
 
  
     };
@@ -1116,7 +1093,7 @@ void HandleLobbyTransition(){
 
 void HandleNecroTransition(){
     //faded out
-    if (globalState.over_necro and passwordValidated && !player.isDead){
+    if (globalState.over_necro and globalState.passwordValidated && !player.isDead){
         gameState = LOBBY; //over enterance goto lobby
         UpdateNPCActivity(NECROTECH,LOBBY); //turn off NPCs in the scene you are leaving, turn on NPCs in the scene you are entering. 
 
@@ -1594,6 +1571,7 @@ void HandleTransition() {
 
 
 void Dig(){
+    Color shovelTint = WHITE;
     //check if player is over dig spot, while clicking. Then add item to inventory
    if (player.position.x > 1860 && player.position.x < 1880 && !player.hasPills && gameState == CEMETERY){ //over dig spot
         player.hasPills = true; //if you dont have pill you can allways get more here. 
@@ -1776,7 +1754,7 @@ void slotSelectionLogic(){
 
 void RenderInventory() {
     int slotWidth = resources.inventorySlot.width;
-    shovelTint = WHITE;
+    Color shovelTint = WHITE;
     Color gunTint = WHITE;
     Color shotgunTint = WHITE;
     Color macTint = WHITE;
@@ -1815,6 +1793,23 @@ void RenderInventory() {
             if (inventory[i] == "watch"){
                 DrawTexture(resources.pocketWatch, x, y, WHITE);
 
+            }
+
+            if (inventory[i] == "raygun"){
+                DrawTexture(resources.raygunIcon, x, y, WHITE);
+                Rectangle raygunBounds = { 
+                    static_cast<float>(x),      
+                    static_cast<float>(y),      
+                    static_cast<float>(64),  
+                    static_cast<float>(64)  
+                };
+
+                if ((CheckCollisionPointRec(mousePosition, raygunBounds) || globalState.selectedSlot == i)){
+                    if (player.currentWeapon != RAYGUN){
+                        player.currentWeapon = RAYGUN;
+                    }
+                    
+                }
             }
 
             if (inventory[i] == "crowbar"){
@@ -2065,7 +2060,7 @@ void CheckBulletNPCCollisions(std::vector<NPC>& npcs) { //Bullet collision with 
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (bullets[i].isActive && !bullets[i].laser) {  // Only check active bullets and not lasers
             for (NPC& npc : npcs) { //zombies vector is passed to this func which calls them npcs
-                if (npc.isActive && npc.CheckHit(bullets[i].previousPosition, bullets[i].position, bulletSize)) { //
+                if (npc.isActive && npc.CheckHit(bullets[i].previousPosition, bullets[i].position, bullets[i].size)) { //
                     // Collision detected
                     bullets[i].isActive = false;  // Deactivate the bullet
                     npc.TakeDamage(bullets[i].damage);  // Bullets can do more or less damage, use the bullet's damage, it's set when firing
@@ -2972,7 +2967,7 @@ void RenderSubway(){
   
 
     BeginMode2D(camera);  // Begin 2D mode with the camera
-    ClearBackground(customBackgroundColor);
+    ClearBackground(globalState.customBackgroundColor);
 
     //Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
     HandleKeyboardAiming();
@@ -3138,7 +3133,7 @@ void RenderAstral(){
     
     BeginMode2D(camera);
     
-    ClearBackground(customBackgroundColor);
+    ClearBackground(globalState.customBackgroundColor);
 
     
     HandleKeyboardAiming();
@@ -3343,7 +3338,7 @@ void RenderCemetery(){
 
     HandleKeyboardAiming();
     
-    ClearBackground(customBackgroundColor);
+    ClearBackground(globalState.customBackgroundColor);
     if (!globalState.move_car && !player.enter_car){
         camera.target = player.position;
     }
@@ -3915,7 +3910,7 @@ void RenderLot(){
 void RenderPark(){
     globalState.drunk = false;
     BeginMode2D(camera);  // Begin 2D mode with the camera
-    ClearBackground(customBackgroundColor);
+    ClearBackground(globalState.customBackgroundColor);
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
     //do we do this in office?
     float parallaxBackground = camera.target.x * 0.9f;  // Background moves even slower
@@ -4126,7 +4121,7 @@ void RenderUFOinterior(){
     player.outline = false;
     camera.target = player.position;
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
-    ClearBackground(customBackgroundColor);
+    ClearBackground(globalState.customBackgroundColor);
 
     float parallaxBackground = camera.target.x * 0.8f;  // Background moves even slower
 
@@ -4246,7 +4241,7 @@ void RenderLab(){
     float deltaTime = GetFrameTime();
     camera.target = player.position;
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
-    ClearBackground(customBackgroundColor);
+    ClearBackground(globalState.customBackgroundColor);
     
     if (globalState.drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
         
@@ -4414,7 +4409,7 @@ void RenderOffice(){
 
     camera.target = player.position;
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
-    ClearBackground(customBackgroundColor);
+    ClearBackground(globalState.customBackgroundColor);
     
     if (globalState.drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
            
@@ -4563,7 +4558,7 @@ void RenderLobby(){
 
     camera.target = player.position;
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
-    ClearBackground(customBackgroundColor);
+    ClearBackground(globalState.customBackgroundColor);
     
     if (globalState.drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
         
@@ -4732,9 +4727,9 @@ void RenderNecroTech(){
 
     //Over building entrance
     globalState.over_necro = false;
-    showPasswordInterface = false; //you can interact with either the door or the robot outside, to enter password. 
+    globalState.showPasswordInterface = false; //you can interact with either the door or the robot outside, to enter password. 
     if (player.position.x < 2144 && player.position.x > 2124){
-        if (passwordValidated){
+        if (globalState.passwordValidated){
             globalState.over_necro = true;
             phrase = "UP TO ENTER";
             globalState.show_dbox = true;
@@ -4744,7 +4739,7 @@ void RenderNecroTech(){
             phrase = "LOCKED";
             globalState.show_dbox = true;
             globalState.dboxPosition = player.position;
-            showPasswordInterface = true; //show password UI when over door
+            globalState.showPasswordInterface = true; //show password UI when over door
         }
 
     }
@@ -4753,7 +4748,7 @@ void RenderNecroTech(){
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
     //Outside of Mode2D is screen space coords. 
    
-    ClearBackground(customBackgroundColor);
+    ClearBackground(globalState.customBackgroundColor);
     
     if (globalState.drunk){
         BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
@@ -4805,7 +4800,7 @@ void RenderNecroTech(){
         DrawCarUI(player_car, camera);
     }
 
-    if (robots[0].agro && robots[0].isActive) showPasswordInterface = false; //hide interface on shots fired. 
+    if (robots[0].agro && robots[0].isActive) globalState.showPasswordInterface = false; //hide interface on shots fired. 
 
     // for (NPC& cyberZombie : cyberZombies){
     //     cyberZombie.Update();
@@ -4823,7 +4818,7 @@ void RenderNecroTech(){
                 phrase = robot.speech;
                 globalState.show_dbox = true;
                 globalState.dboxPosition = robot.position;
-                showPasswordInterface = true;
+                globalState.showPasswordInterface = true;
 
 
             }
@@ -4876,11 +4871,11 @@ void RenderNecroTech(){
     }
 
     //This delays turning off password interface so player has time to read the message. Make this logic better. 
-    if (!passwordValidated && showPasswordInterface && globalState.passwordTimer <= 0){
+    if (!globalState.passwordValidated && globalState.showPasswordInterface && globalState.passwordTimer <= 0){
         UpdatePasswordInterface(); //show password interface
         RenderPasswordInterface();
 
-    }else if (passwordValidated && showPasswordInterface && globalState.passwordTimer > 0){
+    }else if (globalState.passwordValidated && globalState.showPasswordInterface && globalState.passwordTimer > 0){
         RenderPasswordInterface(); //show interface for a few seconds before not rendering it. 
     }else{
         //don't render nothin
@@ -4910,7 +4905,7 @@ void RenderOutside() {
     
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
     //Outside of Mode2D is screen space coords. 
-    ClearBackground(customBackgroundColor);
+    ClearBackground(globalState.customBackgroundColor);
     
     HandleKeyboardAiming(); //need mouse position based on camera coords. could we make this global?
     
@@ -4939,8 +4934,10 @@ void RenderOutside() {
     
 
     HandleGrenades();
+    if (!player.hasRaygun){
+        DrawItem(Vector2 {2200, 716}, "raygun");
+    }
 
-    
     
      if (globalState.show_carUI && !globalState.move_car && player.enter_car){ //draw carUI inside Mode2d for reasons, show carUI infront of dialog box
         DrawCarUI(player_car, camera); //draw dialog box behind carUI
@@ -5126,9 +5123,11 @@ void RenderOutside() {
 }
 
 
+
 void spawnNPCs(){
     // Create NPCs and set there starting desitnations. //outside npcs start active
-
+    //this function is 300 lines long. consider breaking this up some how. Maybe break into scene specific NPCs, like spawnOutsideNPCs(), spawnLobbyNPCs(), ect.. 
+    // better yet make a factory function for instancing multiple NPCs. first need to refactor createNPC to take a NPCType instead of isZombie.  
     float speed = 50.0f; //normal NPC speed
 
     //spawn generic NPCs
@@ -5763,6 +5762,7 @@ void UptoEnter(){
 
 
 void UpdateDrawRectangle(Rectangle* destRect) {
+    // this centers the screen with black pillars on the side for fullscreen square resolution. 
     int screenWidth = GetScreenWidth();
     int screenHeight = GetScreenHeight();
 
@@ -5823,7 +5823,7 @@ void MainMenu(PauseState& currentPauseState, Rectangle& destRect){
     // Draw semi-transparent background overlay
         if (globalState.menuOpen) {
             float offset_x = 0;
-            if (globalState.borderlessWindow) offset_x = (screenWidth - GAME_SCREEN_WIDTH)/2;
+            if (globalState.borderlessWindow){} offset_x = (screenWidth - GAME_SCREEN_WIDTH)/2;
             
             // Draw semi-transparent background overlay
             DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, 0.3f));
@@ -5864,7 +5864,7 @@ void MainMenu(PauseState& currentPauseState, Rectangle& destRect){
             if (CheckCollisionPointRec(mousePosition, btnFullRec) && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)) {
                 if (!globalState.borderlessWindow){
                     globalState.borderlessWindow = true;
-                    offsetX = 1024;
+        
                     ToggleBorderlessWindowed();
                     globalState.windowStateChanged = true;
                 
@@ -5900,7 +5900,7 @@ void MainMenu(PauseState& currentPauseState, Rectangle& destRect){
             if (GuiButton(btnFullRec, "FullScreen")) {
                 if (!globalState.borderlessWindow){
                     globalState.borderlessWindow = true;
-                    offsetX = 1024;
+               
                     ToggleBorderlessWindowed();
                     globalState.windowStateChanged = true;
                 
@@ -6069,8 +6069,9 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadSound("armorHit2", "assets/sounds/armorHit2.ogg");
     soundManager.LoadSound("squish", "assets/sounds/squish.ogg");
     soundManager.LoadSound("zipper", "assets/sounds/zipper.ogg");
-
+    soundManager.LoadSound("chargeUp", "assets/sounds/chargeUp.ogg");
     soundManager.LoadSound("alarm", "assets/sounds/alarm1.ogg");
+    soundManager.LoadSound("raygunFire", "assets/sounds/raygunFire.ogg");
 
     soundManager.LoadSound("ShotGun", "assets/sounds/ShotGun.ogg");
     soundManager.LoadSound("ShotgunReload", "assets/sounds/ShotgunReload.ogg");

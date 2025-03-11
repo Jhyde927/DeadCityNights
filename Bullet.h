@@ -9,11 +9,13 @@ struct Bullet {
     Vector2 position;
     Vector2 previousPosition;
     Vector2 direction;
+    Vector2 size;
     float speed;
     bool isActive;
     float lifeTime;
     float damage;
     bool laser;
+    bool raygun;
     
 };
 
@@ -23,7 +25,7 @@ const int MAX_BULLETS = 50;  // Max number of bullets // bullets are used for bo
 
 extern Bullet bullets[MAX_BULLETS];  // Declare the global bullets array
 
-void FireBullet(Player& player, bool spread, float damage, bool laser);  // Declare the FireBullet function
+void FireBullet(Player& player, bool spread, float damage, bool laser, bool raygun);  // Declare the FireBullet function
 void NPCfireBullet(NPC& npc, bool spread, float damage, bool laser);
 void UpdateBullets();             // Function to update bullet positions
 void DrawBullets();               // Function to draw bullets

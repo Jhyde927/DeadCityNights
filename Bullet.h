@@ -16,6 +16,7 @@ struct Bullet {
     float damage;
     bool laser;
     bool raygun;
+    int health;
     
 };
 

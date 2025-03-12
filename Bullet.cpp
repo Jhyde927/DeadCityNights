@@ -45,6 +45,7 @@ void FireBullet(Player& player, bool spread, float damage, bool laser, bool rayg
             bullets[i].isActive = true;
             bullets[i].laser = laser;
             bullets[i].raygun = raygun;
+            bullets[i].health = 1;
             bullets[i].size = Vector2 {1, 1};
             player.bulletCount--;  // Decrease player's bullet count
             if (spread){
@@ -54,11 +55,12 @@ void FireBullet(Player& player, bool spread, float damage, bool laser, bool rayg
 
             if (raygun){
                 bullets[i].speed = 500;
+                bullets[i].health = 4;
                 //change the size of bullets depending on damage, in check hit make sure your getting bullets[i].size
-                if (damage == 200) bullets[i].size = Vector2 {10, 10};
-                if (damage == 100) bullets[i].size = Vector2 {5, 5};
-                if (damage == 50) bullets[i].size = Vector2 {3, 3};
-                if (damage == 20) bullets[i].size = Vector2 {1, 1};
+                if (damage == 100) bullets[i].size = Vector2 {10, 10};
+                if (damage == 50) bullets[i].size = Vector2 {5, 5};
+                if (damage == 30) bullets[i].size = Vector2 {3, 3};
+                if (damage == 10) bullets[i].size = Vector2 {1, 1};
 
 
             } 
@@ -100,7 +102,7 @@ void UpdateBullets() {
             bullets[i].lifeTime -= GetFrameTime();  // Reduce bullet's lifetime
 
             // Deactivate the bullet if it goes off-screen or its lifetime runs out
-            if (bullets[i].position.x < 0 || bullets[i].position.x > 8000 || bullets[i].lifeTime <= 0) {
+            if (bullets[i].position.x < 0 || bullets[i].position.x > 8000 || bullets[i].lifeTime <= 0 || bullets[i].health < 0) {
                 bullets[i].isActive = false;
             }
         }
@@ -113,19 +115,19 @@ void DrawBullets() {
         if (bullets[i].isActive) {
             if (bullets[i].laser){
                 DrawRectangleV(bullets[i].position, Vector2 {5, 2}, RED); // Draw laser as a wide rectangle
-            }else if (bullets[i].raygun){
-                    //change the size of the projectile depending on damage. this way we 
-                if (bullets[i].damage == 20){
+            }else if (bullets[i].raygun){ //raygun bullet
+                    //change the size of the projectile depending on damage.  
+                if (bullets[i].damage == 10){
                     
                     DrawCircleV(bullets[i].position, 1, RED);
                     DrawCircleSectorLines(bullets[i].position, 3, 0, 360, 8, RED);
-                }else if (bullets[i].damage == 50){
+                }else if (bullets[i].damage == 30){
                     DrawCircleV(bullets[i].position, 3, RED);
                     DrawCircleSectorLines(bullets[i].position, 5, 0, 360, 8, RED);
-                }else if (bullets[i].damage == 100){
+                }else if (bullets[i].damage == 50){
                     DrawCircleV(bullets[i].position, 5, RED);
                     DrawCircleSectorLines(bullets[i].position, 10, 0, 360, 8, RED);
-                }else if (bullets[i].damage == 200){
+                }else if (bullets[i].damage == 100){
                     DrawCircleV(bullets[i].position, 10, RED);
                     DrawCircleSectorLines(bullets[i].position, 15, 0, 360, 8, RED);
                 }

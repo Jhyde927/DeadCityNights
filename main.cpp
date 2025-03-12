@@ -2,6 +2,7 @@
 #include <raylib.h>
 #include <raymath.h>
 #include <vector>
+#include <unordered_set>
 #include "Globals.h"
 #include "NPC.h"
 #include "Player.h"
@@ -1758,6 +1759,7 @@ void RenderInventory() {
     Color gunTint = WHITE;
     Color shotgunTint = WHITE;
     Color macTint = WHITE;
+    Color raygunTint = WHITE;
     Color slotColor = WHITE;
 
 
@@ -1779,6 +1781,7 @@ void RenderInventory() {
         if (player.currentWeapon == SHOTGUN) shotgunTint = customTint;
         if (player.currentWeapon == REVOLVER) gunTint = customTint;
         if (player.currentWeapon == MAC10) macTint = customTint;
+        if (player.currentWeapon == RAYGUN) raygunTint = customTint;
 
 
 
@@ -1796,7 +1799,7 @@ void RenderInventory() {
             }
 
             if (inventory[i] == "raygun"){
-                DrawTexture(resources.raygunIcon, x, y, WHITE);
+                DrawTexture(resources.raygunIcon, x, y, raygunTint);
                 Rectangle raygunBounds = { 
                     static_cast<float>(x),      
                     static_cast<float>(y),      
@@ -1805,9 +1808,12 @@ void RenderInventory() {
                 };
 
                 if ((CheckCollisionPointRec(mousePosition, raygunBounds) || globalState.selectedSlot == i)){
-                    if (player.currentWeapon != RAYGUN){
-                        player.currentWeapon = RAYGUN;
+                    if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){
+                        if (player.currentWeapon != RAYGUN){
+                            player.currentWeapon = RAYGUN;
+                        }
                     }
+        
                     
                 }
             }
@@ -2054,25 +2060,70 @@ void CheckLaserNPCCollisions(std::vector<NPC>& npcs){
 
 
 
-void CheckBulletNPCCollisions(std::vector<NPC>& npcs) { //Bullet collision with zombies, bats, and ghosts
-    Vector2 bulletSize = {1, 1};  // Size of the bullet hitbox
-
+void CheckBulletNPCCollisions(std::vector<NPC>& npcs) { 
     for (int i = 0; i < MAX_BULLETS; i++) {
-        if (bullets[i].isActive && !bullets[i].laser) {  // Only check active bullets and not lasers
-            for (NPC& npc : npcs) { //zombies vector is passed to this func which calls them npcs
-                if (npc.isActive && npc.CheckHit(bullets[i].previousPosition, bullets[i].position, bullets[i].size)) { //
-                    // Collision detected
-                    bullets[i].isActive = false;  // Deactivate the bullet
-                    npc.TakeDamage(bullets[i].damage);  // Bullets can do more or less damage, use the bullet's damage, it's set when firing
-                    
-                    break;  // Exit loop since the bullet is deactivated
+        if (bullets[i].isActive && !bullets[i].laser) {  
+            std::unordered_set<NPC*> hitNPCs;  // Track which NPCs this bullet has hit, and only apply damage once per bullet. 
+
+            for (NPC& npc : npcs) { 
+                if (npc.isActive && hitNPCs.find(&npc) == hitNPCs.end() && //if NPC not in set
+                    npc.CheckHit(bullets[i].previousPosition, bullets[i].position, bullets[i].size)) { 
+
+                    // Mark NPC as hit
+                    hitNPCs.insert(&npc); //add npc to set, as to not apply damage again from the same raygun bullet. 
+
+                    if (bullets[i].raygun && bullets[i].health > 0) {
+                        bullets[i].health -= 1;  // Raygun bullets penetrate enemies up to 3 times
+                        npc.TakeDamage(bullets[i].damage);
+                        
+                        if (bullets[i].health == 0) {
+                            bullets[i].isActive = false;  // Deactivate raygun bullet when out of health, also check this in bullet.update()
+                            break;
+                        }
+                    } else {
+                        // Normal bullets
+                        bullets[i].isActive = false;  
+                        npc.TakeDamage(bullets[i].damage);
+                        break;  // Normal bullets stop after one enemy
+                    }
                 }
             }
         }
     }
-
-
 }
+
+
+// void CheckBulletNPCCollisions(std::vector<NPC>& npcs) { //Bullet collision with zombies, bats, and ghosts
+//     //Vector2 bulletSize = {1, 1};  // Size of the bullet hitbox
+
+//     for (int i = 0; i < MAX_BULLETS; i++) {
+//         if (bullets[i].isActive && !bullets[i].laser) {  // Only check active bullets and not lasers
+//             for (NPC& npc : npcs) { //zombies vector is passed to this func which calls them npcs
+//                 if (npc.isActive && npc.CheckHit(bullets[i].previousPosition, bullets[i].position, bullets[i].size)) { //
+//                     // Collision detected
+//                     if (bullets[i].raygun && bullets[i].health > 0){
+//                         bullets[i].health -= 1; //raygun bullets can penetrate enemies up to 3. 
+//                         npc.TakeDamage(bullets[i].damage);
+//                         //dont deactivate raygun bullets. they are deactivated when health hits 0.
+
+
+//                     }else{
+//                         //normal bullets
+//                         bullets[i].isActive = false;  // Deactivate the bullet
+//                         npc.TakeDamage(bullets[i].damage);  // Bullets can do more or less damage, use the bullet's damage, it's set when firing
+//                         break;
+//                     }
+
+
+                    
+//                     break;  // Exit loop since the bullet is deactivated
+//                 }
+//             }
+//         }
+//     }
+
+
+// }
 
 
 void DrawHUD(const Player& player) {
@@ -2569,6 +2620,7 @@ void DrawUFO(){
     if (globalState.abductionBeam && gameState == CEMETERY){
         //show abduction beam. if player is under UFO
         player.abduction = true;
+        player.isMoving = false;
         player.outline = true;
         Rectangle sourceRec = { 0.0f, 0.0f, (float)resources.lightBar.width, (float)resources.lightBar.height };
         Rectangle destRec = { 
@@ -4144,6 +4196,12 @@ void RenderUFOinterior(){
                     {0, 0, static_cast<float>(resources.UFObackground.width), static_cast<float>(resources.UFObackground.height)}, {0, 0}, 0.0f, WHITE);
 
     HandleGrenades();
+
+    if (!player.hasRaygun){
+        DrawItem(Vector2 {2200, 724}, "raygun");
+    }
+
+
     //DRAW PLAYER
     if (!player.onElevator) player.DrawPlayer();
 
@@ -4934,9 +4992,7 @@ void RenderOutside() {
     
 
     HandleGrenades();
-    if (!player.hasRaygun){
-        DrawItem(Vector2 {2200, 716}, "raygun");
-    }
+
 
     
      if (globalState.show_carUI && !globalState.move_car && player.enter_car){ //draw carUI inside Mode2d for reasons, show carUI infront of dialog box
@@ -6072,6 +6128,7 @@ void InitSounds(SoundManager& soundManager){
     soundManager.LoadSound("chargeUp", "assets/sounds/chargeUp.ogg");
     soundManager.LoadSound("alarm", "assets/sounds/alarm1.ogg");
     soundManager.LoadSound("raygunFire", "assets/sounds/raygunFire.ogg");
+    soundManager.LoadSound("plasma", "assets/sounds/Plasma.ogg");
 
     soundManager.LoadSound("ShotGun", "assets/sounds/ShotGun.ogg");
     soundManager.LoadSound("ShotgunReload", "assets/sounds/ShotgunReload.ogg");
@@ -6132,6 +6189,7 @@ void InitSounds(SoundManager& soundManager){
     SoundManager::getInstance().SetSoundVolume("Owl", 0.5f);
     SoundManager::getInstance().SetSoundVolume("alarm", 0.5f);
     SoundManager::getInstance().SetSoundVolume("crowbarAttack", 0.5);
+    SoundManager::getInstance().SetSoundVolume("chargeUp", 0.5);
 }
 
 void DrawPlayTime(float totalTime) {

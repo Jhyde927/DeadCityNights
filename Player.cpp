@@ -787,22 +787,22 @@ void Player::shootLogic(){
         if (isAiming && canShoot){
             if (IsKeyReleased(KEY_SPACE) || IsMouseButtonReleased(MOUSE_BUTTON_LEFT) || IsGamepadButtonReleased(0, GAMEPAD_BUTTON_RIGHT_TRIGGER_2)){
                 SoundManager::getInstance().ManagerStopSound("chargeUp");
-                PlaySound(SoundManager::getInstance().GetSound("raygunFire"));
+                PlaySound(SoundManager::getInstance().GetSound("plasma"));
                 chargeSoundPlayed = false;
                 isShooting = true;
                 canShoot = false;
                 currentFrame = 0;
                 frameCounter = 0.0f;
                 //infinite bullets
-                int rayDamage = 20;
+                int rayDamage = 10;
                 if (chargeTimer > 2){
-                    rayDamage = 200;
-                } 
-                else if (chargeTimer > 1){
                     rayDamage = 100;
                 } 
-                else if (chargeTimer > 0.5){
+                else if (chargeTimer > 1){
                     rayDamage = 50;
+                } 
+                else if (chargeTimer > 0.5){
+                    rayDamage = 30;
                 }
                 //play laser sound. 
 

@@ -862,14 +862,63 @@ NecroTech Interior:
 
 	Needs more characters. 
 
-	Lots of things get triggered by the cemetery key. queue zombies, open graveyard, move ufo to cemetery, where else could be trigger things. The badge opens up necrotech. 
+	Lots of things get triggered by the cemetery key. queue zombies, open graveyard, move ufo to cemetery, where else could be trigger things. The badge opens up necrotech. On password accepted we could make zombies invade mains street. 
+
+	It would be a cool thing to die on say the office, get sent back to the apartment, then step out side and see zombies in the street. Just make it possible for zombies to be on main street. 
 
 	maybe magic door one should dissapear when you go through it into astral. then the only way out is up. maybe. 
 	when you exit astral you should wake up in your apartment. 
 
+	if you die in the lobby, office, or lab next time you enter main street zombies are spawning. Maybe we should stop rendering the drug dealer and teller. if (zombies.size() > 0) dont render dealer. means if you left a zombie alive in the park dealer wont show up. If dealer dies and you never bought the pill you loose access to astral. and thats ok? All these things we can comeback to once the game is more or less finished. 
+
+	If zombies invade main street what about the hobo? Maybe he is there with a gun fighting the zombies. what gun? a mac10 would look coolest. shot gun would make more sense. shotgun is easier to control maybe. cause how would you get input for automatic fire? if he's got a zombie in sight he just unloads the clip? fires until it's dead, but what if there are many zombies. with shotgun just check if a zombie is close enough and if you have shells fire else reload. He should hip fire the shotgun. maybe its a pump. maybe it's a 44 magnum. that one shots zombies. 
+
+	made zombie speed 35 instead of 25. lessened time between spawns by a second for most encounters.
+
+	added pause menu button. 
+
+	added controller support. Except for the apartment and car UI where you need to use the mouse. Consider moving mouse with right stick? Right stick is zoom in/out right now. maybe car UI has controller button shortcuts for destinations. 
+
+	drawCarUI(){
+		draw UI
+		if (isgamepadbuttonpressed(, 0, A)){
+
+		}
+	}
+
+	the mouse seems to start at the bottom left of the screen when you enter car, make it start in the middle. 
+
+	maybe left and right bumper should scroll through inventory instead of d pad. That frees up the d-pad for other things. Then crowbar would have to be a face button i guess. not A , not Y, X is reload, i guess it has to be B
+
+	then what is the d-pad for? quickly switch weapons, map revolver to left shotgun to up, mac10 to right, and down for a future gun. I'm sold
+
+	change inv scroll to bumpers x
+
+	crowbar swings when exiting apartment with controller. x
+
+	you shouldn't be able to swing the crowbar when moving x -isMoving was being set to false at all times. It is now only false if there is no input. 
 
 
+	change min dist to player var in park x
 
 
+	Hide cursor is not working for all areas. park and graveyard still shows cursor when uning controller, cant reproduce. 
 
+	robot in necrotech wasn't turned off? strange, I swung the crowbar and hit a invisible robot while inside the office, this agrod it so it was agro when I came back outside. 
 
+	map weapons to d pad again, changed show inventory button to d pad down. 
+
+	We were not updating position audio on zombies except for in the park and subway. fixed we now update positional sounds everywhere zombies spawn x
+
+	refactored mount boolean to a struct in globals.h called globalState. so now for say show_dbox. you would need to say
+	globalState.show_dbox = true; and going forward all global vars will be added to this struct. As to not pollute main with a bunch of garbage up front. 
+
+	800 insertions. took 2 hours. 
+
+	what is next? Add another enemy. Add a laser gun you get from the aliens. what would be different about this gun to justify it's existence? A ray gun. shoots a beam. hold down fire to charge it up. release to fire. otherwise it's a pea shooter that does like no damage. but charge it and it will 1 shot zombies. The noisy cricket. 
+
+	halfway implemented ray gun. Make it so it can penetrate zombies up to a point. Give the bullet health. 
+
+	draw a progress bar by the players raygun that reflects the charge up time. 
+
+	needs better sound, bigger sound for bigger projectile. 

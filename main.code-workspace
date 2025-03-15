@@ -60,7 +60,8 @@
 			"random": "cpp",
 			"numbers": "cpp",
 			"ctime": "cpp",
-			"map": "cpp"
+			"map": "cpp",
+			"unordered_set": "cpp"
 		},
 		"makefile.configureOnOpen": true
 	}

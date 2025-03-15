@@ -12,14 +12,12 @@
 #include "Globals.h"
 #include "Platform.h"
 #include "Particle.h"
+#include <algorithm>
 
 
 WeaponType currentWeapon;  // To track the current weapon
 
-
 Player player;  // Define the player instance
-
-
 
 
 Player::Player() {
@@ -103,6 +101,8 @@ Player::Player() {
     abduction = false;
     hasPills = false;
     chargeSoundPlayed = false;
+    charging = false;
+    maxChargeTime = 2.0;
     
 
 }
@@ -152,6 +152,7 @@ void Player::take_damage(int damage) {
 
 
 float GetRightBoundary(){
+    //level boundaries. 
     if (gameState == OUTSIDE){
         return 4707.0f;
     }else if (gameState == CEMETERY){
@@ -215,6 +216,37 @@ float GetLeftBoundary(){
     }
 }
 
+void Player::DrawChargeBar(Vector2 offset) {
+    float chargePercentage = chargeTimer / maxChargeTime; // Normalize charge time
+
+    int barWidth = 10;  // Width of progress bar
+    int barHeight = 3;   // Height of progress bar
+    Vector2 barPos = { position.x + offset.x, position.y + offset.y };
+
+    //floating points were causing flickering, round to nearest whole number including startX
+
+    int filledWidth = static_cast<int>(barWidth * chargePercentage + 0.5f); // Round to nearest whole pixel "Banker's rounding"
+
+    if (facingRight) {
+        // Normal left-to-right fill
+        DrawRectangle(barPos.x, barPos.y, filledWidth, barHeight, RED);
+    } else {
+        // Ensure smooth right-to-left fill
+        int startX = static_cast<int>(barPos.x + (barWidth - filledWidth) + 0.5f);
+        DrawRectangle(startX, barPos.y, filledWidth, barHeight, RED);
+    }
+    
+}
+
+void Player::UpdateCharge(float deltaTime, bool charging) {
+    if (charging) {
+        //chargeTimer += deltaTime;
+        if (chargeTimer > maxChargeTime) chargeTimer = maxChargeTime;
+    } else {
+        chargeTimer = 0.0f; // Reset charge when not holding fire
+    }
+}
+
 
 
 
@@ -274,12 +306,23 @@ bool Player::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosit
 
 void Player::HandleInput(float speed) {
     if (abduction) return; // Can't move while being abducted by aliens.
-
-    //double currentTime = GetTime();
-    float deltaTime = GetFrameTime();
-
     // Detect if a gamepad is connected
     bool isControllerConnected = IsGamepadAvailable(0);
+
+    //weapon switching
+    // 1,2 or 3, 4 or D-pad left, up, right, down. clockwise
+    if ((IsKeyPressed(KEY_ONE) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_LEFT)) && hasGun) { //dpad left
+        currentWeapon = REVOLVER;
+    } else if ((IsKeyPressed(KEY_TWO) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_UP)) && hasShotgun) { //up
+        currentWeapon = SHOTGUN;
+    }else if ((IsKeyPressed(KEY_THREE) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_RIGHT)) && hasMac10){ //right
+        currentWeapon = MAC10;
+    }else if (IsKeyPressed(KEY_FOUR) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_DOWN) && hasRaygun){ //dpad down
+        currentWeapon = RAYGUN;
+    }
+
+    
+    float deltaTime = GetFrameTime();
 
     // ------------------------------
     // MOVEMENT (Keyboard + Left Stick)
@@ -303,22 +346,22 @@ void Player::HandleInput(float speed) {
 
     // Apply movement
     if (moveX != 0) {
+        
         velocity.x += moveX * acceleration * deltaTime;
-        if (velocity.x > maxSpeedX) velocity.x = maxSpeedX;
-        if (velocity.x < -maxSpeedX) velocity.x = -maxSpeedX;
+        velocity.x = std::clamp(velocity.x, -maxSpeedX, maxSpeedX);
 
         isMoving = true;
         facingRight = moveX > 0;
     } else {
         // Deceleration when no input
-        isMoving = false;
         if (velocity.x > 0.0f) {
-            velocity.x -= deceleration * deltaTime;
-            if (velocity.x < 0.0f) velocity.x = 0.0f;
+            velocity.x = std::max(velocity.x - deceleration * deltaTime, 0.0f); // Stop at zero
         } else if (velocity.x < 0.0f) {
-            velocity.x += deceleration * deltaTime;
-            if (velocity.x > 0.0f) velocity.x = 0.0f;
+            velocity.x = std::min(velocity.x + deceleration * deltaTime, 0.0f); // Stop at zero
         }
+
+        // Only set isMoving to false if velocity has actually stopped
+        isMoving = (velocity.x != 0.0f);
     }
 
     // ------------------------------
@@ -661,19 +704,11 @@ void Player::updateAnimations(){
 
 
 void Player::shootLogic(){
-    // 1,2 or 3, or D-pad left, up, right
-    if ((IsKeyPressed(KEY_ONE) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_LEFT)) && hasGun) {
-        currentWeapon = REVOLVER;
-    } else if ((IsKeyPressed(KEY_TWO) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_UP)) && hasShotgun) {
-        currentWeapon = SHOTGUN;
-    }else if ((IsKeyPressed(KEY_THREE) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_RIGHT)) && hasMac10){
-        currentWeapon = MAC10;
-    }else if (IsKeyPressed(KEY_FOUR) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_DOWN) && hasRaygun){
-        currentWeapon = RAYGUN;
-    }
+    charging = false;
 
 
 
+    //handle crowbar
     if ((IsKeyPressed(KEY_V) || IsKeyPressed(KEY_LEFT_CONTROL)|| IsKeyPressed(KEY_RIGHT_CONTROL) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT)) && canSwing && !isAiming &&  !isReloading && !isShooting && hasCrowbar && !isMoving && gameState != APARTMENT){ //swing the crowbar
         canSwing = false;
         swinging = true;
@@ -775,6 +810,7 @@ void Player::shootLogic(){
         //no dry fire
         if (hasRaygun  && isAiming && (IsKeyDown(KEY_SPACE) || IsMouseButtonDown(MOUSE_BUTTON_LEFT) || IsGamepadButtonDown(0, GAMEPAD_BUTTON_RIGHT_TRIGGER_2)) && canShoot) {
             chargeTimer += GetFrameTime();
+            charging = true;
 
             if (!chargeSoundPlayed){
                 PlaySound(SoundManager::getInstance().GetSound("chargeUp"));
@@ -788,6 +824,7 @@ void Player::shootLogic(){
             if (IsKeyReleased(KEY_SPACE) || IsMouseButtonReleased(MOUSE_BUTTON_LEFT) || IsGamepadButtonReleased(0, GAMEPAD_BUTTON_RIGHT_TRIGGER_2)){
                 SoundManager::getInstance().ManagerStopSound("chargeUp");
                 PlaySound(SoundManager::getInstance().GetSound("plasma"));
+                if (chargeTimer > 1.5) PlaySound(SoundManager::getInstance().GetSound("raygunFire"));
                 chargeSoundPlayed = false;
                 isShooting = true;
                 canShoot = false;
@@ -795,7 +832,7 @@ void Player::shootLogic(){
                 frameCounter = 0.0f;
                 //infinite bullets
                 int rayDamage = 10;
-                if (chargeTimer > 2){
+                if (chargeTimer > 1.5){
                     rayDamage = 100;
                 } 
                 else if (chargeTimer > 1){
@@ -818,6 +855,9 @@ void Player::UpdateMovement() {
     //isMoving = false; //reset is moving to false at the start of the frame. If it remains false all the way though to the next frame, we are not moving. 
 
     float deltaTime = GetFrameTime();
+    if (currentWeapon == RAYGUN){
+        UpdateCharge(deltaTime, charging);
+    }
     
     reloadLogic(deltaTime);
     shootLogic(); //handle key presses for shooting and switching weapons. 
@@ -874,8 +914,14 @@ void Player::DrawPlayer() {
     Texture2D currentSheet;
     Rectangle sourceRec;
     int frameWidth = 64; // Assuming each frame is 64 pixels wide
-   
-
+    if (currentWeapon == RAYGUN){
+        if (facingRight){
+            DrawChargeBar(Vector2 {40, 16});
+        }else{
+            DrawChargeBar(Vector2 {16, 16});
+        } 
+    }
+    
 
     // Prioritize drawing states: Shooting > Reloading > Aiming > Moving > Idle
     if (currentWeapon == REVOLVER){

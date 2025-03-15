@@ -7,6 +7,7 @@
 #include <cmath>
 #include "GameResources.h"
 
+
 Bullet bullets[MAX_BULLETS];  // Define the global bullets array
 
 
@@ -33,6 +34,12 @@ Vector2 ApplySpread(Vector2 direction, float spreadAngle) {
     return spreadDirection;
 }
 
+void ResetBullet(Bullet& bullet) {
+    bullet.isActive = false;
+    bullet.hitNPCs.clear();  // Clear the hit NPCs so the bullet can work correctly next time
+}
+
+
 
 void FireBullet(Player& player, bool spread, float damage, bool laser, bool raygun) {
     for (int i = 0; i < MAX_BULLETS; i++) {
@@ -54,13 +61,26 @@ void FireBullet(Player& player, bool spread, float damage, bool laser, bool rayg
             }
 
             if (raygun){
-                bullets[i].speed = 500;
-                bullets[i].health = 4;
+                bullets[i].speed = 300;
+                bullets[i].health = 1;
+                bullets[i].lifeTime = 10;
                 //change the size of bullets depending on damage, in check hit make sure your getting bullets[i].size
-                if (damage == 100) bullets[i].size = Vector2 {10, 10};
-                if (damage == 50) bullets[i].size = Vector2 {5, 5};
-                if (damage == 30) bullets[i].size = Vector2 {3, 3};
-                if (damage == 10) bullets[i].size = Vector2 {1, 1};
+                if (damage >= 100){
+                    bullets[i].size = Vector2 {10, 10}; // the hitbox is square, unlike the projectile
+                    bullets[i].health = 10;
+                } 
+                if (damage == 50){
+                    bullets[i].size = Vector2 {5, 5}; // needs more testing, make it OP?
+                    bullets[i].health = 5;
+                } 
+                if (damage == 30){
+                    bullets[i].size = Vector2 {3, 3};
+                    bullets[i].health = 3;
+                } 
+                if (damage == 10){
+                    bullets[i].size = Vector2 {1, 1};
+                    bullets[i].health = 1;
+                } 
 
 
             } 
@@ -103,7 +123,8 @@ void UpdateBullets() {
 
             // Deactivate the bullet if it goes off-screen or its lifetime runs out
             if (bullets[i].position.x < 0 || bullets[i].position.x > 8000 || bullets[i].lifeTime <= 0 || bullets[i].health < 0) {
-                bullets[i].isActive = false;
+                //bullets[i].isActive = false;
+                ResetBullet(bullets[i]);
             }
         }
     }

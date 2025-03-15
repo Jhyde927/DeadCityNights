@@ -4,12 +4,15 @@
 #include <raylib.h>
 #include "Player.h"  // Include Player.h to declare FireBullet correctly
 #include "NPC.h"
+#include <unordered_set>
 
 struct Bullet {
     Vector2 position;
     Vector2 previousPosition;
     Vector2 direction;
     Vector2 size;
+    std::unordered_set<NPC*> hitNPCs; // Add this to track NPCs per bullet
+
     float speed;
     bool isActive;
     float lifeTime;

@@ -1192,15 +1192,26 @@ void NPC::Render() {
     if (interacting){
         highLight = true;
     }
+
+    float hitboxWidth = 16.0f;   
+    float hitboxHeight = 32.0f;  //Tall rectange to cover the sprite. 
+
+    Rectangle npcHitbox = { //debug hitbox
+        position.x+24,     
+        position.y+16,      
+        hitboxWidth,  
+        hitboxHeight                    
+    };
     
     // Draw the texture at the NPC's position
     // Tint the NPC red if recently hit
     Color tint = (hitTimer > 0) ? RED : WHITE;
     if (ghost) tint = ColorAlpha(WHITE, ghostAlpha);//use Color alpha to change alpha of ghost on hit
     if (bat) BeginShaderMode(shaders.rainbowOutlineShader); //raindbow bats
-    if (highLight && !frank) BeginShaderMode(shaders.highlightShader);//highlight when talking except for frank, for reasons. 
+    if (highLight && !frank) BeginShaderMode(shaders.highlightShader);//highlight when talking except for frank, for reasons. I think this broke 
+    //npc highlighting but I think I like it with out it. 
     
-
+    //DrawRectangleLines(position.x+24, position.y+16, hitboxWidth, hitboxHeight, RED); // debug show hitbox
     DrawTextureRec(texture, sourceRec, position, tint);
 
     bloodEmitter.DrawParticles(); //draw blood in front of sprite, looks better IMO
@@ -1255,7 +1266,7 @@ void NPC::ClickNPC(){
 }
 
 bool NPC::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition, Vector2 bulletSize) { 
-
+// Check hit between bullet hitbox and NPC hitbox. 
 //         ______________ 
 //        |      32-4 x  |
 //        |     _|_  16y |

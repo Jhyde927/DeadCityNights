@@ -733,16 +733,32 @@ void spawnZombie(Vector2 position){
     
 }
 
+// void StartZombieSpawn(int zombie_count, float delay) {
+//     globalState.spawning_zombies = true;
+//     globalState.remainingZombiesToSpawn = zombie_count;
+//     globalState.spawnTimer = 0.0f; // Reset timer
 
-void StartZombieSpawn(int zombie_count, float delay){
+//     // Allow spawning as fast as `delay` permits, with a slight random variance
+//     globalState.nextSpawnDelay = delay * 0.5f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX) / (delay * 0.5f));
+
+//     if (gameState != OFFICE && gameState != LAB) {
+//         globalState.glitch = true; // Activate glitch shader to make things more dramatic
+//     }
+// }
+
+void StartZombieSpawn(int zombie_count, float max_delay){
     globalState.spawning_zombies = true;
     globalState.remainingZombiesToSpawn = zombie_count;
-    globalState.spawnTimer = 0.0f; //reset timer
-    // nextSpawnDelay = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / delay));  // Random delay between 1-4 seconds
-    globalState.nextSpawnDelay = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX) / (delay - 1.0f));
-    //film = true;
-    if (gameState != OFFICE && gameState != LAB) globalState.glitch = true; //Activate glitch shader to make things more dramatic, not in the office however, it's a bit too much. 
-    
+    globalState.spawnTimer = 0.0f; // Reset timer
+
+    // Set the maximum possible delay (now used in UpdateZombieSpawning)
+    globalState.maxSpawnDelay = max_delay;
+
+    // Initial spawn delay
+    float minDelay = 0.5f;
+    globalState.nextSpawnDelay = minDelay + ((float)rand() / (float)RAND_MAX) * (max_delay - minDelay);
+
+    if (gameState != OFFICE && gameState != LAB) globalState.glitch = true; // Glitch effect
 }
 
 void UpdateZombieSpawning(){
@@ -783,8 +799,8 @@ void UpdateZombieSpawning(){
  
             // Reset the spawn timer and set a new random delay
             globalState.spawnTimer = 0.0f;
-            float minDelay = 1.0f;
-            float maxDelay = 3.0f; 
+            float minDelay = 0.1f;
+            float maxDelay = globalState.maxSpawnDelay; // Set by StartZombieSpawn()
             globalState.nextSpawnDelay = minDelay + ((float)rand() / (float)RAND_MAX) * (maxDelay - minDelay);
             
             // Decrease the number of zombies left to spawn
@@ -2061,30 +2077,34 @@ void CheckLaserNPCCollisions(std::vector<NPC>& npcs){
 
 
 void CheckBulletNPCCollisions(std::vector<NPC>& npcs) { 
+    //bullet/raygun
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (bullets[i].isActive && !bullets[i].laser) {  
-            std::unordered_set<NPC*> hitNPCs;  // Track which NPCs this bullet has hit, and only apply damage once per bullet. 
+            
+           
 
             for (NPC& npc : npcs) { 
-                if (npc.isActive && hitNPCs.find(&npc) == hitNPCs.end() && //if NPC not in set
+                if (npc.isActive && bullets[i].hitNPCs.find(&npc) == bullets[i].hitNPCs.end() &&
                     npc.CheckHit(bullets[i].previousPosition, bullets[i].position, bullets[i].size)) { 
 
                     // Mark NPC as hit
-                    hitNPCs.insert(&npc); //add npc to set, as to not apply damage again from the same raygun bullet. 
+                    bullets[i].hitNPCs.insert(&npc);
 
                     if (bullets[i].raygun && bullets[i].health > 0) {
-                        bullets[i].health -= 1;  // Raygun bullets penetrate enemies up to 3 times
+                        bullets[i].health -= 1;
                         npc.TakeDamage(bullets[i].damage);
-                        
-                        if (bullets[i].health == 0) {
-                            bullets[i].isActive = false;  // Deactivate raygun bullet when out of health, also check this in bullet.update()
-                            break;
+
+                        if (bullets[i].health <= 0) {
+                            bullets[i].isActive = false;
+                            bullets[i].hitNPCs.clear();
+                            // Don't break here, allow other NPCs to still get hit this frame
                         }
                     } else {
-                        // Normal bullets
-                        bullets[i].isActive = false;  
+                        // Normal bullets stop on the first enemy
+                        bullets[i].isActive = false;
+                        bullets[i].hitNPCs.clear();
                         npc.TakeDamage(bullets[i].damage);
-                        break;  // Normal bullets stop after one enemy
+                        break;  // Normal bullets should stop after one enemy
                     }
                 }
             }
@@ -2093,37 +2113,6 @@ void CheckBulletNPCCollisions(std::vector<NPC>& npcs) {
 }
 
 
-// void CheckBulletNPCCollisions(std::vector<NPC>& npcs) { //Bullet collision with zombies, bats, and ghosts
-//     //Vector2 bulletSize = {1, 1};  // Size of the bullet hitbox
-
-//     for (int i = 0; i < MAX_BULLETS; i++) {
-//         if (bullets[i].isActive && !bullets[i].laser) {  // Only check active bullets and not lasers
-//             for (NPC& npc : npcs) { //zombies vector is passed to this func which calls them npcs
-//                 if (npc.isActive && npc.CheckHit(bullets[i].previousPosition, bullets[i].position, bullets[i].size)) { //
-//                     // Collision detected
-//                     if (bullets[i].raygun && bullets[i].health > 0){
-//                         bullets[i].health -= 1; //raygun bullets can penetrate enemies up to 3. 
-//                         npc.TakeDamage(bullets[i].damage);
-//                         //dont deactivate raygun bullets. they are deactivated when health hits 0.
-
-
-//                     }else{
-//                         //normal bullets
-//                         bullets[i].isActive = false;  // Deactivate the bullet
-//                         npc.TakeDamage(bullets[i].damage);  // Bullets can do more or less damage, use the bullet's damage, it's set when firing
-//                         break;
-//                     }
-
-
-                    
-//                     break;  // Exit loop since the bullet is deactivated
-//                 }
-//             }
-//         }
-//     }
-
-
-// }
 
 
 void DrawHUD(const Player& player) {
@@ -3322,8 +3311,8 @@ void RenderCemetery(){
     
     //dont spawn unless raise zombies is true. raise zombies is set to true by talking to the hobo, and finding the gun
     if (!player.enter_car && player.position.x < 1900 && !globalState.zombieWave3 && !globalState.firstHobo){ // walk to far left and zombies spawn again
-        globalState.zombieWave3 = true;
-        StartZombieSpawn(10, 2);
+        globalState.zombieWave3 = true; 
+        StartZombieSpawn(10, 3);//shovel pickup zombies
         globalState.minDistToPlayer = 50;
         globalState.maxDistToPlayer = 200;
     }
@@ -3371,11 +3360,11 @@ void RenderCemetery(){
 
     }
     
-    if (player_car.position.x < carMin && !globalState.leave_cemetery){
+    if (player_car.position.x < carMin && !globalState.leave_cemetery){ //arrive
         globalState.move_car = false;
     }
 
-   if (player.position.x > carMin && player.position.x < carMax){
+   if (player.position.x > carMin && player.position.x < carMax && !globalState.spawning_zombies){ //over car, can't get in car if zombies are still spawning
         globalState.over_car = true;
         phrase = "UP TO ENTER";
         globalState.show_dbox = true;
@@ -3602,8 +3591,8 @@ void RenderRoad(){
     
     EndMode2D();
     showBigBadge();
-    if (!globalState.usingController) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D
-   
+    //if (!globalState.usingController) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D
+    //dont show cursor on road. it just gets in the way. 
 }
 
 void RenderGraveyard(){
@@ -3611,7 +3600,7 @@ void RenderGraveyard(){
     float digPos = 2350.0f;
     if (player.position.x > 3437 and globalState.raiseZombies){
         globalState.raiseZombies = false;
-        StartZombieSpawn(20, 1);
+        StartZombieSpawn(20, 3);
         globalState.minDistToPlayer = 25;
         globalState.maxDistToPlayer = 200;
     }
@@ -5658,6 +5647,11 @@ void debugKeys(){
             player.hasMac10 = true;
         }
 
+        if (!player.hasRaygun){
+            AddItemToInventory("raygun");
+            player.hasRaygun = true;
+        }
+
     }
 
 }
@@ -6215,7 +6209,7 @@ int main() {
     SetExitKey(0);  // Disable escape key from closing the window
     // Set global text size for buttons
     GuiSetStyle(DEFAULT, TEXT_SIZE, 25); 
-
+ 
     srand(static_cast<unsigned>(time(0))); //randomize seed based on time
     
     resources.Load();
@@ -6267,7 +6261,7 @@ int main() {
 
     //AddItemToInventory("crowbar", inventory, INVENTORY_SIZE); //TODO: find a place to give the player the crowbar. Should it just be the shovel?
 
-    
+    //std::cout << "C++ version: " << __cplusplus << std::endl;
     // Main game loop
     while (!WindowShouldClose() && !globalState.quitRequested) {
         PauseLogic(currentPauseState, pauseTexture, finalTexture);
@@ -6385,7 +6379,7 @@ int main() {
         //////////////////////////////////////////////
 
         //I for inventory
-        if ((IsKeyPressed(KEY_I) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_DOWN))){
+        if ((IsKeyPressed(KEY_I) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_MIDDLE_LEFT))){
             if (!showInventory){
                 showInventory = true;
             }else{

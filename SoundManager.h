@@ -123,15 +123,11 @@ public:
 
         std::advance(it, randomIndex); //advance to random index 
         
-        
         // Set current voice and play it
         currentVoice = it->second; 
         ::PlaySound(currentVoice);
         voicePlaying = true;
     }
-
-
-
 
     void StartRandomVoices(float duration) { // start playing a randomized series of clips
         if (voices.empty()) return;
@@ -310,10 +306,6 @@ public:
         robotVoices.clear();
         alienVoices.clear();
         activeSounds.clear();
-
-
-
-
     }
 
 

@@ -157,6 +157,7 @@ struct GlobalState { //store random bools and timers that have accumulated over 
     float blackoutTimer = 0.0f; // Timer to keep track of blackout period
     float minDistToPlayer = 50;
     float maxDistToPlayer = 200;
+    float maxSpawnDelay = 3;
     int selectedSlot = -1;
     int displayMoney = 100;
 

@@ -21,28 +21,24 @@ enum GameState {
     ALIEN,
 };
 
-enum class NPCType {
-    //not used yet. Refactor createNPC to take a NPCType as a parameter instead of isZombie. 
-    GENERIC,
-    BUSINESSMAN,
-    HOBO,
-    POLICEMAN, 
-    DEALER,
-    TELLER,
-    WOMAN,
-    WOMAN2,
-    ZOMBIE,
-    CYBER_ZOMBIE,
-    MIB,
-    GHOST,
-    BAT,
-    ALIEN,
-    SCIENTIST,
-    JR_SCIENTIST,
-
-
-    // Add more NPC types as needed
-};
+// enum class NPCType {
+//     //not used yet. Refactor createNPC to take a NPCType as a parameter instead of isZombie. 
+//     GENERIC,
+//     HOBO,
+//     POLICEMAN, 
+//     DEALER,
+//     TELLER,
+//     ROBOT,
+//     ZOMBIE,
+//     CYBER_ZOMBIE,
+//     MIB,
+//     GHOST,
+//     BAT,
+//     ALIEN,
+//     SCIENTIST,
+//     JR_SCIENTIST,
+//     FRANK,
+// };
 
 enum TrainState {
     MovingToStation,

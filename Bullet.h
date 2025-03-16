@@ -2,16 +2,16 @@
 #define BULLET_H
 
 #include <raylib.h>
-#include "Player.h"  // Include Player.h to declare FireBullet correctly
+#include "Player.h"  
 #include "NPC.h"
-#include <unordered_set>
+#include <unordered_set> //for raygun
 
 struct Bullet {
     Vector2 position;
     Vector2 previousPosition;
     Vector2 direction;
     Vector2 size;
-    std::unordered_set<NPC*> hitNPCs; // Add this to track NPCs per bullet
+    std::unordered_set<NPC*> hitNPCs; //save which NPC the bullet hit, as to only subtract bullet health once per NPC hit. 
 
     float speed;
     bool isActive;

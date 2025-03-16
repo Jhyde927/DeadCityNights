@@ -5149,7 +5149,6 @@ void RenderOutside() {
 }
 
 
-
 void spawnNPCs(){
     // Create NPCs and set there starting desitnations. //outside npcs start active
     //this function is 300 lines long. consider breaking this up some how. Maybe break into scene specific NPCs, like spawnOutsideNPCs(), spawnLobbyNPCs(), ect.. 
@@ -5448,7 +5447,7 @@ void spawnNPCs(){
 
         scientists.push_back(scientist);
     }
-
+    //spawn aliens
     int a = 3;
     for (int i = 0; i < a; i++){
         Vector2 a_pos =  {static_cast<float>(2000 + i * 200), 700};
@@ -6216,7 +6215,7 @@ int main() {
     //All boxes
     InitBoxes();
 
-    spawnNPCs(); //Create all NPCs
+    spawnNPCs(); //Create all NPCs, except zombies which are created when needed. 
     
     setButtonColors(); //main menu button colors, sets globally for all rayGUI buttons
    

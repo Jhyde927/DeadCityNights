@@ -19,9 +19,6 @@
 
 
 
-
-
-
 NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState initialAnimation, bool active, bool zombie)
 {
     texture = npcTexture;
@@ -30,6 +27,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     currentAnimation = initialAnimation;
     isActive = active;
     isZombie = zombie;
+    
     frameCounter = 0;
     frameSpeed = 8.0f;
     currentFrame = 0;
@@ -58,6 +56,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     scientist = false;
     scienceJr = false;
     cyberZombie = false;
+ 
     alien = false;
     robot = false;
     clickCount = 0;
@@ -85,6 +84,25 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
 
     animationTimer = 0.0;
     isMoving = false;
+
+    // switch(type){ //redundant halfway implemented NPCType. type is still set on creation except for isZombie which is set here. 
+    //     case NPCType::ZOMBIE:isZombie = true; break;
+    //     case NPCType::ROBOT: robot = true; break;
+    //     case NPCType::ALIEN: alien = true; break;
+    //     case NPCType::MIB: MiB = true; break;
+    //     case NPCType::CYBER_ZOMBIE: cyberZombie = true; break;
+    //     case NPCType::GHOST: ghost = true; break;
+    //     case NPCType::BAT: bat = true; break;
+    //     case NPCType::HOBO: hobo = true; break;
+    //     case NPCType::POLICEMAN: police = true; break;
+    //     case NPCType::DEALER: dealer = true; break;
+    //     case NPCType::TELLER: teller = true; break;
+    //     case NPCType::SCIENTIST: scientist = true; break;
+    //     case NPCType::JR_SCIENTIST: scienceJr = true; break;
+    //     case NPCType::FRANK: frank = true; break;
+    //     case NPCType::GENERIC: break;
+            
+    // }
 
 
  

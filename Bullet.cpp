@@ -55,7 +55,8 @@ void FireBullet(Player& player, bool spread, float damage, bool laser, bool rayg
             bullets[i].health = 1;
             bullets[i].size = Vector2 {1, 1};
             player.bulletCount--;  // Decrease player's bullet count
-            if (spread){
+
+            if (spread){ //shotgun spread
                 bullets[i].direction = ApplySpread(bullets[i].direction, 2);
                 bullets[i].position.y += rand() % 4;
             }
@@ -63,15 +64,15 @@ void FireBullet(Player& player, bool spread, float damage, bool laser, bool rayg
             if (raygun){
                 bullets[i].speed = 300;
                 bullets[i].health = 1;
-                bullets[i].lifeTime = 10;
+                bullets[i].lifeTime = 3;
                 //change the size of bullets depending on damage, in check hit make sure your getting bullets[i].size
                 if (damage >= 100){
                     bullets[i].size = Vector2 {10, 10}; // the hitbox is square, unlike the projectile
-                    bullets[i].health = 10;
+                    bullets[i].health = 4; //kill up to 4 zombies in a row. 
                 } 
                 if (damage == 50){
                     bullets[i].size = Vector2 {5, 5}; // needs more testing, make it OP?
-                    bullets[i].health = 5;
+                    bullets[i].health = 4;
                 } 
                 if (damage == 30){
                     bullets[i].size = Vector2 {3, 3};
@@ -116,13 +117,13 @@ void NPCfireBullet(NPC& npc, bool spread, float damage, bool laser) { //robots s
 void UpdateBullets() {
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (bullets[i].isActive) {
-            bullets[i].previousPosition = bullets[i].position; // Better hit detection by also checking positions between prev and current bullet pos
+            bullets[i].previousPosition = bullets[i].position; //save the bullets previous position for better hit detection. 
             // Update bullet position based on direction and speed
             bullets[i].position.x += bullets[i].direction.x * bullets[i].speed * GetFrameTime();
             bullets[i].lifeTime -= GetFrameTime();  // Reduce bullet's lifetime
 
             // Deactivate the bullet if it goes off-screen or its lifetime runs out
-            if (bullets[i].position.x < 0 || bullets[i].position.x > 8000 || bullets[i].lifeTime <= 0 || bullets[i].health < 0) {
+            if (bullets[i].position.x < -100 || bullets[i].position.x > 7000 || bullets[i].lifeTime <= 0 || bullets[i].health < 0) {
                 //bullets[i].isActive = false;
                 ResetBullet(bullets[i]);
             }
@@ -139,7 +140,7 @@ void DrawBullets() {
             }else if (bullets[i].raygun){ //raygun bullet
                     //change the size of the projectile depending on damage.  
                 if (bullets[i].damage == 10){
-                    
+                    //a circle with a ring around it. Best I can do for now. 
                     DrawCircleV(bullets[i].position, 1, RED);
                     DrawCircleSectorLines(bullets[i].position, 3, 0, 360, 8, RED);
                 }else if (bullets[i].damage == 30){

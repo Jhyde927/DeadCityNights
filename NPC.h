@@ -7,6 +7,7 @@
 #include <string>
 #include "Particle.h"
 #include "Grenade.h"
+#include "GameEnums.h"
 
 
 
@@ -96,7 +97,7 @@ public:
     NPC* targetNPC; //zombie's target NPC, a null_ptr that's set to a pointer to a NPC inside a vector 
     
     //Constructor
-    NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState initialAnimation, bool isActive, bool isZombie);
+    NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState initialAnimation, bool isActive, bool zombie);
     
     void Update();
     void Render();

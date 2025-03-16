@@ -304,23 +304,10 @@ bool Player::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosit
     return false;  // Return false if no hit occurred
 }
 
-void Player::HandleInput(float speed) {
+void Player::HandleInput(float speed) { //this doesn't run if aiming. 
     if (abduction) return; // Can't move while being abducted by aliens.
     // Detect if a gamepad is connected
     bool isControllerConnected = IsGamepadAvailable(0);
-
-    //weapon switching
-    // 1,2 or 3, 4 or D-pad left, up, right, down. clockwise
-    if ((IsKeyPressed(KEY_ONE) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_LEFT)) && hasGun) { //dpad left
-        currentWeapon = REVOLVER;
-    } else if ((IsKeyPressed(KEY_TWO) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_UP)) && hasShotgun) { //up
-        currentWeapon = SHOTGUN;
-    }else if ((IsKeyPressed(KEY_THREE) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_RIGHT)) && hasMac10){ //right
-        currentWeapon = MAC10;
-    }else if (IsKeyPressed(KEY_FOUR) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_DOWN) && hasRaygun){ //dpad down
-        currentWeapon = RAYGUN;
-    }
-
     
     float deltaTime = GetFrameTime();
 
@@ -705,7 +692,17 @@ void Player::updateAnimations(){
 
 void Player::shootLogic(){
     charging = false;
-
+    //weapon switching
+    // 1,2 or 3, 4 or D-pad left, up, right, down. clockwise
+    if ((IsKeyPressed(KEY_ONE) || IsGamepadButtonDown(0, GAMEPAD_BUTTON_LEFT_FACE_LEFT)) && hasGun) { //dpad left
+        currentWeapon = REVOLVER;
+    } else if ((IsKeyPressed(KEY_TWO) || IsGamepadButtonDown(0, GAMEPAD_BUTTON_LEFT_FACE_UP)) && hasShotgun) { //up
+        currentWeapon = SHOTGUN;
+    }else if ((IsKeyPressed(KEY_THREE) || IsGamepadButtonDown(0, GAMEPAD_BUTTON_LEFT_FACE_RIGHT)) && hasMac10){ //right
+        currentWeapon = MAC10;
+    }else if (IsKeyPressed(KEY_FOUR) || IsGamepadButtonDown(0, GAMEPAD_BUTTON_LEFT_FACE_DOWN) && hasRaygun){ //dpad down
+        currentWeapon = RAYGUN;
+    }
 
 
     //handle crowbar
@@ -896,17 +893,15 @@ void Player::UpdateMovement() {
 
 
     
-    if (!isAiming && !isShooting && !isReloading) {
+    if (!isAiming && !isShooting && !isReloading) { //cancel all input while aiming, is this a good idea? means weapon switching needs to be outside handleInput 
         //KEYBOARD MOVEMENT CODE
         HandleInput(maxSpeedX); //check input before physics
     
     }
-    playerPhysics(deltaTime);
 
-    
-    updateAnimations();
+    playerPhysics(deltaTime); 
+    updateAnimations(); //shouldn't this be called in draw? 
 }
-
 
 
 // Method for drawing the player
@@ -924,9 +919,10 @@ void Player::DrawPlayer() {
     
 
     // Prioritize drawing states: Shooting > Reloading > Aiming > Moving > Idle
-    if (currentWeapon == REVOLVER){
+
+    if (currentWeapon == REVOLVER){ //surely there is a better way, this decides which sprite sheet we are using. 
     
-        if (hasGun && isShooting && (AllowGuns)) { //need a way to allow guns outside cemetery at a certain point in the game. 
+        if (hasGun && isShooting && (AllowGuns)) { 
             currentSheet = resources.shootSheet;
             sourceRec = { static_cast<float>(currentFrame * frameWidth), 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
@@ -957,9 +953,6 @@ void Player::DrawPlayer() {
             currentSheet = resources.manTexture;  // Idle pose
             sourceRec = { 0, 0, static_cast<float>(currentSheet.width), static_cast<float>(currentSheet.height) };
         }
-
-
-
     
     }
     else if (currentWeapon == SHOTGUN){/////////////////shotgun//////////////

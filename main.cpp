@@ -594,8 +594,7 @@ void HandleKeyboardAiming(){
 
 void PlayPositionalSound(Sound sound, Vector2 soundPos, Vector2 listenerPos, float maxDistance) {
     //There are 2 ways to play positional sounds, this function and one built into sound manager.
-    //This function loops and is used for UFO energyHum, and posible player_car. Sound manager positional sound is for non looping sounds. 
-
+    //This function loops and is used for UFO energyHum, and train. Sound manager positional sound is for non looping sounds. like zombie moan. 
 
     // Calculate distance between listener and sound source
     float dx = listenerPos.x - soundPos.x;
@@ -656,7 +655,7 @@ Vector2 GetRandomSpawnPositionX(Vector2 playerPos, float minDistance, float maxD
     // Adjust the spawn position based on the player's position and direction
     float spawnX = spawnOnRight ? playerPos.x + randomXOffset : playerPos.x - randomXOffset;
 
-    return Vector2{spawnX, 700};  // Keep the same y position as the player
+    return Vector2{spawnX, 700};  // Keep the same y position as the player, 700 is ground level for NPCs and Player just by hapenstance. 
 }
 
 
@@ -687,6 +686,7 @@ void spawnMib(Vector2 position){
 }
 
 void spawnFrank(Vector2 position){
+    //spawn frank after all zombies are dead in the office. 
     int speed = 50;
     NPC frank = CreateNPC(resources.frankSheet, position, speed, IDLE, true, false);
     frank.frank = true;
@@ -698,6 +698,7 @@ void spawnFrank(Vector2 position){
 }
 
 void spawnCyberZombie(Vector2 position){
+    //spawn CyberZombies in lab after talking to mad scientist. 
     int speed = 50;
     NPC cyberZombie = CreateNPC(resources.cyberZombieSheet, position, speed, IDLE, true, false);
     cyberZombie.cyberZombie = true;
@@ -733,18 +734,6 @@ void spawnZombie(Vector2 position){
     
 }
 
-// void StartZombieSpawn(int zombie_count, float delay) {
-//     globalState.spawning_zombies = true;
-//     globalState.remainingZombiesToSpawn = zombie_count;
-//     globalState.spawnTimer = 0.0f; // Reset timer
-
-//     // Allow spawning as fast as `delay` permits, with a slight random variance
-//     globalState.nextSpawnDelay = delay * 0.5f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX) / (delay * 0.5f));
-
-//     if (gameState != OFFICE && gameState != LAB) {
-//         globalState.glitch = true; // Activate glitch shader to make things more dramatic
-//     }
-// }
 
 void StartZombieSpawn(int zombie_count, float max_delay){
     globalState.spawning_zombies = true;
@@ -755,7 +744,7 @@ void StartZombieSpawn(int zombie_count, float max_delay){
     globalState.maxSpawnDelay = max_delay;
 
     // Initial spawn delay
-    float minDelay = 0.5f;
+    float minDelay = 0.5f; // <--- Difficulty setting 
     globalState.nextSpawnDelay = minDelay + ((float)rand() / (float)RAND_MAX) * (max_delay - minDelay);
 
     if (gameState != OFFICE && gameState != LAB) globalState.glitch = true; // Glitch effect
@@ -773,12 +762,12 @@ void UpdateZombieSpawning(){
 
         if (globalState.spawnTimer >= globalState.nextSpawnDelay){ // spawn zombies at randomm position around the player
         
-            if (gameState == OFFICE) globalState.maxDistToPlayer = 400;//spawn zombies further away, more of a chance they find a target. 
+            //if (gameState == OFFICE) globalState.maxDistToPlayer = 400;//spawn zombies further away, more of a chance they find a target. (more of a chance to get lost) 
 
             Vector2 z_pos = GetRandomSpawnPositionX(player.position, globalState.minDistToPlayer, globalState.maxDistToPlayer);  // Min/max distance from player, set globally so it can change
             int zombie_speed = 35;//25
             NPC zombie_npc = CreateNPC(resources.zombieSheet, z_pos, zombie_speed, RISING, true, true);
-            zombie_npc.SetDestination(1000, 4000);
+            zombie_npc.SetDestination(1000, 4000); //random starting destination
             zombies.push_back(zombie_npc);
             
 
@@ -960,7 +949,9 @@ void Flocking(std::vector<NPC>& npcs) {
 void UpdateNPCActivity(GameState previousState, GameState newState) {
     //Activate/DeActivate NPCs depending on the game state. 
     // Map game states to multiple NPC groups
-    std::map<GameState, std::vector<std::vector<NPC>*>> npcGroups = { //key = gameState, val = vector of vectors 
+
+    
+    std::map<GameState, std::vector<std::vector<NPC>*>> npcGroups = { //key = gameState, val = vector of vectors of pointers.  
         { NECROTECH, { &robots } },
         { LOBBY, { &lobbyRobots, &lobbyNPCs, &lobbyMibs, &zombies } },  // Multiple NPC groups in LOBBY
         { ASTRAL, { &astralBats, &astralGhosts } },
@@ -4849,13 +4840,7 @@ void RenderNecroTech(){
 
     if (robots[0].agro && robots[0].isActive) globalState.showPasswordInterface = false; //hide interface on shots fired. 
 
-    // for (NPC& cyberZombie : cyberZombies){
-    //     cyberZombie.Update();
-    //     cyberZombie.Render();
-    // }
 
-
-    //showPasswordInterface = false; //dont show interface if not interacting. 
     for (NPC& robot : robots){
         if (robot.isActive){
             robot.Update();
@@ -4877,11 +4862,7 @@ void RenderNecroTech(){
     DrawBullets();
     HandleGrenades();
     EndShaderMode(); ////////////////////////////SHADER OFF
-
-
-    
     HandleKeyboardAiming();
-
     renderBoxes();
     DrawPickups();
     EndMode2D();

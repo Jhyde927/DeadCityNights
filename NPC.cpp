@@ -1227,6 +1227,97 @@ void NPC::SetAnimationState(AnimationState newState) {
     }
 }
 
+void NPC::handleDeath(){
+    if (isZombie) {
+        //PlaySound(SoundManager::getInstance().GetSound("zombieDeath"));
+        SoundManager::getInstance().PlayPositionalSound("zombieDeath", position, player.position, 500);
+        riseTimer = 0; //if killed while still rising set the risetimer back to 0 as to not play rise animation
+        isDying = true;           // Start dying process
+        bloodEmitter.SpawnExplosion(20, RED);
+        if (rand() % 2 == 0){
+            SetAnimationState(DEATH);  // Set to death animation
+        }else{
+            SetAnimationState(DEATH2); //randomize deaths
+        }
+
+        deathTimer = 0.85f;        // Set death animation duration // needs to be exact
+        destination = position; //zombie is at it's destination on death as to not play walk animation
+    }
+
+    if (ghost){
+        isDying = true;
+        deathTimer = 0.3; // same as the fade out time. So the ghost just fades out for good on death. 
+        destination = position;
+        bloodEmitter.SpawnExplosion(20, WHITE);
+    }
+
+    if (bat){
+        isDying = true;
+        frameSpeed = 14;
+        deathTimer = 0.5;
+        destination = position;
+        SetAnimationState(DEATH2);
+    }
+
+    if (robot){
+        riseTimer = 0;
+        isDying = true;
+        SetAnimationState(DEATH);
+        //play robot death sound
+        //trigger = true; //summon more robots on death in lobby
+        SoundManager::getInstance().PlayPositionalSound("explosion", position, player.position, 500);
+        bloodEmitter.SpawnExplosion(20, YELLOW);
+        destination = position;
+        deathTimer = .85f;
+
+    }
+    if (cyberZombie){
+        SoundManager::getInstance().PlayPositionalSound("zombieDeath", position, player.position, 500);
+        riseTimer = 0;
+        isDying = true;
+        SetAnimationState(DEATH);
+        deathTimer = .85f;
+        destination = position;
+    }
+
+    if (!robot && !cyberZombie && !isZombie && !ghost && !bat){ //NPC killed by zombie
+        riseTimer = 0; 
+        isDying = true;           // Start dying process   
+        SetAnimationState(DEATH);  // Set to death animation
+        SoundManager::getInstance().PlayPositionalSound("deathScream", position, player.position, 500);
+        deathTimer = 0.85f;        // Set death animation duration // needs to be exact
+        destination = position; 
+        
+    }
+
+}
+
+void NPC::playZombieHit(int soundIndex)
+{
+    switch (soundIndex){ //zombie hits
+        case 0:
+            SoundManager::getInstance().PlayPositionalSound("zhit1", position, player.position, 500);
+            
+            break;
+        case 1:
+
+            SoundManager::getInstance().PlayPositionalSound("zhit2", position, player.position, 500);
+            break;
+
+        case 2:
+
+            SoundManager::getInstance().PlayPositionalSound("zhit3", position, player.position, 500);
+            break;
+        
+        case 3:
+
+            SoundManager::getInstance().PlayPositionalSound("zhit4", position, player.position, 500);
+            break;
+
+    }
+
+}
+
 void NPC::ClickNPC(){
     if (!isActive) return; //dont click on inactive NPCs 
 
@@ -1289,7 +1380,7 @@ bool NPC::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition
         hitboxHeight                    // Height of hitbox
     };
 
-    // Check if the current or previous bullet position is inside the hitbox (normal check)
+    
     Rectangle bulletRect = {
         currentBulletPosition.x,  // Bullet's x position
         currentBulletPosition.y,  // Bullet's y position
@@ -1297,6 +1388,7 @@ bool NPC::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition
         bulletSize.y              // Bullet's height
     };
 
+    // Check if the current or previous bullet position is inside the hitbox (normal check)
     if (CheckCollisionRecs(npcHitbox, bulletRect)) {
         return true;  // Return true indicating a hit
     }
@@ -1324,8 +1416,10 @@ bool NPC::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition
 }
 
 
+
 void NPC::TakeDamage(int damage) {
-    if (!isDying){
+
+    if (!isDying){ //we don't limit how faster take damage can run. Usually you would have a canTakeDamage bool. if (npc.hitTimer <= 0) takeDamage() 
         health -= damage;
         hitTimer = 0.3f; // Tint the sprite red for 0.3 seconds
 
@@ -1341,123 +1435,34 @@ void NPC::TakeDamage(int damage) {
 
     if (!robot && !ghost){
         bloodEmitter.SpawnBlood(5,RED, !facingRight); //everyone bleeds, except robots and ghosts
-        
-
+    
     } 
 
+    if (ghost || bat || MiB || robot){
+        if (!agro){
+            agro = true; //trigger agro on hit
+            destination = player.position;//move toward player
+            idleTime = 0; //stop being idle 
+            facingRight = (player.position.x > position.x); //face the player
 
+        }
 
-    if (ghost || bat) agro = true; //trigger agro on hit
+    } 
 
     if (!isZombie && !bat && !ghost && !robot){
         destination = position; //if your an NPC, stop when you take damage so we can play the death animation. 
         
     }
 
-    if (robot && !agro){ //Robot agros on hit
-        agro = true;
-        destination = player.position;//move toward player
-        idleTime = 0; //stop being idle 
-        facingRight = (player.position.x > position.x); //face the player
-
-    }
-
-    if (MiB && !agro){
-        agro = true;
-        destination = player.position;
-        idleTime = 0;
-        facingRight = (player.position.x > position.x);
-    }
-
     int soundIndex = rand() % 4; //returns 0, 1, 2 or 3
 
-    if (isZombie){
-
+    if (isZombie && !isDying){
+        playZombieHit(soundIndex);
         
-        switch (soundIndex){ //zombie hits
-            case 0:
-                SoundManager::getInstance().PlayPositionalSound("zhit1", position, player.position, 500);
-                
-                break;
-            case 1:
-
-                SoundManager::getInstance().PlayPositionalSound("zhit2", position, player.position, 500);
-                break;
-
-            case 2:
-
-                SoundManager::getInstance().PlayPositionalSound("zhit3", position, player.position, 500);
-                break;
-            
-            case 3:
-
-                SoundManager::getInstance().PlayPositionalSound("zhit4", position, player.position, 500);
-                break;
-
-        }
     }
 
-
-    if (health <= 0 && !isDying && isZombie) {
-        //PlaySound(SoundManager::getInstance().GetSound("zombieDeath"));
-        SoundManager::getInstance().PlayPositionalSound("zombieDeath", position, player.position, 500);
-        riseTimer = 0; //if killed while still rising set the risetimer back to 0 as to not play rise animation
-        isDying = true;           // Start dying process
-        bloodEmitter.SpawnExplosion(20, RED);
-        if (rand() % 2 == 0){
-            SetAnimationState(DEATH);  // Set to death animation
-        }else{
-            SetAnimationState(DEATH2); //randomize deaths
-        }
-
-        deathTimer = 0.85f;        // Set death animation duration // needs to be exact
-        destination = position; //zombie is at it's destination on death as to not play walk animation
-    }
-
-    if (health <= 0 && ghost && !isDying){
-        isDying = true;
-        deathTimer = 0.3; // same as the fade out time. So the ghost just fades out for good on death. 
-        destination = position;
-        bloodEmitter.SpawnExplosion(20, WHITE);
-    }
-
-    if (health <= 0 && bat && !isDying){
-        isDying = true;
-        frameSpeed = 14;
-        deathTimer = 0.5;
-        destination = position;
-        SetAnimationState(DEATH2);
-    }
-
-    if (health <= 0 && !isDying && robot){
-        riseTimer = 0;
-        isDying = true;
-        SetAnimationState(DEATH);
-        //play robot death sound
-        //trigger = true; //summon more robots on death in lobby
-        SoundManager::getInstance().PlayPositionalSound("explosion", position, player.position, 500);
-        bloodEmitter.SpawnExplosion(20, YELLOW);
-        destination = position;
-        deathTimer = .85f;
-
-    }
-    if (health <= 0 && !isDying && cyberZombie){
-        SoundManager::getInstance().PlayPositionalSound("zombieDeath", position, player.position, 500);
-        riseTimer = 0;
-        isDying = true;
-        SetAnimationState(DEATH);
-        deathTimer = .85f;
-        destination = position;
-    }
-
-    if (health <= 0 && !isDying && !robot && !cyberZombie){ //NPC killed by zombie
-        riseTimer = 0; 
-        isDying = true;           // Start dying process   
-        SetAnimationState(DEATH);  // Set to death animation
-        SoundManager::getInstance().PlayPositionalSound("deathScream", position, player.position, 500);
-        deathTimer = 0.85f;        // Set death animation duration // needs to be exact
-        destination = position; 
-        
+    if (health <= 0 && !isDying){
+        handleDeath();
     }
 
 }

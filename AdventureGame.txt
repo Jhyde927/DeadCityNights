@@ -921,4 +921,24 @@ NecroTech Interior:
 
 	draw a progress bar by the players raygun that reflects the charge up time. 
 
-	needs better sound, bigger sound for bigger projectile. 
+	needs better sound, bigger sound for bigger projectile. still needs better sound. 
+
+	you can leave by car while zombies are spawning in cemetery, and the zombies will show up on main street. can't get into car while zombies are spawning but you can once they are done and there is still zombies left. Maybe you can take zombies back with you and that's ok. everyone on main street could die and the game would just keep going. hobo would be unaffected. Once again the solution is to do nothing. 
+
+	raygun only penetrates 3 zombies max no matter how much health I give the bullet. It must be running take damage every frame. I set it to 1000 health and it still had 3 zom penetration. how many frames is the bullet over the zombie? must be less than 1000. so I don't know. -fixed by tracking which NPC is hit by bullet. One takeDamage call per bullet. Now raygun can lay waste to a line of 10 zombies, may need to dial it back, maybe make it charge faster. but less damage. 
+
+	once you kill the CEO or whatever you need to make your way out of the building that's still crawling with the undead. 
+
+	It's gonna take more testing of the end game. Need to make an ending before moving forward honestly. 
+
+	controller button for raygun
+
+	if I'm holding left trigger to aim, and hit the d-pad to switch weapons it doesn't work. Need to release aim to switch weapons which was not intentional. Controller can only take in 1 input at a time? HandleInput function isn't called while aiming so you can't put weapon switching code in handleInput, so it remains in shootLogic()
+
+	was using C++14, upgraded to C++17 so i can use clamp. 
+
+	Raygun makes the office fight trivial. If you know how to use it. and were diligent enough to find the UFO.
+
+	Need a fight that lasts more than 30 seconds. The last boss should have multiple phases. 
+
+	I think I'm being suppressed. I'm not allowed to have UFOs in my game. Maybe raysan won't like it. but why should I care about what raysan thinks about UFOs. it's super secret level. As to not offend any one. I tried to put #UFO in youtube and it doesn't exist. The cover up is real. wake up people!

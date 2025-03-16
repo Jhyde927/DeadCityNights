@@ -1,10 +1,5 @@
 #include "GameResources.h"
 
-// Load a texture from file
-// Texture2D LoadTextureFromFile(const std::string& filePath) {
-//     return LoadTexture(filePath.c_str());
-// }
-
 GameResources resources;  // Define the global instance
 
 // Load all game resources

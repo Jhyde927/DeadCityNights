@@ -93,7 +93,7 @@ public:
     // Add an emitter for each NPC
     Emitter bloodEmitter;
 
-    NPC* targetNPC; //zombie's target
+    NPC* targetNPC; //zombie's target NPC, a null_ptr that's set to a pointer to a NPC inside a vector 
     
     //Constructor
     NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState initialAnimation, bool isActive, bool isZombie);
@@ -115,6 +115,8 @@ public:
     void TakeDamage(int damage);
     void HandleAnimationLogic();
     void ghostMoves();
+    void playZombieHit(int soundIndex);
+    void handleDeath();
     
 };
 

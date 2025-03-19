@@ -33,7 +33,7 @@ const int GAME_SCREEN_WIDTH = 1024;
 const int GAME_SCREEN_HEIGHT = 1024;
 
 float cursorSpeed = 900.0f; // Adjust speed of cursor movement
-float deadZone = 0.2f;      // Ignore slight stick movements
+float deadZone = 0.2f;   // Ignore slight stick movements
 // Virtual cursor position (simulates the mouse)
 Vector2 virtualCursor = { 512, 512 }; // Start at screen center
 
@@ -225,9 +225,7 @@ void HandleGrenades(){
 
     for (auto& grenade : grenades) {
         grenade.Update(GetFrameTime());
-        grenade.Draw();
-   
-        
+        grenade.Draw();  
     }
 
     // Remove non Active grenades
@@ -237,7 +235,6 @@ void HandleGrenades(){
     );
 
 }
-
 
 void DrawElevator(Elevator& elevator, Texture2D elevatorTexture, Texture2D floorTexture, int frameWidth, int frameHeight, float deltaTime) {
     // Update animation only if the elevator is opening or closing
@@ -389,13 +386,15 @@ void crowbarAttack(std::vector<NPC>& enemies){
 }
 
 void showBigBadge(){
+    //show the badge in the middle of the screen until you click the badge again. 
     if (globalState.showBadge) DrawTexture(resources.BigBadge, 512, 512, WHITE);
 
 }
 
 void renderBoxes(){
+    //render all boxes in world.
     for (Box& box : boxes){
-        if (box.scene == gameState){
+        if (box.scene == gameState){ //if box is set to current scene, render it
             box.Draw();
             box.Update(GetFrameTime());
         }
@@ -407,7 +406,6 @@ void OutsideCarButtons(){
         globalState.move_car = true;
         globalState.show_carUI = false;
     }else if (player.enter_car && globalState.buttonWork){//button press work
-        //do something
         globalState.gotoWork = true;
         globalState.move_car = true;
         globalState.hasWorked = true;
@@ -570,7 +568,7 @@ void HandleKeyboardAiming(){
     Vector2 WorldMousePosition = GetScreenToWorld2D(mousePosition, camera);
 
     float leftStickX = 0.0f;
-    float deadZone = 0.3f;
+    float deadZone = 0.5f;
 
     if (IsGamepadAvailable(0)) {
         leftStickX = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_X);
@@ -584,9 +582,12 @@ void HandleKeyboardAiming(){
         if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT) || leftStickX < -deadZone) {
             player.facingRight = false;
         }
-    }else if (player.isAiming && (!IsKeyDown(KEY_F) && !IsGamepadButtonDown(0, GAMEPAD_BUTTON_LEFT_TRIGGER_2))) {// If the player is not aiming with keyboard, allow mouse control to set the facing direction
+    }else if (player.isAiming && (!IsKeyDown(KEY_F) && !IsGamepadButtonDown(0, GAMEPAD_BUTTON_LEFT_TRIGGER_2))) {// If the player is aiming with keyboard, allow mouse control to set the facing direction
         // Set facing direction based on world mouse position
+        
         player.facingRight = WorldMousePosition.x > player.position.x; //facing right is true if mousepos.x > playerPos.x and not holding f and trigger
+        
+        
 
     }
 }
@@ -747,7 +748,7 @@ void StartZombieSpawn(int zombie_count, float max_delay){
     float minDelay = 0.5f; // <--- Difficulty setting 
     globalState.nextSpawnDelay = minDelay + ((float)rand() / (float)RAND_MAX) * (max_delay - minDelay);
 
-    if (gameState != OFFICE && gameState != LAB) globalState.glitch = true; // Glitch effect
+    if (gameState != OFFICE && gameState != LAB && gameState != !OUTSIDE) globalState.glitch = false; // Glitch effect
 }
 
 void UpdateZombieSpawning(){
@@ -1196,6 +1197,7 @@ void HandleOutsideTransition(PlayerCar& player_car) {
 void HandleApartmentTransition() {
     gameState = OUTSIDE;  // Go back outside
     player.position.x = globalState.apartmentX;
+    showInventory = true;
     UpdateNPCActivity(APARTMENT, OUTSIDE);
 }
 
@@ -1554,8 +1556,8 @@ void HandleFadeOut(PlayerCar& player_car) {
 
 
 void HandleTransition() {
-    //if you want to tranision to a new scene, just say FADEOUT = TRUE
-
+    //if you want to tranision to a new scene, just say transitionState = FADE_OUT
+    globalState.showBadge = false;//turn off big badge when leaving any area. incase they don't know how to close it. 
     if (transitionState == FADE_IN) {
         HandleFadeIn();
     } else if (transitionState == FADE_OUT) {
@@ -2618,15 +2620,12 @@ void DrawUFO(){
         BeginBlendMode(BLEND_ADDITIVE);
         DrawTexturePro(resources.lightBar, sourceRec, destRec, origin, rotation, WHITE);
         EndBlendMode();
-        
-
-
     
     }
     
-    BeginShaderMode(shaders.glitchShader); //TODO find a good shader for UFO
+    //BeginShaderMode(shaders.glitchShader); //TODO find a good shader for UFO
     DrawTextureRec(resources.UFOsheet, sourceRect, UFODrawPosition, WHITE); 
-    EndShaderMode();
+    //EndShaderMode();
     
 }
 
@@ -2888,11 +2887,11 @@ void EnterCar(){
 void playerOutsideInteraction(){
     //on main street there are lots of different interactable things. Handle them here. 
     //this doesn't handle the button press. just checks postiions. 
-    int ap_min = 2246;//over apartment
-    int ap_max = 2266;
-    int pc_min = 1728; // over player_car
-    int pc_max = 1748;
-    int road_min = 1340; //exiting outside via road
+    const int ap_min = 2246;//over apartment
+    const int ap_max = 2266;
+    const int pc_min = 1728; // over player_car
+    const int pc_max = 1748;
+    const int road_min = 1340; //exiting outside via road
 
     int dist = abs(player.position.x - ap_max);
 
@@ -2981,8 +2980,6 @@ void playerOutsideInteraction(){
 
 }
 
-
-
 void RenderSubway(){
     globalState.drunk = false;
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
@@ -3003,7 +3000,6 @@ void RenderSubway(){
 
     //Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
     HandleKeyboardAiming();
-
 
     if (globalState.drunk){
         BeginShaderMode(shaders.glowShader2);
@@ -4625,9 +4621,14 @@ void RenderLobby(){
     }
 
     if (globalState.globalAgro && globalState.can_spawn_mibs){
+        //spawn 4 more mibs in lobby on agro.. 
         globalState.can_spawn_mibs = false;
-        //spawnMib(resources, player, player.position + Vector2 {300, 0});
+        spawnMib(player.position + Vector2 {300, 0});
         spawnMib(player.position + Vector2 {-300, 0});
+
+        spawnMib(player.position + Vector2 {200, 0});
+        spawnMib(player.position + Vector2 {-200, 0});
+
         
     }
     
@@ -4928,7 +4929,9 @@ void RenderOutside() {
 
     if (globalState.triggerOutsideZombies){
         globalState.triggerOutsideZombies = false;
-        StartZombieSpawn(15, 1);
+        globalState.maxDistToPlayer = 400; //zombies spread way out. 
+        globalState.minDistToPlayer = 20;
+        StartZombieSpawn(30, 2); //lots of them every 0.5 - 2 seconds. 
     }
     
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
@@ -5069,10 +5072,24 @@ void RenderOutside() {
     DrawBullets();
 
     //DrawPlayerCar
-    if (!globalState.carToPark){ //you took the car to the park and the subway back, car is still at the park
-        float CarFrameWidth = 128;
-        Rectangle sourceRecCar = {player_car.currentFrame * CarFrameWidth, 0, CarFrameWidth, CarFrameWidth};
-        DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE); //draw player_car
+
+    float CarFrameWidth = 128;
+    Rectangle sourceRecCar = {player_car.currentFrame * CarFrameWidth, 0, CarFrameWidth, CarFrameWidth};
+    DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE); //draw player_car
+
+    
+    if (!globalState.triggerOutsideZombies){ //show hud when zombies are attacking.
+        if ((player.hasGun || player.hasShotgun || player.hasMac10) && !player.enter_car) DrawHUD(player); 
+    }
+
+    
+
+    //DrawText("Cemetery", screenWidth/2 - 100, 60, 50, WHITE);
+
+    //draw healthbar 
+    if (!player.enter_car){
+        Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
+        DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
 
     }
 
@@ -5161,11 +5178,9 @@ void spawnNPCs(){
         float randomX = dis(gen); //random distrabution using RNG
         Vector2 g_pos = {randomX, 700.0f};   
         NPC npc = CreateNPC(resources.npcTexture, g_pos, speed, IDLE,  true, false);
-        if (gameState == OUTSIDE){
-            npc.SetDestination(0, 4000.0f);
-        }else if (gameState == PARK){
-            npc.SetDestination(1000, 2100);
-        }
+        
+        npc.SetDestination(0, 4000.0f);
+
         npcs.push_back(npc);  // Add the NPC to the vector
         //ParkNpcs.push_back(npc); //no generic NPCs in park, too many people
     }
@@ -5370,7 +5385,7 @@ void spawnNPCs(){
     }
 
     //spawn lobby buisiness men NPCs
-    int bmen = 3;
+    int bmen = 1;
     for (int i = 0; i < bmen; i++){
         Vector2 b_pos = {static_cast<float>(2200 + i * 100), 700};
         NPC businessman = CreateNPC(resources.businessSheet, b_pos, speed, IDLE, false, false);
@@ -5382,7 +5397,7 @@ void spawnNPCs(){
     }
 
     //spawn lobby women
-    int wm = 3;
+    int wm = 1;
     for (int i = 0; i < wm; i++){
         Vector2 w_pos = {static_cast<float>(2200 + i * 100), 700};
         NPC woman = CreateNPC(resources.woman2Sheet, w_pos, speed, IDLE, false, false);
@@ -5392,7 +5407,7 @@ void spawnNPCs(){
     }
 
     //spawn lobby MiBs
-    int mb = 3;
+    int mb = 5;
     for (int i = 0; i < mb; i++){
         Vector2 m_pos = {static_cast<float>(2000 + i * 200), 700}; 
         NPC mib_npc = CreateNPC(resources.mibSheet, m_pos, speed, IDLE, false, false);
@@ -5475,7 +5490,7 @@ void handleCamera(float& targetZoom){
         } else if (GetMouseWheelMove() < 0) {
             targetZoom -= 0.1f;
         }
-        if (IsGamepadAvailable(0)){
+        if (IsGamepadAvailable(0)){//gamepad right stick Y to zoom in and out. 
             float rightStickY = GetGamepadAxisMovement(0, GAMEPAD_AXIS_RIGHT_Y);
             if (rightStickY > 0) {
                 targetZoom -= 0.01f;
@@ -5484,16 +5499,14 @@ void handleCamera(float& targetZoom){
             }
         }
     
-
         // Smoothly interpolate the current zoom towards the target zoom
         camera.zoom = Lerp(camera.zoom, targetZoom, 0.1f);
         float maxZoom = 3.5;
         float minZoom = 1.0;
+
         // Apply boundary checks for the zoom level
-        if (camera.zoom > maxZoom) camera.zoom = maxZoom;
-        if (camera.zoom < minZoom) camera.zoom = minZoom;
-        if (targetZoom > maxZoom) targetZoom = maxZoom;
-        if (targetZoom < minZoom) targetZoom = minZoom;
+        camera.zoom = std::clamp(camera.zoom, minZoom, maxZoom);
+        targetZoom = std::clamp(targetZoom, minZoom, maxZoom);
 
 }
 
@@ -5595,8 +5608,8 @@ void debugKeys(){
         }
     }
 
-    //n
-    if (IsKeyPressed(KEY_N)){
+    
+    if (IsKeyPressed(KEY_SEMICOLON)){
         if (!player.hasArmor){
             player.hasArmor = true;
             AddItemToInventory("vest");
@@ -5635,8 +5648,6 @@ void debugKeys(){
     }
 
 }
-
-
 
 void UptoEnter(){
     //enter places by pressing up 
@@ -5828,9 +5839,6 @@ void setButtonColors(){
     GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(LightBlue));
     GuiSetStyle(BUTTON, BORDER_COLOR_FOCUSED, ColorToInt(LightBlue));
     GuiSetStyle(BUTTON, BASE_COLOR_PRESSED, ColorToInt(LightBlue));
-
-    
-
 }
 
 void ShowControls(){
@@ -5841,10 +5849,11 @@ void ShowControls(){
     Vector2 controlsRectSize = { 300, 700 };
     DrawRectangle(controlsRecPos2.x, controlsRecPos2.y, controlsRectSize.x, controlsRectSize.y-250, Fade(BLACK, 0.7f));
     DrawRectangle(controlsRectPos.x, controlsRectPos.y, controlsRectSize.x, controlsRectSize.y, Fade(BLACK, 0.7f)); // Semi-transparent background
+
     DrawText("\nKeyboard:\n\n\nEsc - Menu\n\nD - Move Right\n\nA - Move Left\n\nShift - Run\n\nW - Interact\n\nS - Exit Car/Apartment\n\nSpace - Jump\n\nI - Open Inventory\n\nV - Melee\n\nRightClick - Aim\n\nLeftClick - Fire\n\nM - Mute Music\n\nMouseWheel - Zoom\n\n1,2,3 - Switch Weapons\n\n\n\nDebug Keys:\n\nK - Give Keys\n\nG - Give Guns\n\nH - Give Shovel\n\nP - Give Drugs\n\nL - Give Crowbar", 
             controlsRectPos.x + 32, controlsRectPos.y, 20, WHITE); 
 
-    DrawText("\nGamepad:\n\n\nStart - Menu\n\nLeftStick - Move\n\nA - Interact\n\nB - Exit Car/Apartment\n\nY - Jump\n\nD-pad Down - Open Inven\n\nB - Melee\n\nLeftTrigger - Aim\n\nRightTrigger - Fire\n\nRightStick - Zoom\n\nBumpers - scroll inven\n\nD-pad - Switch Weapons", 
+    DrawText("\nGamepad:\n\n\nStart - Menu\n\nLeftStick - Move\n\nA - Interact\n\nB - Exit Car/Apartment\n\nY - Jump\n\nSelect - Inventory\n\nB - Melee\n\nLeftTrigger - Aim\n\nRightTrigger - Fire\n\nRightStick - Zoom\n\nBumpers - scroll inven\n\nD-pad - Switch Weapons", 
         controlsRecPos2.x + 32, controlsRecPos2.y, 20, WHITE); 
 
 }
@@ -5999,31 +6008,30 @@ void drawMenuButton(PauseState& currentPauseState, RenderTexture2D& pauseTexture
     DrawTexture(resources.menuButton, buttonBounds.x, buttonBounds.y, WHITE);
 }
 
-
-Vector2 clampMouseCursor(Vector2& mousePosition){
-    int winWidth = GetScreenWidth(); 
+Vector2 clampMouseCursor(Vector2& mousePosition) {
+    int winWidth = GetScreenWidth();
     int winHeight = GetScreenHeight();
+
     int mouseX = GetMouseX();
     int mouseY = GetMouseY();
 
-    // Clamp to window dimensions
-    if (mouseX < 0) mouseX = 0;
-    if (mouseX > winWidth - 1) mouseX = winWidth - 1;
+    // Clamp X position
+    mouseX = Clamp(mouseX, 0, winWidth - 1);
 
-    if (globalState.borderlessWindow){ //lock the cursor to the window only when in fullscreen AKA borderless window. 
-        if (mouseX > winWidth){
-            mouseX = winWidth - 1;
-            SetMousePosition(mouseX, mouseY); //SetMousePosition overrides the mouse, keeping the cursor inside the screen. 
-        }
+    // If borderless window, lock cursor strictly within window bounds
+    if (globalState.borderlessWindow && mouseX >= winWidth) {
+        mouseX = winWidth - 1;
+        SetMousePosition(mouseX, mouseY);
     }
 
-    if (mouseY < 0) mouseY = 0;
-    if (mouseY > winHeight - 1) mouseY = winHeight - 1;
+    // Clamp Y position
+    mouseY = Clamp(mouseY, 0, winHeight - 1);
 
-    // If we changed anything, set the mouse position:
-    mousePosition = Vector2 {static_cast<float>(mouseX),static_cast<float>(mouseY)};
+    // Update the vector
+    mousePosition = Vector2{ static_cast<float>(mouseX), static_cast<float>(mouseY) };
     return mousePosition;
 }
+
 
 void InitLabObjects(){
 
@@ -6268,29 +6276,33 @@ int main() {
         
         UpdateBullets();
         //check each enemy group for bullet collisions
-        CheckBulletNPCCollisions(zombies);
-        CheckBulletNPCCollisions(ghosts);
-        CheckBulletNPCCollisions(astralGhosts);
-        CheckBulletNPCCollisions(bats);
-        CheckBulletNPCCollisions(astralBats);
-        CheckBulletNPCCollisions(cyberZombies);
+
+        for (auto groupPtr : enemies){ //iterate all enemies and check for bullet hits. 
+            if (groupPtr){
+                CheckBulletNPCCollisions(*groupPtr);
+            }
+        }
+
+        // CheckBulletNPCCollisions(zombies);
+        // CheckBulletNPCCollisions(ghosts);
+        // CheckBulletNPCCollisions(astralGhosts);
+        // CheckBulletNPCCollisions(bats);
+        // CheckBulletNPCCollisions(astralBats);
+        // CheckBulletNPCCollisions(cyberZombies);
         
-        CheckBulletNPCCollisions(robots); //player shoots necroTech robot
-        CheckBulletNPCCollisions(lobbyRobots); //player shoots lobby robots
-        CheckBulletNPCCollisions(lobbyMibs); // player shoots mibs
+        // CheckBulletNPCCollisions(robots); //player shoots necroTech robot
+        // CheckBulletNPCCollisions(lobbyRobots); //player shoots lobby robots
+        // CheckBulletNPCCollisions(lobbyMibs); // player shoots mibs
         
         CheckLaserNPCCollisions(lobbyNPCs); //robots can shoot regular NPCs if they happen to be in the way
         CheckLaserNPCCollisions(zombies); //mibs can shoot zombies if they get in the way.
 
-        crowbarAttack(zombies); //check crowbar collisions with every enemy group. optimize this?
-        crowbarAttack(lobbyMibs);
-        crowbarAttack(lobbyRobots);
-        crowbarAttack(astralBats);
-        crowbarAttack(astralGhosts);
-        crowbarAttack(ghosts);
-        crowbarAttack(robots);
-        crowbarAttack(bats); //there are no bats, but just incase future bats
-        crowbarAttack(cyberZombies);
+        for (auto npcGroupPtr : enemies){ //enemy NPC groups are kept in the enemies vector, so we can iterate and check hits vs all enemies. 
+            if (npcGroupPtr){
+                crowbarAttack(*npcGroupPtr);
+            }  
+        }
+
 
         crowbarAttackBoxes(boxes); //breakable boxes
 

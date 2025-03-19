@@ -41,6 +41,8 @@ std::vector<NPC>scientists;
 std::vector<NPC>cyberZombies;
 std::vector<NPC>aliens;
 
+std::vector<std::vector<NPC>*> enemies;
+
 // Define the global NPC group list
 std::vector<std::vector<NPC>*> allNPCGroups;
 
@@ -61,6 +63,13 @@ void InitCamera() {
 
 // Function to initialize allNPCGroups
 void InitializeNPCGroups() {
+
+    enemies = 
+    {
+       &zombies, &cyberZombies, &ghosts, &bats, &mibs, 
+       &lobbyMibs, &robots, &lobbyRobots, &astralBats, &astralGhosts
+    };
+
     allNPCGroups = {
         &npcs, &zombies, &hobos, &ghosts, &bats, &mibs, 
         &astralGhosts, &astralBats, &ParkNpcs, &robots, 

@@ -326,7 +326,7 @@ void Player::HandleInput(float speed) { //this doesn't run if aiming.
     if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) moveX = -1.0f;
 
     // Controller movement (if above deadzone threshold)
-    float deadzone = 0.2f; // Ignore slight stick movements
+    float deadzone = 0.5f; // Ignore slight stick movements
     if (fabs(leftStickX) > deadzone) {
         moveX = leftStickX;
     }
@@ -339,6 +339,8 @@ void Player::HandleInput(float speed) { //this doesn't run if aiming.
 
         isMoving = true;
         facingRight = moveX > 0;
+
+
     } else {
         // Deceleration when no input
         if (velocity.x > 0.0f) {
@@ -346,9 +348,11 @@ void Player::HandleInput(float speed) { //this doesn't run if aiming.
         } else if (velocity.x < 0.0f) {
             velocity.x = std::min(velocity.x + deceleration * deltaTime, 0.0f); // Stop at zero
         }
+        isMoving = false; //instantly set to false so you can swing crowbar immediatly 
+
 
         // Only set isMoving to false if velocity has actually stopped
-        isMoving = (velocity.x != 0.0f);
+        //isMoving = (velocity.x != 0.0f);
     }
 
     // ------------------------------
@@ -364,14 +368,15 @@ void Player::HandleInput(float speed) { //this doesn't run if aiming.
 
     if (moveX == 0 && !isAiming) {
         isRunning = false;  // Stop running if no movement keys are pressed
+        
     }
 
     // ------------------------------
     // JUMPING (Keyboard + Controller)
     // ------------------------------
-    float leftStickY = 0.0f;
+    float leftStickY = 0.0f;//drop through platforms by holding down on left stick
     if (isControllerConnected) {
-        leftStickY = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_Y);
+        leftStickY = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_Y); 
     }
 
     if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN) || (isControllerConnected && leftStickY > 0.5f)) {
@@ -398,7 +403,7 @@ void Player::HandleInput(float speed) { //this doesn't run if aiming.
     // ------------------------------
     // AIMING (Keyboard + Controller)
     // ------------------------------
-    if (isAiming && !isReloading) {
+    if (isAiming) {
         if (moveX > 0) {
             facingRight = true;
         }
@@ -547,18 +552,9 @@ void Player::playerPhysics(float deltaTime){
     }
 
     // Clamp horizontal velocity
-    if (velocity.x > maxSpeedX) {
-        velocity.x = maxSpeedX;
-    } else if (velocity.x < -maxSpeedX) {
-        velocity.x = -maxSpeedX;
-    }
+    velocity.x = std::clamp(velocity.x, -maxSpeedX, maxSpeedX);
+    velocity.y = std::clamp(velocity.y, -maxSpeedY, maxSpeedY);
 
-    // Clamp vertical velocity (for downward movement)
-    if (velocity.y > maxSpeedY) {
-        velocity.y = maxSpeedY;
-    } else if (velocity.y < -maxSpeedY) {
-        velocity.y = -maxSpeedY;
-    }
 
     if (isAiming || isShooting || isReloading){ // apply deceleration here, and when there is no input
         if (velocity.x > 0.0f) {

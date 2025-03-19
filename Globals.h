@@ -31,6 +31,8 @@ extern std::vector<NPC>scientists;
 extern std::vector<NPC>cyberZombies;
 extern std::vector<NPC>aliens;
 
+extern std::vector<std::vector<NPC>*> enemies;
+
 // Extern declaration of the master NPC group list
 extern std::vector<std::vector<NPC>*> allNPCGroups;
 

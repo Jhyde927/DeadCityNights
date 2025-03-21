@@ -46,7 +46,7 @@ const int screenHeight = 1024; // is it crazy to keep the resolution square?
 
 std::vector<Box> boxes; //boxes stays in main because undefined behavior do to inclusion hell. 
 
-GameState gameState = OUTSIDE; //start outside. on main street. 
+GameState gameState = LAB; //start outside. on main street. 
 
 TransitionState transitionState = NONE; //state for transitioning scenes. 
 
@@ -967,6 +967,7 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
         {LOT, {&hobos}}, //dont forget about hobo
         {LAB, {&cyberZombies, &scientists, &zombies}},
         {ALIEN, {&aliens}},
+        {PENTHOUSE, {}},
 
     };
 
@@ -1391,16 +1392,26 @@ void HandleParkTransition(){
 
     }
 
+}
 
+void HandlePenthouseTransition(){
+    //do something
 }
 
 void HandleLabTransition(){
     if (elevators[1].isOccupied && player.onElevator){
         gameState = OFFICE;
         player.onElevator = false;
+       
         UpdateNPCActivity(LAB, OFFICE);
 
-    }else if (player.isDead){
+    }else if (elevators[0].isOccupied && player.onElevator){
+        gameState = PENTHOUSE;
+        player.onElevator = false;
+        
+        UpdateNPCActivity(LAB, PENTHOUSE);
+    }
+    else if (player.isDead){
         UpdateNPCActivity(LAB, APARTMENT);
         gameState = APARTMENT;
         player.currentHealth = player.maxHealth;
@@ -1511,6 +1522,9 @@ void PerformStateTransition( PlayerCar& player_car) {
         case ALIEN:
             HandleUFOtransition();
             break;
+
+        case PENTHOUSE:
+            HandlePenthouseTransition();
   
     }
 }
@@ -4235,6 +4249,88 @@ void RenderUFOinterior(){
 
 }
 
+void RenderPenthouse()
+{
+    SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
+    player.outline = false;
+    globalState.show_dbox = false;
+    globalState.over_elevator = false;
+    globalState.over_elevator2 = false;
+    globalState.over_Ebutton = false;
+    globalState.over_Ebutton2 = false;
+    globalState.over_console = false;
+
+    // Vector2 pentPos = {2800, 648};
+    // if (elevators[0].position != pentPos){
+    //     elevators[0].position = pentPos;
+    // }
+
+    float deltaTime = GetFrameTime();
+    camera.target = player.position;
+    BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
+    ClearBackground(globalState.customBackgroundColor);
+    float parallaxBackground = camera.target.x * 0.8f;  // Background moves even slower
+    float parallaxMidground = camera.target.x * 0.6f;  // Background moves even slower
+    if (globalState.drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
+        
+    
+    DrawTexturePro(resources.penthouseBackground, {0, 0, static_cast<float>(resources.penthouseBackground.width), static_cast<float>(resources.penthouseBackground.height)},
+    {-700 + parallaxBackground, 0, static_cast<float>(resources.penthouseBackground.width), static_cast<float>(resources.penthouseBackground.height)}, {0, 0}, 0.0f, WHITE);
+
+    DrawTexturePro(resources.penthouseMidground, {0, 0, static_cast<float>(resources.penthouseMidground.width), static_cast<float>(resources.penthouseMidground.height)},
+    {parallaxMidground, 0, static_cast<float>(resources.penthouseMidground.width), static_cast<float>(resources.penthouseMidground.height)}, {0, 0}, 0.0f, WHITE);
+ 
+
+    DrawTexturePro(resources.penthouseForeground, {0, 0, static_cast<float>(resources.penthouseForeground.width), static_cast<float>(resources.penthouseForeground.height)},
+    {512, 0, static_cast<float>(resources.penthouseForeground.width), static_cast<float>(resources.penthouseForeground.height)}, {0, 0}, 0.0f, WHITE);
+
+    DrawElevator(elevators[0], resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
+
+    HandleGrenades();
+
+
+    //DRAW PLAYER
+    if (!player.onElevator) player.DrawPlayer();
+
+    DrawBullets();
+    EndShaderMode(); ////////////////////////////SHADER OFF
+    
+
+    HandleKeyboardAiming();
+    renderBoxes();
+    DrawPickups();
+    EndMode2D();
+    showBigBadge();
+
+    //draw healthbar 
+    if (!player.enter_car){
+        Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
+        DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
+
+    }
+
+    DrawMoney(); //draw money after EndMode2d()
+    if (showInventory){
+         
+        RenderInventory();  // Render the inventory 
+    }
+
+    if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
+        if (!globalState.usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+    }else{
+        if (!globalState.usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+    }
+
+    if (globalState.show_dbox){
+        DrawDialogBox(camera, 0, 0, 20);
+
+    }
+
+    if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player);
+
+
+}
+
 void RenderLab(){
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
     player.outline = false;
@@ -4244,9 +4340,28 @@ void RenderLab(){
     globalState.over_Ebutton = false;
     globalState.over_Ebutton2 = false;
     globalState.over_console = false;
-    //elevators[1].isOccupied = false;
-    //player.onElevator = false;
 
+    Vector2 labPos = {1800, 648}; //move elevator 1 to the far left. 
+    if (elevators[0].position != labPos){
+        elevators[0].position = labPos;
+    }
+
+    if (player.position.x > 1875 && player.position.x < 1895){
+        globalState.over_Ebutton = true;
+        phrase = "Call Elevator";
+        globalState.show_dbox = true;
+        globalState.dboxPosition = player.position;
+    }
+
+    if (player.position.x < 1843 && player.position.x > 1823 && elevators[0].isOpen){
+        globalState.over_elevator = true;
+        phrase = "Up to Enter";
+        globalState.show_dbox = true;
+        globalState.dboxPosition = player.position;     
+
+    }
+
+  
 
     if (player.position.x < 3297 && player.position.x > 3277){
         globalState.over_Ebutton2 = true;
@@ -4279,13 +4394,14 @@ void RenderLab(){
     
     if (globalState.drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
         
-    //No parallax for lobby
+    //No parallax for lab
     DrawTexturePro(resources.labBackground, {0, 0, static_cast<float>(resources.officeBackground.width), static_cast<float>(resources.officeBackground.height)},
                     {300, 0, static_cast<float>(resources.officeBackground.width), static_cast<float>(resources.officeBackground.height)}, {0, 0}, 0.0f, WHITE);
 
 
 
     DrawElevator(elevators[1], resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
+    DrawElevator(elevators[0], resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
 
     for (Tank& tank : Tanks){
         if (globalState.explodeTanks){
@@ -5665,7 +5781,7 @@ void UptoEnter(){
             PlaySound(SoundManager::getInstance().GetSound("mainDoor"));
             globalState.over_apartment = false;
             showInventory = false;
-            //player.position.x = 512; //move player, to move inventory to the middle of the screen. 
+            
             
         }
         //enter car for both outside and cemetery and Park
@@ -5696,7 +5812,7 @@ void UptoEnter(){
             transitionState = FADE_OUT; //trans to lobby
         }
         if (globalState.over_exit && gameState == LOBBY && !globalState.spawning_zombies){ //can't leave the scene while zombies are spawning, 
-        //but you can when zombies are still active wich couid cause trouble
+        //but you can when zombies are still active which couid cause trouble
             transitionState = FADE_OUT; //trans to necrotech
         }
 
@@ -5712,7 +5828,7 @@ void UptoEnter(){
             
         }
 
-        if (globalState.over_Ebutton && gameState == OFFICE){ //open and close all elevators. shouldn't matter because they are offscreen. 
+        if (globalState.over_Ebutton && gameState == OFFICE){  //call elevator1 in office
             if (elevators[0].isOpen){
                 elevators[0].isOpen = false;          
             }else{
@@ -5720,7 +5836,7 @@ void UptoEnter(){
             }
         }
 
-        if (globalState.over_Ebutton2 && gameState == OFFICE){ //over ebutton2, open second elevator
+        if (globalState.over_Ebutton2 && gameState == OFFICE){ //over ebutton2, open second elevator in office
             if (elevators[1].isOpen){
                 elevators[1].isOpen = false;
             }else{
@@ -5728,7 +5844,7 @@ void UptoEnter(){
             }
         }
 
-        if (globalState.over_Ebutton2 && gameState == LAB){
+        if (globalState.over_Ebutton2 && gameState == LAB){ //call elevator2 in lab
             if (elevators[1].isOpen){
                 elevators[1].isOpen = false;
             }else{
@@ -5736,7 +5852,15 @@ void UptoEnter(){
             }
         }
 
-        if (globalState.over_elevator2 && gameState == LAB){
+        if (globalState.over_Ebutton && gameState == LAB){ //call elevator1 in lab
+            if (elevators[0].isOpen){
+                elevators[0].isOpen = false;
+            }else{
+                elevators[0].isOpen = true;
+            }
+        }
+
+        if (globalState.over_elevator2 && gameState == LAB){ //board elevator2 in lab
             if (elevators[1].isOpen){
                 elevators[1].isOpen = false;
                 elevators[1].isOccupied = true;
@@ -5746,8 +5870,18 @@ void UptoEnter(){
             }
         }
 
+        if (globalState.over_elevator && gameState == LAB){ //board elevator1 in lab
+            if (elevators[0].isOpen){
+                elevators[0].isOpen = false;
+                elevators[0].isOccupied = true;
+                player.onElevator = true;
+                transitionState = FADE_OUT; //goto penthouse
 
-        if (globalState.over_elevator && gameState == OFFICE){         
+            }
+        }
+
+
+        if (globalState.over_elevator && gameState == OFFICE){     //board elevator 1 in office     
             if (elevators[0].isOpen){
                 
                 elevators[0].isOpen = false;
@@ -5757,7 +5891,7 @@ void UptoEnter(){
             }
         }
 
-        if (globalState.over_elevator2 && gameState == OFFICE){ //go to penthouse office TODO: implement penthouse office, 
+        if (globalState.over_elevator2 && gameState == OFFICE){ //board elevator2 in office
             if (elevators[1].isOpen){
                 std::cout << "closing elevator2";
                 elevators[1].isOpen = false;
@@ -5770,7 +5904,7 @@ void UptoEnter(){
         }
 
 
-        if (globalState.over_elevator && gameState == LOBBY){
+        if (globalState.over_elevator && gameState == LOBBY){ //board elevator1 in lobby
            
             if (elevators[0].isOpen){
                
@@ -5783,7 +5917,7 @@ void UptoEnter(){
 
         }
 
-        if (globalState.over_medkit && gameState == LOBBY){
+        if (globalState.over_medkit && gameState == LOBBY){ //over medkit
             if (!player.hasPills){
                 player.hasPills = true;
                 AddItemToInventory("pills");
@@ -5793,9 +5927,9 @@ void UptoEnter(){
             }
         }
 
-        if (globalState.over_console && !globalState.explodeTanks){
+        if (globalState.over_console && !globalState.explodeTanks){ //over console in lab, explode tanks
             globalState.explodeTanks = true;
-            std::cout << "explodeTanks\n";
+            
         }
 
     }
@@ -6183,7 +6317,30 @@ void DrawPlayTime(float totalTime) {
     DrawText(timerText, 10, 10, 20, WHITE);
 }
 
+void enemyBulletCollision(){
 
+    //robots and mibs shoot lasers. Need to check for laser collisions as well.
+    CheckLaserNPCCollisions(lobbyNPCs); //robots can shoot regular NPCs if they happen to be in the way
+    CheckLaserNPCCollisions(zombies); //mibs can shoot zombies if they get in the way.
+
+    //enemy NPC groups are kept in the enemies vector, so we can iterate and check hits vs all enemies. 
+    for (auto groupPtr : enemies){ //iterate all enemies and check for bullet hits. 
+        if (groupPtr){  
+            //check collisions on each enemy group
+            CheckBulletNPCCollisions(*groupPtr);
+        }
+    }
+    
+    //crowbar attack
+    for (auto npcGroupPtr : enemies){ 
+        if (npcGroupPtr){
+            //crowbar collides with all enemies.
+            crowbarAttack(*npcGroupPtr);
+        }  
+    }
+
+
+}
 
 
 int main() {
@@ -6197,7 +6354,7 @@ int main() {
     SetExitKey(0);  // Disable escape key from closing the window
     // Set global text size for buttons
     GuiSetStyle(DEFAULT, TEXT_SIZE, 25); 
- 
+    SetTargetFPS(60);
     srand(static_cast<unsigned>(time(0))); //randomize seed based on time
     
     resources.Load();
@@ -6226,10 +6383,10 @@ int main() {
     spawnNPCs(); //Create all NPCs, except zombies which are created when needed. 
     
     setButtonColors(); //main menu button colors, sets globally for all rayGUI buttons
-   
+    
     globalState.inventoryPositionX = player.position.x; //init inventory position
     globalState.inventoryPositionY = player.position.y;  
-    SetTargetFPS(60);
+    
     globalState.dboxPosition = player.position;
 
     //GuiSetFont(RubicBold); // Set the loaded font as the default GUI font
@@ -6258,7 +6415,9 @@ int main() {
 
         mousePosition = clampMouseCursor(mousePosition); //stop mouse from going offscreen when in fullscreen. 
 
-        if (!player.enter_car && !player.onElevator && !player.enter_train && !globalState.fading && currentPauseState == GAME_RUNNING) player.UpdateMovement();  // Update player position and animation
+        // Update player position 
+        if (!player.enter_car && !player.onElevator && !player.enter_train && !globalState.fading && currentPauseState == GAME_RUNNING) player.UpdateMovement(); 
+        
         UpdateInventoryPosition(camera);
 
         
@@ -6275,34 +6434,9 @@ int main() {
         //HandleActiveNPC();
         
         UpdateBullets();
+
         //check each enemy group for bullet collisions
-
-        for (auto groupPtr : enemies){ //iterate all enemies and check for bullet hits. 
-            if (groupPtr){
-                CheckBulletNPCCollisions(*groupPtr);
-            }
-        }
-
-        // CheckBulletNPCCollisions(zombies);
-        // CheckBulletNPCCollisions(ghosts);
-        // CheckBulletNPCCollisions(astralGhosts);
-        // CheckBulletNPCCollisions(bats);
-        // CheckBulletNPCCollisions(astralBats);
-        // CheckBulletNPCCollisions(cyberZombies);
-        
-        // CheckBulletNPCCollisions(robots); //player shoots necroTech robot
-        // CheckBulletNPCCollisions(lobbyRobots); //player shoots lobby robots
-        // CheckBulletNPCCollisions(lobbyMibs); // player shoots mibs
-        
-        CheckLaserNPCCollisions(lobbyNPCs); //robots can shoot regular NPCs if they happen to be in the way
-        CheckLaserNPCCollisions(zombies); //mibs can shoot zombies if they get in the way.
-
-        for (auto npcGroupPtr : enemies){ //enemy NPC groups are kept in the enemies vector, so we can iterate and check hits vs all enemies. 
-            if (npcGroupPtr){
-                crowbarAttack(*npcGroupPtr);
-            }  
-        }
-
+        enemyBulletCollision();
 
         crowbarAttackBoxes(boxes); //breakable boxes
 
@@ -6319,7 +6453,7 @@ int main() {
             RemoveItemFromInventory("vest");
         }
 
-        if (globalState.playSoundTimer > 0){
+        if (globalState.playSoundTimer > 0){ //used for some unknown sound i guess
             globalState.canPlaySound = false;
             globalState.playSoundTimer -= GetFrameTime();
         }else{
@@ -6333,7 +6467,7 @@ int main() {
  
             
         UpdateShaders(deltaTime, globalState.borderlessWindow,  gameState);
-        SoundManager::getInstance().UpdateRandomVoices(deltaTime); //////////////////TURNED OFF VOICES for now
+        SoundManager::getInstance().UpdateRandomVoices(deltaTime); //////////////////Needed for hobo? 
 
         if (globalState.windowStateChanged) { //toggle full screen    
             UpdateDrawRectangle(&destRect); 
@@ -6464,15 +6598,15 @@ int main() {
                 case ALIEN:
                     RenderUFOinterior();
                     break;
-                    
+                case PENTHOUSE:
+                    RenderPenthouse();
+                    break;
             }
             
             HandleTransition(); //Check everyframe for gamestate transitions, inside draw to handle fadeouts
             drawMenuButton(currentPauseState, pauseTexture, finalTexture);
             
             EndTextureMode();
-            
-
 
         }
 

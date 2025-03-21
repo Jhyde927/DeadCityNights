@@ -123,6 +123,9 @@ void GameResources::Load() {
     raygunIcon = LoadTexture("assets/rayGun.png");
     raygunPickup = LoadTexture("assets/raygunPickup.png");
     light64 = LoadTexture("assets/Light(64).png");
+    penthouseBackground = LoadTexture("assets/PenthouseBackground.png");
+    penthouseForeground = LoadTexture("assets/PenthouseForeground.png");
+    penthouseMidground = LoadTexture("assets/PenthouseMidground.png");
 }
 
 // Unload all game resources
@@ -243,4 +246,7 @@ void GameResources::Unload() {
     UnloadTexture(raygunIcon);
     UnloadTexture(raygunPickup);
     UnloadTexture(light64);
+    UnloadTexture(penthouseBackground);
+    UnloadTexture(penthouseForeground);
+    UnloadTexture(penthouseMidground);
 }

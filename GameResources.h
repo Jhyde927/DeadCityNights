@@ -127,6 +127,9 @@ struct GameResources {
     Texture2D raygunIcon;
     Texture2D raygunPickup;
     Texture2D light64;
+    Texture2D penthouseBackground;
+    Texture2D penthouseForeground;
+    Texture2D penthouseMidground;
     
 
     Font defaultFont;

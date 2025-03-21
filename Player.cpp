@@ -181,6 +181,8 @@ float GetRightBoundary(){
         return 3852;
     }else if (gameState == ALIEN){
         return 3400;
+    }else if (gameState == PENTHOUSE){
+        return 3400;
     }
 }
 
@@ -213,6 +215,8 @@ float GetLeftBoundary(){
         return 1575;
     }else if (gameState == ALIEN){
         return 1024;
+    }else if (gameState == PENTHOUSE){
+        return 0;
     }
 }
 

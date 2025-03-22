@@ -42,11 +42,7 @@ std::string phrase = "A and D to move, hold shift to run"; //initial tutorial ph
 const int screenWidth = 1024; //screen is square for gameplay reasons, we don't want to reveal to much of the screen at one time. 
 const int screenHeight = 1024; // is it crazy to keep the resolution square?
 
-//Emitter explosionEmitter; //what is this for? grenades have there own explosions right?
-
-std::vector<Box> boxes; //boxes stays in main because undefined behavior do to inclusion hell. 
-
-GameState gameState = LAB; //start outside. on main street. 
+GameState gameState = OUTSIDE; //start outside. on main street. 
 
 TransitionState transitionState = NONE; //state for transitioning scenes. 
 
@@ -61,52 +57,7 @@ void PrintVector2(const Vector2& vec) {
 }
 
 
-void InitBoxes(){
-    // boxes are stored in one big vector "boxes", and assigned to a specific scene on initiation. 
-    //renderBoxes then renders the appropriate boxes for each scene. 
-    Texture2D boxSheet = resources.boxSheet;
 
-    //LOT
-    boxes.emplace_back(Vector2 {2938, 724},boxSheet, LOT);
-    boxes.emplace_back(Vector2 {2988, 724}, boxSheet, LOT);
-    boxes.emplace_back(Vector2 {2988+50, 724}, boxSheet, LOT);
-
-    //CEMETERY
-    boxes.emplace_back(Vector2 {3550, 724}, boxSheet, CEMETERY);
-    boxes.emplace_back(Vector2 {3600, 724}, boxSheet, CEMETERY);//right
-    boxes.emplace_back(Vector2 {3500, 724}, boxSheet, CEMETERY);
-
-    //GRAVEYARD
-    boxes.emplace_back(Vector2 {4404, 724}, boxSheet, GRAVEYARD);//far right
-
-    boxes.emplace_back(Vector2 {1600, 724}, boxSheet, GRAVEYARD);//far left
-    boxes.emplace_back(Vector2 {1650, 724}, boxSheet, GRAVEYARD);
-    boxes.emplace_back(Vector2 {1700, 724}, boxSheet, GRAVEYARD);
-
-    //OUTSIDE
-    boxes.emplace_back(Vector2 {-57, 724}, boxSheet, OUTSIDE); //left
-
-    boxes.emplace_back(Vector2 {3980, 724}, boxSheet, OUTSIDE); //far right
-    boxes.emplace_back(Vector2 {4030, 724}, boxSheet, OUTSIDE);
-    boxes.emplace_back(Vector2 {4080, 724}, boxSheet, OUTSIDE);
-
-    //SUBWAY
-    boxes.emplace_back(Vector2 {1740, 724}, boxSheet, SUBWAY);
-    boxes.emplace_back(Vector2 {1790, 724}, boxSheet, SUBWAY);
-
-    //PARK
-    boxes.emplace_back(Vector2 {1237, 724}, boxSheet, PARK);
-
-    //NECROTECH EXTERIOR
-    boxes.emplace_back(Vector2 {2500, 724}, boxSheet, NECROTECH);
-    boxes.emplace_back(Vector2 {2450, 724}, boxSheet, NECROTECH);
-
-    //OFFICE
-    boxes.emplace_back(Vector2 {1210, 724}, boxSheet, OFFICE);
-    boxes.emplace_back(Vector2 {1260, 724}, boxSheet, OFFICE);
-
-
-}
 
 // Function to add an item to the first available slot in the inventory
 void AddItemToInventory(const std::string& item) {
@@ -1395,7 +1346,13 @@ void HandleParkTransition(){
 }
 
 void HandlePenthouseTransition(){
-    //do something
+
+    if (elevators[0].isOccupied && player.onElevator){
+        gameState = LAB;
+        player.onElevator = false;
+        UpdateNPCActivity(PENTHOUSE, LAB);
+
+    }
 }
 
 void HandleLabTransition(){
@@ -4258,33 +4215,56 @@ void RenderPenthouse()
     globalState.over_elevator2 = false;
     globalState.over_Ebutton = false;
     globalState.over_Ebutton2 = false;
-    globalState.over_console = false;
 
-    // Vector2 pentPos = {2800, 648};
-    // if (elevators[0].position != pentPos){
-    //     elevators[0].position = pentPos;
-    // }
+    //elevator interactions
+    if (player.position.x < 1897 && player.position.x > 1877){
+        globalState.over_Ebutton = true;
+        phrase = "Call Elevator";
+        globalState.show_dbox = true;
+        globalState.dboxPosition = player.position;
+
+    }
+
+    if (player.position.x < 1844 && player.position.x > 1824 && elevators[0].isOpen){
+        globalState.over_elevator = true;
+        phrase = "Up to Enter";
+        globalState.show_dbox = true;
+        globalState.dboxPosition = player.position; 
+
+    }
 
     float deltaTime = GetFrameTime();
     camera.target = player.position;
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
     ClearBackground(globalState.customBackgroundColor);
+
+
     float parallaxBackground = camera.target.x * 0.8f;  // Background moves even slower
+    float parallaxMidgBack = camera.target.x * 0.7f;  // Background moves even slower
     float parallaxMidground = camera.target.x * 0.6f;  // Background moves even slower
+
+
     if (globalState.drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
         
-    
+    //sky
     DrawTexturePro(resources.penthouseBackground, {0, 0, static_cast<float>(resources.penthouseBackground.width), static_cast<float>(resources.penthouseBackground.height)},
     {-700 + parallaxBackground, 0, static_cast<float>(resources.penthouseBackground.width), static_cast<float>(resources.penthouseBackground.height)}, {0, 0}, 0.0f, WHITE);
 
+    //far buildings
+    DrawTexturePro(resources.penthouseMidBack, {0, 0, static_cast<float>(resources.penthouseMidBack.width), static_cast<float>(resources.penthouseMidBack.height)},
+    {-300 + parallaxMidgBack, 0, static_cast<float>(resources.penthouseMidBack.width), static_cast<float>(resources.penthouseMidBack.height)}, {0, 0}, 0.0f, WHITE);
+
+    //buildings
     DrawTexturePro(resources.penthouseMidground, {0, 0, static_cast<float>(resources.penthouseMidground.width), static_cast<float>(resources.penthouseMidground.height)},
     {parallaxMidground, 0, static_cast<float>(resources.penthouseMidground.width), static_cast<float>(resources.penthouseMidground.height)}, {0, 0}, 0.0f, WHITE);
  
-
+    //foreground covers wthe whole screen with a whole cut in it for the window. 
     DrawTexturePro(resources.penthouseForeground, {0, 0, static_cast<float>(resources.penthouseForeground.width), static_cast<float>(resources.penthouseForeground.height)},
     {512, 0, static_cast<float>(resources.penthouseForeground.width), static_cast<float>(resources.penthouseForeground.height)}, {0, 0}, 0.0f, WHITE);
 
     DrawElevator(elevators[0], resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
+
+    DrawElevator(elevators[1], resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
 
     HandleGrenades();
 
@@ -5844,6 +5824,25 @@ void UptoEnter(){
             }
         }
 
+        if (globalState.over_Ebutton && gameState == PENTHOUSE){ //call elevator0 in penthouse
+            if (elevators[0].isOpen){
+                elevators[0].isOpen = false;
+            }else{
+                elevators[0].isOpen = true;
+            }
+        }
+
+        if (globalState.over_elevator && gameState == PENTHOUSE){ //call elevator2 in lab
+            if (elevators[0].isOpen){
+                elevators[0].isOpen = false;
+                elevators[0].isOccupied = true;
+                player.onElevator = true;
+                transitionState = FADE_OUT; //goto LAB
+
+            }
+        }
+
+
         if (globalState.over_Ebutton2 && gameState == LAB){ //call elevator2 in lab
             if (elevators[1].isOpen){
                 elevators[1].isOpen = false;
@@ -5893,7 +5892,6 @@ void UptoEnter(){
 
         if (globalState.over_elevator2 && gameState == OFFICE){ //board elevator2 in office
             if (elevators[1].isOpen){
-                std::cout << "closing elevator2";
                 elevators[1].isOpen = false;
                 elevators[1].isOccupied = true;
                 player.onElevator = true;

@@ -16,6 +16,7 @@ Console console;
 Monitor monitor;
 
 std::vector<Platform> platforms;
+std::vector<Box> boxes; 
 std::vector<MagicDoor> magicDoors;
 std::vector<Elevator> elevators;
 
@@ -191,6 +192,54 @@ void InitializeTrain() {
     // Calculate the distance needed to stop
     float stoppingDistance = (train.maxSpeed * train.maxSpeed) / (2.0f * train.deceleration);
     train.slowDownStartX = 2500.0f + stoppingDistance;
+}
+
+void InitBoxes(){
+    // boxes are stored in one big vector "boxes", and assigned to a specific scene on initiation. 
+    //renderBoxes then renders the appropriate boxes for each scene. 
+    Texture2D boxSheet = resources.boxSheet;
+
+    //LOT
+    
+    boxes.emplace_back(Vector2 {2938, 724},boxSheet, LOT);
+    boxes.emplace_back(Vector2 {2988, 724}, boxSheet, LOT);
+    boxes.emplace_back(Vector2 {2988+50, 724}, boxSheet, LOT);
+
+    //CEMETERY
+    boxes.emplace_back(Vector2 {3550, 724}, boxSheet, CEMETERY);
+    boxes.emplace_back(Vector2 {3600, 724}, boxSheet, CEMETERY);//right
+    boxes.emplace_back(Vector2 {3500, 724}, boxSheet, CEMETERY);
+
+    //GRAVEYARD
+    boxes.emplace_back(Vector2 {4404, 724}, boxSheet, GRAVEYARD);//far right
+
+    boxes.emplace_back(Vector2 {1600, 724}, boxSheet, GRAVEYARD);//far left
+    boxes.emplace_back(Vector2 {1650, 724}, boxSheet, GRAVEYARD);
+    boxes.emplace_back(Vector2 {1700, 724}, boxSheet, GRAVEYARD);
+
+    //OUTSIDE
+    boxes.emplace_back(Vector2 {-57, 724}, boxSheet, OUTSIDE); //left
+
+    boxes.emplace_back(Vector2 {3980, 724}, boxSheet, OUTSIDE); //far right
+    boxes.emplace_back(Vector2 {4030, 724}, boxSheet, OUTSIDE);
+    boxes.emplace_back(Vector2 {4080, 724}, boxSheet, OUTSIDE);
+
+    //SUBWAY
+    boxes.emplace_back(Vector2 {1740, 724}, boxSheet, SUBWAY);
+    boxes.emplace_back(Vector2 {1790, 724}, boxSheet, SUBWAY);
+
+    //PARK
+    boxes.emplace_back(Vector2 {1237, 724}, boxSheet, PARK);
+
+    //NECROTECH EXTERIOR
+    boxes.emplace_back(Vector2 {2500, 724}, boxSheet, NECROTECH);
+    boxes.emplace_back(Vector2 {2450, 724}, boxSheet, NECROTECH);
+
+    //OFFICE
+    boxes.emplace_back(Vector2 {1210, 724}, boxSheet, OFFICE);
+    boxes.emplace_back(Vector2 {1260, 724}, boxSheet, OFFICE);
+
+
 }
 
 

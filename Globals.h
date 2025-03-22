@@ -6,6 +6,7 @@
 #include "platform.h"
 #include <vector>
 #include "NPC.h"
+#include "box.h"
 
 //A place to put random structs and vectors. That isn't main. 
 
@@ -295,6 +296,7 @@ extern Vector2 mousePosition; // Global mouse position, updated in main.
 extern float totalTime; // total elapsed time, used for sine waves
 
 extern std::vector<Platform> platforms;
+extern std::vector<Box> boxes; //boxes stays in main because undefined behavior do to inclusion hell. 
 extern std::vector<MagicDoor> magicDoors;
 extern std::vector<Elevator> elevators;
 

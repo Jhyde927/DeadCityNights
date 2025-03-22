@@ -130,6 +130,7 @@ struct GameResources {
     Texture2D penthouseBackground;
     Texture2D penthouseForeground;
     Texture2D penthouseMidground;
+    Texture2D penthouseMidBack;
     
 
     Font defaultFont;

@@ -42,7 +42,7 @@ std::string phrase = "A and D to move, hold shift to run"; //initial tutorial ph
 const int screenWidth = 1024; //screen is square for gameplay reasons, we don't want to reveal to much of the screen at one time. 
 const int screenHeight = 1024;
 
-GameState gameState = LAB; //start outside. on main street. 
+GameState gameState = OUTSIDE; //start outside. on main street. 
 
 TransitionState transitionState = NONE; //state for transitioning scenes. 
 
@@ -1279,6 +1279,7 @@ void HandleOfficeTransition(){
         gameState = LOBBY;
         UpdateNPCActivity(OFFICE, LOBBY);
         player.onElevator = false;
+        elevators[0].isOccupied = false;
         globalState.can_spawn_zombies = false; //only spawn zombies once. 
 
     }else if (elevators[1].isOccupied){
@@ -1286,6 +1287,7 @@ void HandleOfficeTransition(){
         gameState = LAB;
         UpdateNPCActivity(OFFICE, LAB);
         player.onElevator = false;
+        elevators[1].isOccupied = false;
 
 
     } else if (player.isDead){
@@ -1341,6 +1343,7 @@ void HandlePenthouseTransition(){
         std::cout << "LEAVING PENTHOUSE TO LAB";
         gameState = LAB;
         player.onElevator = false;
+        elevators[0].isOccupied = false;
         UpdateNPCActivity(PENTHOUSE, LAB);
     }
 
@@ -1348,6 +1351,7 @@ void HandlePenthouseTransition(){
         gameState = NECROTECH;
         std::cout << "LEAVING PENTHOUSE TO NECRO";
         player.onElevator = false;
+        elevators[1].isOccupied = false;
         UpdateNPCActivity(PENTHOUSE, NECROTECH);
     }
 }
@@ -1356,7 +1360,7 @@ void HandleLabTransition(){
     if (elevators[1].isOccupied && player.onElevator){
         gameState = OFFICE;
         player.onElevator = false;
-       
+        elevators[1].isOccupied = false; //remember to deoccupy the elevator
         UpdateNPCActivity(LAB, OFFICE);
 
     }else if (elevators[0].isOccupied && player.onElevator){

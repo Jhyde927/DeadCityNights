@@ -40,24 +40,21 @@ Vector2 virtualCursor = { 512, 512 }; // Start at screen center
 std::string phrase = "A and D to move, hold shift to run"; //initial tutorial phrase
 
 const int screenWidth = 1024; //screen is square for gameplay reasons, we don't want to reveal to much of the screen at one time. 
-const int screenHeight = 1024; // is it crazy to keep the resolution square?
+const int screenHeight = 1024;
 
-GameState gameState = OUTSIDE; //start outside. on main street. 
+GameState gameState = LAB; //start outside. on main street. 
 
 TransitionState transitionState = NONE; //state for transitioning scenes. 
 
 // Initialize random number generator
 std::random_device rd;   // Seed for the random number engine
 std::mt19937 gen(rd());  // Mersenne Twister engine
-std::uniform_real_distribution<float> dis(0.0f, 4000.0f); // Uniform distribution between 1000 and 4000 for NPC distribution outside. 
+std::uniform_real_distribution<float> dis(0.0f, 4000.0f); // Uniform distribution between 0 and 4000 for NPC starting distribution outside. 
 
 
 void PrintVector2(const Vector2& vec) {
     std::cout << "(" << vec.x << ", " << vec.y << ")" << "\n";
 }
-
-
-
 
 // Function to add an item to the first available slot in the inventory
 void AddItemToInventory(const std::string& item) {
@@ -170,6 +167,11 @@ bool AreAllNPCsDeactivated(const std::vector<NPC>& npcs) {
     });
 }
 
+void showDBOX(){
+    globalState.show_dbox = true;
+    globalState.dboxPosition = player.position; 
+}
+
 
 void HandleGrenades(){
     // Update all grenades
@@ -189,23 +191,11 @@ void HandleGrenades(){
 
 void DrawElevator(Elevator& elevator, Texture2D elevatorTexture, Texture2D floorTexture, int frameWidth, int frameHeight, float deltaTime) {
     // Update animation only if the elevator is opening or closing
-
-    if (gameState == OFFICE) elevator.currentFloorFrame = 7;
+    if (gameState == PENTHOUSE) elevator.currentFloorFrame = 1;
+    if (gameState == LAB) elevator.currentFloorFrame = 0;
+    if (gameState == OFFICE) elevator.currentFloorFrame = 6;
     if (gameState == LOBBY) elevator.currentFloorFrame = 0;
 
-    if (elevator.isOccupied && !elevator.isOpen){ //animate floor numbers
-        
-        // elevator.floorFrameTimer += deltaTime;
-        // if (elevator.floorFrameTimer >= elevator.floorFrameTime){
-        //     elevator.floorFrameTimer -= elevator.floorFrameTime;
-        //     elevator.currentFloorFrame++;
-        // }
-
-        //dont count up floors
-
-     
-
-    }
     if (elevator.isOpen && elevator.currentFrame < elevator.totalFrames - 1) { //animate opening door
         elevator.frameTimer += deltaTime;
         if (elevator.frameTimer >= elevator.frameTime) {
@@ -265,7 +255,7 @@ void crowbarAttackBoxes(std::vector<Box>& _boxes){
     attackHitbox.width = 16;
     attackHitbox.height = 16;
 
-    DrawRectangleLines(attackHitbox.x, attackHitbox.y, attackHitbox.width, attackHitbox.height, RED);
+    DrawRectangleLines(attackHitbox.x, attackHitbox.y, attackHitbox.width, attackHitbox.height, RED); //debug draws dont draw because it's called outside of mode2d?
 
     for (Box& box : _boxes){
         float hitboxWidth = 24.0f;   
@@ -1348,10 +1338,17 @@ void HandleParkTransition(){
 void HandlePenthouseTransition(){
 
     if (elevators[0].isOccupied && player.onElevator){
+        std::cout << "LEAVING PENTHOUSE TO LAB";
         gameState = LAB;
         player.onElevator = false;
         UpdateNPCActivity(PENTHOUSE, LAB);
+    }
 
+    if (elevators[1].isOccupied && player.onElevator){
+        gameState = NECROTECH;
+        std::cout << "LEAVING PENTHOUSE TO NECRO";
+        player.onElevator = false;
+        UpdateNPCActivity(PENTHOUSE, NECROTECH);
     }
 }
 
@@ -1365,7 +1362,7 @@ void HandleLabTransition(){
     }else if (elevators[0].isOccupied && player.onElevator){
         gameState = PENTHOUSE;
         player.onElevator = false;
-        
+        elevators[0].isOccupied = false;
         UpdateNPCActivity(LAB, PENTHOUSE);
     }
     else if (player.isDead){
@@ -4220,18 +4217,30 @@ void RenderPenthouse()
     if (player.position.x < 1897 && player.position.x > 1877){
         globalState.over_Ebutton = true;
         phrase = "Call Elevator";
-        globalState.show_dbox = true;
-        globalState.dboxPosition = player.position;
+        showDBOX();
 
     }
 
     if (player.position.x < 1844 && player.position.x > 1824 && elevators[0].isOpen){
         globalState.over_elevator = true;
         phrase = "Up to Enter";
-        globalState.show_dbox = true;
-        globalState.dboxPosition = player.position; 
+        showDBOX();
 
     }
+
+    if (player.position.x < 3296 && player.position.x > 3276){
+        globalState.over_Ebutton2 = true;
+        phrase = "Call Elevator";
+        showDBOX();
+    }
+
+    if (player.position.x > 3224 && player.position.x < 3244){
+        globalState.over_elevator2 = true;
+        phrase = "Up to Enter";
+        showDBOX();
+    }
+
+
 
     float deltaTime = GetFrameTime();
     camera.target = player.position;
@@ -5824,7 +5833,7 @@ void UptoEnter(){
             }
         }
 
-        if (globalState.over_Ebutton && gameState == PENTHOUSE){ //call elevator0 in penthouse
+        if (globalState.over_Ebutton && gameState == PENTHOUSE){ //call elevator1 in penthouse
             if (elevators[0].isOpen){
                 elevators[0].isOpen = false;
             }else{
@@ -5832,7 +5841,7 @@ void UptoEnter(){
             }
         }
 
-        if (globalState.over_elevator && gameState == PENTHOUSE){ //call elevator2 in lab
+        if (globalState.over_elevator && gameState == PENTHOUSE){ //board elevator1 in penthouse
             if (elevators[0].isOpen){
                 elevators[0].isOpen = false;
                 elevators[0].isOccupied = true;
@@ -5840,6 +5849,27 @@ void UptoEnter(){
                 transitionState = FADE_OUT; //goto LAB
 
             }
+        }
+
+        if (globalState.over_Ebutton2 && gameState == PENTHOUSE){ //call elevator2 in penthouse
+            if (elevators[1].isOpen){
+                elevators[1].isOpen = false;
+            }else{
+                elevators[1].isOpen = true;
+            }
+        }
+
+
+
+        if (globalState.over_elevator2 && gameState == PENTHOUSE){ //board elevator2 in penthouse
+            if (elevators[1].isOpen){
+                elevators[1].isOpen = false;
+                elevators[1].isOccupied = true;
+                player.onElevator = true;
+                transitionState = FADE_OUT; //goto NECROTECH
+
+            }
+
         }
 
 
@@ -5993,8 +6023,8 @@ void ShowControls(){
 void MainMenu(PauseState& currentPauseState, Rectangle& destRect){
     // Draw semi-transparent background overlay
         if (globalState.menuOpen) {
-            float offset_x = 0;
-            if (globalState.borderlessWindow){} offset_x = (screenWidth - GAME_SCREEN_WIDTH)/2;
+            //float offset_x = 0;
+            //if (globalState.borderlessWindow){} offset_x = (screenWidth - GAME_SCREEN_WIDTH)/2;
             
             // Draw semi-transparent background overlay
             DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, 0.3f));
@@ -6141,19 +6171,24 @@ void drawMenuButton(PauseState& currentPauseState, RenderTexture2D& pauseTexture
 }
 
 Vector2 clampMouseCursor(Vector2& mousePosition) {
-    int winWidth = GetScreenWidth();
+    int winWidth = screenWidth; //keep it 1024
     int winHeight = GetScreenHeight();
 
     int mouseX = GetMouseX();
     int mouseY = GetMouseY();
 
     // Clamp X position
-    mouseX = Clamp(mouseX, 0, winWidth - 1);
 
-    // If borderless window, lock cursor strictly within window bounds
-    if (globalState.borderlessWindow && mouseX >= winWidth) {
-        mouseX = winWidth - 1;
-        SetMousePosition(mouseX, mouseY);
+    // If borderless window, lock cursor strictly within window bounds. 
+    if (globalState.borderlessWindow && globalState.menuOpen){
+        mouseX = Clamp(mouseX, 400, winWidth + (winWidth/2));//When menu is open move clamp over for some unknown reason. 
+
+    }else if (globalState.borderlessWindow && !globalState.menuOpen){
+        mouseX = Clamp(mouseX, 0, winWidth -24);
+    }
+    else{
+        mouseX = Clamp(mouseX, 0, winWidth - 24); // minus the size of the cursor
+
     }
 
     // Clamp Y position
@@ -6444,7 +6479,7 @@ int main() {
         MonitorMouseClicks(); 
         UpdateZombieSpawning();
 
-        slotSelectionLogic();
+        slotSelectionLogic(); //gamepad inventory traversal. 
 
         if (!player.armor){ //remove vest from inventory if armor is depleted. 
             player.hasArmor = false;

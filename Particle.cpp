@@ -18,7 +18,7 @@ void Emitter::SpawnBlood(int amount, Color color, bool facingRight) {
     float baseAngle = facingRight ? 0.0f : 180.0f; 
 
     for (int i = 0; i < amount; i++) {
-        if (particles.size() >= maxParticles) {
+        if (static_cast<int>(particles.size()) >= maxParticles) {
             particles.erase(particles.begin()); // Remove oldest particle if over limit
         }
 
@@ -41,7 +41,7 @@ void Emitter::SpawnBlood(int amount, Color color, bool facingRight) {
 // **Explosion effect** (limited number of particles)
 void Emitter::SpawnExplosion(int amount, Color explosionColor) {
     for (int i = 0; i < amount; i++) {
-        if (particles.size() >= maxParticles) {
+        if (static_cast<int>(particles.size()) >= maxParticles) {
             particles.erase(particles.begin()); // Remove oldest particle
         }
 

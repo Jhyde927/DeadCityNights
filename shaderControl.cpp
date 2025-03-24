@@ -104,12 +104,12 @@ void InitShaders(int screenWidth, int screenHeight) {
 
 
     //setup glitchVignetteShader
-    int offsetLoc = GetShaderLocation(shaders.glitchVignetteShader, "offset");
+    //int offsetLoc = GetShaderLocation(shaders.glitchVignetteShader, "offset");
     int glitchStrengthLoc = GetShaderLocation(shaders.glitchVignetteShader, "glitchStrength");
     int maxGlitchOffsetLoc = GetShaderLocation(shaders.glitchVignetteShader, "maxGlitchOffset");
 
 
-    int timeLoc = GetShaderLocation(shaders.glitchVignetteShader, "time");
+    //int timeLoc = GetShaderLocation(shaders.glitchVignetteShader, "time");
     int resolutionLoc2 = GetShaderLocation(shaders.glitchVignetteShader, "resolution");
     int radiusLoc2 = GetShaderLocation(shaders.glitchVignetteShader, "radius");
     int softnessLoc2 = GetShaderLocation(shaders.glitchVignetteShader, "softness");
@@ -129,7 +129,7 @@ void InitShaders(int screenWidth, int screenHeight) {
 
     //regular glitch
 
-    int timeLocGlitch = GetShaderLocation(shaders.glitchShader, "time");
+    //int timeLocGlitch = GetShaderLocation(shaders.glitchShader, "time");
 
     // Declare variables for resolution and intensity
     //float resolution[2] = {screenWidth, screenHeight};
@@ -173,7 +173,7 @@ void InitShaders(int screenWidth, int screenHeight) {
 
     //old Film
 
-    int timeLocFilm = GetShaderLocation(shaders.oldFilmShader, "time");
+    //int timeLocFilm = GetShaderLocation(shaders.oldFilmShader, "time");
     int resolutionLoc3 = GetShaderLocation(shaders.oldFilmShader, "resolution");
     int grainIntensityLoc = GetShaderLocation(shaders.oldFilmShader, "grainIntensity");
     int sepiaIntensityLoc = GetShaderLocation(shaders.oldFilmShader, "sepiaIntensity");
@@ -239,12 +239,12 @@ void UnloadShaders() {
 void UpdateShaders(float deltaTime, bool fullscreen, GameState& gameState) {
     // Update time for glitch shader
     float time_ = GetTime();
-    float renderWidth = 1024.0f;
+    //float renderWidth = 1024.0f;
     shaders.totalTime += deltaTime;
     int timeLoc = GetShaderLocation(shaders.rainbowOutlineShader, "time");
     int timeLoc2 = GetShaderLocation(shaders.oldFilmShader, "time");
     int timeLoc3 = GetShaderLocation(shaders.glitchVignetteShader, "time");
-    int timeLoc4 = GetShaderLocation(shaders.glitchShader, "time");
+    //int timeLoc4 = GetShaderLocation(shaders.glitchShader, "time");
     //SetShaderValue(shaders.glitchShader, shaders.timeLoc, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.glitchVignetteShader, timeLoc3, &shaders.totalTime, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shaders.rainbowOutlineShader, timeLoc, &shaders.totalTime, SHADER_UNIFORM_FLOAT);

@@ -12,11 +12,11 @@
 class Box {
 public:
     Vector2 position;
+    Texture2D texture;
     GameState scene;
     bool destroyed = false;
     bool canTakeDamage = true;
     int health = 3;
-    Texture2D texture;
     int frameWidth = 32;
     int frameHeight = 32;
     int maxFrames = 3;

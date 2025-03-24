@@ -114,7 +114,7 @@ void Player::take_damage(int damage) {
         can_take_damage = false;
         hitTimer = 0.9f;
 
-        if (rand() & 2 == 0){
+        if ((rand() & 2) == 0){
             PlaySound(SoundManager::getInstance().GetSound("armorHit2"));
         }else{
             PlaySound(SoundManager::getInstance().GetSound("armorHit"));
@@ -184,6 +184,8 @@ float GetRightBoundary(){
     }else if (gameState == PENTHOUSE){
         return 3400;
     }
+
+    return 0.0f;
 }
 
 float GetLeftBoundary(){
@@ -218,6 +220,7 @@ float GetLeftBoundary(){
     }else if (gameState == PENTHOUSE){
         return 0;
     }
+    return 0.0f;
 }
 
 void Player::DrawChargeBar(Vector2 offset) {
@@ -272,16 +275,16 @@ bool Player::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosit
     Rectangle npcHitbox = {
         position.x + 32 - 4,   // Center horizontally
         position.y+16,  // Center vertically
-        hitboxWidth,                    // Width of hitbox
-        hitboxHeight                    // Height of hitbox
+        hitboxWidth,                    
+        hitboxHeight                    
     };
 
     // Check if the current or previous bullet position is inside the hitbox (normal check)
     Rectangle bulletRect = {
-        currentBulletPosition.x,  // Bullet's x position
-        currentBulletPosition.y,  // Bullet's y position
-        bulletSize.x,             // Bullet's width
-        bulletSize.y              // Bullet's height
+        currentBulletPosition.x,  
+        currentBulletPosition.y,  
+        bulletSize.x,             
+        bulletSize.y              
     };
 
     if (CheckCollisionRecs(npcHitbox, bulletRect)) {
@@ -700,7 +703,7 @@ void Player::shootLogic(){
         currentWeapon = SHOTGUN;
     }else if ((IsKeyPressed(KEY_THREE) || IsGamepadButtonDown(0, GAMEPAD_BUTTON_LEFT_FACE_RIGHT)) && hasMac10){ //right
         currentWeapon = MAC10;
-    }else if (IsKeyPressed(KEY_FOUR) || IsGamepadButtonDown(0, GAMEPAD_BUTTON_LEFT_FACE_DOWN) && hasRaygun){ //dpad down
+    }else if ((IsKeyPressed(KEY_FOUR) || IsGamepadButtonDown(0, GAMEPAD_BUTTON_LEFT_FACE_DOWN)) && hasRaygun){ //dpad down
         currentWeapon = RAYGUN;
     }
 

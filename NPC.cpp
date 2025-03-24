@@ -84,27 +84,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
 
     animationTimer = 0.0;
     isMoving = false;
-
-    // switch(type){ //redundant halfway implemented NPCType. type is still set on creation except for isZombie which is set here. 
-    //     case NPCType::ZOMBIE:isZombie = true; break;
-    //     case NPCType::ROBOT: robot = true; break;
-    //     case NPCType::ALIEN: alien = true; break;
-    //     case NPCType::MIB: MiB = true; break;
-    //     case NPCType::CYBER_ZOMBIE: cyberZombie = true; break;
-    //     case NPCType::GHOST: ghost = true; break;
-    //     case NPCType::BAT: bat = true; break;
-    //     case NPCType::HOBO: hobo = true; break;
-    //     case NPCType::POLICEMAN: police = true; break;
-    //     case NPCType::DEALER: dealer = true; break;
-    //     case NPCType::TELLER: teller = true; break;
-    //     case NPCType::SCIENTIST: scientist = true; break;
-    //     case NPCType::JR_SCIENTIST: scienceJr = true; break;
-    //     case NPCType::FRANK: frank = true; break;
-    //     case NPCType::GENERIC: break;
-            
-    // }
-
-
+    CEO = false;
  
 }
 
@@ -385,6 +365,23 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
 
         }
 
+        if (CEO && !talked){
+            talked = true;
+            idleTime = 3;
+            talkTimer = 3;
+            if (interactions == 0){
+                clickCount += 1;
+                switch (clickCount){
+                    case 1:
+                        speech = "TESTING";
+                        break;
+                    case 2:
+                        speech = "TESTING 2";
+                        break;
+                }
+            }
+        }
+
 
 
         if (hobo && !talked){
@@ -569,7 +566,7 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
 
 
 void NPC::HandleAlien(){
-    frameSpeed = 14;
+    frameSpeed = 14;//faster animation for walking 
 
 }
 
@@ -934,8 +931,7 @@ void NPC::HandleAnimationLogic(){
 
 void NPC::ghostMoves(){
     if (agro && hasTarget) {
-        float deltaTime = GetFrameTime(); 
-        
+        float deltaTime = GetFrameTime();   
         Vector2 direction = { destination.x - position.x, destination.y - position.y };
         float distance = sqrtf(direction.x * direction.x + direction.y * direction.y); // Get distance
         
@@ -1107,10 +1103,7 @@ void NPC::Update() {
                 SetAnimationState(WALK);
                 position.x += speed * GetFrameTime();
                 facingRight = true;
-            }
-
-
-            
+            } 
             
         }else if (bat || ghost) {
             ghostMoves(); // XY movement for ghosts and bats. 
@@ -1136,7 +1129,9 @@ void NPC::Update() {
             }else if (scientist || scienceJr){
                 SetDestination(2400, 3600); //lab scientists
             }else if (alien){
-                SetDestination(1900, 2200);
+                SetDestination(1900, 2200); // aliens stay in the middle
+            }else if (CEO){
+                SetDestination(2200, 2500); //ceo stays by desk. 
             } else{
                 SetDestination(1000, 3500);  //Pedestrians Outside, and park
                 
@@ -1211,15 +1206,15 @@ void NPC::Render() {
         highLight = true;
     }
 
-    float hitboxWidth = 16.0f;   
-    float hitboxHeight = 32.0f;  //Tall rectange to cover the sprite. 
+    // float hitboxWidth = 16.0f;   
+    // float hitboxHeight = 32.0f;  //Tall rectange to cover the sprite. 
 
-    Rectangle npcHitbox = { //debug hitbox
-        position.x+24,     
-        position.y+16,      
-        hitboxWidth,  
-        hitboxHeight                    
-    };
+    // Rectangle npcHitbox = { //debug hitbox
+    //     position.x+24,     
+    //     position.y+16,      
+    //     hitboxWidth,  
+    //     hitboxHeight                    
+    // };
     
     // Draw the texture at the NPC's position
     // Tint the NPC red if recently hit

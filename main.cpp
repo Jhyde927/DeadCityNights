@@ -108,7 +108,7 @@ void RenderPasswordInterface() {
     for (int i = 0; i < 3; i++) {
         int x = startX + i * (slotWidth + 10);
         DrawRectangle(x, startY, slotWidth, slotHeight, BLACK);
-        if (i < globalState.enteredPassword.size()) {
+        if (i < static_cast<int>(globalState.enteredPassword.size())) {
             DrawText(std::string(1, globalState.enteredPassword[i]).c_str(), x + 15, startY + 15, 40, WHITE);
         }
     }
@@ -908,7 +908,7 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
         {LOT, {&hobos}}, //dont forget about hobo
         {LAB, {&cyberZombies, &scientists, &zombies}},
         {ALIEN, {&aliens}},
-        {PENTHOUSE, {}},
+        {PENTHOUSE, {&CEOs}},
 
     };
 
@@ -981,7 +981,7 @@ void DrawItem(Vector2 itemPos, const std::string& itemType) {
     Rectangle itemBounds = { itemPos.x, itemPos.y, 64, 64 };
 
     if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(mouseWorldPos, itemBounds)) || 
-        (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)) && distanceToItemX < 20 && distanceToItemY < 50) {
+        ((IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))) && (distanceToItemX < 20 && distanceToItemY < 50)) {
         
         if (!(*playerItemFlags[itemType])) {
             *playerItemFlags[itemType] = true; //hasShovel, hasCrowbar ect.. = true
@@ -1000,13 +1000,10 @@ void DrawItem(Vector2 itemPos, const std::string& itemType) {
                 player.hasArmor = true;
                 PlaySound(SoundManager::getInstance().GetSound("zipper"));
 
-            } 
-
-           
+            }  
         }
     }
 }
-
 
 
 void HandleLobbyTransition(){
@@ -1067,14 +1064,9 @@ void HandleNecroTransition(){
         UpdateNPCActivity(NECROTECH,OUTSIDE);
 
     }
-
- 
 }
 
-
-
-
-void HandleOutsideTransition(PlayerCar& player_car) {
+void HandleOutsideTransition() {
     if (globalState.move_car && !globalState.gotoWork && !globalState.gotoPark && !globalState.gotoNecro) {  // Car is moving, go to road
         gameState = ROAD;
         UpdateNPCActivity(OUTSIDE, ROAD);
@@ -1101,7 +1093,6 @@ void HandleOutsideTransition(PlayerCar& player_car) {
         player.position.x = player_car.position.x;
         UpdateNPCActivity(OUTSIDE, NECROTECH);
         
-        //gotoNecro = false;
 
     } else if (player.isDead) {  // Died outside, go to apartment
         gameState = APARTMENT;
@@ -1149,7 +1140,7 @@ void HandleUFOtransition() {
     UpdateNPCActivity(ALIEN, CEMETERY);
 }
 
-void HandleRoadTransition(PlayerCar& player_car) {
+void HandleRoadTransition() {
     if (!globalState.reverse_road) {
         gameState = CEMETERY;
         player_car.position.x = 3000;
@@ -1165,7 +1156,7 @@ void HandleRoadTransition(PlayerCar& player_car) {
     }
 }
 
-void HandleCemeteryTransition(PlayerCar& player_car) {
+void HandleCemeteryTransition() {
     globalState.reverse_road = true;
     player_car.facingLeft = false;
     globalState.move_car = false;
@@ -1203,7 +1194,7 @@ void HandleCemeteryTransition(PlayerCar& player_car) {
     }
 }
 
-void HandleGraveyardTransition(std::vector<NPC>& ghosts){
+void HandleGraveyardTransition(){
     if (player.isDead){
         gameState = APARTMENT;//wake up back at your apartment with full health.
         player.position.x = globalState.apartmentX;
@@ -1340,7 +1331,7 @@ void HandleParkTransition(){
 void HandlePenthouseTransition(){
 
     if (elevators[0].isOccupied && player.onElevator){
-        std::cout << "LEAVING PENTHOUSE TO LAB";
+
         gameState = LAB;
         player.onElevator = false;
         elevators[0].isOccupied = false;
@@ -1349,7 +1340,7 @@ void HandlePenthouseTransition(){
 
     if (elevators[1].isOccupied && player.onElevator){
         gameState = NECROTECH;
-        std::cout << "LEAVING PENTHOUSE TO NECRO";
+        player.position.x = 2129.0f; //front door 
         player.onElevator = false;
         elevators[1].isOccupied = false;
         UpdateNPCActivity(PENTHOUSE, NECROTECH);
@@ -1424,68 +1415,28 @@ void HandleSubwayTransition(){
     }
 }
 
-void PerformStateTransition( PlayerCar& player_car) {
-    //if we are fading out, we are transitioning, switch to the next area depending on the gameState. 
+void PerformStateTransition(PlayerCar& player_car) {
+    // If we are fading out, we are transitioning. Switch to the next area depending on the gameState.
     switch (gameState) {
-        case OUTSIDE:
-            HandleOutsideTransition(player_car);
-            break;
-        case APARTMENT:
-            HandleApartmentTransition();
-            break;
-        case ROAD:
-            HandleRoadTransition( player_car);
-            break;
-        case CEMETERY:
-            HandleCemeteryTransition(player_car);
-            break;
-        case WORK:
-            HandleWorkTransition();
-            break;
-        case LOT:
-            HandleLotTransition();
-            break;
-        case GRAVEYARD:
-            HandleGraveyardTransition(ghosts);
-            break;
-
-        case ASTRAL:
-            HandleAstralTransition();
-            break;
-
-        case PARK:
-            HandleParkTransition();
-            break;
-
-        case SUBWAY:
-            HandleSubwayTransition();
-            break;
-
-        case NECROTECH:
-            HandleNecroTransition();
-            break;
-
-        case LOBBY:
-            HandleLobbyTransition();
-            break;
-
-        case OFFICE:
-            HandleOfficeTransition();
-            break;
-
-        case LAB:
-            HandleLabTransition();
-            break;
-
-        case ALIEN:
-            HandleUFOtransition();
-            break;
-
-        case PENTHOUSE:
-            HandlePenthouseTransition();
-  
+        case OUTSIDE:     HandleOutsideTransition();              break;
+        case APARTMENT:   HandleApartmentTransition();            break;
+        case ROAD:        HandleRoadTransition();                 break;
+        case CEMETERY:    HandleCemeteryTransition();             break;
+        case WORK:        HandleWorkTransition();                 break;
+        case LOT:         HandleLotTransition();                  break;
+        case GRAVEYARD:   HandleGraveyardTransition();            break;
+        case ASTRAL:      HandleAstralTransition();               break;
+        case PARK:        HandleParkTransition();                 break;
+        case SUBWAY:      HandleSubwayTransition();               break;
+        case NECROTECH:   HandleNecroTransition();                break;
+        case LOBBY:       HandleLobbyTransition();                break;
+        case OFFICE:      HandleOfficeTransition();               break;
+        case LAB:         HandleLabTransition();                  break;
+        case ALIEN:       HandleUFOtransition();                  break;
+        case PENTHOUSE:   HandlePenthouseTransition();            break;
     }
 }
+
 
 void DrawFadeMask() {
     DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, globalState.fadeAlpha)); //fade to black
@@ -1771,8 +1722,6 @@ void RenderInventory() {
         //chatGPT suggests using enum ItemType and struct inventoryDefinitions, just makes it more spread out and complicated.
             if (inventory[i] == "vest"){
                 DrawTexture(resources.armorIcon, x, y, WHITE);
-
-
             }
             if (inventory[i] == "watch"){
                 DrawTexture(resources.pocketWatch, x, y, WHITE);
@@ -2370,7 +2319,7 @@ void HandleGamepadMouseControl() {
 
 
 void DrawTank(Tank& tank){
-    if (!IsWindowFocused) return; //don't update animations when window is not focused. 
+
     float tankFrame = 32.0;
     int numFrames = 5;
       // Update animation timer
@@ -3094,7 +3043,7 @@ void RenderSubway(){
     if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player);
 
     globalState.subwayExit = false;
-    if ((player.position.x > 3700 && player.position.x < 3720 || player.position.x > 1900 && player.position.x < 1920)&& gameState == SUBWAY){ //far right or far left of subway, both have exit
+    if (((player.position.x > 3700 && player.position.x < 3720) || (player.position.x > 1900 && player.position.x < 1920)) && gameState == SUBWAY){ //far right or far left of subway, both have exit
 
         phrase = "Up TO EXIT SUBWAY";
         globalState.show_dbox = true;
@@ -4281,6 +4230,18 @@ void RenderPenthouse()
 
     HandleGrenades();
 
+    for (NPC& ceo : CEOs){
+        ceo.Update();
+        ceo.Render();
+        ceo.ClickNPC();
+
+        if (ceo.interacting){
+            phrase = ceo.speech;
+            globalState.show_dbox = true;
+            globalState.dboxPosition = ceo.position;
+        }
+    }
+
 
     //DRAW PLAYER
     if (!player.onElevator) player.DrawPlayer();
@@ -4657,6 +4618,10 @@ void RenderLobby(){
     //elevator.isOccupied = false;
     elevators[0].isOccupied = false;
     float deltaTime = GetFrameTime();
+    Vector2 lobbyPos = {2446, 648};
+    if (elevators[0].position != lobbyPos){
+        elevators[0].position = lobbyPos;
+    }
 
     if (player.position.x < 2051 && player.position.x > 2031){
         globalState.over_medkit = true;
@@ -5516,7 +5481,7 @@ void spawnNPCs(){
     }
 
     //spawn lobby MiBs
-    int mb = 5;
+    int mb = 3;
     for (int i = 0; i < mb; i++){
         Vector2 m_pos = {static_cast<float>(2000 + i * 200), 700}; 
         NPC mib_npc = CreateNPC(resources.mibSheet, m_pos, speed, IDLE, false, false);
@@ -5581,6 +5546,14 @@ void spawnNPCs(){
 
         aliens.push_back(alien);
     }
+
+    //spawn CEO
+    Vector2 c_pos = {2200, 700};
+    NPC CEO = CreateNPC(resources.CEOsheet, c_pos, speed, IDLE, false, false);
+    CEO.CEO = true;
+    CEO.SetDestination(2000, 3000);
+    CEOs.push_back(CEO);
+
 
 
 }
@@ -6354,6 +6327,10 @@ void DrawPlayTime(float totalTime) {
     DrawText(timerText, 10, 10, 20, WHITE);
 }
 
+void RenderWork(){
+    ClearBackground(BLACK);
+}
+
 void enemyBulletCollision(){
 
     //robots and mibs shoot lasers. Need to check for laser collisions as well.
@@ -6485,7 +6462,7 @@ int main() {
 
         slotSelectionLogic(); //gamepad inventory traversal. 
 
-        if (!player.armor){ //remove vest from inventory if armor is depleted. 
+        if (player.armor <= 0){ //remove vest from inventory if armor is depleted. 
             player.hasArmor = false;
             RemoveItemFromInventory("vest");
         }
@@ -6509,25 +6486,19 @@ int main() {
         if (globalState.windowStateChanged) { //toggle full screen    
             UpdateDrawRectangle(&destRect); 
             globalState.windowStateChanged = false;
-
-
-            
         }
         
         if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_D) || IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT) || GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_X)){ //tutorial text
             if (globalState.start){
                 globalState.start = false; //turn off dbox if any movement
                 phrase = "UP to Enter"; //set phrase to uptoenter cause liquor store doesn't set it
-
             }
-
         }
 
         if (IsKeyPressed(KEY_M)){ //MUTE MUSIC
             if (SoundManager::getInstance().IsMusicPlaying("NewNeon")){
                 SoundManager::getInstance().PauseMusic("NewNeon");
                 
-
             }else{
                 SoundManager::getInstance().ResumeMusic("NewNeon");
                 
@@ -6583,61 +6554,23 @@ int main() {
             //MULTIPASS RENDERING. Everything inside BeginTextureMode is saved to a RenderTexture2D. This makes it possible to stack shaders.   
             BeginTextureMode(targetTexture); //Render to targetTexture. First Pass/////////////////////////////
             
-            switch (gameState){//Depending on the gameState, render the scene. 
-                case OUTSIDE:
-                    RenderOutside();
-                    break;
-                case APARTMENT:
-                    RenderApartment();
-                    break;
-                case ROAD:
-                    RenderRoad();
-                    break;
-                case CEMETERY:
-                    RenderCemetery();
-                    break;
-                case WORK:
-                    ClearBackground(BLACK);//do nothing at the moment
-                    break;
-                case LOT:
-                    RenderLot();
-                    break;
-                case GRAVEYARD:
-                    RenderGraveyard();
-                    break;
-                case ASTRAL:
-                    RenderAstral();
-                    break;
-                case PARK:
-                    RenderPark();
-                    break;
-
-                case SUBWAY:
-                    RenderSubway();
-                    break;
-
-                case NECROTECH:
-                    RenderNecroTech();
-                    break;
-
-                case LOBBY:
-                    RenderLobby();
-                    break;
-
-                case OFFICE:
-                    RenderOffice();
-                    break;
-
-                case LAB:
-                    RenderLab();
-                    break;
-
-                case ALIEN:
-                    RenderUFOinterior();
-                    break;
-                case PENTHOUSE:
-                    RenderPenthouse();
-                    break;
+            switch (gameState) { // Depending on the gameState, render the scene.
+                case OUTSIDE:     RenderOutside();      break;
+                case APARTMENT:   RenderApartment();    break;
+                case ROAD:        RenderRoad();         break;
+                case CEMETERY:    RenderCemetery();     break;
+                case WORK:        RenderWork();         break; // Do nothing at the moment
+                case LOT:         RenderLot();          break;
+                case GRAVEYARD:   RenderGraveyard();    break;
+                case ASTRAL:      RenderAstral();       break;
+                case PARK:        RenderPark();         break;
+                case SUBWAY:      RenderSubway();       break;
+                case NECROTECH:   RenderNecroTech();    break;
+                case LOBBY:       RenderLobby();        break;
+                case OFFICE:      RenderOffice();       break;
+                case LAB:         RenderLab();          break;
+                case ALIEN:       RenderUFOinterior();  break;
+                case PENTHOUSE:   RenderPenthouse();    break;
             }
             
             HandleTransition(); //Check everyframe for gamestate transitions, inside draw to handle fadeouts

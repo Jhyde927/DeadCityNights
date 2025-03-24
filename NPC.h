@@ -90,6 +90,7 @@ public:
     bool scientist;
     bool scienceJr;
     bool alien;
+    bool CEO;
 
     // Add an emitter for each NPC
     Emitter bloodEmitter;

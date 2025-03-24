@@ -41,6 +41,7 @@ std::vector<NPC>officeWorkers;
 std::vector<NPC>scientists;
 std::vector<NPC>cyberZombies;
 std::vector<NPC>aliens;
+std::vector<NPC>CEOs;
 
 std::vector<std::vector<NPC>*> enemies;
 
@@ -67,9 +68,9 @@ void InitializeNPCGroups() {
 
     enemies = 
     {
-       &zombies, &cyberZombies, &ghosts, &bats, &mibs, 
-       &lobbyMibs, &robots, &lobbyRobots, &astralBats, &astralGhosts
-    };
+       &zombies, &cyberZombies, &ghosts, &bats, &lobbyMibs, 
+       &robots, &lobbyRobots, &astralBats, &astralGhosts
+    }; //omit mib on main street. 
 
     allNPCGroups = {
         &npcs, &zombies, &hobos, &ghosts, &bats, &mibs, 

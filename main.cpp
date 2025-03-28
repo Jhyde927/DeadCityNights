@@ -714,6 +714,7 @@ void UpdateZombieSpawning(){
             int zombie_speed = 35;//25
             NPC zombie_npc = CreateNPC(resources.zombieSheet, z_pos, zombie_speed, RISING, true, true);
             zombie_npc.SetDestination(1000, 4000); //random starting destination
+            zombie_npc.scene = gameState;
             zombies.push_back(zombie_npc);
             
 
@@ -1556,17 +1557,6 @@ void Dig(){
                 // }
 }
 
-
-
-
-Vector2 Lerp(Vector2 start, Vector2 end, float t) {
-    return Vector2{
-        start.x + t * (end.x - start.x),
-        start.y + t * (end.y - start.y)
-    };
-}
-
-
 NPC* FindClosestNPC(NPC& zombie, std::vector<NPC>& npcs) {
     //find closest npc to zombie
     NPC* closestNPC = nullptr;
@@ -1586,6 +1576,20 @@ NPC* FindClosestNPC(NPC& zombie, std::vector<NPC>& npcs) {
     return closestNPC;
 }
 
+
+
+
+
+Vector2 Lerp(Vector2 start, Vector2 end, float t) {
+    return Vector2{
+        start.x + t * (end.x - start.x),
+        start.y + t * (end.y - start.y)
+    };
+}
+
+
+
+
 void UpdatePoliceTarget(NPC& police, std::vector<NPC>& zeds){
     police.targetNPC = FindClosestNPC(police, zeds);
 
@@ -1596,6 +1600,7 @@ void UpdatePoliceTarget(NPC& police, std::vector<NPC>& zeds){
         
     }
 }
+
 
 
 void UpdateZombieTarget(NPC& zombie, std::vector<NPC>& npcs) {
@@ -2282,6 +2287,14 @@ void DrawCarUI(PlayerCar& player_car, Camera2D& camera){
     }
 
 }
+
+void ClearAllEnemies() {
+    for (std::vector<NPC>* groupPtr : enemies) {
+        delete groupPtr;
+    }
+    enemies.clear();
+}
+
 
 
 void HandleGamepadMouseControl() {
@@ -3362,9 +3375,13 @@ void RenderCemetery(){
 
 
 
-    for (NPC& zombie : zombies){ //update and draw zombies in cemetery
-        zombie.Update();
-        zombie.Render();
+    for (NPC& zombie : zombies){
+        if (zombie.isActive && zombie.scene == gameState){ //cemetery zombies stay in the cemetery
+            zombie.Update();
+            zombie.Render();
+
+        }
+
 
     }
 
@@ -3567,8 +3584,12 @@ void RenderGraveyard(){
 
     }
     for (NPC& zombie : zombies){
-        zombie.Update();
-        zombie.Render();
+        if (zombie.isActive && zombie.scene == gameState){ //could this cause a bug. graveyard zombies stay in graveyard. 
+            zombie.Update();
+            zombie.Render();
+
+        }
+
 
         if (zombie.isDying && !globalState.firstBlood && gameState == GRAVEYARD){ //first zombie that is dying in the graveyard
             globalState.firstBlood = true;
@@ -3991,10 +4012,14 @@ void RenderPark(){
 
     }
 
+
+
     for (NPC& zombie : zombies){
-        zombie.Update();
-        zombie.Render();
-        UpdateZombieTarget(zombie, ParkNpcs);
+        if (zombie.isActive && zombie.scene == gameState){
+            zombie.Update();
+            zombie.Render();
+            UpdateZombieTarget(zombie, npcs);
+        }
     }
 
     if (globalState.show_carUI && !globalState.move_car && player.enter_car){ //destination menu //Draw inside mode2d
@@ -4426,11 +4451,12 @@ void RenderLab(){
     }
 
     for (NPC& zombie : zombies){
-        zombie.Update();
-        zombie.Render();
-        UpdateZombieTarget(zombie, scientists);
+        if (zombie.isActive && zombie.scene == gameState){
+            zombie.Update();
+            zombie.Render();
+            UpdateZombieTarget(zombie, npcs);
+        }
     }
-
     HandleGrenades();
 
 
@@ -4579,11 +4605,12 @@ void RenderOffice(){
 
 
     for (NPC& zombie : zombies){
-        zombie.Update();
-        zombie.Render();
-        UpdateZombieTarget(zombie, officeWorkers);
+        if (zombie.isActive && zombie.scene == gameState){
+            zombie.Update();
+            zombie.Render();
+            UpdateZombieTarget(zombie, npcs);
+        }
     }
-
     DrawBullets();
     EndShaderMode(); ////////////////////////////SHADER OFF
     
@@ -4796,11 +4823,12 @@ void RenderLobby(){
     }
 
     for (NPC& zombie : zombies){
-        zombie.Update();
-        zombie.Render();
-        UpdateZombieTarget(zombie, lobbyNPCs);
+        if (zombie.isActive && zombie.scene == gameState){
+            zombie.Update();
+            zombie.Render();
+            UpdateZombieTarget(zombie, npcs);
+        }
     }
-
 
     DrawBullets();
     EndShaderMode(); ////////////////////////////SHADER OFF
@@ -5149,11 +5177,13 @@ void RenderOutside() {
     }
 
     for (NPC& zombie : zombies){
-        zombie.Update();
-        zombie.Render();
-        UpdateZombieTarget(zombie, npcs);
-    }
+        if (zombie.isActive && zombie.scene == gameState){
+            zombie.Update();
+            zombie.Render();
+            UpdateZombieTarget(zombie, npcs);
+        }
 
+    }
 
     
     //DrawStreetLight
@@ -6361,6 +6391,7 @@ void DrawPlayTime(float totalTime) {
 
 void RenderWork(){
     ClearBackground(BLACK);
+    //Render a black screen before returning to street. 
 }
 
 void enemyBulletCollision(){
@@ -6671,6 +6702,7 @@ int main() {
     // Unload resources and close the window
     resources.Unload();
     soundManager.UnloadAllSounds();
+    ClearAllEnemies(); //clean up pointers. 
     UnloadShaders();
     CloseAudioDevice();
     CloseWindow();

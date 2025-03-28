@@ -85,6 +85,7 @@ public:
     bool scienceJr;
     bool alien;
     bool CEO;
+    GameState scene;
 
     // Add an emitter for each NPC
     Emitter bloodEmitter;

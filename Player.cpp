@@ -362,18 +362,19 @@ void Player::HandleInput(float speed) { //this doesn't run if aiming.
         isMoving = false; //instantly set to false so you can swing crowbar immediatly 
 
 
-        // Only set isMoving to false if velocity has actually stopped
+        // Only set isMoving to false if velocity has actually stopped <- fucks with crowbar attack, can't melee immediatly after stoping. 
         //isMoving = (velocity.x != 0.0f);
     }
 
     //-----------------------------------
-    // ROLLING (Keyboard + Controller)
+    // DODGE ROLLING (Keyboard + Controller)
     //--------------------------------------
     if ((IsKeyPressed(KEY_E) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT)) && isRunning && canRoll && !isRolling){
         currentFrame = 0;
         canRoll = false;
         isRolling = true;
-        rollTimer = 0.4f;
+        rollTimer = 0.4f; //i-frames, same as roll duration. 
+        PlaySound(SoundManager::getInstance().GetSound("jump"));
         
     }
     // ------------------------------

@@ -56,7 +56,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     scientist = false;
     scienceJr = false;
     cyberZombie = false;
- 
+    
     alien = false;
     robot = false;
     clickCount = 0;
@@ -619,7 +619,7 @@ void NPC::HandleZombie(){
     if (isZombie && distanceToPlayer < 10.0f && riseTimer <= 0 && !isDying) { //zombie attack player
         attacking = true;
         destination = position;
-        if (player.hitTimer <= 0){
+        if (player.hitTimer <= 0 && !player.isRolling){ //dont play sound if player is rolling. 
             player.take_damage(10);
             if (player.armor <= 0){ //dont play hit sfx when player has armor. 
                 PlaySound(rand() % 2 == 0 ? SoundManager::getInstance().GetSound("boneBreak") : SoundManager::getInstance().GetSound("squish"));
@@ -639,7 +639,7 @@ void NPC::HandleZombie(){
     }
 
     if (targetNPC != nullptr && riseTimer <= 0){
-        //if (!targetNPC->isActive) return;
+        
         float distToNPC = fabs(targetNPC->position.x - position.x);
         if (distToNPC < 15 && !isDying){
             

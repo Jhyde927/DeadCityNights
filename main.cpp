@@ -688,8 +688,12 @@ void StartZombieSpawn(int zombie_count, float max_delay){
     // Initial spawn delay
     float minDelay = 0.5f; // <--- Difficulty setting 
     globalState.nextSpawnDelay = minDelay + ((float)rand() / (float)RAND_MAX) * (max_delay - minDelay);
-
-    if (gameState != OFFICE && gameState != LAB && gameState != !OUTSIDE) globalState.glitch = false; // Glitch effect
+    if (globalState.canGlitch){
+        globalState.glitch = true;
+        globalState.canGlitch = false; //play once when we first see zombies. 
+        //if you want glitch in other areas, just make canGlitch true again before zombies spawn. 
+    }
+    //if (gameState != OFFICE && gameState != LAB && gameState != !OUTSIDE) globalState.glitch = false; // Glitch effect
 }
 
 void UpdateZombieSpawning(){
@@ -1686,7 +1690,7 @@ void slotSelectionLogic(){
 
 
 void RenderInventory() {
-    int slotWidth = resources.inventorySlot.width;
+    const int slotWidth = resources.inventorySlot.width;
     Color shovelTint = WHITE;
     Color gunTint = WHITE;
     Color shotgunTint = WHITE;
@@ -1956,7 +1960,7 @@ void RenderInventory() {
     
 }
 
-void CheckBulletPlayerCollisions() {
+void CheckBulletPlayerCollisions() { //enemy bullet hits player
     Vector2 bulletSize = {5, 2};
     for (int i = 0; i < MAX_BULLETS; i++){
         if (bullets[i].isActive && bullets[i].laser){ //only lasers hurt player
@@ -1970,11 +1974,11 @@ void CheckBulletPlayerCollisions() {
     }
 }
 
-void CheckLaserNPCCollisions(std::vector<NPC>& npcs){
+void CheckLaserNPCCollisions(std::vector<NPC>& npcs){ //enemy bullets hits Pedestrian or zombie
     Vector2 laserSize = {5, 2};
     int laserDamage = 50; //lasers do more damage to NPCs
 
-    for (int i = 0; i < MAX_BULLETS; i++){//check for laser non robot NPC collision
+    for (int i = 0; i < MAX_BULLETS; i++){//check for laser non robot NPC collision, robots cant shoot other robots. mibs cant shoot other mibs. 
         if (bullets[i].isActive && bullets[i].laser){ 
             for (NPC& npc : npcs){
                 if (npc.isActive && !npc.robot && npc.CheckHit(bullets[i].previousPosition, bullets[i].position, laserSize)) {
@@ -1996,9 +2000,9 @@ void CheckBulletNPCCollisions(std::vector<NPC>& npcs) {
         if (bullets[i].isActive && !bullets[i].laser) {  
             
            
-
+            //Raygun bullet has health. It tics down when intersecting enemy hitbox. 1 damage per enemy. so we can set how many bodies it will penetrate. 
             for (NPC& npc : npcs) { 
-                if (npc.isActive && bullets[i].hitNPCs.find(&npc) == bullets[i].hitNPCs.end() &&
+                if (npc.isActive && bullets[i].hitNPCs.find(&npc) == bullets[i].hitNPCs.end() && //hitNPC is empty and checkHit is true
                     npc.CheckHit(bullets[i].previousPosition, bullets[i].position, bullets[i].size)) { 
 
                     // Mark NPC as hit
@@ -2043,6 +2047,11 @@ void DrawHUD(const Player& player) {
     else if (player.currentWeapon == MAC10 && player.hasMac10){
         DrawText(TextFormat("Ammo: %d", player.mac10BulletCount), screenWidth/2 + ammoX, ammoY, 20, WHITE); 
         DrawText(TextFormat("Mac10: %d", player.autoAmmo), screenWidth/2 + ammoX, ammoY+20, 20, WHITE);
+    }else if (player.currentWeapon == RAYGUN && player.hasRaygun){
+        
+        DrawText("Raygun", screenWidth/2 + ammoX, ammoY + 20, 20, WHITE);
+
+
     }
     
 }
@@ -3205,6 +3214,7 @@ void RenderAstral(){
 void RenderCemetery(){
     int carMax = 2800;
     int carMin = 2765;
+
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
     //UFO shows up in the begining at the far left outside, and once you have the cemetery key in the cemetery. 
     if (globalState.hasCemeteryKey && gameState == CEMETERY) {
@@ -3220,6 +3230,7 @@ void RenderCemetery(){
     //dont spawn unless raise zombies is true. raise zombies is set to true by talking to the hobo, and finding the gun
     if (!player.enter_car && player.position.x < 1900 && !globalState.zombieWave3 && !globalState.firstHobo){ // walk to far left and zombies spawn again
         globalState.zombieWave3 = true; 
+        globalState.canGlitch = true; //glitch runs again
         StartZombieSpawn(10, 3);//shovel pickup zombies
         globalState.minDistToPlayer = 50;
         globalState.maxDistToPlayer = 200;
@@ -3504,10 +3515,12 @@ void RenderRoad(){
 }
 
 void RenderGraveyard(){
+
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
     float digPos = 2350.0f;
     if (player.position.x > 3437 and globalState.raiseZombies){
         globalState.raiseZombies = false;
+        globalState.canGlitch = true;
         StartZombieSpawn(20, 3);
         globalState.minDistToPlayer = 25;
         globalState.maxDistToPlayer = 200;
@@ -3938,6 +3951,7 @@ void RenderPark(){
                     globalState.dboxPosition = npc.position;
                     globalState.show_dbox = true;   //dialogBox
                     globalState.raiseParkZombies = true;
+                    globalState.canGlitch = true; //canglitch again. makes it creepier
                     globalState.mibTimer -= GetFrameTime(); //mib timer tics down when interacting for 3 seconds then deactivate 
                     phrase = npc.speech;//WE are Watching You
                     if (globalState.mibTimer <= 0){
@@ -4230,6 +4244,10 @@ void RenderPenthouse()
 
     HandleGrenades();
 
+    for (int i = 3; i < static_cast<int>(monitors.size()); i++){ //skip the first 3 monitors, they are draw in the lab. 
+        DrawMonitor(monitors[i]);
+    }
+
     for (NPC& ceo : CEOs){
         ceo.Update();
         ceo.Render();
@@ -4280,7 +4298,7 @@ void RenderPenthouse()
 
     }
 
-    if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player);
+    if ((player.hasGun || player.hasShotgun || player.hasMac10) && !player.enter_car) DrawHUD(player);
 
 
 }
@@ -4368,8 +4386,10 @@ void RenderLab(){
         DrawConsole(console);
     }
 
-    for (Monitor& monitor : monitors){
-        DrawMonitor(monitor);
+
+
+    for (int i = 0; i < monitors.size() - 3; i++){ //skip the last 3 in the penthouse
+        DrawMonitor(monitors[i]);
     }
 
     for (NPC& scientist : scientists){
@@ -4381,6 +4401,7 @@ void RenderLab(){
             globalState.show_dbox = true;
             globalState.dboxPosition = scientist.position;
             phrase = scientist.speech;
+            globalState.canGlitch = true; //can glitch maybe 
         }
 
         if (scientist.trigger){
@@ -6176,6 +6197,17 @@ Vector2 clampMouseCursor(Vector2& mousePosition) {
     return mousePosition;
 }
 
+void InitPenthouseObjects(){
+    //InitMonitor(Vector2 {1965, 668});
+    InitMonitor(Vector2 {2005, 668});
+    InitMonitor(Vector2 {2045, 668});
+    InitMonitor(Vector2 {2085, 668});
+
+    InitMonitor(Vector2 {2005, 628});
+    InitMonitor(Vector2 {2045, 628});
+    InitMonitor(Vector2 {2085, 628});
+}
+
 
 void InitLabObjects(){
 
@@ -6386,7 +6418,7 @@ int main() {
     InitUFO();
     InitializeTrain();
     InitLabObjects(); //laboratory tanks and console
-
+    InitPenthouseObjects();
     InitializeNPCGroups();
     //Astral platforms
     InitPlatforms();
@@ -6404,6 +6436,8 @@ int main() {
     globalState.dboxPosition = player.position;
 
     //GuiSetFont(RubicBold); // Set the loaded font as the default GUI font
+
+
 
     PlayMusicStream(SoundManager::getInstance().GetMusic("NewNeon"));
     

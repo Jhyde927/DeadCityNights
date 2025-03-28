@@ -44,6 +44,8 @@ Player::Player() {
     currentFrame = 0;
     frameCounter = 0.0f;
     frameSpeed = 12.0f;
+    rollTimer = 0.0;
+    canRoll = true;
     armor = 0.0f;
     maxArmor = 100.0f;
     hasArmor = false;
@@ -54,6 +56,7 @@ Player::Player() {
     isAiming = false;
     isShooting = false;
     isReloading = false;
+    isRolling = false;
     canShoot = true;
     hasWatch = false;
     hasGun = false;
@@ -104,12 +107,13 @@ Player::Player() {
     charging = false;
     maxChargeTime = 2.0;
     
+    
 
 }
 
 void Player::take_damage(int damage) {
 
-    if (armor > 0 && can_take_damage){     
+    if (armor > 0 && can_take_damage && !isRolling){     
         armor -= damage;
         can_take_damage = false;
         hitTimer = 0.9f;
@@ -123,7 +127,7 @@ void Player::take_damage(int damage) {
     
     if (!enter_car && armor <= 0){ //dont take damage if inside car
 
-        if (can_take_damage && !isDead){
+        if (can_take_damage && !isDead && !isRolling){
             hitTimer = 0.9f; // tint the sprite red for .3 seconds
         
             can_take_damage = false;
@@ -362,6 +366,16 @@ void Player::HandleInput(float speed) { //this doesn't run if aiming.
         //isMoving = (velocity.x != 0.0f);
     }
 
+    //-----------------------------------
+    // ROLLING (Keyboard + Controller)
+    //--------------------------------------
+    if ((IsKeyPressed(KEY_E) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT)) && isRunning && canRoll && !isRolling){
+        currentFrame = 0;
+        canRoll = false;
+        isRolling = true;
+        rollTimer = 0.4f;
+        
+    }
     // ------------------------------
     // RUNNING (Keyboard + Controller)
     // ------------------------------
@@ -664,6 +678,19 @@ void Player::updateAnimations(){
                 canShoot = true;
             }
         }
+    }else if (isRolling && isMoving){
+        frameCounter += GetFrameTime() * frameSpeed;
+        int numFrames = 7;
+
+        if (frameCounter >= 0.1){
+            currentFrame++;
+            frameCounter = 0;
+
+            if (currentFrame >= numFrames){
+                currentFrame = 0;
+            }
+        }
+
     } else if (isMoving && !isAiming) {
         frameCounter += GetFrameTime() * frameSpeed;
         int numFrames = (maxSpeedX == runSpeed) ? (resources.runSheet.width / 64) : (resources.walkSheet.width / 64);
@@ -881,6 +908,13 @@ void Player::UpdateMovement() {
         
     }
 
+    if (rollTimer > 0){
+        rollTimer -= deltaTime;
+    }else{
+        isRolling = false;
+        canRoll = true;
+    }
+
     
 
     //keep player in bounds
@@ -946,7 +980,10 @@ void Player::DrawPlayer() {
             currentSheet = resources.jumpSheet;
             sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
-        } 
+        } else if (isRolling){
+            currentSheet = resources.flipSheet;
+            sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
+        }
         else if (isMoving) {
             // Walking or running animation
             currentSheet = isRunning ? resources.runSheet : resources.walkSheet;  // Use runSheet if running, else walkSheet
@@ -975,6 +1012,15 @@ void Player::DrawPlayer() {
             currentSheet = resources.ShotGunSheet;
             sourceRec = { 0, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth)};  // First frame for aiming
 
+        }
+        else if (jumping){
+            currentSheet = resources.jumpSheet;
+            sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
+
+        }
+         else if (isRolling){
+            currentSheet = resources.flipSheet;
+            sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
         } 
         else if (isMoving) {
             // Walking or running animation
@@ -1012,6 +1058,10 @@ void Player::DrawPlayer() {
             sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
         } 
+        else if (isRolling){
+            currentSheet = resources.flipSheet;
+            sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
+        } 
         else if (isMoving) {
             // Walking or running animation
             currentSheet = isRunning ? resources.runSheet : resources.walkSheet;  // Use runSheet if running, else walkSheet
@@ -1047,6 +1097,10 @@ void Player::DrawPlayer() {
             sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
 
         } 
+        else if (isRolling){
+            currentSheet = resources.flipSheet;
+            sourceRec = { static_cast<float>(currentFrame) * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameWidth) };
+        }  
         else if (isMoving) {
             // Walking or running animation
             currentSheet = isRunning ? resources.runSheet : resources.walkSheet;  // Use runSheet if running, else walkSheet

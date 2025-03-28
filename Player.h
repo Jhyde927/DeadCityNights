@@ -17,8 +17,6 @@ enum WeaponType {
     RAYGUN
 };
 
-
-
 class Player {
 public:  
     // Player attributes
@@ -31,7 +29,7 @@ public:
     bool jumping;
     bool onPlatform;
     float fallTimer;
-    float stunTimer;
+
     float walkSpeed;
     float runSpeed;
     int currentFrame;
@@ -41,7 +39,9 @@ public:
     float maxSpeedY;
     float acceleration;
     float deceleration;
-    
+
+    int maxHealth;
+    int currentHealth;
     float armor;
     float maxArmor;
     bool hasArmor;
@@ -61,6 +61,7 @@ public:
     bool isShooting;
     bool isDead;
     bool isReloading;
+    bool isRolling;
     bool canShoot;
     bool hasWatch;
     bool hasGun;
@@ -68,6 +69,7 @@ public:
     bool hasShotgun;
     bool hasMac10;
     bool hasShovel;
+    bool hasCrowbar;
     bool hasBadge;
     bool hasWhiskey;
     bool outline;
@@ -77,19 +79,21 @@ public:
     bool enter_train;
     bool arriving;
     bool can_take_damage;
+    bool canRoll;
     bool AllowGuns;
     bool validatedPassword;
     bool necroTechSearched;
     bool onElevator;
     bool hasPills;
     bool step;
-    bool hasCrowbar;
+
     bool canSwing;
     bool swinging;
     float swingTimer;
     bool chargeSoundPlayed;
 
     // Timers & counters
+    float rollTimer;
     float chargeTimer;
     int raygunSize;
     float dropTimer;
@@ -97,8 +101,6 @@ public:
     int shells;
     int autoAmmo;
     int revolverAmmo;
-    int maxHealth;
-    int currentHealth;
     float hitTimer;
     float reloadTimer;
     double LastTapTimeLeft;
@@ -106,9 +108,7 @@ public:
     double tapInterval;
     float shotgunReloadTime;
     int money;
-
     Emitter bloodEmitter;
-
 
     // Weapon variables
     WeaponType currentWeapon;

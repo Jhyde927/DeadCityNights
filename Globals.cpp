@@ -63,15 +63,16 @@ void InitCamera() {
     targetZoom = camera.zoom;  // Sync with initial zoom
     }
 
-// Function to initialize allNPCGroups
+// Function to initialize allNPCGroups and enemies
 void InitializeNPCGroups() {
 
-    enemies = 
+    enemies =     //all the NPC groups that can be attacked by the player. 
     {
        &zombies, &cyberZombies, &ghosts, &bats, &lobbyMibs, 
        &robots, &lobbyRobots, &astralBats, &astralGhosts
-    }; //omit mib on main street. 
+    }; //omit mib on main street. until...you die in necrotech, he's not agro yet though. just add mibs to the vector on player death in building. 
 
+    //every NPC incase we need it. 
     allNPCGroups = {
         &npcs, &zombies, &hobos, &ghosts, &bats, &mibs, 
         &astralGhosts, &astralBats, &ParkNpcs, &robots, 
@@ -109,6 +110,7 @@ void InitMonitor(Vector2 position){
     monitor.frameTime = 0.1f;
     monitors.push_back(monitor);
 }
+
 
 
 void InitializePlayerCar(){
@@ -257,7 +259,7 @@ void InitPlatforms() {
     platforms.emplace_back(1900.0f, 300.0f, 150.0f, 20.0f, WHITE);
     platforms.emplace_back(1600.0f, 250.0f, 200.0f, 20.0f, WHITE);
     platforms.emplace_back(1400.0f, 150.0f, 250.0f, 20.0f, WHITE);
-    //platforms.emplace_back(1600.0f, 100.0f, 200.0f, 20.0f, WHITE);
+    //platforms.emplace_back(1600.0f, 100.0f, 200.0f, 20.0f, WHITE); //jump the gap
     platforms.emplace_back(1800.0f, 75.0f, 300.0f, 20.0f, WHITE);
     platforms.emplace_back(2100.0f, 0.0f, 200.0f, 20.0f, WHITE);
     platforms.emplace_back(2300.0f, -100.0f, 200.0f, 20.0f, WHITE);

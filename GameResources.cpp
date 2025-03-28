@@ -128,6 +128,7 @@ void GameResources::Load() {
     penthouseMidground = LoadTexture("assets/PenthouseMidground.png");
     penthouseMidBack = LoadTexture("assets/PenthouseMidBack.png");
     CEOsheet = LoadTexture("assets/CEOsheet.png");
+    flipSheet = LoadTexture("assets/flipSheet.png");
 }
 
 // Unload all game resources
@@ -253,4 +254,5 @@ void GameResources::Unload() {
     UnloadTexture(penthouseMidground);
     UnloadTexture(penthouseMidBack);
     UnloadTexture(CEOsheet);
+    UnloadTexture(flipSheet);
 }

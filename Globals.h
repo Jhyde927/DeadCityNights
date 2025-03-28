@@ -8,7 +8,7 @@
 #include "NPC.h"
 #include "box.h"
 
-//A place to put random structs and vectors. That isn't main. 
+//Global containers
 
 // Declare global Camera2D
 extern Camera2D camera;
@@ -38,7 +38,7 @@ extern std::vector<std::vector<NPC>*> enemies;
 // Extern declaration of the master NPC group list
 extern std::vector<std::vector<NPC>*> allNPCGroups;
 
-struct GlobalState { //store random bools and timers that have accumulated over the months. just prefix everything with globalState
+struct GlobalState { //store random bools and timers that have accumulated over the months. just prefix everything with globalState is the price we pay for cleaner code. 
     float apartmentX = 2256;
     int vacantLotX = 2753;
     int vacantExitX = 2762;
@@ -164,6 +164,7 @@ struct GlobalState { //store random bools and timers that have accumulated over 
     float maxSpawnDelay = 3;
     int selectedSlot = -1;
     int displayMoney = 100;
+    bool canGlitch = true;
 
     //leftovers, refactor these, just define where they are used.
     Vector2 carKeysPos = {(1024/2) - 100, 655}; // remember positions need to based on screenwidth incase of resolution change. 
@@ -304,6 +305,7 @@ extern std::vector<Elevator> elevators;
 extern std::vector<Tank> Tanks;
 extern std::vector<Console> consoles;
 extern std::vector<Monitor> monitors;
+
 
 void InitCamera();
 void InitializePlayerCar();

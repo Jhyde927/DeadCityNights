@@ -9,10 +9,8 @@
 #include "Grenade.h"
 #include "GameEnums.h"
 
-
-
-
 class Player;  // Forward declaration of Player
+
 enum AnimationState {
     IDLE,
     WALK,
@@ -22,8 +20,6 @@ enum AnimationState {
     RISING,
     DEATH2
 };
-
-
 
 class NPC {
 public:
@@ -44,9 +40,7 @@ public:
     float riseTimer;
     bool interacting;
     Vector2 destination;
-
     float distanceToPlayer;
-    
     float speed;
     bool isActive;
     int maxHealth;

@@ -77,7 +77,7 @@ void InitializeNPCGroups() {
         &npcs, &zombies, &hobos, &ghosts, &bats, &mibs, 
         &astralGhosts, &astralBats, &ParkNpcs, &robots, 
         &lobbyRobots, &lobbyNPCs, &lobbyMibs, &officeWorkers, 
-        &scientists, &cyberZombies, &aliens
+        &scientists, &cyberZombies, &aliens, &CEOs
     };
 }
 

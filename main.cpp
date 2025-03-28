@@ -4274,15 +4274,21 @@ void RenderPenthouse()
     }
 
     for (NPC& ceo : CEOs){
-        ceo.Update();
-        ceo.Render();
-        ceo.ClickNPC();
+        if (ceo.isActive){
+            ceo.Update();
+            ceo.Render();
+            ceo.ClickNPC();
 
-        if (ceo.interacting){
-            phrase = ceo.speech;
-            globalState.show_dbox = true;
-            globalState.dboxPosition = ceo.position;
+            if (ceo.interacting){
+                phrase = ceo.speech;
+                globalState.show_dbox = true;
+                globalState.dboxPosition = ceo.position;
+            }
+
         }
+
+
+
     }
 
 
@@ -5591,7 +5597,7 @@ void spawnNPCs(){
     int a = 3;
     for (int i = 0; i < a; i++){
         Vector2 a_pos =  {static_cast<float>(2000 + i * 200), 700};
-        NPC alien = CreateNPC(resources.alienSheet, a_pos, speed, IDLE, true, false);
+        NPC alien = CreateNPC(resources.alienSheet, a_pos, speed, IDLE, false, false); //was set to active from the beginning
         alien.alien = true;
         alien.SetDestination(2000, 2600);
 
@@ -5801,8 +5807,8 @@ void UptoEnter(){
             
             
         }
-        //enter car for both outside and cemetery and Park
-        if (globalState.over_car && !player.enter_car && globalState.has_car_key){
+        //enter car for both outside and cemetery and Park //cant enter car while zombies are spawning
+        if (globalState.over_car && !player.enter_car && globalState.has_car_key && !globalState.spawning_zombies){ 
             //player inside idling car
             SoundManager::getInstance().PlayMusic("CarRun");
             //PlayPositionalSound(SoundManager::getInstance().GetSound("carRun"), player_car.position, player.position, 800);
@@ -5810,7 +5816,7 @@ void UptoEnter(){
             PlaySound(SoundManager::getInstance().GetSound("CarDoorOpen"));
             player.enter_car = true;
             globalState.over_car = false;
-            player_car.currentFrame = 1;
+            player_car.currentFrame = 1;//occupied frame 
             globalState.show_dbox = false;
 
 

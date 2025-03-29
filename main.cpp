@@ -296,6 +296,7 @@ void crowbarAttack(std::vector<NPC>& enemies){
     //DrawRectangleLines(attackHitbox.x, attackHitbox.y, attackHitbox.width, attackHitbox.height, RED);
 
     for (NPC& zombie : enemies){
+        
         if (zombie.isActive){          
             float hitboxWidth = 16.0f;   
             float hitboxHeight = 32.0f;  //Tall rectange to cover the sprite. 
@@ -328,7 +329,13 @@ void crowbarAttack(std::vector<NPC>& enemies){
 
 void showBigBadge(){
     //show the badge in the middle of the screen until you click the badge again. 
-    if (globalState.showBadge) DrawTexture(resources.BigBadge, 512, 512, WHITE);
+    
+    if (globalState.showBadge){
+        std::cout << "showing badge";
+        DrawTexture(resources.BigBadge, 512, 512, WHITE);
+
+    } 
+
 
 }
 
@@ -504,7 +511,7 @@ void MonitorMouseClicks(){
 
 }
 
-void HandleKeyboardAiming(){
+void HandleKeyboardAiming(){ //and gamepad
     //mousePosition is screen2world(mousePosition)
     Vector2 WorldMousePosition = GetScreenToWorld2D(mousePosition, camera);
 
@@ -526,7 +533,8 @@ void HandleKeyboardAiming(){
     }else if (player.isAiming && (!IsKeyDown(KEY_F) && !IsGamepadButtonDown(0, GAMEPAD_BUTTON_LEFT_TRIGGER_2))) {// If the player is aiming with keyboard, allow mouse control to set the facing direction
         // Set facing direction based on world mouse position
         
-        player.facingRight = WorldMousePosition.x > player.position.x; //facing right is true if mousepos.x > playerPos.x and not holding f and trigger
+        player.facingRight = WorldMousePosition.x > player.position.x; 
+        //facing right is true if mousepos.x > playerPos.x and not holding f and trigger
         
         
 
@@ -720,17 +728,9 @@ void UpdateZombieSpawning(){
 
             int soundIndex = rand() % 3; //zombie moans while rising.
             switch (soundIndex){  
-                case 0:
-                    PlaySound(SoundManager::getInstance().GetSound("moan1"));
-                    break;
-                
-                case 1:
-                    PlaySound(SoundManager::getInstance().GetSound("moan2"));
-                    break;
-
-                case 2:
-                    PlaySound(SoundManager::getInstance().GetSound("moan3"));
-                    break;
+                case 0: PlaySound(SoundManager::getInstance().GetSound("moan1")); break; 
+                case 1: PlaySound(SoundManager::getInstance().GetSound("moan2")); break;
+                case 2: PlaySound(SoundManager::getInstance().GetSound("moan3")); break;
             }
  
             // Reset the spawn timer and set a new random delay
@@ -938,6 +938,13 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
     }
 }
 
+void AddEnemyGroupOnce(std::vector<std::vector<NPC>*>& enemies, std::vector<NPC>* group) {
+    if (std::find(enemies.begin(), enemies.end(), group) == enemies.end()) {
+        enemies.push_back(group);
+    }
+}
+
+
 void DrawItem(Vector2 itemPos, const std::string& itemType) {
     //Draw item pickups and handle mouse clicks: crowbar, shovel, ect...
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
@@ -1039,7 +1046,10 @@ void HandleLobbyTransition(){
         globalState.glitch = false;
         globalState.remainingZombiesToSpawn = 0; //turn off zombie spawning on death
         gameCalendar.AdvanceDay();
-        globalState.triggerOutsideZombies = true;
+        globalState.triggerOutsideZombies = true; //trigger appocalypse 
+
+        AddEnemyGroupOnce(enemies, &mibs); // add main street mib to enemies vector so he can agro. 
+        
 
     }
 }
@@ -1299,6 +1309,9 @@ void HandleOfficeTransition(){
         globalState.glitch = false;
         globalState.triggerOutsideZombies = true;
 
+        AddEnemyGroupOnce(enemies, &mibs); // add main street mib to enemies vector so he can agro. 
+
+
     }
 }
 
@@ -1365,7 +1378,7 @@ void HandleLabTransition(){
         elevators[0].isOccupied = false;
         UpdateNPCActivity(LAB, PENTHOUSE);
     }
-    else if (player.isDead){
+    else if (player.isDead){ //Death in lab go to appartment
         UpdateNPCActivity(LAB, APARTMENT);
         gameState = APARTMENT;
         player.currentHealth = player.maxHealth;
@@ -1375,6 +1388,8 @@ void HandleLabTransition(){
         globalState.glitch = false;
         globalState.remainingZombiesToSpawn = 0;
         globalState.triggerOutsideZombies = true; //if you die in the lab or office or lobby it triggers zombies to invade main street. 
+
+        AddEnemyGroupOnce(enemies, &mibs); // add main street mib to enemies vector so he can agro. 
 
     }
 }
@@ -1485,11 +1500,12 @@ void HandleFadeOut(PlayerCar& player_car) {
 
 void HandleTransition() {
     //if you want to tranision to a new scene, just say transitionState = FADE_OUT
-    globalState.showBadge = false;//turn off big badge when leaving any area. incase they don't know how to close it. 
+
     if (transitionState == FADE_IN) {
         HandleFadeIn();
     } else if (transitionState == FADE_OUT) {
         HandleFadeOut(player_car);
+        globalState.showBadge = false;//turn off big badge when leaving any area. 
     }
 
     // Reset player position and health on death
@@ -1796,7 +1812,8 @@ void RenderInventory() {
                 };
 
                 if ((CheckCollisionPointRec(mousePosition, badgeBounds) || globalState.selectedSlot == i)){
-                    if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){
+                    if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){\
+                        std::cout << "pressing badge";
                         if (!globalState.showBadge){
                             globalState.showBadge = true;
                         }else{
@@ -2289,11 +2306,9 @@ void DrawCarUI(PlayerCar& player_car, Camera2D& camera){
 }
 
 void ClearAllEnemies() {
-    for (std::vector<NPC>* groupPtr : enemies) {
-        delete groupPtr;
-    }
-    enemies.clear();
+    enemies.clear(); // remove the pointers
 }
+
 
 
 
@@ -3376,6 +3391,7 @@ void RenderCemetery(){
 
 
     for (NPC& zombie : zombies){
+        if (zombie.scene != gameState) zombie.isActive = false;
         if (zombie.isActive && zombie.scene == gameState){ //cemetery zombies stay in the cemetery
             zombie.Update();
             zombie.Render();
@@ -3584,6 +3600,7 @@ void RenderGraveyard(){
 
     }
     for (NPC& zombie : zombies){
+        if (zombie.scene != gameState) zombie.isActive = false;
         if (zombie.isActive && zombie.scene == gameState){ //could this cause a bug. graveyard zombies stay in graveyard. 
             zombie.Update();
             zombie.Render();
@@ -3986,7 +4003,7 @@ void RenderPark(){
             npc.Update();
             npc.Render();
             npc.ClickNPC();
-            UpdatePoliceTarget(npc, ParkNpcs);
+            UpdatePoliceTarget(npc, zombies);
 
 
 
@@ -4005,20 +4022,15 @@ void RenderPark(){
                 
                 spawnZombie(npc.position); //NPC is transformed into a zombie. 
             }
-
-      
-
         }
-
     }
 
-
-
     for (NPC& zombie : zombies){
+        if (zombie.scene != gameState) zombie.isActive = false;//ensure zombies are not active outside of the current scene. 
         if (zombie.isActive && zombie.scene == gameState){
             zombie.Update();
             zombie.Render();
-            UpdateZombieTarget(zombie, npcs);
+            UpdateZombieTarget(zombie, ParkNpcs);
         }
     }
 
@@ -4034,8 +4046,6 @@ void RenderPark(){
     DrawTexture(resources.lightCone, 1492, 610, WHITE);
     DrawTexture(resources.lightCone, 1967, 610, WHITE);
     EndBlendMode();
-
-
 
     renderBoxes();
     DrawPickups();
@@ -4153,9 +4163,6 @@ void RenderUFOinterior(){
             globalState.dboxPosition = alien.position;
         }
     }
-
-
-
     
     EndShaderMode(); ////////////////////////////SHADER OFF
     DrawBullets();
@@ -4191,8 +4198,6 @@ void RenderUFOinterior(){
     }
 
     if ((player.hasGun || player.hasShotgun) && !player.enter_car) DrawHUD(player);
-
-
 }
 
 void RenderPenthouse()
@@ -4245,7 +4250,7 @@ void RenderPenthouse()
     float parallaxMidground = camera.target.x * 0.6f;  // Background moves even slower
 
 
-    if (globalState.drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
+    //if (globalState.drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
         
     //sky
     DrawTexturePro(resources.penthouseBackground, {0, 0, static_cast<float>(resources.penthouseBackground.width), static_cast<float>(resources.penthouseBackground.height)},
@@ -4263,9 +4268,9 @@ void RenderPenthouse()
     DrawTexturePro(resources.penthouseForeground, {0, 0, static_cast<float>(resources.penthouseForeground.width), static_cast<float>(resources.penthouseForeground.height)},
     {512, 0, static_cast<float>(resources.penthouseForeground.width), static_cast<float>(resources.penthouseForeground.height)}, {0, 0}, 0.0f, WHITE);
 
-    DrawElevator(elevators[0], resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
+    DrawElevator(elevators[0], resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime); //arrive on elevator0
 
-    DrawElevator(elevators[1], resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime);
+    DrawElevator(elevators[1], resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime); //leave on elevator1
 
     HandleGrenades();
 
@@ -4280,14 +4285,21 @@ void RenderPenthouse()
             ceo.ClickNPC();
 
             if (ceo.interacting){
-                phrase = ceo.speech;
-                globalState.show_dbox = true;
-                globalState.dboxPosition = ceo.position;
+                if (ceo.interactions == 0){
+                    phrase = ceo.speech;
+                    globalState.show_dbox = true;
+                    globalState.dboxPosition = ceo.position;
+
+                }
+                else if (ceo.interactions == 1){
+                    ceo.interactions = 2;
+                    ceo.agro = true;
+                    AddEnemyGroupOnce(enemies, &CEOs);
+                }
+
             }
 
         }
-
-
 
     }
 
@@ -4419,7 +4431,7 @@ void RenderLab(){
 
 
 
-    for (int i = 0; i < monitors.size() - 3; i++){ //skip the last 3 in the penthouse
+    for (int i = 0; i < static_cast<int>(monitors.size()) - 3; i++){ //skip the last 3 in the penthouse
         DrawMonitor(monitors[i]);
     }
 
@@ -4457,10 +4469,11 @@ void RenderLab(){
     }
 
     for (NPC& zombie : zombies){
+        if (zombie.scene != gameState) zombie.isActive = false;
         if (zombie.isActive && zombie.scene == gameState){
             zombie.Update();
             zombie.Render();
-            UpdateZombieTarget(zombie, npcs);
+            UpdateZombieTarget(zombie, scientists);
         }
     }
     HandleGrenades();
@@ -4521,6 +4534,7 @@ void RenderOffice(){
     //sound alarm and spawn in zoms immediatly 
     if (globalState.can_spawn_zombies){
         globalState.can_spawn_zombies = false;
+        globalState.canGlitch = false;// dont glitch in office. it looks bad. 
         StartZombieSpawn(15, 1);
     }
 
@@ -4611,10 +4625,12 @@ void RenderOffice(){
 
 
     for (NPC& zombie : zombies){
+        
+        if (zombie.scene != gameState) zombie.isActive = false; //we should run this globaly
         if (zombie.isActive && zombie.scene == gameState){
             zombie.Update();
             zombie.Render();
-            UpdateZombieTarget(zombie, npcs);
+            UpdateZombieTarget(zombie, officeWorkers);
         }
     }
     DrawBullets();
@@ -4829,10 +4845,11 @@ void RenderLobby(){
     }
 
     for (NPC& zombie : zombies){
+        if (zombie.scene != gameState) zombie.isActive = false;
         if (zombie.isActive && zombie.scene == gameState){
             zombie.Update();
             zombie.Render();
-            UpdateZombieTarget(zombie, npcs);
+            UpdateZombieTarget(zombie, lobbyNPCs);
         }
     }
 
@@ -5183,6 +5200,7 @@ void RenderOutside() {
     }
 
     for (NPC& zombie : zombies){
+        if (zombie.scene != gameState) zombie.isActive = false;
         if (zombie.isActive && zombie.scene == gameState){
             zombie.Update();
             zombie.Render();
@@ -5211,17 +5229,6 @@ void RenderOutside() {
     
     if (!globalState.triggerOutsideZombies){ //show hud when zombies are attacking.
         if ((player.hasGun || player.hasShotgun || player.hasMac10) && !player.enter_car) DrawHUD(player); 
-    }
-
-    
-
-    //DrawText("Cemetery", screenWidth/2 - 100, 60, 50, WHITE);
-
-    //draw healthbar 
-    if (!player.enter_car){
-        Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
-        DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
-
     }
 
 
@@ -6038,7 +6045,7 @@ void setButtonColors(){
 }
 
 void ShowControls(){
-    float offsetX = 664 - (1024.0f / 2.0f); // Offset relative to the center of the 1024x1024 window
+    float offsetX = 152.0f;
     Vector2 controlsRectPos = { (GetScreenWidth() / 2.0f) + offsetX, 212 };
     Vector2 controlsRecPos2 =  { (GetScreenWidth() / 2.0f) - (offsetX * 3), 212 };
     //Vector2 controlsRectPos = { 664, 212 };
@@ -6049,16 +6056,14 @@ void ShowControls(){
     DrawText("\nKeyboard:\n\n\nEsc - Menu\n\nD - Move Right\n\nA - Move Left\n\nShift - Run\n\nW - Interact\n\nS - Exit Car/Apartment\n\nSpace - Jump\n\nI - Open Inventory\n\nV - Melee\n\nRightClick - Aim\n\nLeftClick - Fire\n\nM - Mute Music\n\nMouseWheel - Zoom\n\n1,2,3 - Switch Weapons\n\n\n\nDebug Keys:\n\nK - Give Keys\n\nG - Give Guns\n\nH - Give Shovel\n\nP - Give Drugs\n\nL - Give Crowbar", 
             controlsRectPos.x + 32, controlsRectPos.y, 20, WHITE); 
 
-    DrawText("\nGamepad:\n\n\nStart - Menu\n\nLeftStick - Move\n\nA - Interact\n\nB - Exit Car/Apartment\n\nY - Jump\n\nSelect - Inventory\n\nB - Melee\n\nLeftTrigger - Aim\n\nRightTrigger - Fire\n\nRightStick - Zoom\n\nBumpers - scroll inven\n\nD-pad - Switch Weapons", 
+    DrawText("\nGamepad:\n\n\nStart - Menu\n\nLeftStick - Move\n\nA - Interact\n\nB - Exit Car/Apartment\n\nY - Jump\n\nB - Melee\n\nSelect - Open Inventory\n\nLeftTrigger - Aim\n\nRightTrigger - Fire\n\nRightStick - Zoom\n\nBumpers - scroll Inven\n\nD-pad - Switch Weapons", 
         controlsRecPos2.x + 32, controlsRecPos2.y, 20, WHITE); 
 
 }
 
-void MainMenu(PauseState& currentPauseState, Rectangle& destRect){
+void MainMenu(PauseState& currentPauseState, Rectangle& destRect){ //draw buttons and cursor
     // Draw semi-transparent background overlay
         if (globalState.menuOpen) {
-            //float offset_x = 0;
-            //if (globalState.borderlessWindow){} offset_x = (screenWidth - GAME_SCREEN_WIDTH)/2;
             
             // Draw semi-transparent background overlay
             DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, 0.3f));

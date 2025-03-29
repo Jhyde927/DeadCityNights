@@ -114,6 +114,7 @@ public:
     void ghostMoves();
     void playZombieHit(int soundIndex);
     void handleDeath();
+    void HandleCEO();
     
 };
 

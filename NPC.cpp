@@ -378,6 +378,11 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
                     case 2:
                         speech = "TESTING 2";
                         break;
+
+                    case 3:
+                        speech = "AGRO";
+                        interactions = 1; //in renderPenthouse trigger agro and add &CEOs to enemies vector
+                        break;
                 }
             }
         }
@@ -961,7 +966,44 @@ void NPC::ghostMoves(){
     }
 }
 
+void NPC::HandleCEO(){
+    if (distanceToPlayer < detectionRange && agro){
+        hasTarget = true;
+        destination = player.position;
+        facingRight = player.position.x > position.x;
+        speed = 75;
 
+    }
+
+    if (distanceToPlayer < 150 && agro){ //150 for longer distance, more of a chance for NPCs to get in the way
+        destination = position;//stop before shooting
+       //shoot
+       if (can_shoot && !isDying){
+            
+            can_shoot = false;
+            attacking = true;
+            SoundManager::getInstance().PlayPositionalSound("gunShot", position, player.position, 500); //CEO shoot lasers, but sound like guns. 
+            SetAnimationState(ATTACKING);
+            if (currentFrame == 5){
+                NPCfireBullet(*this, false, 10, true);
+                shootTimer = 1.0f;
+
+            }
+           
+            
+            
+    }
+
+    if (shootTimer > 0){
+        shootTimer -= GetFrameTime();      
+    }else{
+        can_shoot = true;
+        attacking = false;
+    }
+
+}
+
+}
 
 void NPC::Update() {
     if (!isActive) return;  // Skip update if the NPC is not active
@@ -1059,6 +1101,7 @@ void NPC::Update() {
     if (ghost || bat) HandleGhost(); //also bats
     if (alien) HandleAlien();
     if (robot) HandleRobot();
+    if (CEO) HandleCEO();
 
     Vector2 directionToPlayer = {
     player.position.x - position.x,
@@ -1451,7 +1494,7 @@ void NPC::TakeDamage(int damage) {
     
     } 
 
-    if (ghost || bat || MiB || robot){
+    if (ghost || bat || MiB || robot || CEO){
         if (!agro){
             agro = true; //trigger agro on hit
             destination = player.position;//move toward player
@@ -1463,7 +1506,7 @@ void NPC::TakeDamage(int damage) {
     } 
 
     if (!isZombie && !bat && !ghost && !robot){
-        destination = position; //if your an NPC, stop when you take damage so we can play the death animation. 
+        destination = position; //if your an friendly NPC, stop when you take damage so we can play the death animation. 
         
     }
 

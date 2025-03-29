@@ -321,6 +321,4 @@ void InitPlatforms();
 void InitBoxes();
 void InitializeNPCGroups();
 
-
-
 #endif // GLOBALS_H

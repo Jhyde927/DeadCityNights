@@ -17,7 +17,7 @@
 #include "Globals.h"
 #include "Grenade.h"
 
-
+BossState bossState;
 
 NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState initialAnimation, bool active, bool zombie)
 {
@@ -27,7 +27,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     currentAnimation = initialAnimation;
     isActive = active;
     isZombie = zombie;
-    
+    isBoss = false;
     frameCounter = 0;
     frameSpeed = 8.0f;
     currentFrame = 0;
@@ -85,6 +85,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     animationTimer = 0.0;
     isMoving = false;
     CEO = false;
+    bossState = BOSS_IDLE;
  
 }
 
@@ -107,6 +108,8 @@ std::string GetRandomPhrase() {
 
     return phrases[randomIndex];
 }
+
+
 
 void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
 
@@ -693,11 +696,12 @@ void NPC::HandleMiB(){
     if (gameState == LOBBY && MiB && distanceToPlayer < 1000 && !hasTarget && agro){
         hasTarget = true;
         destination = player.position;
+        facingRight = player.position.x > position.x;
     }
 
 
     if (MiB && agro && distanceToPlayer < 150){
-       destination = position;
+       destination = position; //stop before shooting
        hasTarget = true;
 
        //shoot
@@ -1183,7 +1187,7 @@ void NPC::Update() {
         
         }
 
-        if (isZombie && distanceToPlayer >= detectionRange && fabs(position.x - destination.x) < 5){ //at destination and zombie and no target
+        if (isZombie && distanceToPlayer >= detectionRange){ //dont get lost. alway move toward the player. 
             
             SetDestination(player.position.x - 100, player.position.x + 100); //move toward player as to not get lost. test this
         }
@@ -1268,7 +1272,14 @@ void NPC::Render() {
     //npc highlighting but I think I like it with out it. 
     
     //DrawRectangleLines(position.x+24, position.y+16, hitboxWidth, hitboxHeight, RED); // debug show hitbox
-    DrawTextureRec(texture, sourceRec, position, tint);
+    if (isBoss){
+        Vector2 newPos = {position.x, position.y - 16}; //offset boss sprite //hit box is still at ground level. 
+        DrawTextureRec(texture, sourceRec, newPos, tint);
+
+    }else{
+        DrawTextureRec(texture, sourceRec, position, tint);
+    }
+   
 
     bloodEmitter.DrawParticles(); //draw blood in front of sprite, looks better IMO
     EndShaderMode();
@@ -1284,6 +1295,16 @@ void NPC::SetAnimationState(AnimationState newState) {
 }
 
 void NPC::handleDeath(){
+
+    if (CEO){
+        isDying = true;          // Start dying process   
+        SetAnimationState(DEATH);  // Set to death animation
+        SoundManager::getInstance().PlayPositionalSound("deathScream", position, player.position, 500);
+        deathTimer = 0.85f;        // Set death animation duration // needs to be exact
+        destination = position;
+        trigger = true;
+    }
+
     if (isZombie) {
         //PlaySound(SoundManager::getInstance().GetSound("zombieDeath"));
         SoundManager::getInstance().PlayPositionalSound("zombieDeath", position, player.position, 500);
@@ -1346,6 +1367,25 @@ void NPC::handleDeath(){
         
     }
 
+}
+
+void NPC::HandleBoss(){
+    //work in progress. 
+    switch (bossState){
+        case BOSS_IDLE:
+            SetAnimationState(IDLE);
+            break;
+        case BOSS_CHARGE:
+            SetAnimationState(WALK);
+
+        case BOSS_FLYAWAY:
+            SetAnimationState(WALK);
+
+            
+            
+            
+
+    }
 }
 
 void NPC::playZombieHit(int soundIndex)

@@ -32,6 +32,7 @@ extern std::vector<NPC>scientists;
 extern std::vector<NPC>cyberZombies;
 extern std::vector<NPC>aliens;
 extern std::vector<NPC>CEOs;
+extern std::vector<NPC>Boss;
 
 extern std::vector<std::vector<NPC>*> enemies;
 

@@ -24,6 +24,7 @@
 #include "raygui.h"
 #include "Grenade.h"
 
+//main
 
 bool showInventory = false;
 const int INVENTORY_SIZE = 12;  // Define the size of the inventory
@@ -331,7 +332,6 @@ void showBigBadge(){
     //show the badge in the middle of the screen until you click the badge again. 
     
     if (globalState.showBadge){
-        std::cout << "showing badge";
         DrawTexture(resources.BigBadge, 512, 512, WHITE);
 
     } 
@@ -618,7 +618,14 @@ void spawnRobot(Vector2 position){
     robot_npc.health = 300;
     robot_npc.agro = true; //robots spawn angry
     robot_npc.SetDestination(player.position.x, player.position.x + 100);
-    lobbyRobots.push_back(robot_npc);
+    
+    if (gameState == LOBBY){
+        lobbyRobots.push_back(robot_npc);
+    }
+    else if (gameState == NECROTECH){
+        robots.push_back(robot_npc);
+    }
+
 
 }
 
@@ -658,12 +665,24 @@ void spawnCyberZombie(Vector2 position){
     cyberZombies.push_back(cyberZombie);
 }
 
+void spawnBoss(Vector2 position){
+    //spawn boss
+    int speed = 50;
+    NPC boss = CreateNPC(resources.demonSheet, position, speed, IDLE, true, false); //spawn active
+    boss.isBoss = true;
+    boss.SetDestination(2200, 700);
+    boss.maxHealth = 1000;
+    boss.health = boss.maxHealth;
+    Boss.push_back(boss);
+}
+
 void spawnZombie(Vector2 position){
     //spawn a zombie at the dead NPC position
-    
+    std::cout << "spawning zombie\n";
     int zombie_speed = 25;
     NPC zombie_npc = CreateNPC(resources.zombieSheet, position, zombie_speed, RISING, true, true);
-    zombie_npc.SetDestination(1000, 3000);
+    zombie_npc.SetDestination(2000, 3000);
+    zombie_npc.scene = gameState; //make sure scene is set to current gamestate
     zombies.push_back(zombie_npc);
 
     int soundIndex = rand() % 3; //zombie moans while rising.
@@ -992,9 +1011,14 @@ void DrawItem(Vector2 itemPos, const std::string& itemType) {
 
     Rectangle itemBounds = { itemPos.x, itemPos.y, 64, 64 };
 
-    if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(mouseWorldPos, itemBounds)) || 
-        ((IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))) && (distanceToItemX < 20 && distanceToItemY < 50)) {
-        
+    if ( //fucky layout to prevent warning 
+        (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(mouseWorldPos, itemBounds)) ||
+        (
+            (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)) &&
+            (distanceToItemX < 20 && distanceToItemY < 50)
+        )
+    )
+
         if (!(*playerItemFlags[itemType])) {
             *playerItemFlags[itemType] = true; //hasShovel, hasCrowbar ect.. = true
             AddItemToInventory(inventoryNames[itemType]);
@@ -1014,7 +1038,7 @@ void DrawItem(Vector2 itemPos, const std::string& itemType) {
 
             }  
         }
-    }
+    
 }
 
 
@@ -1056,11 +1080,20 @@ void HandleLobbyTransition(){
 
 void HandleNecroTransition(){
     //faded out
-    if (globalState.over_necro and globalState.passwordValidated && !player.isDead){
+    if (globalState.over_necro and globalState.passwordValidated && !player.isDead){//use password to enter. 
         gameState = LOBBY; //over enterance goto lobby
         UpdateNPCActivity(NECROTECH,LOBBY); //turn off NPCs in the scene you are leaving, turn on NPCs in the scene you are entering. 
 
-    }else if (player.isDead){
+    }else if (globalState.over_necro && AreAllNPCsDeactivated(robots)){//kill all robots to access lobby. or use passowrd. 
+        gameState = LOBBY;
+        UpdateNPCActivity(NECROTECH, LOBBY);
+        for (NPC& mib : lobbyMibs){ //agro the mibs if you kill the robots. 
+            if (!mib.agro){
+                mib.agro = true;
+            }
+        }
+
+    }  else if (player.isDead){
         gameState = APARTMENT;
         player.position.x = globalState.apartmentX;
         player.isDead = false;
@@ -1281,7 +1314,7 @@ void HandleAstralTransition(){
 
 void HandleOfficeTransition(){
     if (elevators[0].isOccupied){
-        std::cout << "GOTO lobby";
+
         gameState = LOBBY;
         UpdateNPCActivity(OFFICE, LOBBY);
         player.onElevator = false;
@@ -1289,7 +1322,7 @@ void HandleOfficeTransition(){
         globalState.can_spawn_zombies = false; //only spawn zombies once. 
 
     }else if (elevators[1].isOccupied){
-        std::cout << "Goto lab";
+
         gameState = LAB;
         UpdateNPCActivity(OFFICE, LAB);
         player.onElevator = false;
@@ -1813,7 +1846,6 @@ void RenderInventory() {
 
                 if ((CheckCollisionPointRec(mousePosition, badgeBounds) || globalState.selectedSlot == i)){
                     if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){\
-                        std::cout << "pressing badge";
                         if (!globalState.showBadge){
                             globalState.showBadge = true;
                         }else{
@@ -2923,7 +2955,7 @@ void playerOutsideInteraction(){
     if (player.position.x < 64 && !globalState.move_ufo && gameState == OUTSIDE){
         globalState.move_ufo = true;
         globalState.ufoTimer = 10; //it takes 10 seconds for the UFO to move into position and hover before shooting off. 
-        std::cout << "Moving UFO";
+
 
     }
 
@@ -4278,11 +4310,21 @@ void RenderPenthouse()
         DrawMonitor(monitors[i]);
     }
 
+    for (NPC& boss : Boss){
+        boss.Update();
+        boss.Render();
+    }
+
     for (NPC& ceo : CEOs){
         if (ceo.isActive){
             ceo.Update();
             ceo.Render();
             ceo.ClickNPC();
+
+            if (ceo.trigger){
+                ceo.trigger = false;
+                spawnBoss(ceo.position);
+            }
 
             if (ceo.interacting){
                 if (ceo.interactions == 0){
@@ -4765,13 +4807,12 @@ void RenderLobby(){
     }
 
     if (globalState.globalAgro && globalState.can_spawn_mibs){
-        //spawn 4 more mibs in lobby on agro.. 
+        //spawn 2 more mibs in lobby on agro.. 
         globalState.can_spawn_mibs = false;
         spawnMib(player.position + Vector2 {300, 0});
         spawnMib(player.position + Vector2 {-300, 0});
 
-        spawnMib(player.position + Vector2 {200, 0});
-        spawnMib(player.position + Vector2 {-200, 0});
+
 
         
     }
@@ -4818,10 +4859,6 @@ void RenderLobby(){
             }
 
             if (mib.agro){ 
-                //mib.idleTime = 0;
-                mib.hasTarget = true;
-                mib.destination = player.position;
-                mib.facingRight = player.position.x > mib.position.x;
                 Flocking(lobbyMibs); //only flock if agro. flocking = repulsion force. 
                 globalState.globalAgro = true; //if 1 mib is agro, alert everyone else. 
             }
@@ -4914,7 +4951,7 @@ void RenderNecroTech(){
     globalState.over_necro = false;
     globalState.showPasswordInterface = false; //you can interact with either the door or the robot outside, to enter password. 
     if (player.position.x < 2144 && player.position.x > 2124){
-        if (globalState.passwordValidated){
+        if (globalState.passwordValidated || AreAllNPCsDeactivated(robots)){ //kill all the robots to enter without the password. 
             globalState.over_necro = true;
             phrase = "UP TO ENTER";
             globalState.show_dbox = true;
@@ -4985,14 +5022,15 @@ void RenderNecroTech(){
         DrawCarUI(player_car, camera);
     }
 
-    if (robots[0].agro && robots[0].isActive) globalState.showPasswordInterface = false; //hide interface on shots fired. 
+    if (robots[0].agro && robots[0].isActive) globalState.showPasswordInterface = false; //hide interface on shots fired.
+    
 
 
     for (NPC& robot : robots){
         if (robot.isActive){
             robot.Update();
             robot.Render();
-            robot.ClickNPC();
+            if (!robot.agro) robot.ClickNPC(); //dont talk to angry robots. 
             if (robot.interacting){
                 phrase = robot.speech;
                 globalState.show_dbox = true;
@@ -5001,9 +5039,21 @@ void RenderNecroTech(){
 
 
             }
+
+            if (robot.isDying && gameState == NECROTECH){ //on first robots death, spawn 2 more. 
+                if (globalState.can_spawn_robots){
+                    globalState.can_spawn_robots = false;
+                    Vector2 spawnPos = {robots[0].position.x + 400, 700};
+                    Vector2 spawnPos2 = {robots[0].position.x - 400, 700};
+            
+                    spawnRobot(spawnPos);
+                    spawnRobot(spawnPos2);
+
+                }
+            }
+
+
         }
-        
-  
     }
 
     DrawBullets();
@@ -5618,8 +5668,6 @@ void spawnNPCs(){
     CEO.SetDestination(2000, 3000);
     CEOs.push_back(CEO);
 
-
-
 }
 
 void DisplayDate(){
@@ -5839,6 +5887,7 @@ void UptoEnter(){
             transitionState = FADE_OUT; //trans to subway
         }
         if (globalState.over_necro && gameState == NECROTECH){
+            globalState.can_spawn_robots = true; //queue up more robots
             transitionState = FADE_OUT; //trans to lobby
         }
         if (globalState.over_exit && gameState == LOBBY && !globalState.spawning_zombies){ //can't leave the scene while zombies are spawning, 

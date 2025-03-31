@@ -21,6 +21,15 @@ enum AnimationState {
     DEATH2
 };
 
+enum BossState {
+    BOSS_IDLE,
+    BOSS_CHARGE,
+    BOSS_FLYAWAY,
+    // add more as needed
+};
+
+
+
 class NPC {
 public:
     Vector2 position;
@@ -35,6 +44,8 @@ public:
     bool patrolling;
     float idleTime;
     bool isZombie;
+    bool isBoss; //WIP
+    
     bool isDying;      // Flag to check if NPC is in dying state
     float deathTimer;  // Timer for death animation
     float riseTimer;
@@ -86,6 +97,7 @@ public:
     bool alien;
     bool CEO;
     GameState scene;
+    BossState bossState;
 
     // Add an emitter for each NPC
     Emitter bloodEmitter;
@@ -115,6 +127,7 @@ public:
     void playZombieHit(int soundIndex);
     void handleDeath();
     void HandleCEO();
+    void HandleBoss(); //WIP
     
 };
 

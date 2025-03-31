@@ -133,6 +133,7 @@ struct GameResources {
     Texture2D penthouseMidBack;
     Texture2D CEOsheet;
     Texture2D flipSheet;
+    Texture2D demonSheet;
     
 
     Font defaultFont;

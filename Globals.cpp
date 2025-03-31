@@ -1,7 +1,7 @@
 #include "Globals.h"
 
 
-//difine the instances of the random structs
+//define the instances of the structs
 
 GlobalState globalState;
 
@@ -24,6 +24,7 @@ std::vector<Tank> Tanks;
 std::vector<Console> consoles;
 std::vector<Monitor> monitors;
 
+//NPC groups
 std::vector<NPC> npcs; //outside // subway
 std::vector<NPC> zombies; //cemetery/graveyard
 std::vector<NPC>hobos; //lot
@@ -42,7 +43,9 @@ std::vector<NPC>scientists;
 std::vector<NPC>cyberZombies;
 std::vector<NPC>aliens;
 std::vector<NPC>CEOs;
+std::vector<NPC>Boss;
 
+//Define global enemies vector, see InitializeNPCgroups()
 std::vector<std::vector<NPC>*> enemies;
 
 // Define the global NPC group list
@@ -69,8 +72,8 @@ void InitializeNPCGroups() {
     enemies =     //all the NPC groups that can be attacked by the player. 
     {
        &zombies, &cyberZombies, &ghosts, &bats, &lobbyMibs, 
-       &robots, &lobbyRobots, &astralBats, &astralGhosts
-    }; //omit mib on main street. until...you die in necrotech, he's not agro yet though. just add mibs to the vector on player death in building. 
+       &robots, &lobbyRobots, &astralBats, &astralGhosts, &Boss
+    }; //omit mib on main street, and ceo. they are added to the vector later
 
     //every NPC incase we need it. 
     allNPCGroups = {

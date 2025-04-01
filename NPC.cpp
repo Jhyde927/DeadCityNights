@@ -56,7 +56,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     scientist = false;
     scienceJr = false;
     cyberZombie = false;
-    
+    stateTimer = 0.0f;
     alien = false;
     robot = false;
     clickCount = 0;
@@ -1009,12 +1009,14 @@ void NPC::HandleCEO(){
 
 }
 
+
+
 void NPC::Update() {
     if (!isActive) return;  // Skip update if the NPC is not active
     if (!isZombie && !robot) riseTimer = 0;
 
     //animation.Update(GetFrameTime());
-
+    float deltaTime = GetFrameTime();
     distanceToPlayer = abs(player.position.x - position.x);
 
     bloodEmitter.UpdateParticles(GetFrameTime()); //update blood
@@ -1107,6 +1109,8 @@ void NPC::Update() {
     if (robot) HandleRobot();
     if (CEO) HandleCEO();
 
+    if (isBoss) updateBoss(deltaTime);
+    if (isBoss) HandleBoss(deltaTime);
     Vector2 directionToPlayer = {
     player.position.x - position.x,
     player.position.y - position.y
@@ -1121,17 +1125,20 @@ void NPC::Update() {
     if (!isDying && riseTimer <= 0 && !attacking) { //MOVE NPCs and Police and Zombies and Ghosts. 
         // Move towards the destination
 
-        if (!ghost && !bat){ //pedestrians on the street/zombies
+
+        if (!ghost && !bat && !isBoss){ //pedestrians on the street/zombies
 
             if (!isTargeted){ //not targeted regular npc movement
                 if (position.x < destination.x) {
-                    position.x += speed * GetFrameTime();
+                    position.x += speed * deltaTime;
+                    
                     facingRight = true;
                     SetAnimationState(WALK);
                     isMoving = true;
                 
                 } else if (position.x > destination.x) {
-                    position.x -= speed * GetFrameTime();
+                    position.x -= speed * deltaTime;
+                    if (isBoss && position.y < destination.y) position.y += speed * deltaTime;
                     facingRight = false;
                     SetAnimationState(WALK);
                     isMoving = true;
@@ -1156,9 +1163,9 @@ void NPC::Update() {
             ghostMoves(); // XY movement for ghosts and bats. 
         }
 
-        // Check if destination is reached
 
-        if (fabs(position.x - destination.x) < 5.0f && !hasTarget && !isZombie && !attacking) { //Pedestrians
+
+        if (fabs(position.x - destination.x) < 5.0f && !hasTarget && !isZombie && !attacking && !isBoss) { //Pedestrians
             // Reached destination, go idle for a moment, then set a new destination
             idleTime = 3.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 2.0f));  // 3-6 seconds of idle time
 
@@ -1369,24 +1376,137 @@ void NPC::handleDeath(){
 
 }
 
-void NPC::HandleBoss(){
-    //work in progress. 
-    switch (bossState){
+void NPC::updateBoss(float deltaTime)
+{
+    if (!isBoss) return; // safety check
+    agro = true;
+    stateTimer += deltaTime;
+    float distanceTo = abs(player.position.x - position.x);
+    float runDistance = 300;
+    switch (bossState)
+    {
         case BOSS_IDLE:
-            SetAnimationState(IDLE);
+            speed = 50;
+            facingRight = (player.position.x > position.x);
+            if (stateTimer > 2.0f)
+            {
+                SetAnimationState(WALK);
+                if (distanceTo <= 250){
+                    bossState = BOSS_CHARGE;
+                    stateTimer = 0.0f;
+
+                }else{
+                    bossState = BOSS_IDLE;
+                }
+
+
+               // std::cout << "Boss starts charging!\n";
+            }
             break;
+
         case BOSS_CHARGE:
-            SetAnimationState(WALK);
+            
+            // Do charge movement logic here
+            //std::cout << "Boss is charging...\n";
+            speed = 200;
+            destination = player.position;
+            facingRight = (player.position.x > position.x);
+            if (stateTimer > 2.0f)
+            {
+                bossState = BOSS_FLYAWAY;
+                stateTimer = 0.0f;
+               // std::cout << "Boss flies away!\n";
+               
+                SetAnimationState(WALK);
+
+                if (player.position.x < position.x){
+                    idleTime = 0;
+                    destination.x = position.x + runDistance;
+                    destination.y = 600;
+    
+                }else{
+                    idleTime = 0;
+                    destination.x = position.x - runDistance;
+                    destination.y = 600;
+                }
+            }
+            break;
 
         case BOSS_FLYAWAY:
-            SetAnimationState(WALK);
+            
+           // std::cout << "Boss is flying...\n";
+            speed = 100;
+            facingRight = (player.position.x > position.x);
 
-            
-            
-            
-
+            if (stateTimer > 4.0f)
+            {
+                SetAnimationState(WALK);
+                bossState = BOSS_IDLE;
+                stateTimer = 0.0f;
+                //std::cout << "Boss goes idle.\n";
+            }
+            break;
     }
 }
+
+
+void NPC::HandleBoss(float deltaTime){
+    //boss movement code
+    if (isBoss && agro) {
+
+        // Check if destination is reached
+        float distanceToX = abs(player.position.x - position.x);
+        float distanceToY = abs(player.position.y - position.y);
+
+        float tolerance = 1.0f;
+
+        if (distanceToX < 5 && distanceToY < 5){
+            attacking = true;
+            facingRight = true;
+            //SetAnimationState(ATTACKING);
+            if (player.hitTimer <= 0){
+                player.take_damage(10);
+            }
+        }else{
+            attacking = false;
+        }
+    
+        // X Movement
+        if (fabs(position.x - destination.x) > tolerance) {
+            if (position.x < destination.x) {
+                position.x += speed * deltaTime;
+                SetAnimationState(WALK);
+                facingRight = true;
+            } else {
+                position.x -= speed * deltaTime;
+                facingRight = false;
+                SetAnimationState(WALK);
+            }
+        } else {
+            position.x = destination.x; // Snap to target
+            SetAnimationState(WALK);
+        }
+    
+        // Y Movement
+        if (fabs(position.y - destination.y) > tolerance) {
+            if (position.y < destination.y) {
+                position.y += speed * deltaTime;
+            } else {
+                position.y -= speed * deltaTime;
+            }
+        } else {
+            position.y = destination.y; // Snap to target
+        }
+    }
+
+}
+
+            
+            
+            
+
+//     }
+// }
 
 void NPC::playZombieHit(int soundIndex)
 {

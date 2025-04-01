@@ -49,6 +49,7 @@ public:
     bool isDying;      // Flag to check if NPC is in dying state
     float deathTimer;  // Timer for death animation
     float riseTimer;
+    float stateTimer;
     bool interacting;
     Vector2 destination;
     float distanceToPlayer;
@@ -127,7 +128,8 @@ public:
     void playZombieHit(int soundIndex);
     void handleDeath();
     void HandleCEO();
-    void HandleBoss(); //WIP
+    void HandleBoss(float deltaTime); //WIP
+    void updateBoss(float deltaTime);
     
 };
 

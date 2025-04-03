@@ -13,6 +13,7 @@ void Emitter::SetMaxParticles(int max) {
     maxParticles = max;
 }
 
+
 // **Blood spray effect** (limited number of particles)
 void Emitter::SpawnBlood(int amount, Color color, bool facingRight) {
     float baseAngle = facingRight ? 0.0f : 180.0f; 

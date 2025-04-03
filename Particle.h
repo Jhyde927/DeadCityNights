@@ -27,6 +27,8 @@ public:
     void UpdateParticles(float deltaTime);
     void DrawParticles() const;
     void SetMaxParticles(int max); 
+    //bool IsEmpty() const { return particles.empty(); }
+
 
 private:
     float particleLifetime = 2.0f;

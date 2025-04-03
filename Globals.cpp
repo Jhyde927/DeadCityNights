@@ -15,6 +15,9 @@ Tank tank;
 Console console;
 Monitor monitor;
 
+
+
+
 std::vector<Platform> platforms;
 std::vector<Box> boxes; 
 std::vector<MagicDoor> magicDoors;
@@ -83,6 +86,8 @@ void InitializeNPCGroups() {
         &scientists, &cyberZombies, &aliens, &CEOs
     };
 }
+
+
 
 void InitTank(Vector2 position){
     tank.position = position;

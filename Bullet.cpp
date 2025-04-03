@@ -6,16 +6,26 @@
 #include <raymath.h>
 #include <cmath>
 #include "GameResources.h"
+#include"Particle.h"
+#include <iostream>
 
 
 Bullet bullets[MAX_BULLETS];  // Define the global bullets array
+Emitter explosionEmitter;
 
 
+Vector2 RotateTowards(Vector2 current, Vector2 target, float maxAngle) {
+    float angle = atan2f(target.y, target.x) - atan2f(current.y, current.x);
 
-// Function to generate a random float between 0 and 1
-// float randf() {
-//     return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-// }
+    // Clamp the angle
+    if (angle > PI) angle -= 2 * PI;
+    if (angle < -PI) angle += 2 * PI;
+    angle = Clamp(angle, -maxAngle, maxAngle);
+
+    float currentAngle = atan2f(current.y, current.x) + angle;
+    return Vector2Normalize(Vector2{ cosf(currentAngle), sinf(currentAngle) });
+}
+
 
 // Function to add spread to a bullet's direction
 Vector2 ApplySpread(Vector2 direction, float spreadAngle) {
@@ -40,10 +50,10 @@ void ResetBullet(Bullet& bullet) {
 }
 
 
-
 void FireBullet(Player& player, bool spread, float damage, bool laser, bool raygun) {
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (!bullets[i].isActive) {
+            bullets[i].isFireball = false;
             bullets[i].position = Vector2{player.position.x + 32, player.position.y + 23};  // Adjust bullet position to match player
             bullets[i].direction = player.facingRight ? Vector2{1, 0} : Vector2{-1, 0};    // Set direction based on player facing
             bullets[i].damage = damage; //take different damage for different guns
@@ -57,7 +67,7 @@ void FireBullet(Player& player, bool spread, float damage, bool laser, bool rayg
             player.bulletCount--;  // Decrease player's bullet count
 
             if (spread){ //shotgun spread
-                bullets[i].direction = ApplySpread(bullets[i].direction, 2);
+                //bullets[i].direction = ApplySpread(bullets[i].direction, 2);
                 bullets[i].position.y += rand() % 4;
             }
 
@@ -91,53 +101,86 @@ void FireBullet(Player& player, bool spread, float damage, bool laser, bool rayg
     }
 }
 
-void NPCfireBullet(NPC& npc, bool spread, float damage, bool laser) { //robots shoot lasers
+void NPCfireBullet(NPC& npc, bool spread, float damage, bool laser, bool fireBall) { //robots shoot lasers
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (!bullets[i].isActive) {
-            bullets[i].position = Vector2{npc.position.x + 32, npc.position.y + 26}; //center bullet on Robot gun
-            bullets[i].direction = npc.facingRight ? Vector2{1, 0} : Vector2{-1, 0};    
-            bullets[i].damage = damage; //take different damage for different guns
-            bullets[i].speed = 1000.0f;  // Set bullet speed
-            bullets[i].lifeTime = 1.0f;  // Bullet will last for 2 seconds
+            bullets[i].position = Vector2{npc.position.x + 32, npc.position.y + 26};
+
+            bullets[i].damage = damage;
+            bullets[i].speed = fireBall ? 300.0f : 1000.0f;
+            bullets[i].lifeTime = fireBall ? 2.0f : 1.0f;
             bullets[i].isActive = true;
             bullets[i].laser = laser;
-            bullets[i].size = Vector2 {1, 1};
-            //player.bulletCount--;  // Decrease player's bullet count //robots have infinite ammo
-            if (spread){
-                bullets[i].direction = ApplySpread(bullets[i].direction, 2);
-                bullets[i].position.y += rand() % 4;
-            }
-
+            bullets[i].isFireball = fireBall;
+            bullets[i].size = fireBall ? Vector2{8, 8} : Vector2{1, 1};
             
-            break;  // Use the first available (inactive) bullet
+            if (fireBall) {
+                
+                Vector2 target = player.position;
+                target.y += 32; // offset to aim lower
+                bullets[i].direction = Vector2Normalize(Vector2Subtract(target, bullets[i].position));
+            } else {
+                bullets[i].direction = npc.facingRight ? Vector2{1, 0} : Vector2{-1, 0};
+                if (spread) {
+                    bullets[i].direction = ApplySpread(bullets[i].direction, 2);
+                    bullets[i].position.y += rand() % 4;
+                }
+            }
+            
         }
     }
 }
 
+
+
 void UpdateBullets() {
+    explosionEmitter.UpdateParticles(GetFrameTime());
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (bullets[i].isActive) {
             bullets[i].previousPosition = bullets[i].position; //save the bullets previous position for better hit detection. 
             // Update bullet position based on direction and speed
-            bullets[i].position.x += bullets[i].direction.x * bullets[i].speed * GetFrameTime();
+            bullets[i].position.x += bullets[i].direction.x * bullets[i].speed * GetFrameTime();     
+            if (bullets[i].isFireball) bullets[i].position.y += bullets[i].direction.y * bullets[i].speed * GetFrameTime(); //y axis for fireballs. 
             bullets[i].lifeTime -= GetFrameTime();  // Reduce bullet's lifetime
+
+            if (bullets[i].isFireball) {
+                Vector2 target = player.position;
+                target.y += 32;
+                Vector2 desiredDir = Vector2Normalize(Vector2Subtract(target, bullets[i].position));
+
+                float maxTurn = 0.05f; // Radians per frame (~2.8°)
+                bullets[i].direction = RotateTowards(bullets[i].direction, desiredDir, maxTurn);
+            }
+
+            
 
             // Deactivate the bullet if it goes off-screen or its lifetime runs out
             if (bullets[i].position.x < -100 || bullets[i].position.x > 7000 || bullets[i].lifeTime <= 0 || bullets[i].health < 0) {
                 //bullets[i].isActive = false;
                 ResetBullet(bullets[i]);
             }
+
+            if (bullets[i].position.y > 700){
+                //explosionEmitter.SpawnExplosion(50, YELLOW);
+                //ResetBullet(bullets[i]);
+            }
+
         }
     }
 }
 
 void DrawBullets() {
     //BeginShaderMode(shaders.highlightShader);
+    explosionEmitter.DrawParticles();
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (bullets[i].isActive) {
-            if (bullets[i].laser){
+            if (bullets[i].laser && !bullets[i].isFireball){
                 DrawRectangleV(bullets[i].position, Vector2 {5, 2}, RED); // Draw laser as a wide rectangle
-            }else if (bullets[i].raygun){ //raygun bullet
+
+            }else if (bullets[i].isFireball && bullets[i].laser){ //fireball is also a laser for collision purposes. 
+                DrawCircleV(bullets[i].position, 8, RED);
+
+            } else if (bullets[i].raygun){ //raygun bullet
                     //change the size of the projectile depending on damage.  
                 if (bullets[i].damage == 10){
                     //a circle with a ring around it. Best I can do for now. 

@@ -25,7 +25,9 @@ enum BossState {
     BOSS_IDLE,
     BOSS_CHARGE,
     BOSS_FLYAWAY,
-    // add more as needed
+    BOSS_CHASE,
+    BOSS_FIREBALL, 
+   
 };
 
 
@@ -97,6 +99,7 @@ public:
     bool scienceJr;
     bool alien;
     bool CEO;
+    bool hasAttacked;
     GameState scene;
     BossState bossState;
 

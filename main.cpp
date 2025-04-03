@@ -23,6 +23,8 @@
 #include "Inventory.h"
 #include "raygui.h"
 #include "Grenade.h"
+#include "Particle.h"
+#include "Explosion.h"
 
 //main
 
@@ -50,7 +52,10 @@ TransitionState transitionState = NONE; //state for transitioning scenes.
 // Initialize random number generator
 std::random_device rd;   // Seed for the random number engine
 std::mt19937 gen(rd());  // Mersenne Twister engine
-std::uniform_real_distribution<float> dis(0.0f, 4000.0f); // Uniform distribution between 0 and 4000 for NPC starting distribution outside. 
+std::uniform_real_distribution<float> dis(0.0f, 4000.0f); // Uniform distribution between 0 and 4000 for NPC starting distribution outside.
+
+#define MAX_EXPLOSIONS 20
+Explosion explosions[MAX_EXPLOSIONS];
 
 
 void PrintVector2(const Vector2& vec) {
@@ -100,6 +105,24 @@ std::string GetTellerPhrase() {
     int randomIndex = rand() % tellerPhrases.size();
     return tellerPhrases[randomIndex];
 }
+
+void TriggerExplosion(Vector2 pos, Texture2D* tex) {
+    PlaySound(SoundManager::getInstance().GetSound("explosion"));
+    explosions[0].Start(pos, tex);
+
+    // for (int i = 0; i < MAX_EXPLOSIONS; i++) { //pool of explosions explode all for some reason. 
+    //     if (!explosions[i].isActive) {
+    //         std::cout << "exploding\n";
+    //         explosions[i].Start(pos, tex);
+    //         break;
+    //     }
+    // }
+}
+
+
+
+
+
 
 // Render and update logic
 void RenderPasswordInterface() {
@@ -159,6 +182,13 @@ void UpdatePasswordInterface() {
             robots[0].idleTime = 0;
             //play a sound
         }
+    }
+}
+
+void UpdateFireballs(float deltaTime){
+    for (int i = 0; i < MAX_EXPLOSIONS; i++) {
+        explosions[i].Draw();
+        explosions[i].Update(deltaTime);
     }
 }
 
@@ -2020,7 +2050,14 @@ void CheckBulletPlayerCollisions() { //enemy bullet hits player
         if (bullets[i].isActive && bullets[i].laser){ //only lasers hurt player
             if (player.CheckHit(bullets[i].previousPosition, bullets[i].position, bulletSize)){
                 player.take_damage(bullets[i].damage);
-                bullets[i].isActive = false; //desteroy the bullet on hit
+
+                bool wasFireball = bullets[i].isFireball;
+            
+                bullets[i].isActive = false; // deactivate first
+            
+                if (wasFireball) {
+                    TriggerExplosion(player.position, &resources.explosionSheet);
+                }
             }
 
 
@@ -4306,6 +4343,7 @@ void RenderPenthouse()
 
     HandleGrenades();
 
+
     for (int i = 3; i < static_cast<int>(monitors.size()); i++){ //skip the first 3 monitors, they are draw in the lab. 
         DrawMonitor(monitors[i]);
     }
@@ -4348,7 +4386,7 @@ void RenderPenthouse()
 
     //DRAW PLAYER
     if (!player.onElevator) player.DrawPlayer();
-
+    UpdateFireballs(deltaTime); //draw explosion after player. 
     DrawBullets();
     EndShaderMode(); ////////////////////////////SHADER OFF
     
@@ -4520,7 +4558,8 @@ void RenderLab(){
     }
     HandleGrenades();
 
-
+    UpdateFireballs(deltaTime);
+    
     //DRAW PLAYER
     if (!player.onElevator) player.DrawPlayer();
 
@@ -5709,6 +5748,7 @@ void debugKeys(){
     if (IsKeyPressed(KEY_SPACE)){
         std::cout << "Player Position: "; //print player position on key_space for debug purposes
         PrintVector2(player.position);
+   
 
         
         //example iterate every NPC in the game:
@@ -6513,7 +6553,7 @@ int main() {
     InitializeNPCGroups();
     //Astral platforms
     InitPlatforms();
-
+    //explosionEmitter.SetMaxParticles(100);  // Or whatever you prefer
     //All boxes
     InitBoxes();
 
@@ -6572,14 +6612,15 @@ int main() {
   
         //HandleActiveNPC();
         
-        UpdateBullets();
-
+        UpdateBullets(); //also update/draw explosion particles
+      
         //check each enemy group for bullet collisions
         enemyBulletCollision();
 
         crowbarAttackBoxes(boxes); //breakable boxes
 
         UpdatePickups();
+        
 
         CheckBulletPlayerCollisions(); //NPCs shoot player
         MonitorMouseClicks(); 
@@ -6678,6 +6719,7 @@ int main() {
             GuiSetStyle(DEFAULT, TEXT_SIZE, 20); //set text size smaller for dealer and teller buttons. 
             //MULTIPASS RENDERING. Everything inside BeginTextureMode is saved to a RenderTexture2D. This makes it possible to stack shaders.   
             BeginTextureMode(targetTexture); //Render to targetTexture. First Pass/////////////////////////////
+
             
             switch (gameState) { // Depending on the gameState, render the scene.
                 case OUTSIDE:     RenderOutside();      break;
@@ -6697,6 +6739,7 @@ int main() {
                 case ALIEN:       RenderUFOinterior();  break;
                 case PENTHOUSE:   RenderPenthouse();    break;
             }
+
             
             HandleTransition(); //Check everyframe for gamestate transitions, inside draw to handle fadeouts
             drawMenuButton(currentPauseState, pauseTexture, finalTexture);

@@ -380,7 +380,7 @@ OBJ_DIR = obj
 # Define all object files from source files
 SRC = $(call rwildcard, *.c, *.h)
 #OBJS = $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
-OBJS ?= main.cpp NPC.cpp Player.cpp Bullet.cpp GameCalendar.cpp Platform.cpp shaderControl.cpp raygui_impl.cpp Particle.cpp GameResources.cpp Globals.cpp Grenade.cpp Pickup.cpp resource.o box.cpp
+OBJS ?= main.cpp NPC.cpp Player.cpp Bullet.cpp GameCalendar.cpp Platform.cpp shaderControl.cpp raygui_impl.cpp Particle.cpp GameResources.cpp Globals.cpp Grenade.cpp Pickup.cpp resource.o box.cpp Explosion.cpp
 
 # For Android platform we call a custom Makefile.Android
 ifeq ($(PLATFORM),PLATFORM_ANDROID)

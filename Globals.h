@@ -7,12 +7,16 @@
 #include <vector>
 #include "NPC.h"
 #include "box.h"
-
+#include "Particle.h"
+#include "Explosion.h"
 //Global containers
 
 // Declare global Camera2D
 extern Camera2D camera;
 extern float targetZoom;
+
+extern Emitter explosionEmitter;  // global instance
+
 
 extern std::vector<NPC> npcs; //outside // subway
 extern std::vector<NPC> zombies; //cemetery/graveyard
@@ -33,6 +37,7 @@ extern std::vector<NPC>cyberZombies;
 extern std::vector<NPC>aliens;
 extern std::vector<NPC>CEOs;
 extern std::vector<NPC>Boss;
+
 
 extern std::vector<std::vector<NPC>*> enemies;
 
@@ -187,6 +192,7 @@ struct GlobalState { //store random bools and timers that have accumulated over 
 
 };
 
+
 struct Tank {
     Vector2 position;
     int currentFrame = 0;
@@ -311,6 +317,7 @@ extern std::vector<Monitor> monitors;
 void InitCamera();
 void InitializePlayerCar();
 void InitializeMagicDoor(Vector2 position);
+void initExplosion(Vector2 position);
 void InitTank(Vector2 position);
 void InitConsole(Vector2 position);
 void InitMonitor(Vector2 position);

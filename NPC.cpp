@@ -85,6 +85,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     animationTimer = 0.0;
     isMoving = false;
     CEO = false;
+    hasAttacked = false;
     bossState = BOSS_IDLE;
  
 }
@@ -710,7 +711,7 @@ void NPC::HandleMiB(){
             attacking = true;
             SoundManager::getInstance().PlayPositionalSound("gunShot", position, player.position, 500); //mibs shoot lasers, but sound like guns. 
             SetAnimationState(ATTACKING);
-            NPCfireBullet(*this, false, 10, true);
+            NPCfireBullet(*this, false, 10, true, false);
             shootTimer = 1.0f;
        }
 
@@ -750,7 +751,7 @@ void NPC::HandleRobot(){
             SoundManager::getInstance().PlayPositionalSound("laser", position, player.position, 500);
             can_shoot = false;
             SetAnimationState(ATTACKING);
-            NPCfireBullet(*this, false, 10, true); //laser = true
+            NPCfireBullet(*this, false, 10, true, false); //laser = true
             shootTimer = 1.0f;
 
         }
@@ -989,7 +990,7 @@ void NPC::HandleCEO(){
             SoundManager::getInstance().PlayPositionalSound("gunShot", position, player.position, 500); //CEO shoot lasers, but sound like guns. 
             SetAnimationState(ATTACKING);
             if (currentFrame == 5){
-                NPCfireBullet(*this, false, 10, true);
+                NPCfireBullet(*this, false, 10, true, false);
                 shootTimer = 1.0f;
 
             }
@@ -1309,11 +1310,11 @@ void NPC::handleDeath(){
         SoundManager::getInstance().PlayPositionalSound("deathScream", position, player.position, 500);
         deathTimer = 0.85f;        // Set death animation duration // needs to be exact
         destination = position;
-        trigger = true;
+        trigger = true; //trigger demon spawn
     }
 
     if (isZombie) {
-        //PlaySound(SoundManager::getInstance().GetSound("zombieDeath"));
+        //positional sound on zombie death
         SoundManager::getInstance().PlayPositionalSound("zombieDeath", position, player.position, 500);
         riseTimer = 0; //if killed while still rising set the risetimer back to 0 as to not play rise animation
         isDying = true;           // Start dying process
@@ -1368,7 +1369,7 @@ void NPC::handleDeath(){
         riseTimer = 0; 
         isDying = true;           // Start dying process   
         SetAnimationState(DEATH);  // Set to death animation
-        SoundManager::getInstance().PlayPositionalSound("deathScream", position, player.position, 500);
+        SoundManager::getInstance().PlayPositionalSound("deathScream", position, player.position, 500); //death scream can be heard 500 pixels away
         deathTimer = 0.85f;        // Set death animation duration // needs to be exact
         destination = position; 
         
@@ -1386,17 +1387,18 @@ void NPC::updateBoss(float deltaTime)
     switch (bossState)
     {
         case BOSS_IDLE:
+            //do nothing for 2 seconds
             speed = 50;
             facingRight = (player.position.x > position.x);
             if (stateTimer > 2.0f)
             {
-                SetAnimationState(WALK);
+                SetAnimationState(WALK);//play walk for idle, so it still flaps it wings, if it's on the ground we could play true idle. 
                 if (distanceTo <= 250){
                     bossState = BOSS_CHARGE;
                     stateTimer = 0.0f;
 
                 }else{
-                    bossState = BOSS_IDLE;
+                    bossState = BOSS_CHASE; //slowly move toward player. 
                 }
 
 
@@ -1405,14 +1407,13 @@ void NPC::updateBoss(float deltaTime)
             break;
 
         case BOSS_CHARGE:
-            
-            // Do charge movement logic here
-            //std::cout << "Boss is charging...\n";
+        
             speed = 200;
             destination = player.position;
             facingRight = (player.position.x > position.x);
-            if (stateTimer > 2.0f)
+            if (stateTimer > 1.0f)
             {
+                //switch to flying away after charging. 
                 bossState = BOSS_FLYAWAY;
                 stateTimer = 0.0f;
                // std::cout << "Boss flies away!\n";
@@ -1421,12 +1422,12 @@ void NPC::updateBoss(float deltaTime)
 
                 if (player.position.x < position.x){
                     idleTime = 0;
-                    destination.x = position.x + runDistance;
+                    destination.x = player.position.x - runDistance; //run to the opposite side, to keep more or less centered. 
                     destination.y = 600;
     
                 }else{
                     idleTime = 0;
-                    destination.x = position.x - runDistance;
+                    destination.x = player.position.x + runDistance;
                     destination.y = 600;
                 }
             }
@@ -1434,18 +1435,53 @@ void NPC::updateBoss(float deltaTime)
 
         case BOSS_FLYAWAY:
             
-           // std::cout << "Boss is flying...\n";
+            //fly away for 3 seconds. 
             speed = 100;
             facingRight = (player.position.x > position.x);
 
-            if (stateTimer > 4.0f)
+            if (stateTimer > 3.0f)
             {
-                SetAnimationState(WALK);
-                bossState = BOSS_IDLE;
-                stateTimer = 0.0f;
-                //std::cout << "Boss goes idle.\n";
+                if (distanceTo <= 400){
+                    SetAnimationState(WALK);
+                    bossState = BOSS_FIREBALL;
+                    stateTimer = 0.0f;
+
+                }else{
+                    bossState = BOSS_IDLE;
+                    stateTimer = 0.0f;
+                }
+
+             
             }
             break;
+
+        case BOSS_CHASE:
+            speed = 75;
+            facingRight = (player.position.x > position.x);
+            destination = player.position;
+            if (stateTimer > 3){
+                bossState = BOSS_IDLE;
+                stateTimer = 0;
+            }
+            break;
+
+        case BOSS_FIREBALL:
+            speed = 0; // stationary while casting
+            facingRight = (player.position.x > position.x);
+        
+            if (stateTimer > 0.5f && !hasAttacked) {
+                NPCfireBullet(*this, false, 25, true, true);
+                hasAttacked = true;
+                //SetAnimationState(ATTACK); // optional
+            }
+        
+            if (stateTimer > 2.0f) {
+                bossState = BOSS_IDLE;
+                stateTimer = 0.0f;
+                hasAttacked = false;
+            }
+            break;
+        
     }
 }
 
@@ -1484,7 +1520,7 @@ void NPC::HandleBoss(float deltaTime){
             }
         } else {
             position.x = destination.x; // Snap to target
-            SetAnimationState(WALK);
+            SetAnimationState(WALK); //walk for idle so he is still flapping his wings. 
         }
     
         // Y Movement
@@ -1654,6 +1690,7 @@ void NPC::TakeDamage(int damage) {
     
     } 
 
+    //trigger agro on hit
     if (ghost || bat || MiB || robot || CEO){
         if (!agro){
             agro = true; //trigger agro on hit
@@ -1664,8 +1701,8 @@ void NPC::TakeDamage(int damage) {
         }
 
     } 
-
-    if (!isZombie && !bat && !ghost && !robot){
+    //stop NPC on hit. 
+    if (!isZombie && !bat && !ghost && !robot && !isBoss){
         destination = position; //if your an friendly NPC, stop when you take damage so we can play the death animation. 
         
     }

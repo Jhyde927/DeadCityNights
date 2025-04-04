@@ -54,8 +54,8 @@ std::random_device rd;   // Seed for the random number engine
 std::mt19937 gen(rd());  // Mersenne Twister engine
 std::uniform_real_distribution<float> dis(0.0f, 4000.0f); // Uniform distribution between 0 and 4000 for NPC starting distribution outside.
 
-#define MAX_EXPLOSIONS 20
-Explosion explosions[MAX_EXPLOSIONS];
+// #define MAX_EXPLOSIONS 20
+// extern Explosion explosions[MAX_EXPLOSIONS];
 
 
 void PrintVector2(const Vector2& vec) {
@@ -106,17 +106,15 @@ std::string GetTellerPhrase() {
     return tellerPhrases[randomIndex];
 }
 
+
+
+
 void TriggerExplosion(Vector2 pos, Texture2D* tex) {
     PlaySound(SoundManager::getInstance().GetSound("explosion"));
+    Explosion exp;
+    explosions.push_back(exp);
     explosions[0].Start(pos, tex);
 
-    // for (int i = 0; i < MAX_EXPLOSIONS; i++) { //pool of explosions explode all for some reason. 
-    //     if (!explosions[i].isActive) {
-    //         std::cout << "exploding\n";
-    //         explosions[i].Start(pos, tex);
-    //         break;
-    //     }
-    // }
 }
 
 
@@ -185,11 +183,35 @@ void UpdatePasswordInterface() {
     }
 }
 
-void UpdateFireballs(float deltaTime){
-    for (int i = 0; i < MAX_EXPLOSIONS; i++) {
+void fireballCheck(){
+    for (int i = 0; i < MAX_BULLETS; i++){
+        if (bullets[i].isActive && bullets[i].isFireball){
+            //std::cout << "Y position: " << bullets[i].position.y << "\n";
+            if (bullets[i].position.y > 748){
+                if (bullets[i].isActive){
+                    Vector2 offset {0, -16};
+                    TriggerExplosion(bullets[i].position + offset, &resources.explosionSheet);
+                    bullets[i].isActive = false;
+                }
+            }
+        }
+    }
+}
+
+
+void UpdateExplosions(float deltaTime){
+    for (int i = 0; i < explosions.size(); i++) {
         explosions[i].Draw();
         explosions[i].Update(deltaTime);
+
     }
+
+    // Remove finished ones
+    explosions.erase(std::remove_if(explosions.begin(), explosions.end(),
+    [](const Explosion& e) {
+        return !e.isActive; // remove non active explosions
+    }), explosions.end());
+
 }
 
 bool AreAllNPCsDeactivated(const std::vector<NPC>& npcs) {
@@ -1425,6 +1447,20 @@ void HandlePenthouseTransition(){
         player.onElevator = false;
         elevators[1].isOccupied = false;
         UpdateNPCActivity(PENTHOUSE, NECROTECH);
+    }
+
+    if (player.isDead){
+        UpdateNPCActivity(PENTHOUSE, APARTMENT);
+        gameState = APARTMENT;
+        gameState = APARTMENT;
+        player.currentHealth = player.maxHealth;
+        player.position.x = globalState.apartmentX;
+        player.isDead = false;
+        gameCalendar.AdvanceDay();
+        globalState.glitch = false;
+        globalState.remainingZombiesToSpawn = 0;
+        globalState.triggerOutsideZombies = true; //if you die in the lab or office or lobby it triggers zombies to invade main street. 
+        AddEnemyGroupOnce(enemies, &mibs); // add main street mib to enemies vector so he can agro. 
     }
 }
 
@@ -4386,7 +4422,7 @@ void RenderPenthouse()
 
     //DRAW PLAYER
     if (!player.onElevator) player.DrawPlayer();
-    UpdateFireballs(deltaTime); //draw explosion after player. 
+    UpdateExplosions(deltaTime); //draw explosion after player. 
     DrawBullets();
     EndShaderMode(); ////////////////////////////SHADER OFF
     
@@ -4558,7 +4594,7 @@ void RenderLab(){
     }
     HandleGrenades();
 
-    UpdateFireballs(deltaTime);
+    UpdateExplosions(deltaTime); //Boss fireball explosions
     
     //DRAW PLAYER
     if (!player.onElevator) player.DrawPlayer();
@@ -6620,7 +6656,7 @@ int main() {
         crowbarAttackBoxes(boxes); //breakable boxes
 
         UpdatePickups();
-        
+        fireballCheck();
 
         CheckBulletPlayerCollisions(); //NPCs shoot player
         MonitorMouseClicks(); 

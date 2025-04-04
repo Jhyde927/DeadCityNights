@@ -935,10 +935,127 @@ NecroTech Interior:
 
 	if I'm holding left trigger to aim, and hit the d-pad to switch weapons it doesn't work. Need to release aim to switch weapons which was not intentional. Controller can only take in 1 input at a time? HandleInput function isn't called while aiming so you can't put weapon switching code in handleInput, so it remains in shootLogic()
 
-	was using C++14, upgraded to C++17 so i can use clamp. 
+	was using C++14, upgraded to C++17 so i can use clamp. Raylib already has clamp you fool. Well I'm using C++17 anyway. 
 
 	Raygun makes the office fight trivial. If you know how to use it. and were diligent enough to find the UFO.
 
 	Need a fight that lasts more than 30 seconds. The last boss should have multiple phases. 
 
-	I think I'm being suppressed. I'm not allowed to have UFOs in my game. Maybe raysan won't like it. but why should I care about what raysan thinks about UFOs. it's super secret level. As to not offend any one. I tried to put #UFO in youtube and it doesn't exist. The cover up is real. wake up people!
+	Ideas are drying up again. Another NPC? A reason to visit the subway and park. Maybe there is a NPC in the park that gives you a mission where you need to go to the subway for some reason. We running out of room for items. Maybe you need to give somebody some pain pills? An old lady? in the park. Lost her cat? She lost her meds and need some pain pills. why go to the subway? Maybe after you kill the CEO the town is overrun with zombies, the subway has been abandoned and there are tunnels you need to traverse. Necrotech is using a portal to hell to summons zombies. The portal is held open by a relic. The relic is held underground underneath necrotech building. you can only get there by way of the subway tunnels. 
+
+	Tried to refactor spawnNPCs(). It's too spaghetti. instead of a isZombie flag, we now have a NPCType that gets set on creation. type = NPCType::ZOMBIE, tried to use this instead of isZombie and hobo, police ect... Would need to deconstruct zombie AI code and I don't want to touch it. So now it remains half implemented, we could use this NPCType class enum in the future if we need it so I guess I'll leave it. 
+
+	reverted back to not use NPCType enum class. The game is almost finished the time for big refactors is over. Work with what you have because at least you know how it works. 
+
+	we you reload you face right. or you face toward the mouse
+
+	swing crowbar is buggy with the controller. raised deadzone to .5 and it seems better. however you sometimes swing the crowbar the opposite way you are facing. Like 1 in 10 times. 
+
+	The reward for doing a quest for what ever NPC is in the park is armor vest. 
+
+	digging up the mac 10 in the graveyard is lame. 
+
+	make showBadge false when exiting scene, like in handleTransition so it works for every scene. 
+
+	take the business people out of the lobby. maybe. Maybe less people. Maybe it's just full of mibs. Like 20 mibs. first like 3 then 10 more spawn. Have 1 business man and woman as fodder. for now just spawn in more mibs and take out some b people. x
+
+	enable health bar on main street. x
+
+	when leaving the apartment don't set show inventory to false. x
+
+	whats something you wanted to add but thought it was too much. first person views of building interiors. What else. 
+
+	put another elevator in the lab. on the far left. It starts locked. 
+
+	renderPenthouse() x
+
+
+
+	handlePenthouseTransition() x
+
+	how to switch to penthouse: handle lab transition, if elevator0.isoccupied TransitionState = FADE_OUT
+
+	redo the penthouse background. clamp it like the lot. camera stops before player. just start with the lot and edit it. 
+
+	Made a foreground with a cutout for a window. then draw midground buildings then background sky. Used art I made like a year ago that I never intended on using for a game. 
+
+	Need dialog for CEO. and a boss fight of some kind. He should summon zombies and had invincibility frames. He could phase in and out of existence. a mech suite? some kind of abomination of science. 
+
+	put CEO in office x
+
+	mouse cursor isn't locked to screen when in fullscreen. it's clamped to the left side but not the right. 
+	if (mousePos.x > screenWidth){
+		mousePos.x = screenWidth
+	}
+
+	fix mouse clamp problems. Having menu open when full screen needed to be handled differently for some reason. SO now the mouse is clamped from 0 to 1024-24, unless menu is open then it's Clamp(mouseX, 400, winWidth+winWidth/2).
+
+	CEO dialog:
+
+		2. Corporate-Speak with a Sinister Twist:
+
+		“Control the workforce, control the world. You call them zombies—I call them compliant citizens. No sick days. No insubordination. Better than human. Optimized for maximum compliance.”
+
+		2. Sinister corporate pride:
+
+		“They’re not undead. They’re streamlined, purpose-driven, and utterly obedient. Optimized for maximum compliance.”
+
+		“Control the workforce, and you unlock total systemic synergy. I’ve leveraged undead integration to streamline operations, eliminate downtime, and scale compliance across all sectors. They’re not zombies—they’re high-efficiency, behaviorally-optimized assets.”
+
+		“We’re revolutionizing human capital. One corpse at a time.”
+
+	mib on main street can be shot and killed. refactoring bullet collisions caused it. We check all mibs, maybe remove mibs from the enemies vector. yep just omit the mib on main street, but what if we want him to turn agro later in the game?
+	We would have to add him to the vector while the game is running? if (mainMib agro) enemies.push_back(mibs); Added a add group to enemies vector function, because we do this twice. Once for main street mib and once for CEO. We could do this with friendly ghost. 
+
+	armor not removed from inventory when it's depleted for some reason. we were doing if (!armor) where armor is a float. 
+	change to if (armor <= 0) RemoveFromInventory("vest"); x
+
+	We turned off glitch shader everywhere. It should still play the first time you see zombies at least. can_glitch = true;
+	it should also play in the lab when zombies first spawn. and the park. def park not sure about the lab. 
+
+	CEO is in office and can talk. now what? give him dialog, that triggers a fight. once you kill him, he turns into a demon. 
+	A flying devil. A gigantic beast who floats in the air flapping its wings. or a giant grim reaper, or a lich. First instinct said demon. draw a demon.
+
+	step one. just get the ceo to be able to shoot his gun at the player. 
+
+	what could the player spend money on? ammo, health, whisky, fortune, dealer, maybe make some things more expensive? subway costs money? 
+
+	CEO is set active from begining making him absorb bullets somehow. maybe we need to check the scene when doing bullet collision
+
+	make the CEO agro and shoot. x 
+
+	ceo could start outside of enemies. then add the vector once combat is triggered. that way the play can't skip the dialog. x 
+
+	glitch plays in office x
+	
+	add CEO dialog
+
+	create a final form for ceo with patterned behavior. e.g. charge 3 times then run away. repeat. make enum BossState
+	Need to draw it first. Just start with a red circle or something. 
+
+	for (NPC& boss : bosses){
+		if boss.isBoss{
+			switch (BossState){
+				case IDLE:
+					go idle
+					if timer <= 0;
+						BossState = CHARGING
+
+				case CHARGING:
+					charge
+
+				case FLYAWAY:
+					move away
+
+		}
+	}
+
+	Boss charges and does like 50 damage. Player can doge roll to dodge it. Maybe an attack the travels along the ground so the player can jump it. should he shoot fireballs? 
+
+	Maybe there are 2 ways into necrotech. the password. or kill the robot. then more robots show up, kill them then the door opens. mibs are agro when you enter. 
+
+	raygun was printed outside of the left, we must be drawing it inside mode2d
+
+	workers in office and tanks in lab don't spawn zombies. fixed, copy and pasted errs. 
+
+	the only gun that can hit the boss, is the rocket launcher. You find it in the lab. it seeks enemies. maybe like a plasma cannon or something 

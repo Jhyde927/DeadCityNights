@@ -15,6 +15,7 @@ Tank tank;
 Console console;
 Monitor monitor;
 
+std::vector<Explosion> explosions;
 
 
 

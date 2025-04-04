@@ -134,6 +134,7 @@ struct GameResources {
     Texture2D CEOsheet;
     Texture2D flipSheet;
     Texture2D demonSheet;
+    Texture2D fireballSheet;
     
 
     Font defaultFont;

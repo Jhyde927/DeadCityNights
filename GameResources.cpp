@@ -130,6 +130,7 @@ void GameResources::Load() {
     CEOsheet = LoadTexture("assets/CEOsheet.png");
     flipSheet = LoadTexture("assets/flipSheet.png");
     demonSheet = LoadTexture("assets/demonSheet.png");
+    fireballSheet = LoadTexture("assets/fireballSheet.png");
 }
 
 // Unload all game resources
@@ -257,4 +258,5 @@ void GameResources::Unload() {
     UnloadTexture(CEOsheet);
     UnloadTexture(flipSheet);
     UnloadTexture(demonSheet);
+    UnloadTexture(fireballSheet);
 }

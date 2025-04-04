@@ -11,8 +11,8 @@ struct Bullet {
     Vector2 previousPosition;
     Vector2 direction;
     Vector2 size;
-    std::unordered_set<NPC*> hitNPCs; //save which NPC the bullet hit, as to only subtract bullet health once per NPC hit. 
-    Emitter explosionEmitter;
+    std::unordered_set<NPC*> hitNPCs; //save which NPC the bullet hit, as to only subtract bullet health once per NPC hit. (for raygun)
+    
     float speed;
     bool isActive;
     float lifeTime;
@@ -21,6 +21,11 @@ struct Bullet {
     bool raygun;
     bool isFireball;
     int health;
+    
+    int currentFrame = 0;
+    float frameTimer = 0.0f;
+    float frameTime = 0.1f;
+    int maxFrames = 4;
 
 
     

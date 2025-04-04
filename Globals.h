@@ -15,6 +15,8 @@
 extern Camera2D camera;
 extern float targetZoom;
 
+extern std::vector<Explosion> explosions;
+
 extern Emitter explosionEmitter;  // global instance
 
 

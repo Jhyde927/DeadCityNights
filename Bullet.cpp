@@ -1,4 +1,5 @@
 #include "Bullet.h"
+#include "Globals.h"
 #include "Player.h"
 #include "NPC.h"
 #include <raylib.h>
@@ -8,10 +9,13 @@
 #include "GameResources.h"
 #include"Particle.h"
 #include <iostream>
+#include "SoundManager.h"
+#include "Explosion.h"
 
 
 Bullet bullets[MAX_BULLETS];  // Define the global bullets array
-Emitter explosionEmitter;
+
+
 
 
 Vector2 RotateTowards(Vector2 current, Vector2 target, float maxAngle) {
@@ -134,7 +138,7 @@ void NPCfireBullet(NPC& npc, bool spread, float damage, bool laser, bool fireBal
 
 
 void UpdateBullets() {
-    explosionEmitter.UpdateParticles(GetFrameTime());
+
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (bullets[i].isActive) {
             bullets[i].previousPosition = bullets[i].position; //save the bullets previous position for better hit detection. 
@@ -148,8 +152,20 @@ void UpdateBullets() {
                 target.y += 32;
                 Vector2 desiredDir = Vector2Normalize(Vector2Subtract(target, bullets[i].position));
 
-                float maxTurn = 0.05f; // Radians per frame (~2.8°)
+                float maxTurn = 0.01f; // Radians per frame (~2.8°)
                 bullets[i].direction = RotateTowards(bullets[i].direction, desiredDir, maxTurn);
+
+                //update fireball animation, drawn in drawBullets
+                bullets[i].frameTimer += GetFrameTime(); 
+
+                if (bullets[i].frameTimer >= bullets[i].frameTime) {
+                    bullets[i].frameTimer = 0.0f;
+                    bullets[i].currentFrame++;
+
+                    if (bullets[i].currentFrame >= bullets[i].maxFrames) {
+                        bullets[i].currentFrame = 0;
+                    }
+                }
             }
 
             
@@ -160,18 +176,14 @@ void UpdateBullets() {
                 ResetBullet(bullets[i]);
             }
 
-            if (bullets[i].position.y > 700){
-                //explosionEmitter.SpawnExplosion(50, YELLOW);
-                //ResetBullet(bullets[i]);
-            }
+
 
         }
     }
 }
 
 void DrawBullets() {
-    //BeginShaderMode(shaders.highlightShader);
-    explosionEmitter.DrawParticles();
+
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (bullets[i].isActive) {
             if (bullets[i].laser && !bullets[i].isFireball){
@@ -179,6 +191,12 @@ void DrawBullets() {
 
             }else if (bullets[i].isFireball && bullets[i].laser){ //fireball is also a laser for collision purposes. 
                 DrawCircleV(bullets[i].position, 8, RED);
+                float frameWidth = 64;
+                float frameHeight = 64;
+               
+                Rectangle sourceRect = { bullets[i].currentFrame * frameWidth, 0, frameWidth, frameHeight };
+                Rectangle destRect = { bullets[i].position.x-16, bullets[i].position.y-16, 32, 32};
+                DrawTexturePro(resources.fireballSheet, sourceRect, destRect, { 0, 0 }, 0.0f, WHITE);
 
             } else if (bullets[i].raygun){ //raygun bullet
                     //change the size of the projectile depending on damage.  

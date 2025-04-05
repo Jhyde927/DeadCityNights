@@ -210,6 +210,7 @@ struct Console {
     int currentFrame = 0;
     float frameTimer = 0.0f;
     float frameTime = 0.0f;
+    GameState scene;
 
 };
 
@@ -218,6 +219,7 @@ struct Monitor {
     int currentFrame = 0;
     float frameTimer = 0.0f;
     float frameTime = 0.0f;
+    GameState scene;
 
 };
 
@@ -321,8 +323,8 @@ void InitializePlayerCar();
 void InitializeMagicDoor(Vector2 position);
 void initExplosion(Vector2 position);
 void InitTank(Vector2 position);
-void InitConsole(Vector2 position);
-void InitMonitor(Vector2 position);
+void InitConsole(Vector2 position, GameState scene);
+void InitMonitor(Vector2 position, GameState scene);
 void InitEarth();
 void InitElevator(Vector2 position); 
 void InitUFO();

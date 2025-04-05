@@ -64,6 +64,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     talkTimer = 0.0f;
     ghostAlpha = 1.0f;
     deathTimer = 0.0;
+    canTakeDamage = true;
     hasTarget = false;
     isTargeted = false;
     targetNPC = nullptr; //set in main
@@ -81,7 +82,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     targetedTimer = 0.0f;
     agroZombie = false;
     distanceToPlayer = 0;
-
+    playerDiff = Vector2{0, 0};
     animationTimer = 0.0;
     isMoving = false;
     CEO = false;
@@ -1019,6 +1020,7 @@ void NPC::Update() {
     //animation.Update(GetFrameTime());
     float deltaTime = GetFrameTime();
     distanceToPlayer = abs(player.position.x - position.x);
+    playerDiff = Vector2Subtract(player.position, position);
 
     bloodEmitter.UpdateParticles(GetFrameTime()); //update blood
 
@@ -1276,7 +1278,8 @@ void NPC::Render() {
     Color tint = (hitTimer > 0) ? RED : WHITE;
     if (ghost) tint = ColorAlpha(WHITE, ghostAlpha);//use Color alpha to change alpha of ghost on hit
     if (bat) BeginShaderMode(shaders.rainbowOutlineShader); //raindbow bats
-    if (highLight && !frank) BeginShaderMode(shaders.highlightShader);//highlight when talking except for frank, for reasons. I think this broke 
+    if (isBoss && !canTakeDamage) BeginShaderMode(shaders.rainbowOutlineShader);
+    //if (highLight && !frank) BeginShaderMode(shaders.highlightShader);//highlight when talking except for frank, for reasons. I think this broke 
     //npc highlighting but I think I like it with out it. 
     
     //DrawRectangleLines(position.x+24, position.y+16, hitboxWidth, hitboxHeight, RED); // debug show hitbox
@@ -1303,6 +1306,15 @@ void NPC::SetAnimationState(AnimationState newState) {
 }
 
 void NPC::handleDeath(){
+
+    if (isBoss){
+        isDying = true;
+        SetAnimationState(DEATH);
+        deathTimer = 0.85f;
+        destination = position;
+        attacking = false;
+        bossState = BOSS_DEATH;
+    }
 
     if (CEO){
         isDying = true;          // Start dying process   
@@ -1365,7 +1377,7 @@ void NPC::handleDeath(){
         destination = position;
     }
 
-    if (!robot && !cyberZombie && !isZombie && !ghost && !bat){ //NPC killed by zombie
+    if (!robot && !cyberZombie && !isZombie && !ghost && !bat && !isBoss){ //NPC killed by zombie
         riseTimer = 0; 
         isDying = true;           // Start dying process   
         SetAnimationState(DEATH);  // Set to death animation
@@ -1388,12 +1400,14 @@ void NPC::updateBoss(float deltaTime)
     {
         case BOSS_IDLE:
             //do nothing for 2 seconds
+
             speed = 50;
             facingRight = (player.position.x > position.x);
             if (stateTimer > 2.0f)
             {
                 SetAnimationState(WALK);//play walk for idle, so it still flaps it wings, if it's on the ground we could play true idle. 
-                if (distanceTo <= 250){
+                canTakeDamage = true;
+                if (distanceTo <= 250){ //if player is close charge, otherwise slowly walk toward player giving them a chance to attack. 
                     bossState = BOSS_CHARGE;
                     stateTimer = 0.0f;
 
@@ -1407,13 +1421,25 @@ void NPC::updateBoss(float deltaTime)
             break;
 
         case BOSS_CHARGE:
-        
+
             speed = 200;
             destination = player.position;
-            facingRight = (player.position.x > position.x);
+
+            if (fabs(playerDiff.x) > 10.0f) {
+                facingRight = (playerDiff.x > 0);
+            }
+
+            if (distanceTo < 20){
+                attacking = true;
+                SetAnimationState(ATTACKING);
+                
+            }
+
             if (stateTimer > 1.0f)
             {
                 //switch to flying away after charging. 
+                attacking = false;
+
                 bossState = BOSS_FLYAWAY;
                 stateTimer = 0.0f;
                // std::cout << "Boss flies away!\n";
@@ -1434,10 +1460,12 @@ void NPC::updateBoss(float deltaTime)
             break;
 
         case BOSS_FLYAWAY:
-            
+
             //fly away for 3 seconds. 
             speed = 100;
-            facingRight = (player.position.x > position.x);
+            if (fabs(playerDiff.x) > 10.0f) {
+                facingRight = (playerDiff.x > 0);
+            }
 
             if (stateTimer > 3.0f)
             {
@@ -1456,9 +1484,10 @@ void NPC::updateBoss(float deltaTime)
             break;
 
         case BOSS_CHASE:
-            speed = 75;
+            canTakeDamage = false; //shields up
+            speed = 100;
             facingRight = (player.position.x > position.x);
-            destination = player.position;
+            destination = player.position; //chase player for 3 seconds
             if (stateTimer > 3){
                 bossState = BOSS_IDLE;
                 stateTimer = 0;
@@ -1466,6 +1495,7 @@ void NPC::updateBoss(float deltaTime)
             break;
 
         case BOSS_FIREBALL:
+
             speed = 0; // stationary while casting
             facingRight = (player.position.x > position.x);
         
@@ -1481,6 +1511,11 @@ void NPC::updateBoss(float deltaTime)
                 hasAttacked = false;
             }
             break;
+
+        case BOSS_DEATH:
+            speed = 0;
+            
+
         
     }
 }
@@ -1511,16 +1546,16 @@ void NPC::HandleBoss(float deltaTime){
         if (fabs(position.x - destination.x) > tolerance) {
             if (position.x < destination.x) {
                 position.x += speed * deltaTime;
-                SetAnimationState(WALK);
+                if (!attacking && !isDying) SetAnimationState(WALK);
                 facingRight = true;
             } else {
                 position.x -= speed * deltaTime;
                 facingRight = false;
-                SetAnimationState(WALK);
+                if (!attacking && !isDying) SetAnimationState(WALK);
             }
         } else {
             position.x = destination.x; // Snap to target
-            SetAnimationState(WALK); //walk for idle so he is still flapping his wings. 
+            if (!isDying && !attacking) SetAnimationState(WALK); //walk for idle so he is still flapping his wings. 
         }
     
         // Y Movement
@@ -1671,7 +1706,13 @@ bool NPC::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition
 
 void NPC::TakeDamage(int damage) {
 
-    if (!isDying){ //we don't limit how faster take damage can run. Usually you would have a canTakeDamage bool. if (npc.hitTimer <= 0) takeDamage() 
+    if (!canTakeDamage){
+        //boss gets shot while invincible, TODO animate bullet absorbtion. 
+        std::cout << "damage immune\n";
+        return;
+    }
+
+    if (!isDying && canTakeDamage){ //we don't limit how faster take damage can run. Usually you would have a canTakeDamage bool. if (npc.hitTimer <= 0) takeDamage() 
         health -= damage;
         hitTimer = 0.3f; // Tint the sprite red for 0.3 seconds
 

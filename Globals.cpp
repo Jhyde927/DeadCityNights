@@ -103,20 +103,24 @@ void InitTank(Vector2 position){
 
 }
 
-void InitConsole(Vector2 position){
+void InitConsole(Vector2 position, GameState scene){
     console.position = position;
     console.currentFrame = 0;
     console.frameTimer = 0.0f;
     console.frameTime = 0.1f;
+    console.scene = scene;
     consoles.push_back(console);
+
 
 }
 
-void InitMonitor(Vector2 position){
+void InitMonitor(Vector2 position, GameState scene){
     monitor.position = position;
     monitor.currentFrame = 0;
     monitor.frameTimer = 0.0f;
     monitor.frameTime = 0.1f;
+    monitor.scene = scene;
+
     monitors.push_back(monitor);
 }
 

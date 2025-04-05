@@ -45,7 +45,7 @@ std::string phrase = "A and D to move, hold shift to run"; //initial tutorial ph
 const int screenWidth = 1024; //screen is square for gameplay reasons, we don't want to reveal to much of the screen at one time. 
 const int screenHeight = 1024;
 
-GameState gameState = LAB; //start outside. on main street. 
+GameState gameState = OUTSIDE; //start outside. on main street. 
 
 TransitionState transitionState = NONE; //state for transitioning scenes. 
 
@@ -183,16 +183,25 @@ void UpdatePasswordInterface() {
     }
 }
 
+
+
 void fireballCheck(){
     for (int i = 0; i < MAX_BULLETS; i++){
         if (bullets[i].isActive && bullets[i].isFireball){
-            //std::cout << "Y position: " << bullets[i].position.y << "\n";
-            if (bullets[i].position.y > 748){
+            if (bullets[i].lifeTime <= 0.1){
+                Vector2 offset {-32, -32}; //center the explosion
+                TriggerExplosion(bullets[i].position + offset, &resources.explosionSheet);
+                bullets[i].isActive = false;
+
+            }
+
+            if (bullets[i].position.y > 750){
                 if (bullets[i].isActive){
-                    Vector2 offset {0, -16};
+                    Vector2 offset {-32, -32}; //center the explosion
                     TriggerExplosion(bullets[i].position + offset, &resources.explosionSheet);
                     bullets[i].isActive = false;
                 }
+            
             }
         }
     }
@@ -4351,11 +4360,8 @@ void RenderPenthouse()
 
 
     float parallaxBackground = camera.target.x * 0.8f;  // Background moves even slower
-    float parallaxMidgBack = camera.target.x * 0.7f;  // Background moves even slower
-    float parallaxMidground = camera.target.x * 0.6f;  // Background moves even slower
-
-
-    //if (globalState.drunk) BeginShaderMode(shaders.glowShader2); //drunk doesn't work globally for whatever reason.
+    float parallaxMidgBack = camera.target.x * 0.7f;  
+    float parallaxMidground = camera.target.x * 0.6f;  
         
     //sky
     DrawTexturePro(resources.penthouseBackground, {0, 0, static_cast<float>(resources.penthouseBackground.width), static_cast<float>(resources.penthouseBackground.height)},
@@ -4379,14 +4385,22 @@ void RenderPenthouse()
 
     HandleGrenades();
 
+    for (Monitor& monitor : monitors){
+        if (monitor.scene == PENTHOUSE){
+            DrawMonitor(monitor);
+        }
+    }
 
-    for (int i = 3; i < static_cast<int>(monitors.size()); i++){ //skip the first 3 monitors, they are draw in the lab. 
-        DrawMonitor(monitors[i]);
+    for (Console& console : consoles){
+        if (console.scene == PENTHOUSE){
+            DrawConsole(console);
+        }
     }
 
     for (NPC& boss : Boss){
         boss.Update();
         boss.Render();
+
     }
 
     for (NPC& ceo : CEOs){
@@ -4424,13 +4438,15 @@ void RenderPenthouse()
     if (!player.onElevator) player.DrawPlayer();
     UpdateExplosions(deltaTime); //draw explosion after player. 
     DrawBullets();
-    EndShaderMode(); ////////////////////////////SHADER OFF
+    
     
 
     HandleKeyboardAiming();
     renderBoxes();
     DrawPickups();
+ 
     EndMode2D();
+
     showBigBadge();
 
     //draw healthbar 
@@ -4542,13 +4558,17 @@ void RenderLab(){
     }
 
     for (Console& console : consoles){
-        DrawConsole(console);
+        if (console.scene == LAB){
+            DrawConsole(console);
+        }
     }
 
 
 
-    for (int i = 0; i < static_cast<int>(monitors.size()) - 3; i++){ //skip the last 3 in the penthouse
-        DrawMonitor(monitors[i]);
+    for (Monitor& monitor: monitors){
+        if (monitor.scene == LAB){
+            DrawMonitor(monitor);
+        }
     }
 
     for (NPC& scientist : scientists){
@@ -6365,13 +6385,15 @@ Vector2 clampMouseCursor(Vector2& mousePosition) {
 
 void InitPenthouseObjects(){
     //InitMonitor(Vector2 {1965, 668});
-    InitMonitor(Vector2 {2005, 668});
-    InitMonitor(Vector2 {2045, 668});
-    InitMonitor(Vector2 {2085, 668});
+    InitMonitor(Vector2 {2005, 668}, PENTHOUSE);
+    InitMonitor(Vector2 {2045, 668}, PENTHOUSE);
+    InitMonitor(Vector2 {2085, 668}, PENTHOUSE);
 
-    InitMonitor(Vector2 {2005, 628});
-    InitMonitor(Vector2 {2045, 628});
-    InitMonitor(Vector2 {2085, 628});
+    InitMonitor(Vector2 {2005, 628}, PENTHOUSE);
+    InitMonitor(Vector2 {2045, 628}, PENTHOUSE);
+    InitMonitor(Vector2 {2085, 628}, PENTHOUSE);
+
+    InitConsole(Vector2 {2013, 668}, PENTHOUSE);
 }
 
 
@@ -6381,7 +6403,7 @@ void InitLabObjects(){
         InitTank(Vector2 {2200.0f + i * 100, 668});
     }
 
-    InitConsole(Vector2 {2700, 668});
+    InitConsole(Vector2 {2700, 668}, LAB);
 
     for (int i = 0; i < 4; i++){
         InitTank(Vector2 {2800.0f + i * 100, 668});
@@ -6391,11 +6413,11 @@ void InitLabObjects(){
         InitTank(Vector2 {3370.0f + i * 100, 668});
     }
 
-    InitConsole(Vector2 {3900, 668});
+    InitConsole(Vector2 {3900, 668}, LAB);
 
-    InitMonitor(Vector2 {2750, 668});
-    InitMonitor(Vector2 {2126, 668});
-    InitMonitor(Vector2 {3900, 668});
+    InitMonitor(Vector2 {2750, 668}, LAB);
+    InitMonitor(Vector2 {2126, 668},LAB);
+    InitMonitor(Vector2 {3900, 668},LAB);
 
     for (int i = 0; i < 5; i++){
         InitTank(Vector2 {4000.0f + i * 100, 668});

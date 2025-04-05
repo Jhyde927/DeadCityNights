@@ -27,6 +27,7 @@ enum BossState {
     BOSS_FLYAWAY,
     BOSS_CHASE,
     BOSS_FIREBALL, 
+    BOSS_DEATH,
    
 };
 
@@ -100,6 +101,8 @@ public:
     bool alien;
     bool CEO;
     bool hasAttacked;
+    bool canTakeDamage;
+    Vector2 playerDiff;
     GameState scene;
     BossState bossState;
 

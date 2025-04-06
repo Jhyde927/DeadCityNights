@@ -16,9 +16,6 @@ Console console;
 Monitor monitor;
 
 std::vector<Explosion> explosions;
-
-
-
 std::vector<Platform> platforms;
 std::vector<Box> boxes; 
 std::vector<MagicDoor> magicDoors;
@@ -89,7 +86,7 @@ void InitializeNPCGroups() {
 }
 
 
-
+//Destructible tanks in laboratory
 void InitTank(Vector2 position){
     tank.position = position;
     tank.currentFrame = rand() % 6; //start on a random frame to offset animations. 
@@ -103,6 +100,7 @@ void InitTank(Vector2 position){
 
 }
 
+//consoles in lab and penthouse
 void InitConsole(Vector2 position, GameState scene){
     console.position = position;
     console.currentFrame = 0;
@@ -113,7 +111,7 @@ void InitConsole(Vector2 position, GameState scene){
 
 
 }
-
+//monitors in lab or penthouse
 void InitMonitor(Vector2 position, GameState scene){
     monitor.position = position;
     monitor.currentFrame = 0;
@@ -125,13 +123,14 @@ void InitMonitor(Vector2 position, GameState scene){
 }
 
 
-
+//player car on main street park cemetery necrotech
 void InitializePlayerCar(){
     player_car.position = {1710, 700-32};
     player_car.carSpeed = 100;
     player_car.currentFrame = 0;
 }
 
+//magic door to and from the astral realm
 void InitializeMagicDoor(Vector2 position){
     magicDoor.position = position;//{2089, 700};
     magicDoor.currentFrame = 0;
@@ -140,6 +139,7 @@ void InitializeMagicDoor(Vector2 position){
     magicDoors.push_back(magicDoor);
 }
 
+//spinning globe in astral realm and ufo interior. 
 void InitEarth(){
     earth.position = {2600, 300};
     earth.frameWidth = 48;
@@ -150,6 +150,7 @@ void InitEarth(){
     earth.frameTime = .1;
 }
 
+//lobby, office, lab, penthouse
 void InitElevator(Vector2 position){
     //this is wrong. We are creating an elevator1 and 2 instnace when we don't have to. maybe? 
     elevator.position = position;
@@ -168,7 +169,7 @@ void InitElevator(Vector2 position){
     elevators.push_back(elevator); //add to global elevators vector
 }
 
-
+//UFO on mainstreet and cemetery
 void InitUFO(){
     //animation perameters
     ufo.frameWidth = 144;
@@ -189,7 +190,7 @@ void InitUFO(){
     ufo.bobOffsetX = 0.0f;       // No initial phase offset
     ufo.bobOffsetY = 0.0f;       // No initial phase offset
 }
-
+//init train in subeway. 
 void InitializeTrain() {
     // Set train parameters
     train.position = {5500.0f, 700};
@@ -201,7 +202,7 @@ void InitializeTrain() {
     train.deceleration = 300;
     train.stopDuration = 5;
     train.stopTimer = 0.0f;
-    train.postLoopWaitDuration = 10.0f; // Time to wait after reaching x = 0
+    train.postLoopWaitDuration = 5.0f; // Time to wait after reaching x = 0
     train.postLoopWaitTimer = 0.0f;
     train.state = MovingToStation;
 
@@ -210,9 +211,10 @@ void InitializeTrain() {
     train.slowDownStartX = 2500.0f + stoppingDistance;
 }
 
+//destructible boxes.
 void InitBoxes(){
     // boxes are stored in one big vector "boxes", and assigned to a specific scene on initiation. 
-    //renderBoxes then renders the appropriate boxes for each scene. 
+    //renderBoxes() called from render fucntions then renders the appropriate boxes for each scene. 
     Texture2D boxSheet = resources.boxSheet;
 
     //LOT
@@ -258,7 +260,7 @@ void InitBoxes(){
 
 }
 
-
+//astral platforms
 void InitPlatforms() {
     //initialize platforms before drawing them in astral
     //emplace_back: Constructs the Platform object directly in the vector without creating a temporary object.

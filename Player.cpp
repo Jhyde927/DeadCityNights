@@ -222,7 +222,7 @@ float GetLeftBoundary(){
     }else if (gameState == ALIEN){
         return 1024;
     }else if (gameState == PENTHOUSE){
-        return 0;
+        return 1000;
     }
     return 0.0f;
 }

@@ -43,7 +43,7 @@ extern std::vector<NPC>Boss;
 
 extern std::vector<std::vector<NPC>*> enemies;
 
-// Extern declaration of the master NPC group list
+// Extern declaration of the master NPC group list, unused.
 extern std::vector<std::vector<NPC>*> allNPCGroups;
 
 struct GlobalState { //store random bools and timers that have accumulated over the months. just prefix everything with globalState is the price we pay for cleaner code. 
@@ -79,6 +79,7 @@ struct GlobalState { //store random bools and timers that have accumulated over 
     bool buttonCemetery = false;
     bool buttonInternet = false;
     bool hasCemeteryKey = false;
+    bool showTutorialText = false;
     bool canGiveFortune = true;
     bool can_spawn_zombies = true;
     bool visitedOffice = false;
@@ -170,6 +171,7 @@ struct GlobalState { //store random bools and timers that have accumulated over 
     float minDistToPlayer = 50;
     float maxDistToPlayer = 200;
     float maxSpawnDelay = 3;
+    float tutorialTimer = 0.0;
     int selectedSlot = -1;
     int displayMoney = 100;
     bool canGlitch = true;
@@ -202,7 +204,7 @@ struct Tank {
     float frameTime = 0.0f;
     int health;
     bool explode;
-    bool canSpawn;
+    bool canSpawn; //spawn a zombie on tank destruction. 
 };
 
 struct Console {
@@ -210,7 +212,7 @@ struct Console {
     int currentFrame = 0;
     float frameTimer = 0.0f;
     float frameTime = 0.0f;
-    GameState scene;
+    GameState scene; // scene specific props. One vector holds all the props, we draw only the ones set to the current scene. 
 
 };
 
@@ -272,13 +274,13 @@ struct UFO {
     float frameTime;
     float frameTimer;
 
-    Vector2 basePosition;  // Original position where the UFO is placed
-    float bobAmplitudeX;   // Amplitude of side-to-side movement
-    float bobAmplitudeY;   // Amplitude of up-and-down movement
-    float bobSpeedX;       // Speed of side-to-side movement
-    float bobSpeedY;       // Speed of up-and-down movement
-    float bobOffsetX;      // Phase offset for side-to-side movement
-    float bobOffsetY;      // Phase offset for up-and-down movement
+    Vector2 basePosition;  //center of UFO
+    float bobAmplitudeX;   //ufo wobble around base position. 
+    float bobAmplitudeY;   
+    float bobSpeedX;       
+    float bobSpeedY;       
+    float bobOffsetX;      
+    float bobOffsetY;      
 };
 
 struct Train {
@@ -317,7 +319,7 @@ extern std::vector<Tank> Tanks;
 extern std::vector<Console> consoles;
 extern std::vector<Monitor> monitors;
 
-
+//init global objects
 void InitCamera();
 void InitializePlayerCar();
 void InitializeMagicDoor(Vector2 position);

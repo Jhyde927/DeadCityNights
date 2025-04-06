@@ -1206,6 +1206,11 @@ void NPC::Update() {
             destination = position; //zombie stop while attacking
         }
 
+        if (isZombie && position.x < 1000){
+            if (isActive) TakeDamage(100);
+            //kill any zombie that wanders out of bounds. 
+        }
+
     }
 }
 

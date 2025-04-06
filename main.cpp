@@ -26,21 +26,24 @@
 #include "Particle.h"
 #include "Explosion.h"
 
-//main
+//The law is one. 
 
+
+//move inventory to globals.h ?
 bool showInventory = false;
 const int INVENTORY_SIZE = 12;  // Define the size of the inventory
 std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", "", "", "", "", ""}; //Inventory is a fixed array for no particular reason.
+
 
 const int GAME_SCREEN_WIDTH = 1024;
 const int GAME_SCREEN_HEIGHT = 1024;
 
 float cursorSpeed = 900.0f; // Adjust speed of cursor movement
 float deadZone = 0.2f;   // Ignore slight stick movements
-// Virtual cursor position (simulates the mouse)
+// Virtual cursor position (simulates the mouse with gamepad)
 Vector2 virtualCursor = { 512, 512 }; // Start at screen center
 
-std::string phrase = "A and D to move, hold shift to run"; //initial tutorial phrase
+std::string phrase = "A and D to move, hold shift to run"; //initial tutorial phrase, phrase is what we call a message visible to the player. 
 
 const int screenWidth = 1024; //screen is square for gameplay reasons, we don't want to reveal to much of the screen at one time. 
 const int screenHeight = 1024;
@@ -1521,7 +1524,7 @@ void HandleSubwayTransition(){
         player.enter_train = false;
         globalState.subwayToPark = true; //travel to park from subway, 
         gameState = PARK;
-        player.position.x = 3000;
+        player.position.x = 2000;
         UpdateNPCActivity(SUBWAY, PARK);
 
     }else if (player.enter_train && globalState.subwayToPark){ //Riding train to outside
@@ -3396,15 +3399,29 @@ void RenderCemetery(){
             globalState.minDistToPlayer = 50;
             globalState.maxDistToPlayer = 200;
         }else{
-            StartZombieSpawn(5, 3); //first zombie encounter
-            globalState.minDistToPlayer = 50;
-            globalState.maxDistToPlayer = 200;
+            StartZombieSpawn(5, 4); //first zombie encounter
+            globalState.showTutorialText = true;//trigger tutorial text. 
+            globalState.tutorialTimer = 5;
+            globalState.minDistToPlayer = 50; //the closest they can spawn is 50 pixels away
+            globalState.maxDistToPlayer = 200; //the farthest is 200
         }       
     }
 
     globalState.show_dbox = false;
     globalState.over_gate = false;
     globalState.over_car = false;
+
+    //tutorial text
+    if (globalState.showTutorialText){
+        phrase = "Right click to aim\n\nLeft click to fire"; //tutorial text
+        showDBOX();
+        globalState.tutorialTimer -= GetFrameTime();
+        if (globalState.tutorialTimer <= 0){
+            globalState.showTutorialText = false;
+        }
+    }
+
+
     //Cemetery Gate
     if (player.position.x > 3069 && player.position.x < 3089 && !globalState.hasCemeteryKey){
         phrase = "Locked";
@@ -3432,27 +3449,18 @@ void RenderCemetery(){
         globalState.dboxPosition = player.position;
         
    }
-
-
-
     BeginMode2D(camera);
-
-
     HandleKeyboardAiming();
-    
     ClearBackground(globalState.customBackgroundColor);
+
     if (!globalState.move_car && !player.enter_car){
-        camera.target = player.position;
+        camera.target = player.position; //focus camera back on player. 
     }
     
     float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
     float parallaxTrees = camera.target.x * .8;
     float parallaxBackground = camera.target.x * 0.9f;  // Background moves even slower 
 
-    if (globalState.drunk){
-        BeginShaderMode(shaders.glowShader2);
-
-    } 
 
     // Draw the background layers
     DrawTexturePro(resources.cemeteryBackground, {0, 0, static_cast<float>(resources.cemeteryBackground.width), static_cast<float>(resources.cemeteryBackground.height)},
@@ -3468,7 +3476,7 @@ void RenderCemetery(){
     DrawTexturePro(resources.cemeteryForeground, {0, 0, static_cast<float>(resources.cemeteryForeground.width), static_cast<float>(resources.cemeteryForeground.height)},
                     {1024, 0, static_cast<float>(resources.cemeteryForeground.width), static_cast<float>(resources.cemeteryForeground.height)}, {0, 0}, 0.0f, WHITE);
 
-    //EndShaderMode();
+
 
     EndShaderMode(); ////////////////////////////SHADER OFF
     int CarFrameWidth = 128;
@@ -3492,7 +3500,7 @@ void RenderCemetery(){
     }
 
     if (globalState.hasCemeteryKey){ // dont show UFO until later in the game, this moves the UFO from main street to cemetery, we need to move it back somehow. 
-        ufo.basePosition = {3900, 400}; // 2 ufos?
+        ufo.basePosition = {3900, 400}; // if you visit the cemetery UFO before the mainstreet UFO, the main street ufo no longer shows up. by design. 
         DrawUFO();
     }
 
@@ -3502,8 +3510,6 @@ void RenderCemetery(){
         DrawItem(Vector2 {1870, 700}, "shovel");
     }
 
-
-
     for (NPC& zombie : zombies){
         if (zombie.scene != gameState) zombie.isActive = false;
         if (zombie.isActive && zombie.scene == gameState){ //cemetery zombies stay in the cemetery
@@ -3511,11 +3517,7 @@ void RenderCemetery(){
             zombie.Render();
 
         }
-
-
     }
-
-
 
     if (player.enter_car == false){// if enter car is false, dont render player or update position camera should stay focused on player pos. 
         player.DrawPlayer();
@@ -4026,12 +4028,14 @@ void RenderPark(){
     BeginMode2D(camera);  // Begin 2D mode with the camera
     ClearBackground(globalState.customBackgroundColor);
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
-    //do we do this in office?
+
     float parallaxBackground = camera.target.x * 0.9f;  // Background moves even slower
     float ParallaxBuildings = camera.target.x * 0.7;
     float parallaxMidground = camera.target.x * 0.5f;  // Midground moves slower
     globalState.over_car = false;
-    if (player.position.x > player_car.position.x && player.position.x < player_car.position.x +30 && !globalState.subwayToPark){
+
+    //ENTER PLAYER CAR
+    if (player.position.x > player_car.position.x && player.position.x < player_car.position.x +30){
         globalState.over_car = true;
     }
     
@@ -4072,12 +4076,12 @@ void RenderPark(){
    
 
     //DrawPlayerCar
-    if (!globalState.subwayToPark){
-        float CarFrameWidth = 128.0;
-        Rectangle sourceRecCar = {player_car.currentFrame * CarFrameWidth, 0, CarFrameWidth, CarFrameWidth};
-        DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE); //draw player_car
+    // if (!globalState.subwayToPark){
+    float CarFrameWidth = 128.0;
+    Rectangle sourceRecCar = {player_car.currentFrame * CarFrameWidth, 0, CarFrameWidth, CarFrameWidth};
+    DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE); //draw player_car
 
-    }
+    // }
 
 
     if (player.enter_car == false){// if enter car is false, dont render player or update position. camera should stay focused on player pos. 
@@ -4385,14 +4389,15 @@ void RenderPenthouse()
 
     HandleGrenades();
 
-    for (Monitor& monitor : monitors){
-        if (monitor.scene == PENTHOUSE){
+    for (Monitor& monitor : monitors){ //we should do this in the main while loop for all scenes, 
+        //but we can't because drawing anything after the main switch doesn't work for some reason. probably because render to texture.
+        if (monitor.scene == gameState){
             DrawMonitor(monitor);
         }
     }
 
     for (Console& console : consoles){
-        if (console.scene == PENTHOUSE){
+        if (console.scene == gameState){
             DrawConsole(console);
         }
     }
@@ -4401,6 +4406,11 @@ void RenderPenthouse()
         boss.Update();
         boss.Render();
 
+    }
+
+    for (NPC& zombie : zombies){
+        zombie.Update();
+        zombie.Render();
     }
 
     for (NPC& ceo : CEOs){
@@ -4412,6 +4422,7 @@ void RenderPenthouse()
             if (ceo.trigger){
                 ceo.trigger = false;
                 spawnBoss(ceo.position);
+                StartZombieSpawn(10, 4);
             }
 
             if (ceo.interacting){
@@ -6784,7 +6795,7 @@ int main() {
                 case APARTMENT:   RenderApartment();    break;
                 case ROAD:        RenderRoad();         break;
                 case CEMETERY:    RenderCemetery();     break;
-                case WORK:        RenderWork();         break; // Do nothing at the moment
+                case WORK:        RenderWork();         break; 
                 case LOT:         RenderLot();          break;
                 case GRAVEYARD:   RenderGraveyard();    break;
                 case ASTRAL:      RenderAstral();       break;

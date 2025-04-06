@@ -1059,3 +1059,25 @@ NecroTech Interior:
 	workers in office and tanks in lab don't spawn zombies. fixed, copy and pasted errs. 
 
 	the only gun that can hit the boss, is the rocket launcher. You find it in the lab. it seeks enemies. maybe like a plasma cannon or something 
+
+	if fireballs get below 700 - 32, blowup. x
+
+	if fireball lifetime is up, blowup. x
+
+	after crowbar tutorial text, if you have the gun show gun tutorial text?
+
+	when traveling by train to the park, it fades in on you outside the play area before jumping to starting position. 
+
+	if you buy whiskey with a full inventory, hasWhiskey gets set to true, so you can't buy any more. maybe inventory could exist off screen. No because the array is fixed, anything added when it's full gets lost. Make the badge disappear after talking to hobo about it. get rid of the liquor store. 
+
+	if zombies get out of bounds, they become inactive. fixes office situation. x below 1000 they take damage until they die
+
+	on first encounter with zombies text should say: Right click to aim\n\nLeft click to fire. x
+
+	draw the car in the park at all times. x
+
+	trigger zombies when cEO dies. x
+
+	trigger robots after zombies. or mibs. when all zombies die. 
+
+	subway gets abandoned when zombies invade main street? or another zombie/NPC killing spree in the subway. just don't draw NPCs if that one boolean is true. x test this. 

@@ -48,7 +48,7 @@ std::string phrase = "A and D to move, hold shift to run"; //initial tutorial ph
 const int screenWidth = 1024; //screen is square for gameplay reasons, we don't want to reveal to much of the screen at one time. 
 const int screenHeight = 1024;
 
-GameState gameState = OUTSIDE; //start outside. on main street. 
+GameState gameState = LAB; //start outside. on main street. 
 
 TransitionState transitionState = NONE; //state for transitioning scenes. 
 
@@ -114,15 +114,12 @@ std::string GetTellerPhrase() {
 
 void TriggerExplosion(Vector2 pos, Texture2D* tex) {
     PlaySound(SoundManager::getInstance().GetSound("explosion"));
+    //PlayPositionalSound(SoundManager::getInstance().GetSound("explosion"), pos, player.position, 400);
     Explosion exp;
     explosions.push_back(exp);
-    explosions[0].Start(pos, tex);
+    explosions[0].Start(pos, tex); //do we clean this up?
 
 }
-
-
-
-
 
 
 // Render and update logic
@@ -1485,6 +1482,7 @@ void HandleLabTransition(){
 
     }else if (elevators[0].isOccupied && player.onElevator){
         gameState = PENTHOUSE;
+        globalState.can_spawn_mibs = true; //queue up some mibs. 
         player.onElevator = false;
         elevators[0].isOccupied = false;
         UpdateNPCActivity(LAB, PENTHOUSE);
@@ -3100,49 +3098,52 @@ void RenderSubway(){
     if (!player.hasArmor){
         DrawItem(Vector2 {2000, 700},"vest");
     }
+    if (!globalState.triggerOutsideZombies){ //subway is empty if triggerOutsideZombies is true.
 
-    for (NPC& npc : npcs){
-        npc.Update();
-        npc.Render();
-        npc.ClickNPC();
+        for (NPC& npc : npcs){
+            npc.Update();
+            npc.Render();
+            npc.ClickNPC();
 
-        if (npc.interacting){ //Take the first one you find. only one npc should be able to interact. If you click on multiple NPCs really fast
-        //the dialog box jumps around depending on the timer. Need a way to cancel all interaction except the last one. 
-            globalState.dboxPosition = npc.position;   
-            globalState.show_dbox = true;   //dialogBox
-            if (npc.dealer){
-                phrase = "I gOt wHat YoU NEEd\n\nDrugs: $100";
-                globalState.dealer = true;
-                showInventory = true;
+            if (npc.interacting){ //Take the first one you find. only one npc should be able to interact. If you click on multiple NPCs really fast
+            //the dialog box jumps around depending on the timer. Need a way to cancel all interaction except the last one. 
+                globalState.dboxPosition = npc.position;   
+                globalState.show_dbox = true;   //dialogBox
+                if (npc.dealer){
+                    phrase = "I gOt wHat YoU NEEd\n\nDrugs: $100";
+                    globalState.dealer = true;
+                    showInventory = true;
 
-            }else if (npc.teller){
-                if (!globalState.buyFortune){
-                    phrase = "Fortune: $100";
-                    globalState.teller = true;
+                }else if (npc.teller){
+                    if (!globalState.buyFortune){
+                        phrase = "Fortune: $100";
+                        globalState.teller = true;
 
-                }else if (globalState.buyFortune){
-                    if (globalState.fortuneTimer <= 0){
-                        phrase = npc.speech;
+                    }else if (globalState.buyFortune){
+                        if (globalState.fortuneTimer <= 0){
+                            phrase = npc.speech;
+                        }
+                        
+                        globalState.teller = true;
                     }
                     
-                    globalState.teller = true;
-                }
+
+                } else{
+                    if (globalState.fortuneTimer <= 0 && !globalState.teller && !globalState.dealer){
+                        phrase = npc.speech; //randomized speech
+                        globalState.dealer = false;
+
+                    }
                 
-
-            } else{
-                if (globalState.fortuneTimer <= 0 && !globalState.teller && !globalState.dealer){
-                    phrase = npc.speech; //randomized speech
-                    globalState.dealer = false;
-
                 }
-             
+            }else{
+                globalState.dealer = false;
+                globalState.teller = false;
+            
             }
-        }else{
-            globalState.dealer = false;
-            globalState.teller = false;
-        
+            
         }
-        
+
     }
 
     renderBoxes(); //render boxes behind train
@@ -4357,6 +4358,8 @@ void RenderPenthouse()
 
 
 
+
+
     float deltaTime = GetFrameTime();
     camera.target = player.position;
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
@@ -4388,6 +4391,10 @@ void RenderPenthouse()
     DrawElevator(elevators[1], resources.elevatorSheet, resources.floorNumberSheet, 128, 128, deltaTime); //leave on elevator1
 
     HandleGrenades();
+
+    if (!player.hasArmor){
+        DrawItem(Vector2 {1634, 700},"vest");
+    }
 
     for (Monitor& monitor : monitors){ //we should do this in the main while loop for all scenes, 
         //but we can't because drawing anything after the main switch doesn't work for some reason. probably because render to texture.
@@ -4422,7 +4429,15 @@ void RenderPenthouse()
             if (ceo.trigger){
                 ceo.trigger = false;
                 spawnBoss(ceo.position);
-                StartZombieSpawn(10, 4);
+                StartZombieSpawn(20, 5);
+            }
+
+            if (ceo.health <= ceo.maxHealth/2){
+                if (globalState.can_spawn_mibs){
+                    
+                    spawnMib(Vector2 {player.position.x + 300, player.position.y});
+                    spawnMib(Vector2 {player.position.x - 300, player.position.y});
+                }
             }
 
             if (ceo.interacting){
@@ -4504,14 +4519,15 @@ void RenderLab(){
         elevators[0].position = labPos;
     }
 
-    if (player.position.x > 1875 && player.position.x < 1895){
+    //fix before release. 
+    if (player.position.x > 1875 && player.position.x < 1895){ // && !globalState.lockElevtorLab LOCK ELEVATOR TO PENTHOUSE
         globalState.over_Ebutton = true;
         phrase = "Call Elevator";
         globalState.show_dbox = true;
         globalState.dboxPosition = player.position;
     }
 
-    if (player.position.x < 1843 && player.position.x > 1823 && elevators[0].isOpen){
+    if (player.position.x < 1843 && player.position.x > 1823){ //  && elevators[0].isOpen && !globalState.lockElevtorLab
         globalState.over_elevator = true;
         phrase = "Up to Enter";
         globalState.show_dbox = true;
@@ -4601,6 +4617,7 @@ void RenderLab(){
             spawnCyberZombie(spawnPos);
             spawnCyberZombie(spawnPos2);
             StartZombieSpawn(10, 2);
+            globalState.lockElevtorLab = false;//unlock the elevator to the penthouse. 
             globalState.showConsoleText = true; //dont show console text until zombies are spawned. 
         }
 
@@ -5915,12 +5932,6 @@ void debugKeys(){
             player.hasArmor = true;
             AddItemToInventory("vest");
             player.armor = player.maxArmor;
-        }
-    }
-    if (IsKeyPressed(KEY_J)){
-        if (!player.hasBadge){
-            player.hasBadge = true;
-            AddItemToInventory("Badge");
         }
     }
 

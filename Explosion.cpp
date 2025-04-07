@@ -27,7 +27,7 @@ void Explosion::Update(float deltaTime) {
             currentFrame = maxFrames - 1; // stay on last (possibly empty) frame
             remainingLife -= deltaTime;
             if (remainingLife <= 0.0f) {
-                isActive = false;
+                isActive = false; //after they are flagged inactive, they are erased from the vector in updateExplosions()
             }
         } else {
             timeSinceLastFrame += deltaTime;

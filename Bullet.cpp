@@ -84,6 +84,7 @@ void FireBullet(Player& player, bool spread, float damage, bool laser, bool rayg
                     bullets[i].size = Vector2 {10, 10}; // the hitbox is square, unlike the projectile
                     bullets[i].health = 4; //kill up to 4 zombies in a row. 
                 } 
+                
                 if (damage == 50){
                     bullets[i].size = Vector2 {5, 5}; // needs more testing, make it OP?
                     bullets[i].health = 4;

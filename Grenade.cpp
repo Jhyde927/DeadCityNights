@@ -21,6 +21,7 @@ bool canSpawnSmoke = true;
 Grenade::Grenade(Vector2 pos, Vector2 vel) {
     position = pos;
     velocity = vel;
+    
 }
 
 // Update grenade movement and explosion timer

@@ -1713,7 +1713,7 @@ void NPC::TakeDamage(int damage) {
 
     if (!canTakeDamage){
         //boss gets shot while invincible, TODO animate bullet absorbtion. 
-        std::cout << "damage immune\n";
+        PlaySound(SoundManager::getInstance().GetSound("armorHit"));
         return;
     }
 

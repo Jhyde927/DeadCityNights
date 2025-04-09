@@ -17,14 +17,14 @@ void Explosion::Start(Vector2 pos, Texture2D* tex) {
 
 void Explosion::Update(float deltaTime) {
     if (!isActive) return;
-
+    emitter.UpdateParticles(deltaTime);
     timeSinceLastFrame += deltaTime;
     if (timeSinceLastFrame >= frameTime) {
         timeSinceLastFrame = 0.0f;
         currentFrame++;
 
         if (currentFrame >= maxFrames) {
-            currentFrame = maxFrames - 1; // stay on last (possibly empty) frame
+            currentFrame = maxFrames - 1; // stay on last frame
             remainingLife -= deltaTime;
             if (remainingLife <= 0.0f) {
                 isActive = false; //after they are flagged inactive, they are erased from the vector in updateExplosions()
@@ -39,16 +39,16 @@ void Explosion::Update(float deltaTime) {
         
     }
 
-    emitter.UpdateParticles(deltaTime);
+   
 }
 
 void Explosion::Draw() const {
     if (!isActive) return;
-
+    emitter.DrawParticles();
     if (spriteSheet) {
         Rectangle srcRect = { currentFrame * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameHeight) };
         DrawTextureRec(*spriteSheet, srcRect, position, WHITE);
     }
 
-    emitter.DrawParticles();
+   
 }

@@ -36,6 +36,8 @@ void Emitter::SpawnBlood(int amount, Color color, bool facingRight) {
         p.color = color;
 
         particles.push_back(p);
+        
+        
     }
 }
 

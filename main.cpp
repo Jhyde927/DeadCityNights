@@ -48,7 +48,9 @@ std::string phrase = "A and D to move, hold shift to run"; //initial tutorial ph
 const int screenWidth = 1024; //screen is square for gameplay reasons, we don't want to reveal to much of the screen at one time. 
 const int screenHeight = 1024;
 
-GameState gameState = LAB; //start outside. on main street. 
+
+
+GameState gameState = OUTSIDE; //start outside. on main street. 
 
 TransitionState transitionState = NONE; //state for transitioning scenes. 
 
@@ -111,13 +113,14 @@ std::string GetTellerPhrase() {
 
 
 
-
 void TriggerExplosion(Vector2 pos, Texture2D* tex) {
     PlaySound(SoundManager::getInstance().GetSound("explosion"));
     //PlayPositionalSound(SoundManager::getInstance().GetSound("explosion"), pos, player.position, 400);
     Explosion exp;
     explosions.push_back(exp);
     explosions[0].Start(pos, tex); //do we clean this up?
+    
+    
 
 }
 
@@ -4409,11 +4412,21 @@ void RenderPenthouse()
         }
     }
 
+    
     for (NPC& boss : Boss){
         boss.Update();
         boss.Render();
 
+        if (boss.health < boss.maxHealth/2){ //when boss is half dead, spawn 2 mibs. 
+            if (globalState.can_spawn_mibs){
+                globalState.can_spawn_mibs = false;
+                spawnMib(Vector2 {player.position.x + 300, player.position.y});
+                spawnMib(Vector2 {player.position.x - 300, player.position.y});
+            }
+        }
+
     }
+    
 
     for (NPC& zombie : zombies){
         zombie.Update();
@@ -4432,13 +4445,6 @@ void RenderPenthouse()
                 StartZombieSpawn(20, 5);
             }
 
-            if (ceo.health <= ceo.maxHealth/2){
-                if (globalState.can_spawn_mibs){
-                    
-                    spawnMib(Vector2 {player.position.x + 300, player.position.y});
-                    spawnMib(Vector2 {player.position.x - 300, player.position.y});
-                }
-            }
 
             if (ceo.interacting){
                 if (ceo.interactions == 0){

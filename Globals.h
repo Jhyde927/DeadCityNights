@@ -17,7 +17,7 @@ extern float targetZoom;
 
 extern std::vector<Explosion> explosions;
 
-extern Emitter explosionEmitter;  // global instance
+extern Emitter explosionEmitter;  
 
 
 extern std::vector<NPC> npcs; //outside // subway

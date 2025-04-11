@@ -4,7 +4,7 @@ void Explosion::Start(Vector2 pos, Texture2D* tex) {
     position = pos;
     isActive = true;
     currentFrame = 0;
-    timeSinceLastFrame = 0.0f;
+    frameTimer = 0.0f;
     spriteSheet = tex;
     remainingLife = postAnimLifetime;
     Vector2 offset = {pos.x+28, pos.y+28};
@@ -18,9 +18,9 @@ void Explosion::Start(Vector2 pos, Texture2D* tex) {
 void Explosion::Update(float deltaTime) {
     if (!isActive) return;
     emitter.UpdateParticles(deltaTime);
-    timeSinceLastFrame += deltaTime;
-    if (timeSinceLastFrame >= frameTime) {
-        timeSinceLastFrame = 0.0f;
+    frameTimer += deltaTime;
+    if (frameTimer >= frameTime) {
+        frameTimer = 0.0f;
         currentFrame++;
 
         if (currentFrame >= maxFrames) {
@@ -30,9 +30,9 @@ void Explosion::Update(float deltaTime) {
                 isActive = false; //after they are flagged inactive, they are erased from the vector in updateExplosions()
             }
         } else {
-            timeSinceLastFrame += deltaTime;
-            if (timeSinceLastFrame >= frameTime) {
-                timeSinceLastFrame = 0.0f;
+            frameTimer += deltaTime;
+            if (frameTimer >= frameTime) {
+                frameTimer = 0.0f;
                 currentFrame++;
             }
         }

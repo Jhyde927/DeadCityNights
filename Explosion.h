@@ -11,7 +11,7 @@ struct Explosion {
     float frameTime = 0.15f;
     int currentFrame = 0;
     int maxFrames = 7;
-    float timeSinceLastFrame = 0.0f;
+    float frameTimer = 0.0f;
     bool isActive = false;
 
     float postAnimLifetime = 0.5f; // How long to stay alive after animation ends

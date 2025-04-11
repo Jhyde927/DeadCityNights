@@ -111,8 +111,6 @@ std::string GetTellerPhrase() {
     return tellerPhrases[randomIndex];
 }
 
-
-
 void TriggerExplosion(Vector2 pos, Texture2D* tex) {
     PlaySound(SoundManager::getInstance().GetSound("explosion"));
     //PlayPositionalSound(SoundManager::getInstance().GetSound("explosion"), pos, player.position, 400);
@@ -120,8 +118,6 @@ void TriggerExplosion(Vector2 pos, Texture2D* tex) {
     explosions.push_back(exp);
     explosions[0].Start(pos, tex); //do we clean this up?
     
-    
-
 }
 
 
@@ -189,16 +185,18 @@ void UpdatePasswordInterface() {
 
 
 void fireballCheck(){
+    //No good way to trigger explosion from bullet, so we do it here in main. 
     for (int i = 0; i < MAX_BULLETS; i++){
         if (bullets[i].isActive && bullets[i].isFireball){
-            if (bullets[i].lifeTime <= 0.1){
+            if (bullets[i].lifeTime <= 0.1){ //lifetime runs out so explode
+
                 Vector2 offset {-32, -32}; //center the explosion
                 TriggerExplosion(bullets[i].position + offset, &resources.explosionSheet);
                 bullets[i].isActive = false;
 
             }
 
-            if (bullets[i].position.y > 750){
+            if (bullets[i].position.y > 750){ //fireball hits the ground, explode. 
                 if (bullets[i].isActive){
                     Vector2 offset {-32, -32}; //center the explosion
                     TriggerExplosion(bullets[i].position + offset, &resources.explosionSheet);
@@ -212,7 +210,8 @@ void fireballCheck(){
 
 
 void UpdateExplosions(float deltaTime){
-    for (int i = 0; i < explosions.size(); i++) {
+    //update fireball explosions. 
+    for (int i = 0; i < static_cast<int>(explosions.size()); i++) {
         explosions[i].Draw();
         explosions[i].Update(deltaTime);
 
@@ -226,7 +225,7 @@ void UpdateExplosions(float deltaTime){
 
 }
 
-bool AreAllNPCsDeactivated(const std::vector<NPC>& npcs) {
+bool AreAllNPCsDeactivated(const std::vector<NPC>& npcs) { //are all zombies dead or robots or mibs
     return std::all_of(npcs.begin(), npcs.end(), [](const NPC& npc) {
         return !npc.isActive; // Return true if isActive is false
     });
@@ -360,15 +359,15 @@ void crowbarAttack(std::vector<NPC>& enemies){
     // Debug: Draw the hitbox
     //DrawRectangleLines(attackHitbox.x, attackHitbox.y, attackHitbox.width, attackHitbox.height, RED);
 
-    for (NPC& zombie : enemies){
+    for (NPC& enemy : enemies){
         
-        if (zombie.isActive){          
+        if (enemy.isActive){          
             float hitboxWidth = 16.0f;   
             float hitboxHeight = 32.0f;  //Tall rectange to cover the sprite. 
             
             Rectangle npcHitbox = { 
-                zombie.position.x+24,      // Center horizontally
-                zombie.position.y+16,      //Center vertically
+                enemy.position.x+24,      // Center horizontally
+                enemy.position.y+16,      //Center vertically
                 hitboxWidth,  
                 hitboxHeight                    
             };
@@ -377,13 +376,13 @@ void crowbarAttack(std::vector<NPC>& enemies){
 
             if (CheckCollisionRecs(attackHitbox, npcHitbox) && player.currentFrame == 2){ 
                 
-                if (zombie.hitTimer <= 0 && globalState.canPlaySound){
+                if (enemy.hitTimer <= 0 && globalState.canPlaySound){
                     globalState.canPlaySound = false;
                     globalState.playSoundTimer = .2;
                     PlaySound(SoundManager::getInstance().GetSound("crowbarAttack"));
                     
                 }
-                zombie.TakeDamage(10); //2 hits to kill a zombie
+                enemy.TakeDamage(10); //2 hits to kill a zombie
                 return; //does this help?
             }
 

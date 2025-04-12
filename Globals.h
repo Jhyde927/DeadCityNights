@@ -78,6 +78,8 @@ struct GlobalState { //store random bools and timers that have accumulated over 
     bool lockElevator2 = true;
     bool lockElevtorLab = true;
     bool triggerOutsideZombies = false;
+    bool zombiesTriggered = false;
+    bool robotsTriggered = false;
     bool badEnding = false;
     bool buttonCemetery = false;
     bool buttonInternet = false;

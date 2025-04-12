@@ -50,7 +50,7 @@ const int screenHeight = 1024;
 
 
 
-GameState gameState = LAB; //start outside. on main street. 
+GameState gameState = OUTSIDE; //start outside. on main street. 
 
 TransitionState transitionState = NONE; //state for transitioning scenes. 
 
@@ -182,6 +182,12 @@ void UpdatePasswordInterface() {
     }
 }
 
+void giveAmmo(){
+    player.autoAmmo += 100;
+    player.shells += 20;
+    player.revolverAmmo += 30;
+    PlaySound(SoundManager::getInstance().GetSound("reload"));
+}
 
 
 void fireballCheck(){
@@ -775,8 +781,8 @@ void StartZombieSpawn(int zombie_count, float max_delay){
     // Set the maximum possible delay (now used in UpdateZombieSpawning)
     globalState.maxSpawnDelay = max_delay;
 
-    // Initial spawn delay
-    float minDelay = 0.5f; // <--- Difficulty setting 
+    // Initial spawn delay, at least 1 second between spawns
+    float minDelay = 1.0f; // <--- Difficulty setting 0.5 
     globalState.nextSpawnDelay = minDelay + ((float)rand() / (float)RAND_MAX) * (max_delay - minDelay);
     if (globalState.canGlitch){
         globalState.glitch = true;
@@ -1129,6 +1135,7 @@ void HandleLobbyTransition(){
         UpdateNPCActivity(LOBBY, APARTMENT);
         player.position.x = globalState.apartmentX;
         player.isDead = false;
+        giveAmmo();
         player.currentHealth = player.maxHealth;
         globalState.glitch = false;
         globalState.remainingZombiesToSpawn = 0; //turn off zombie spawning on death
@@ -1162,6 +1169,7 @@ void HandleNecroTransition(){
         player.isDead = false;
         player.currentHealth = player.maxHealth;
         gameCalendar.AdvanceDay();
+        giveAmmo();
         globalState.remainingZombiesToSpawn = 0;
         globalState.glitch = false;
         UpdateNPCActivity(NECROTECH,APARTMENT);
@@ -1401,6 +1409,7 @@ void HandleOfficeTransition(){
         player.isDead = false;
         player.currentHealth = player.maxHealth;
         gameCalendar.AdvanceDay();
+        giveAmmo();
         globalState.remainingZombiesToSpawn = 0;
         globalState.glitch = false;
         globalState.triggerOutsideZombies = true;
@@ -1467,6 +1476,7 @@ void HandlePenthouseTransition(){
         player.currentHealth = player.maxHealth;
         player.position.x = globalState.apartmentX;
         player.isDead = false;
+        giveAmmo();
         gameCalendar.AdvanceDay();
         globalState.glitch = false;
         globalState.remainingZombiesToSpawn = 0;
@@ -1496,6 +1506,7 @@ void HandleLabTransition(){
         player.position.x = globalState.apartmentX;
         player.isDead = false;
         gameCalendar.AdvanceDay();
+        giveAmmo(); //give some ammo on death in necrotech. 
         globalState.glitch = false;
         globalState.remainingZombiesToSpawn = 0;
         globalState.triggerOutsideZombies = true; //if you die in the lab or office or lobby it triggers zombies to invade main street. 
@@ -3379,7 +3390,7 @@ void RenderCemetery(){
     if (!player.enter_car && player.position.x < 1900 && !globalState.zombieWave3 && !globalState.firstHobo){ // walk to far left and zombies spawn again
         globalState.zombieWave3 = true; 
         globalState.canGlitch = true; //glitch runs again
-        StartZombieSpawn(10, 3);//shovel pickup zombies
+        StartZombieSpawn(10, 4);//shovel pickup zombies
         globalState.minDistToPlayer = 50;
         globalState.maxDistToPlayer = 200;
     }
@@ -4929,8 +4940,9 @@ void RenderLobby(){
     //DRAW PLAYER
     if (!player.onElevator) player.DrawPlayer();
 
-    if (AreAllNPCsDeactivated(lobbyMibs) && globalState.can_spawn_robots){ //if all the lobby mibs are dead, spawn robots and zombies
+    if (AreAllNPCsDeactivated(lobbyMibs) && globalState.can_spawn_robots && !globalState.robotsTriggered){ //if all the lobby mibs are dead, spawn robots and zombies
         globalState.can_spawn_robots = false;
+        globalState.robotsTriggered = true; //only spawn robots in lobby once. 
         spawnRobot(player.position + Vector2 {300, 0});
         spawnRobot(player.position + Vector2 {-300, 0});
         if (globalState.can_spawn_zombies){
@@ -5179,10 +5191,10 @@ void RenderNecroTech(){
                 if (globalState.can_spawn_robots){
                     globalState.can_spawn_robots = false;
                     Vector2 spawnPos = {robots[0].position.x + 400, 700};
-                    Vector2 spawnPos2 = {robots[0].position.x - 400, 700};
+                    //Vector2 spawnPos2 = {robots[0].position.x - 400, 700};
             
                     spawnRobot(spawnPos);
-                    spawnRobot(spawnPos2);
+                    //spawnRobot(spawnPos2);
 
                 }
             }
@@ -5258,12 +5270,13 @@ void RenderOutside() {
     float parallaxMidground = camera.target.x * 0.6f;  // Midground moves slower
     float parallaxBackground = camera.target.x * 0.8f;  // Background moves even slower
 
-    if (globalState.triggerOutsideZombies){
+    if (globalState.triggerOutsideZombies && !globalState.zombiesTriggered){ //only spawn zombies outside once. 
         globalState.triggerOutsideZombies = false;
+        globalState.zombiesTriggered = true;
         globalState.badEnding = true;
         globalState.maxDistToPlayer = 400; //zombies spread way out. 
         globalState.minDistToPlayer = 20;
-        StartZombieSpawn(30, 2); //lots of them every 0.5 - 2 seconds. 
+        StartZombieSpawn(15, 3); //lots of them every 0.5 - 2 seconds. 
     }
     
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 

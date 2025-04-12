@@ -50,7 +50,7 @@ const int screenHeight = 1024;
 
 
 
-GameState gameState = OUTSIDE; //start outside. on main street. 
+GameState gameState = LAB; //start outside. on main street. 
 
 TransitionState transitionState = NONE; //state for transitioning scenes. 
 
@@ -4424,6 +4424,11 @@ void RenderPenthouse()
             }
         }
 
+        if (boss.isDying){
+            globalState.bossDefeated = true; //win condition
+        }
+ 
+
     }
     
 
@@ -4459,6 +4464,8 @@ void RenderPenthouse()
                 }
 
             }
+
+
 
         }
 
@@ -5253,6 +5260,7 @@ void RenderOutside() {
 
     if (globalState.triggerOutsideZombies){
         globalState.triggerOutsideZombies = false;
+        globalState.badEnding = true;
         globalState.maxDistToPlayer = 400; //zombies spread way out. 
         globalState.minDistToPlayer = 20;
         StartZombieSpawn(30, 2); //lots of them every 0.5 - 2 seconds. 

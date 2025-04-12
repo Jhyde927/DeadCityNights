@@ -535,33 +535,51 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
 
                 }
 
-
-            }else if (interactions == 3 && !player.validatedPassword && player.necroTechSearched){ //seen all of the 3rd interaction and have searched the internet. 
+                    //end of game. zombies never invaded the city, The Good Ending. 
+            }else if (interactions == 3 && globalState.bossDefeated && !globalState.badEnding){ 
                 clickCount += 1;
                 switch (clickCount)
                 {
                 case 1:
                     SoundManager::getInstance().StartRandomVoices(1);
-                    speech = "A 3 digit code you say?";
+                    speech = "We thought you were dead!\n\nYou've been gone for days";
                     break;
                 
                 case 2:
                     SoundManager::getInstance().StartRandomVoices(1);
-                    speech = "What's the most evil\n\nthree digit number";
+                    speech = "You must have accomplished your mission\n\nBecause the zombies never came";
                     break;
 
                 case 3:
                     SoundManager::getInstance().StartRandomVoices(1);
-                    speech = "You know...\n\nThe mark of the beast?";
+                    speech = "A flying demon you say? \n\nTanks of mutated zombie clones?";
                     break;
 
                 case 4:
                     SoundManager::getInstance().StartRandomVoices(1);
-                    speech = "...the password is\n\n666"; //repeats
+                    speech = "Sounds like you had yourself an adventure";
+            
+                    break;
+
+                case 5:
+                    SoundManager::getInstance().StartRandomVoices(1);
+                    speech = "Thanks for playing!\n\nA Game by Joseph Hyde"; //repeats
                     break;
                 }
+                    //defeated the boss, but died inside necro tech and triggered outside zombies. 
+            }else if (interactions == 3 && globalState.bossDefeated && globalState.badEnding){
+                clickCount += 1;
+                switch (clickCount){
+                    case 1: 
+                        SoundManager::getInstance().StartRandomVoices(1);
+                        speech = "You stopped that maniac\n\nbut the zombies reached the city";
+                        break;
 
-            }    
+                    case 2:
+                        speech = "Better luck next time!\n\nThanks for playing!\n\nA game by Joseph Hyde";
+                        break;
+                }
+            }
         }
 
         if (!talked && !hobo && !police && !teller and !robot){ //all other NPCs
@@ -941,6 +959,7 @@ void NPC::HandleAnimationLogic(){
 }
 
 void NPC::ghostMoves(){
+    //seperate code for x+y movement. 
     if (agro && hasTarget) {
         float deltaTime = GetFrameTime();   
         Vector2 direction = { destination.x - position.x, destination.y - position.y };

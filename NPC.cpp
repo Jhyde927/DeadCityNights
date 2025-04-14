@@ -92,7 +92,7 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     shotsFired = 0;
     reloadTimer = 0.0f;
     reloading = false; 
-    maxShotsBeforeReload = 4;
+    maxShotsBeforeReload = 6;
  
 }
 
@@ -793,6 +793,28 @@ void NPC::HandleRobot(){
 }
 
 void NPC::HandleHobo(){
+    float deltaTime = GetFrameTime();
+    if (gameState == LOT){
+        if (position.x < destination.x) {
+            position.x += speed * deltaTime;
+            
+            facingRight = true;
+            SetAnimationState(WALK);
+            isMoving = true;
+        
+        } else if (position.x > destination.x) {
+            position.x -= speed * deltaTime;
+            if (isBoss && position.y < destination.y) position.y += speed * deltaTime;
+            facingRight = false;
+            SetAnimationState(WALK);
+            isMoving = true;
+            
+        }     
+
+    }
+
+    
+
     if (gameState == OUTSIDE) {
 
         // 🔄 Retarget if dead
@@ -803,13 +825,17 @@ void NPC::HandleHobo(){
 
         // ⏳ Reload logic
         if (reloading) {
+            hasTarget = true;
             reloadTimer -= GetFrameTime();
             if (reloadTimer <= 0.0f) {
                 reloading = false;
                 shotsFired = 0;
+                can_shoot = true;
+                shootTimer = 0.0;
+                
                 SetAnimationState(IDLE);
                 PlaySound(SoundManager::getInstance().GetSound("reload"));
-                std::cout << "Reloaded!\n";
+                
             }
             return; // wait until reload finishes
         }
@@ -839,9 +865,9 @@ void NPC::HandleHobo(){
                     // 💥 Reload if out of shots
                     if (shotsFired >= maxShotsBeforeReload) {
                         reloading = true;
-                        reloadTimer = 2.5f; // adjust as needed
-                        SetAnimationState(IDLE); // if you have one
-                        std::cout << "Reloading...\n";
+                        reloadTimer = 1.5f; 
+                        SetAnimationState(RISING); //make run or death2 the reload animation.
+                        
                     }
 
                     targetNPC = nullptr;
@@ -1227,7 +1253,7 @@ void NPC::Update() {
         // Move towards the destination
 
 
-        if (!ghost && !bat && !isBoss && !hobo){ //pedestrians on the street/zombies
+        if (!ghost && !bat && !isBoss && !hobo){ //pedestrians on the street/zombies //hobo can't move anymore. 
 
             if (!isTargeted){ //not targeted regular npc movement
                 if (position.x < destination.x) {
@@ -1273,7 +1299,7 @@ void NPC::Update() {
             SetAnimationState(IDLE);
             
             
-            if (hobo && !hasTarget){
+            if (hobo){
                 SetDestination(2550, 2600); // hobo stays near middle
             }else if (ghost){
                 SetDestination(1024, 1800); //ghost stays on far left of cemetery

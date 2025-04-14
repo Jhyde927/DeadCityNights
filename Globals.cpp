@@ -287,5 +287,24 @@ void InitPlatforms() {
     platforms.emplace_back(1400.0f, -700.0f, 2000.0f, 20.0f, WHITE);
 }
 
+NPC* FindClosestNPC(NPC& zombie, std::vector<NPC>& npcs) {
+    //find closest npc to zombie
+    NPC* closestNPC = nullptr;
+    float minDist = 500.0f; // Large initial distance //but not too large. 500 is max distance to give chase. otherwise we dont bother. 
+    //prevents NPCs running off screen because a zombie targeting them 1000 pixels away. 
+
+    for (NPC& npc : npcs) {
+        if (npc.isActive && zombie.isActive) { //make sure the zombie is also active
+            float dist = fabs(zombie.position.x - npc.position.x);
+
+            if (dist < minDist) {
+                minDist = dist;
+                closestNPC = &npc;
+            }
+        }
+    }
+    return closestNPC;
+}
+
 
 

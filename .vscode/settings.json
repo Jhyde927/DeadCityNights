@@ -9,6 +9,9 @@
 		"**/*.exe": true
 		
 	},
-	"makefile.configureOnOpen": true
+	"makefile.configureOnOpen": true,
+	"files.associations": {
+		"iostream": "cpp"
+	}
 }
 

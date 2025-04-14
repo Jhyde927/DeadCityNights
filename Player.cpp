@@ -128,7 +128,7 @@ void Player::take_damage(int damage) {
     if (!enter_car && armor <= 0){ //dont take damage if inside car
 
         if (can_take_damage && !isDead && !isRolling){
-            hitTimer = 0.9f; // tint the sprite red for .3 seconds
+            hitTimer = 0.9f; // tint the sprite red 
         
             can_take_damage = false;
             currentHealth -= damage;
@@ -228,6 +228,7 @@ float GetLeftBoundary(){
 }
 
 void Player::DrawChargeBar(Vector2 offset) {
+    //Raygun charge progress bar. 
     float chargePercentage = chargeTimer / maxChargeTime; // Normalize charge time
 
     int barWidth = 10;  // Width of progress bar
@@ -275,7 +276,7 @@ bool Player::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosit
     float hitboxHeight = 32.0f; // Height of the hitbox                 
     ///                                                                  
     //                                                                    
-    // Offset the hitbox so it's centered on the zombie's position        
+    // Offset the hitbox so it's centered on the player's position        
     Rectangle npcHitbox = {
         position.x + 32 - 4,   // Center horizontally
         position.y+16,  // Center vertically
@@ -337,7 +338,7 @@ void Player::HandleInput(float speed) { //this doesn't run if aiming.
     if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) moveX = -1.0f;
 
     // Controller movement (if above deadzone threshold)
-    float deadzone = 0.5f; // Ignore slight stick movements
+    float deadzone = 0.5f; // Ignore slight stick movements, such a large dead zone makes walking difficult with controller. 
     if (fabs(leftStickX) > deadzone) {
         moveX = leftStickX;
     }

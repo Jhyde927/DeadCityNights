@@ -77,8 +77,10 @@ struct GlobalState { //store random bools and timers that have accumulated over 
     bool showConsoleText = false;
     bool lockElevator2 = true;
     bool lockElevtorLab = true;
-    bool triggerOutsideZombies = false;
+
+    bool triggerOutsideZombies = false; //set true for immediate zombies. 
     bool zombiesTriggered = false;
+    
     bool robotsTriggered = false;
     bool badEnding = false;
     bool buttonCemetery = false;
@@ -325,6 +327,7 @@ extern std::vector<Console> consoles;
 extern std::vector<Monitor> monitors;
 
 //init global objects
+NPC* FindClosestNPC(NPC& zombie, std::vector<NPC>& npcs);
 void InitCamera();
 void InitializePlayerCar();
 void InitializeMagicDoor(Vector2 position);

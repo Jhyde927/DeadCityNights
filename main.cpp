@@ -986,12 +986,12 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
     // Map game states to multiple NPC groups
 
     
-    std::map<GameState, std::vector<std::vector<NPC>*>> npcGroups = { //key = gameState, val = vector of vectors of pointers.  
+    std::map<GameState, std::vector<std::vector<NPC>*>> npcGroups = { //key = gameState, val = vector of vectors   
         { NECROTECH, { &robots } },
         { LOBBY, { &lobbyRobots, &lobbyNPCs, &lobbyMibs, &zombies } },  // Multiple NPC groups in LOBBY
         { ASTRAL, { &astralBats, &astralGhosts } },
         {APARTMENT, {}},    
-        { OUTSIDE, { &npcs, &mibs } }, //sigular mib outside
+        { OUTSIDE, { &npcs, &mibs, &zombies } }, //sigular mib outside
         { SUBWAY, { &npcs } }, //same NPCs as outside, so when going from outside to subway they are switched off then back on. 
         { CEMETERY, { &zombies } }, //zombies in the cemetery, graveyard, and park are in the same vector, because they aren't created until they spawn in. 
         { GRAVEYARD, { &zombies, &ghosts } },//we switch them all off when not in one of those 3 scenes. This means zombies will be retained for those scenes.
@@ -1001,7 +1001,7 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
         {LOT, {&hobos}}, //dont forget about hobo
         {LAB, {&cyberZombies, &scientists, &zombies}},
         {ALIEN, {&aliens}},
-        {PENTHOUSE, {&CEOs}},
+        {PENTHOUSE, {&CEOs, &Boss}},
 
     };
 
@@ -1695,24 +1695,7 @@ void Dig(){
                 // }
 }
 
-NPC* FindClosestNPC(NPC& zombie, std::vector<NPC>& npcs) {
-    //find closest npc to zombie
-    NPC* closestNPC = nullptr;
-    float minDist = 500.0f; // Large initial distance //but not too large. 500 is max distance to give chase. otherwise we dont bother. 
-    //prevents NPCs running off screen because a zombie targeting them 1000 pixels away. 
 
-    for (NPC& npc : npcs) {
-        if (npc.isActive && zombie.isActive) { //make sure the zombie is also active
-            float dist = fabs(zombie.position.x - npc.position.x);
-
-            if (dist < minDist) {
-                minDist = dist;
-                closestNPC = &npc;
-            }
-        }
-    }
-    return closestNPC;
-}
 
 
 
@@ -2433,11 +2416,13 @@ void DrawCarUI(PlayerCar& player_car, Camera2D& camera){
 
 }
 
-void ClearAllEnemies() {
-    enemies.clear(); // remove the pointers
+
+
+void ClearAllNPCs() {
+    for (std::vector<NPC>* group : allNPCGroups) {
+        group->clear();  // Clears contents of each vector
+    }
 }
-
-
 
 
 void HandleGamepadMouseControl() {
@@ -2472,7 +2457,7 @@ void HandleGamepadMouseControl() {
             if (virtualCursor.x > GetScreenWidth()) virtualCursor.x = GetScreenWidth();
             if (virtualCursor.y > GetScreenHeight()) virtualCursor.y = GetScreenHeight();
 
-            // Only move real cursor if the menu or car UI is active
+            // Only move real cursor if the menu or car UI is active or in the apartment or subway UI
             if (player.enter_car || gameState == APARTMENT || globalState.menuOpen || globalState.drawingSubwayUI) {
                 
                 SetMousePosition(virtualCursor.x, virtualCursor.y);
@@ -4422,24 +4407,15 @@ void RenderPenthouse()
         }
     }
 
+
     
     for (NPC& boss : Boss){
         boss.Update();
         boss.Render();
 
-        if (boss.health < boss.maxHealth/2){ //when boss is half dead, spawn 2 mibs. 
-            if (globalState.can_spawn_mibs){
-                globalState.can_spawn_mibs = false;
-                spawnMib(Vector2 {player.position.x + 300, player.position.y});
-                spawnMib(Vector2 {player.position.x - 300, player.position.y});
-            }
-        }
-
         if (boss.isDying){
             globalState.bossDefeated = true; //win condition
         }
- 
-
     }
     
 
@@ -4487,8 +4463,6 @@ void RenderPenthouse()
     if (!player.onElevator) player.DrawPlayer();
     UpdateExplosions(deltaTime); //draw explosion after player. 
     DrawBullets();
-    
-    
 
     HandleKeyboardAiming();
     renderBoxes();
@@ -4543,14 +4517,14 @@ void RenderLab(){
     }
 
     //fix before release. 
-    if (player.position.x > 1875 && player.position.x < 1895){ // && !globalState.lockElevtorLab LOCK ELEVATOR TO PENTHOUSE
+    if (player.position.x > 1875 && player.position.x < 1895 && !globalState.lockElevtorLab){ //  LOCK ELEVATOR TO PENTHOUSE
         globalState.over_Ebutton = true;
         phrase = "Call Elevator";
         globalState.show_dbox = true;
         globalState.dboxPosition = player.position;
     }
 
-    if (player.position.x < 1843 && player.position.x > 1823){ //  && elevators[0].isOpen && !globalState.lockElevtorLab
+    if (player.position.x < 1843 && player.position.x > 1823 && elevators[0].isOpen && !globalState.lockElevtorLab){ // 
         globalState.over_elevator = true;
         phrase = "Up to Enter";
         globalState.show_dbox = true;
@@ -4641,7 +4615,7 @@ void RenderLab(){
             spawnCyberZombie(spawnPos2);
             StartZombieSpawn(10, 2);
             globalState.lockElevtorLab = false;//unlock the elevator to the penthouse. 
-            globalState.showConsoleText = true; //dont show console text until zombies are spawned. 
+            globalState.showConsoleText = true; //dont show console text until zombies are spawned. don't show after specimens are destroyed?
         }
 
         if (!scientist.isActive && scientist.CanSpawnZombie){  
@@ -4716,7 +4690,6 @@ void RenderOffice(){
     globalState.over_elevator2 = false;
     globalState.over_Ebutton = false;
     globalState.over_Ebutton2 = false;
-    //elevators[0].isOccupied = false;
     float deltaTime = GetFrameTime();
 
     //sound alarm and spawn in zoms immediatly 
@@ -5081,7 +5054,7 @@ void RenderNecroTech(){
     globalState.drunk = false;
     globalState.show_dbox = false;
     
-    SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide or in vacant lot
+    SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide or in vacant lot or necrotech. 
 
     camera.target = player.position;
     float parallaxMidBuildings = camera.target.x * 0.4;
@@ -5276,7 +5249,7 @@ void RenderOutside() {
         globalState.badEnding = true;
         globalState.maxDistToPlayer = 400; //zombies spread way out. 
         globalState.minDistToPlayer = 20;
-        StartZombieSpawn(15, 3); //lots of them every 0.5 - 2 seconds. 
+        StartZombieSpawn(30, 4); //lots of them 
     }
     
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
@@ -5304,7 +5277,7 @@ void RenderOutside() {
     DrawTexturePro(resources.MidBuildings, {0, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)},
                     {-3050 + parallaxMidBuildings, 0, static_cast<float>(resources.midground.width), static_cast<float>(resources.midground.height)}, {0, 0}, 0.0f, WHITE);
 
-    // Draw the foreground (main scene),  offset by 1024 to center relative to midground. 
+    // Draw the foreground (main scene),  offset to center relative to midground. 
     DrawTexturePro(resources.foreground, {0, 0, static_cast<float>(resources.foreground.width), static_cast<float>(resources.foreground.height)},
                     {-639, 0, static_cast<float>(resources.foreground.width), static_cast<float>(resources.foreground.height)}, {0, 0}, 0.0f, WHITE);
     
@@ -5327,7 +5300,7 @@ void RenderOutside() {
     if (player.position.x > ufo.position.x && player.position.x < ufo.position.x + 64){
         if (ufo.position.y > 395){ //if the UFO is low enough, and the player is under, show beam.
             globalState.abductionBeam = true;
-        }
+        } //we dont do this any more. i thought. 
         
     }
 
@@ -5408,6 +5381,25 @@ void RenderOutside() {
 
     }
 
+    if (globalState.zombiesTriggered){
+        for (NPC& hobo : hobos){
+            hobo.Update();
+            hobo.Render();
+                
+            if (hobo.targetNPC == nullptr || !hobo.targetNPC->isActive) {
+                hobo.targetNPC = FindClosestNPC(hobo, zombies);
+            }
+
+
+
+
+            
+            
+
+
+        }
+    }
+
     
     //DrawStreetLight
     BeginBlendMode(BLEND_ADDITIVE);
@@ -5444,12 +5436,10 @@ void RenderOutside() {
         SoundManager::getInstance().StopMusic("CarRun");
 
         //DRAW PLAYER
-        
-           
         player.DrawPlayer();
-            
-        
+             
     }
+
     renderBoxes();
     DrawPickups();
     MoveTraffic(resources);//Draw Traffic
@@ -6911,7 +6901,7 @@ int main() {
     // Unload resources and close the window
     resources.Unload();
     soundManager.UnloadAllSounds();
-    ClearAllEnemies(); //clean up pointers. 
+    ClearAllNPCs(); //clean up pointers. 
     UnloadShaders();
     CloseAudioDevice();
     CloseWindow();

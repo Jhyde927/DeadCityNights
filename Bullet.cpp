@@ -66,16 +66,16 @@ void FireBullet(Player& player, bool spread, float damage, bool laser, bool rayg
             bullets[i].isActive = true;
             bullets[i].laser = laser;
             bullets[i].raygun = raygun;
-            bullets[i].health = 1;
-            bullets[i].size = Vector2 {1, 1};
+            bullets[i].health = 1; //default health
+            bullets[i].size = Vector2 {1, 1}; //default bullet size. 
             player.bulletCount--;  // Decrease player's bullet count
 
             if (spread){ //shotgun spread
-                //bullets[i].direction = ApplySpread(bullets[i].direction, 2);
+                bullets[i].direction = ApplySpread(bullets[i].direction, 2);
                 bullets[i].position.y += rand() % 4;
             }
 
-            if (raygun){
+            if (raygun){ //Charging up the raygun increases it's damage, we use this value to determine the size of the bullet. and health.
                 bullets[i].speed = 300;
                 bullets[i].health = 1;
                 bullets[i].lifeTime = 3;

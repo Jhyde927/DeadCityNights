@@ -102,6 +102,12 @@ public:
     bool CEO;
     bool hasAttacked;
     bool canTakeDamage;
+
+    int shotsFired;
+    float reloadTimer;
+    bool reloading;
+    int maxShotsBeforeReload;
+
     Vector2 playerDiff;
     GameState scene;
     BossState bossState;
@@ -134,7 +140,8 @@ public:
     void playZombieHit(int soundIndex);
     void handleDeath();
     void HandleCEO();
-    void HandleBoss(float deltaTime); //WIP
+    void HandleHobo();//WIP
+    void HandleBoss(float deltaTime); 
     void updateBoss(float deltaTime);
     
 };

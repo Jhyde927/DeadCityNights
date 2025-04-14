@@ -88,6 +88,11 @@ NPC::NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState 
     CEO = false;
     hasAttacked = false;
     bossState = BOSS_IDLE;
+
+    shotsFired = 0;
+    reloadTimer = 0.0f;
+    reloading = false; 
+    maxShotsBeforeReload = 4;
  
 }
 
@@ -787,6 +792,77 @@ void NPC::HandleRobot(){
 
 }
 
+void NPC::HandleHobo(){
+    if (gameState == OUTSIDE) {
+
+        // 🔄 Retarget if dead
+        if (!targetNPC || !targetNPC->isActive) {
+            targetNPC = FindClosestNPC(*this, zombies);
+            hasTarget = (targetNPC != nullptr);
+        }
+
+        // ⏳ Reload logic
+        if (reloading) {
+            reloadTimer -= GetFrameTime();
+            if (reloadTimer <= 0.0f) {
+                reloading = false;
+                shotsFired = 0;
+                SetAnimationState(IDLE);
+                PlaySound(SoundManager::getInstance().GetSound("reload"));
+                std::cout << "Reloaded!\n";
+            }
+            return; // wait until reload finishes
+        }
+
+        // 🔫 Targeting and Shooting
+        if (targetNPC && targetNPC->isActive){
+            hasTarget = true;
+            float distance_to_zombie = abs(position.x - targetNPC->position.x);
+            if (distance_to_zombie < 200){
+                destination = position;
+                facingRight = position.x < targetNPC->position.x;
+
+                if (can_shoot && !isDying){
+                    can_shoot = false;
+                    SetAnimationState(ATTACKING);
+                    attacking = true;
+
+                    // fire 3 pellets
+                    for (int i = 0; i < 3; ++i) {
+                        NPCfireBullet(*this, false, 15, false, false);
+                    }
+
+                    PlaySound(SoundManager::getInstance().GetSound("ShotGun"));
+                    shootTimer = 1.0f;
+                    shotsFired++;
+
+                    // 💥 Reload if out of shots
+                    if (shotsFired >= maxShotsBeforeReload) {
+                        reloading = true;
+                        reloadTimer = 2.5f; // adjust as needed
+                        SetAnimationState(IDLE); // if you have one
+                        std::cout << "Reloading...\n";
+                    }
+
+                    targetNPC = nullptr;
+                    hasTarget = false;
+                }
+            }
+        }
+
+        // 🔁 Shooting cooldown
+        if (shootTimer > 0) {
+            shootTimer -= GetFrameTime();
+        } else {
+            can_shoot = true;
+            attacking = false;
+            if (!reloading) SetAnimationState(IDLE);
+        }
+    }
+}
+
+
+
 void NPC::HandleCyberZombie(){
     agro = true;
     if (distanceToPlayer < detectionRange && agro){
@@ -914,11 +990,13 @@ void NPC::HandleAnimationLogic(){
     //framecounter = time between frames, 0.0167 * 8 
     
     if (frameCounter >= 1.0f) { 
-        frameCounter = 0.0f; //restet to 0, we dont want to save any frames do to lag,
+        frameCounter = 0.0f; //reset to 0, we dont want to save any frames do to lag,
         // causes NPCs to stutter at the beginning of game. 
         currentFrame++;
 
-        // Determine the number of frames based on the current animation, all animations are 7 frames except idle
+        // Determine the number of frames based on the current animation, all animations are 7 frames except idle.
+        //we could get rid of this and just say numFrames = 7, but what about idle. we could make idle anims 7 frames of the same thing. 
+
         int numFrames = 0;
         switch (currentAnimation) {
             case IDLE:
@@ -1129,6 +1207,7 @@ void NPC::Update() {
     if (ghost || bat) HandleGhost(); //also bats
     if (alien) HandleAlien();
     if (robot) HandleRobot();
+    if (hobo) HandleHobo();
     if (CEO) HandleCEO();
 
     if (isBoss) updateBoss(deltaTime);
@@ -1148,7 +1227,7 @@ void NPC::Update() {
         // Move towards the destination
 
 
-        if (!ghost && !bat && !isBoss){ //pedestrians on the street/zombies
+        if (!ghost && !bat && !isBoss && !hobo){ //pedestrians on the street/zombies
 
             if (!isTargeted){ //not targeted regular npc movement
                 if (position.x < destination.x) {
@@ -1194,7 +1273,7 @@ void NPC::Update() {
             SetAnimationState(IDLE);
             
             
-            if (hobo){
+            if (hobo && !hasTarget){
                 SetDestination(2550, 2600); // hobo stays near middle
             }else if (ghost){
                 SetDestination(1024, 1800); //ghost stays on far left of cemetery

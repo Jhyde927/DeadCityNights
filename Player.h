@@ -125,9 +125,10 @@ public:
 
     
 
+
+    // Methods
     void DrawChargeBar(Vector2 offset);
     void UpdateCharge(float deltaTime, bool charging);
-    // Methods
     void take_damage(int damage);
     void UpdateMovement();
     void DrawPlayer();

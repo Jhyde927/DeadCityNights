@@ -120,13 +120,20 @@ public:
     //Constructor
     NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState initialAnimation, bool isActive, bool zombie);
     
+    //public
     void Update();
     void Render();
     void ClickNPC();
-    void SetAnimationState(AnimationState newState);
     void SetDestination(float minX, float maxX);
     bool CheckHit(Vector2 previousPosition, Vector2 bulletPosition, Vector2 bulletSize);
     void HandleNPCInteraction();
+    void TakeDamage(int damage);
+
+
+private:
+    void SetAnimationState(AnimationState newState); 
+    void HandleHobo();//WIP
+    void HandleCEO();
     void HandlePolice();
     void HandleZombie();
     void HandleGhost();
@@ -134,16 +141,12 @@ public:
     void HandleCyberZombie();
     void HandleMiB();
     void HandleRobot();
-    void TakeDamage(int damage);
     void HandleAnimationLogic();
     void ghostMoves();
     void playZombieHit(int soundIndex);
     void handleDeath();
-    void HandleCEO();
-    void HandleHobo();//WIP
     void HandleBoss(float deltaTime); 
     void updateBoss(float deltaTime);
-    
 };
 
 #endif

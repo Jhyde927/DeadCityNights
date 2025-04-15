@@ -1628,6 +1628,7 @@ void HandleTransition() {
     } else if (transitionState == FADE_OUT) {
         HandleFadeOut(player_car);
         globalState.showBadge = false;//turn off big badge when leaving any area. 
+        globalState.outsideHobo = false; //hobo goes back to lot if you leave the scene. 
     }
 
     // Reset player position and health on death
@@ -5246,6 +5247,7 @@ void RenderOutside() {
     if (globalState.triggerOutsideZombies && !globalState.zombiesTriggered){ //only spawn zombies outside once. 
         globalState.triggerOutsideZombies = false;
         globalState.zombiesTriggered = true;
+        globalState.outsideHobo = true;
         globalState.badEnding = true;
         globalState.maxDistToPlayer = 400; //zombies spread way out. 
         globalState.minDistToPlayer = 20;
@@ -5381,7 +5383,7 @@ void RenderOutside() {
 
     }
 
-    if (globalState.zombiesTriggered){
+    if (globalState.zombiesTriggered && globalState.outsideHobo){
         for (NPC& hobo : hobos){
             hobo.Update();
             hobo.Render();
@@ -5389,13 +5391,6 @@ void RenderOutside() {
             if (hobo.targetNPC == nullptr || !hobo.targetNPC->isActive) {
                 hobo.targetNPC = FindClosestNPC(hobo, zombies);
             }
-
-
-
-
-            
-            
-
 
         }
     }

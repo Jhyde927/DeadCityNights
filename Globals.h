@@ -80,6 +80,7 @@ struct GlobalState { //store random bools and timers that have accumulated over 
 
     bool triggerOutsideZombies = false; //set true for immediate zombies. 
     bool zombiesTriggered = false;
+    bool outsideHobo = false;
     
     bool robotsTriggered = false;
     bool badEnding = false;
@@ -327,7 +328,7 @@ extern std::vector<Console> consoles;
 extern std::vector<Monitor> monitors;
 
 //init global objects
-NPC* FindClosestNPC(NPC& zombie, std::vector<NPC>& npcs);
+NPC* FindClosestNPC(NPC& zombie, std::vector<NPC>& npcs); //called by zombies targeting NPCs, or Hobo targeting zombies. 
 void InitCamera();
 void InitializePlayerCar();
 void InitializeMagicDoor(Vector2 position);

@@ -399,7 +399,7 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
 
 
 
-        if (hobo && !talked){
+        if (hobo && !talked && gameState == LOT){ //hobo can't speak outside of lot. It would complicate things. 
             talked = true;
 
             idleTime = 3; //stops NPC while talking
@@ -795,6 +795,7 @@ void NPC::HandleRobot(){
 void NPC::HandleHobo(){
     float deltaTime = GetFrameTime();
     if (gameState == LOT){
+        //hobo needs to handle his own movements 
         if (position.x < destination.x) {
             position.x += speed * deltaTime;
             
@@ -812,9 +813,7 @@ void NPC::HandleHobo(){
         }     
 
     }
-
-    
-
+    //shoot zombies and reload. 
     if (gameState == OUTSIDE) {
 
         // 🔄 Retarget if dead

@@ -124,24 +124,26 @@ public:
     Player();
 
     
+    //make what can be private private. 
 
+    // public Methods
 
-    // Methods
-    void DrawChargeBar(Vector2 offset);
-    void UpdateCharge(float deltaTime, bool charging);
     void take_damage(int damage);
     void UpdateMovement();
     void DrawPlayer();
+    bool CheckIfOnPlatform();
+    bool CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition, Vector2 bulletSize);
+
+ 
+private:
     void HandleInput(float speed);
-    void Reload();
+    void DrawChargeBar(Vector2 offset);
+    void UpdateCharge(float deltaTime, bool charging);
     void reloadLogic(float deltaTime);
     void playerPhysics(float deltaTime);
     void updateAnimations();
-    bool CheckIfOnPlatform();
-    bool CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition, Vector2 bulletSize);
     void shootLogic();
- 
-
+    void Reload();
     
 };
 

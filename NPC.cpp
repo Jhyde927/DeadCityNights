@@ -852,10 +852,11 @@ void NPC::HandleHobo(){
                     SetAnimationState(ATTACKING);
                     attacking = true;
 
-                    // fire 3 pellets
-                    for (int i = 0; i < 3; ++i) {
-                        NPCfireBullet(*this, false, 15, false, false);
+                    //fire 5 pellets with less damage for greater visual effect. 
+                    for (int i = 0; i < 5; ++i) {
+                        NPCfireBullet(*this, true, 15, false, false); //add spread 
                     }
+
 
                     PlaySound(SoundManager::getInstance().GetSound("ShotGun"));
                     shootTimer = 1.0f;

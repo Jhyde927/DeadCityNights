@@ -30,7 +30,7 @@
 
 
 //move inventory to globals.h ?
-bool showInventory = false;
+bool showInventory = true;
 const int INVENTORY_SIZE = 12;  // Define the size of the inventory
 std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", "", "", "", "", ""}; //Inventory is a fixed array for no particular reason.
 
@@ -1094,7 +1094,14 @@ void DrawItem(Vector2 itemPos, const std::string& itemType) {
             showInventory = true;
             //play sounds:
             if (itemType == "mac10") PlaySound(SoundManager::getInstance().GetSound("reload"));
-            if (itemType == "shovel" || itemType == "crowbar") PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
+            if (itemType == "shovel" || itemType == "crowbar") {
+                PlaySound(SoundManager::getInstance().GetSound("shovelPickup"));
+                phrase = "Click the shovel Icon to dig";
+                globalState.showTutorialText = true;
+                globalState.tutorialTimer = 5.0f;
+                showDBOX();
+
+            }
             if (itemType == "watch") PlaySound(SoundManager::getInstance().GetSound("moneyUp"));
             if (itemType == "crowbar"){
                 globalState.crowbarDialogTimer = 5.0f; //Press V to swing crowbar, show for 5 seconds. 
@@ -3360,6 +3367,12 @@ void RenderCemetery(){
     int carMax = 2800;
     int carMin = 2765;
 
+    globalState.show_dbox = false;
+    globalState.over_gate = false;
+    globalState.over_car = false;
+
+    float deltaTime = GetFrameTime();
+
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
     //UFO shows up in the begining at the far left outside, and once you have the cemetery key in the cemetery. 
     if (globalState.hasCemeteryKey && gameState == CEMETERY) {
@@ -3407,18 +3420,26 @@ void RenderCemetery(){
         }       
     }
 
-    globalState.show_dbox = false;
-    globalState.over_gate = false;
-    globalState.over_car = false;
+
 
     //tutorial text
     if (globalState.showTutorialText){
         phrase = "Right click to aim\n\nLeft click to fire"; //tutorial text
         showDBOX();
-        globalState.tutorialTimer -= GetFrameTime();
+        globalState.tutorialTimer -= deltaTime;
         if (globalState.tutorialTimer <= 0){
             globalState.showTutorialText = false;
         }
+    }
+    Vector2 shovelPos = {1870, 700};
+    if (globalState.showTutorialText){
+        phrase = "Click on the shovel icon to dig";
+        showDBOX();
+        globalState.tutorialTimer -= deltaTime;
+        if (globalState.tutorialTimer <= 0){
+            globalState.showTutorialText = false;
+        }
+
     }
 
 
@@ -3553,6 +3574,8 @@ void RenderCemetery(){
         DrawDialogBox(camera, 0, 0, 20);
 
     }
+
+    
 
     
 
@@ -3873,7 +3896,7 @@ void RenderApartment(){
     //UP DOWN OR ESCAPE TO EXIT APARTMENT
     if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S) || IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)|| IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT)){
         transitionState = FADE_OUT;
-        showInventory = false;
+        //showInventory = false;
         PlaySound(SoundManager::getInstance().GetSound("mainDoor"));
         
     }
@@ -3898,6 +3921,12 @@ void RenderLot(){
 
     if (player.position.x > digPos - 10 && player.position.x < digPos + 10){
         globalState.digSpot = true;
+        if (player.hasShovel && !player.hasShotgun){
+            phrase = "Dig";
+            showDBOX();
+
+        }
+
     }
 
     if (globalState.crowbarDialogTimer > 0){
@@ -5987,7 +6016,7 @@ void UptoEnter(){
             transitionState = FADE_OUT; //Transition to apartment
             PlaySound(SoundManager::getInstance().GetSound("mainDoor"));
             globalState.over_apartment = false;
-            showInventory = false;
+            //showInventory = false;
             
             
         }
@@ -6774,7 +6803,7 @@ int main() {
             if (!showInventory){
                 showInventory = true;
             }else{
-                showInventory = false;
+                //showInventory = false;
             }
             
         }

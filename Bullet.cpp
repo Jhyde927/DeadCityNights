@@ -131,6 +131,8 @@ void NPCfireBullet(NPC& npc, bool spread, float damage, bool laser, bool fireBal
                     bullets[i].position.y += rand() % 4;
                 }
             }
+
+            break;
             
         }
     }

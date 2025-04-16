@@ -328,7 +328,7 @@ extern std::vector<Console> consoles;
 extern std::vector<Monitor> monitors;
 
 //init global objects
-NPC* FindClosestNPC(NPC& zombie, std::vector<NPC>& npcs); //called by zombies targeting NPCs, or Hobo targeting zombies. 
+NPC* FindClosestNPC(NPC& zombie, std::vector<NPC>& npcs); //called by zombie targeting NPCs, or Hobo targeting zombies. 
 void InitCamera();
 void InitializePlayerCar();
 void InitializeMagicDoor(Vector2 position);

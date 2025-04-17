@@ -6908,7 +6908,7 @@ int main() {
             if (globalState.sharpen) BeginShaderMode(shaders.sharpenShader);
             //drunk shader is set inside render functions      
             if (globalState.applyShader) BeginShaderMode(shaders.glowShader);     //Apply various shaders before rendering to screen, only 1 at a time
-            if (globalState.glitch) BeginShaderMode(shaders.glitchShader);        //glitch will override any earlier active shaders. 
+            if (globalState.glitch) BeginShaderMode(shaders.oldFilmShader);        //glitch will override any earlier active shaders. 
             if (globalState.film) BeginShaderMode(shaders.oldFilmShader);                                                      
             //BeginShaderMode(shaders.oldFilmShader);
             DrawTexturePro(

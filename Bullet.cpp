@@ -132,7 +132,7 @@ void NPCfireBullet(NPC& npc, bool spread, float damage, bool laser, bool fireBal
                 }
             }
 
-            break;
+            break; //use first inactive bullet
             
         }
     }
@@ -154,24 +154,22 @@ void UpdateBullets() {
                 Vector2 target = player.position;
                 target.y += 32;
                 Vector2 desiredDir = Vector2Normalize(Vector2Subtract(target, bullets[i].position));
-
+            
                 float maxTurn = 0.01f; // Radians per frame (~2.8°)
                 bullets[i].direction = RotateTowards(bullets[i].direction, desiredDir, maxTurn);
-
+            
                 //update fireball animation, drawn in drawBullets
                 bullets[i].frameTimer += GetFrameTime(); 
-
+            
                 if (bullets[i].frameTimer >= bullets[i].frameTime) {
                     bullets[i].frameTimer = 0.0f;
                     bullets[i].currentFrame++;
-
+            
                     if (bullets[i].currentFrame >= bullets[i].maxFrames) {
                         bullets[i].currentFrame = 0;
                     }
                 }
             }
-
-            
 
             // Deactivate the bullet if it goes off-screen or its lifetime runs out
             if (bullets[i].position.x < -100 || bullets[i].position.x > 7000 || bullets[i].lifeTime <= 0 || bullets[i].health < 0) {
@@ -184,6 +182,40 @@ void UpdateBullets() {
         }
     }
 }
+
+void DrawRaygunProjectile(Bullet& bullet, Texture2D spriteSheet, float deltaTime) {
+    bullet.frameTimer += deltaTime;
+    bullet.maxFrames = 7;
+
+    if (bullet.frameTimer >= bullet.frameTime) {
+        bullet.frameTimer = 0.0f;
+        bullet.currentFrame = (bullet.currentFrame + 1) % bullet.maxFrames;
+    }
+
+    float frameWidth = 64.0f;
+    float frameHeight = 64.0f;
+
+    float scale = 0.25f;
+    if (bullet.damage == 30) scale = 0.4f;
+    else if (bullet.damage == 50) scale = 0.6f;
+    else if (bullet.damage == 100) scale = 0.8f;
+
+    Rectangle sourceRect = {
+        bullet.currentFrame * frameWidth, 0,
+        frameWidth, frameHeight
+    };
+
+    float destSize = frameWidth * scale;
+    Rectangle destRect = {
+        bullet.position.x - destSize / 2,
+        bullet.position.y - destSize / 2,
+        destSize, destSize
+    };
+
+    DrawTexturePro(spriteSheet, sourceRect, destRect, {0, 0}, 0.0f, WHITE);
+}
+
+
 
 void DrawBullets() {
 
@@ -201,30 +233,11 @@ void DrawBullets() {
                 Rectangle destRect = { bullets[i].position.x-16, bullets[i].position.y-16, 32, 32};
                 DrawTexturePro(resources.fireballSheet, sourceRect, destRect, { 0, 0 }, 0.0f, WHITE);
 
-            } else if (bullets[i].raygun){ //raygun bullet
-                    //change the size of the projectile depending on damage.  
-                if (bullets[i].damage == 10){
-                    //a circle with a ring around it. Best I can do for now. 
-                    DrawCircleV(bullets[i].position, 1, RED);
-                    DrawCircleSectorLines(bullets[i].position, 3, 0, 360, 8, RED);
-                }else if (bullets[i].damage == 30){
-                    DrawCircleV(bullets[i].position, 3, RED);
-                    DrawCircleSectorLines(bullets[i].position, 5, 0, 360, 8, RED);
-                }else if (bullets[i].damage == 50){
-                    DrawCircleV(bullets[i].position, 5, RED);
-                    DrawCircleSectorLines(bullets[i].position, 10, 0, 360, 8, RED);
-                }else if (bullets[i].damage == 100){
-                    DrawCircleV(bullets[i].position, 10, RED);
-                    DrawCircleSectorLines(bullets[i].position, 15, 0, 360, 8, RED);
-                }
-                
-            } else{
-                DrawCircleV(bullets[i].position, 1, WHITE);  // Draw each bullet as a small circle
-
-            }
+            } else if (bullets[i].raygun) {
+                DrawRaygunProjectile(bullets[i], resources.energyBallSheet, GetFrameTime());
             
+            }
         }
     }
-
-    //EndShaderMode();
 }
+

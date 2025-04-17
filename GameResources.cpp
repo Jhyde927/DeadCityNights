@@ -131,6 +131,7 @@ void GameResources::Load() {
     flipSheet = LoadTexture("assets/flipSheet.png");
     demonSheet = LoadTexture("assets/demonSheet.png");
     fireballSheet = LoadTexture("assets/fireballSheet.png");
+    energyBallSheet = LoadTexture("assets/energyBallSheet.png");
 }
 
 // Unload all game resources
@@ -259,4 +260,5 @@ void GameResources::Unload() {
     UnloadTexture(flipSheet);
     UnloadTexture(demonSheet);
     UnloadTexture(fireballSheet);
+    UnloadTexture(energyBallSheet);
 }

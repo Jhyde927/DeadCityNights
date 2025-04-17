@@ -22,7 +22,7 @@ struct Bullet {
     bool isFireball;
     int health;
     
-    int currentFrame = 0;
+    int currentFrame = 0; // bullets can have animated sprites. 
     float frameTimer = 0.0f;
     float frameTime = 0.1f;
     int maxFrames = 4;

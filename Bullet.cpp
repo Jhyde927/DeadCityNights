@@ -227,7 +227,7 @@ void DrawBullets() {
                 DrawRectangleV(bullets[i].position, Vector2 {5, 2}, RED); // Draw laser as a wide rectangle
 
             }else if (bullets[i].isFireball && bullets[i].laser){ //fireball is also a laser for collision purposes. 
-                DrawCircleV(bullets[i].position, 8, RED);
+                //DrawCircleV(bullets[i].position, 8, RED);
                 float frameWidth = 64;
                 float frameHeight = 64;
                
@@ -239,7 +239,7 @@ void DrawBullets() {
                 DrawRaygunProjectile(bullets[i], resources.energyBallSheet, GetFrameTime());
             
             }else{
-                DrawCircleV(bullets[i].position, 1, WHITE);
+                DrawCircleV(bullets[i].position, 1, WHITE); //default bullet, 
             }
         }
     }

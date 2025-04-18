@@ -826,6 +826,12 @@ void UpdateZombieSpawning(){
             }
         }
 
+        if (gameState == NECROTECH && globalState.bossDefeated){ //play alarm when leaving necrotech. 
+            if (!SoundManager::getInstance().IsSoundPlaying("alarm")){
+                PlaySound(SoundManager::getInstance().GetSound("alarm"));
+            }
+        }
+
         if (globalState.spawnTimer >= globalState.nextSpawnDelay){ // spawn zombies at randomm position around the player
         
             //if (gameState == OFFICE) globalState.maxDistToPlayer = 400;//spawn zombies further away, more of a chance they find a target. (more of a chance to get lost) 
@@ -1497,6 +1503,7 @@ void HandlePenthouseTransition(){
         player.position.x = 2129.0f; //front door 
         player.onElevator = false;
         elevators[1].isOccupied = false;
+        globalState.can_spawn_zombies = true; //queue up more zoms
         UpdateNPCActivity(PENTHOUSE, NECROTECH);
     }
 
@@ -4380,10 +4387,23 @@ void RenderPenthouse()
     globalState.over_elevator2 = false;
     globalState.over_Ebutton = false;
     globalState.over_Ebutton2 = false;
+    globalState.overSDconsole = false;
+
+    if (globalState.playAlarm){
+        if (!SoundManager::getInstance().IsSoundPlaying("alarm")){
+            PlaySound(SoundManager::getInstance().GetSound("alarm"));
+        }
+    }
+
+    if (player.position.x < 3100 && player.position.x > 3080 && globalState.bossDefeated && !globalState.playAlarm){
+        phrase = "Press Up to Initiate\n\nSelf Destruct Sequence";
+        showDBOX();
+        globalState.overSDconsole = true;
+    }
 
     //elevator interactions
-    if (player.position.x < 1897 && player.position.x > 1877){
-        globalState.over_Ebutton = true;
+    if (player.position.x < 1897 && player.position.x > 1877){ 
+        globalState.over_Ebutton = true; 
         phrase = "Call Elevator";
         showDBOX();
 
@@ -4396,21 +4416,17 @@ void RenderPenthouse()
 
     }
 
-    if (player.position.x < 3296 && player.position.x > 3276){
-        globalState.over_Ebutton2 = true;
+    if (player.position.x < 3296 && player.position.x > 3276 && globalState.bossDefeated && globalState.playAlarm){//lock elevator2
+        globalState.over_Ebutton2 = true;//if you cant call the elevator, it can't open so we only need to block it here. 
         phrase = "Call Elevator";
         showDBOX();
     }
 
-    if (player.position.x > 3224 && player.position.x < 3244){
+    if (player.position.x > 3224 && player.position.x < 3244 && elevators[1].isOpen){
         globalState.over_elevator2 = true;
         phrase = "Up to Enter";
         showDBOX();
     }
-
-
-
-
 
     float deltaTime = GetFrameTime();
     camera.target = player.position;
@@ -5120,6 +5136,10 @@ void RenderNecroTech(){
         globalState.over_car = true;
     }
 
+    if (globalState.bossDefeated && globalState.can_spawn_zombies){
+        globalState.can_spawn_zombies = false;
+        StartZombieSpawn(10, 3);
+    }
 
     //Over building entrance
     globalState.over_necro = false;
@@ -5228,6 +5248,12 @@ void RenderNecroTech(){
 
 
         }
+    }
+
+    for (NPC& zombie : zombies){
+        zombie.Update();
+        zombie.Render();
+
     }
 
     DrawBullets();
@@ -6144,6 +6170,14 @@ void UptoEnter(){
 
         }
 
+        //over Self Destruct Console in penthouse, BLOW IT ALL UP. 
+        if (globalState.overSDconsole && !globalState.playAlarm){
+            globalState.playAlarm = true;
+            globalState.show_dbox = false;
+            globalState.NecroTech = false; //can't travel back to necrotech once it's blowed up. 
+
+        }
+
 
         if (globalState.over_Ebutton2 && gameState == LAB){ //call elevator2 in lab
             if (elevators[1].isOpen){
@@ -6480,6 +6514,11 @@ void InitPenthouseObjects(){
     InitMonitor(Vector2 {2085, 628}, PENTHOUSE);
 
     InitConsole(Vector2 {2013, 668}, PENTHOUSE);
+
+    InitMonitor(Vector2 {3081, 668}, PENTHOUSE);
+    InitMonitor(Vector2 {3120, 668}, PENTHOUSE);
+    InitMonitor(Vector2 {3160, 668}, PENTHOUSE);
+    InitConsole(Vector2 {3089, 668}, PENTHOUSE);
 }
 
 

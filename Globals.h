@@ -68,7 +68,8 @@ struct GlobalState { //store random bools and timers that have accumulated over 
     bool over_gate = false;
     bool over_shotgun = false;
     bool over_console = false;
-    bool bossDefeated = false;
+    bool bossDefeated = false; //testing
+    bool overSDconsole = false;
     bool showBadge = false;
     bool show_carUI = false;
     bool leave_apartment = false;
@@ -78,6 +79,7 @@ struct GlobalState { //store random bools and timers that have accumulated over 
     bool showConsoleText = false;
     bool lockElevator2 = true;
     bool lockElevtorLab = true;
+    bool playAlarm = false;
 
     bool triggerOutsideZombies = false; //set true for immediate zombies. 
     bool zombiesTriggered = false;
@@ -96,7 +98,7 @@ struct GlobalState { //store random bools and timers that have accumulated over 
     bool borderlessWindow = false;
     bool windowStateChanged = false;
     bool fullscreen = false;
-    bool usingController = false;  // Track whether controller is active
+    bool usingController = false; 
     bool move_ufo = false;
     bool canMoveUfo = true;
     bool globalAgro = false;
@@ -127,7 +129,7 @@ struct GlobalState { //store random bools and timers that have accumulated over 
     bool gotoPark = false;
     bool gotoStreet = false;
     bool gotoNecro = false;
-    bool debug = true; ///////////////////////////////////////DEBUG KEYS ON/OFF
+    bool debug = false; ///////////////////////////////////////DEBUG KEYS ON/OFF
     bool hasWorked = false;
     bool buttonSleep = false;
     bool hasSlept = false;

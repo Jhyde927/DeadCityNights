@@ -238,6 +238,8 @@ void DrawBullets() {
             } else if (bullets[i].raygun) {
                 DrawRaygunProjectile(bullets[i], resources.energyBallSheet, GetFrameTime());
             
+            }else{
+                DrawCircleV(bullets[i].position, 1, WHITE);
             }
         }
     }

@@ -52,6 +52,8 @@ std::vector<std::vector<NPC>*> enemies;
 // Define the global NPC group list
 std::vector<std::vector<NPC>*> allNPCGroups;
 
+Emitter explosionEmitter;  
+
 Camera2D camera = { 0 };
 float targetZoom = 1.0f; 
 float totalTime = 0.0f;

@@ -20,6 +20,7 @@ extern std::vector<Explosion> explosions;
 extern Emitter explosionEmitter;  
 
 
+
 extern std::vector<NPC> npcs; //outside // subway
 extern std::vector<NPC> zombies; //cemetery/graveyard
 extern std::vector<NPC>hobos; //lot

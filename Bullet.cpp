@@ -64,6 +64,7 @@ void FireBullet(Player& player, bool spread, float damage, bool laser, bool rayg
             bullets[i].speed = 1000.0f;  // Set bullet speed
             bullets[i].lifeTime = 1.0f;  // Bullet will last for 2 seconds
             bullets[i].isActive = true;
+            bullets[i].canExplode = true;
             bullets[i].laser = laser;
             bullets[i].raygun = raygun;
             bullets[i].health = 1; //default health
@@ -218,6 +219,7 @@ void DrawRaygunProjectile(Bullet& bullet, Texture2D spriteSheet, float deltaTime
 
 
 void DrawBullets() {
+    explosionEmitter.DrawParticles();
 
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (bullets[i].isActive) {

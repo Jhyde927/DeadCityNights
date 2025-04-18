@@ -214,6 +214,30 @@ void fireballCheck(){
     }
 }
 
+void raygunCheck(){
+
+    explosionEmitter.UpdateParticles(GetFrameTime());
+
+    for (int i = 0; i < MAX_BULLETS; i++){
+        if (bullets[i].isActive && bullets[i].raygun){
+            if (bullets[i].lifeTime <= 0.1 && bullets[i].canExplode){ //lifetime runs out so explode
+
+                bullets[i].canExplode = false;
+                explosionEmitter.position = bullets[i].position;
+                explosionEmitter.SpawnExplosion(20, RED);
+
+            }
+
+            if (bullets[i].health <= 0 && bullets[i].canExplode){
+                bullets[i].canExplode = false;
+                explosionEmitter.position = bullets[i].position;
+                explosionEmitter.SpawnExplosion(50, RED);
+            }
+        }
+    }
+}
+
+
 
 void UpdateExplosions(float deltaTime){
     //update fireball explosions. 
@@ -6673,9 +6697,12 @@ int main() {
     InitializeNPCGroups();
     //Astral platforms
     InitPlatforms();
-    //explosionEmitter.SetMaxParticles(100);  // Or whatever you prefer
+
     //All boxes
     InitBoxes();
+
+ 
+
 
     spawnNPCs(); //Create all NPCs, except zombies which are created when needed. 
     
@@ -6688,7 +6715,7 @@ int main() {
 
     //GuiSetFont(RubicBold); // Set the loaded font as the default GUI font
 
-
+    
 
     PlayMusicStream(SoundManager::getInstance().GetMusic("NewNeon"));
     
@@ -6741,6 +6768,7 @@ int main() {
 
         UpdatePickups();
         fireballCheck();
+        raygunCheck();
 
         CheckBulletPlayerCollisions(); //NPCs shoot player
         MonitorMouseClicks(); 

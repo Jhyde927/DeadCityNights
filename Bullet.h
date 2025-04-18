@@ -4,7 +4,10 @@
 #include <raylib.h>
 #include "Player.h"  
 #include "NPC.h"
+#include "Particle.h"
 #include <unordered_set> //for raygun
+
+
 
 struct Bullet {
     Vector2 position;
@@ -21,6 +24,7 @@ struct Bullet {
     bool raygun;
     bool isFireball;
     int health;
+    bool canExplode = true;
     
     int currentFrame = 0; // bullets can have animated sprites. 
     float frameTimer = 0.0f;

@@ -89,8 +89,8 @@ Player::Player() {
     abductionTimer = 0.0;
     mac10BulletCount = 30;
     revolverBulletCount = 6;
-    shotgunBulletCount = 2;  // For Shotgun
-    shotgunReloadTime = 0.7f;  // Reload time for Shotgun
+    shotgunBulletCount = 2; 
+    shotgunReloadTime = 0.7f;  
     currentWeapon = REVOLVER;  // Start with Revolver
     AllowGuns = true;
     hasCrowbar = false;
@@ -493,9 +493,6 @@ void Player::Reload(){
 
             isReloading = true;
             shotgunReloadTime = 0.7f; //start the reload timer
-
-
-            bulletCount = MAX_BULLETS;//shotgun uses same bullets array //refill bullets
             PlaySound(SoundManager::getInstance().GetSound("ShotgunReload"));
 
         }
@@ -532,7 +529,7 @@ bool Player::CheckIfOnPlatform() {
         position.x + 30,
         position.y + 24,
         hitboxWidth,
-        hitboxHeight //magic numbers to size hitbox smaller than texture
+        hitboxHeight 
     };
 
     
@@ -608,8 +605,8 @@ void Player::playerPhysics(float deltaTime){
 
     }
 
-    // Collision with the ground (assuming ground at y = groundLevel)
-    float groundLevel = 700.0f + size.y;  // Adjust based on your game's ground position
+    // Collision with the ground 
+    float groundLevel = 700.0f + size.y;  
     if (position.y + size.y >= groundLevel) { //if below ground
         position.y = groundLevel - size.y;
         velocity.y = 0.0f;
@@ -619,16 +616,13 @@ void Player::playerPhysics(float deltaTime){
     }
 
     if (!isOnGround) {
-        velocity.y += gravity * deltaTime;
+        velocity.y += gravity * deltaTime; //fall down
     }
 
 }
 
-
-
 void Player::updateAnimations(){
     if (gameState == APARTMENT) return;
-
 
     if (swinging){
         frameCounter += GetFrameTime() * frameSpeed;
@@ -646,7 +640,7 @@ void Player::updateAnimations(){
     }
     else if (isShooting) {
         if (currentWeapon == MAC10) frameSpeed = frameSpeed * 10;
-        isRunning = false; // fixed bug where isrunning was causing framespeed to be higher so you could shoot 1.5 times as fast. 
+        isRunning = false; 
         frameCounter += GetFrameTime() * frameSpeed;
         int numFrames = (resources.shootSheet.width / 64);
 
@@ -717,10 +711,7 @@ void Player::updateAnimations(){
     } else if (!isAiming) {
         currentFrame = 0;
     }
-
 }
-
-
 
 void Player::shootLogic(){
     charging = false;
@@ -881,8 +872,6 @@ void Player::shootLogic(){
 }
 
 void Player::UpdateMovement() {
-    //isMoving = false; //reset is moving to false at the start of the frame. If it remains false all the way though to the next frame, we are not moving. 
-
     float deltaTime = GetFrameTime();
     if (currentWeapon == RAYGUN){
         UpdateCharge(deltaTime, charging);
@@ -947,7 +936,7 @@ void Player::UpdateMovement() {
 void Player::DrawPlayer() {
     Texture2D currentSheet;
     Rectangle sourceRec;
-    int frameWidth = 64; // Assuming each frame is 64 pixels wide
+    int frameWidth = 64;
     if (currentWeapon == RAYGUN){
         if (facingRight){
             DrawChargeBar(Vector2 {40, 16});

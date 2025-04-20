@@ -48,9 +48,8 @@ std::string phrase = "A and D to move, hold shift to run"; //initial tutorial ph
 const int screenWidth = 1024; //screen is square for gameplay reasons, we don't want to reveal to much of the screen at one time. 
 const int screenHeight = 1024;
 
-
-
 GameState gameState = OUTSIDE; //start outside. on main street. 
+
 
 TransitionState transitionState = NONE; //state for transitioning scenes. 
 
@@ -69,7 +68,7 @@ void PrintVector2(const Vector2& vec) {
 
 // Function to add an item to the first available slot in the inventory
 void AddItemToInventory(const std::string& item) {
-    //what happens if inventory is full and we add to it? nothing?
+    //what happens if inventory is full and we add to it? nothing? the item is lost. 
 
     for (int i = 0; i < INVENTORY_SIZE; i++) {
         if (inventory[i].empty()) {
@@ -116,7 +115,7 @@ void TriggerExplosion(Vector2 pos, Texture2D* tex) {
     //PlayPositionalSound(SoundManager::getInstance().GetSound("explosion"), pos, player.position, 400);
     Explosion exp;
     explosions.push_back(exp);
-    explosions[0].Start(pos, tex); //do we clean this up?
+    explosions[0].Start(pos, tex);
     
 }
 
@@ -207,6 +206,7 @@ void fireballCheck(){
                     Vector2 offset {-32, -32}; //center the explosion
                     TriggerExplosion(bullets[i].position + offset, &resources.explosionSheet);
                     bullets[i].isActive = false;
+                
                 }
             
             }
@@ -215,7 +215,7 @@ void fireballCheck(){
 }
 
 void raygunCheck(){
-
+    //iterate bullets check for raygun projectiles whos health is 0 or lifetimer is 0. spawn particles. 
     explosionEmitter.UpdateParticles(GetFrameTime());
 
     for (int i = 0; i < MAX_BULLETS; i++){
@@ -228,7 +228,7 @@ void raygunCheck(){
 
             }
 
-            if (bullets[i].health <= 0 && bullets[i].canExplode){
+            if (bullets[i].health <= 0 && bullets[i].canExplode){ //health runs out so explode. 
                 bullets[i].canExplode = false;
                 explosionEmitter.position = bullets[i].position;
                 explosionEmitter.SpawnExplosion(50, RED);
@@ -255,7 +255,7 @@ void UpdateExplosions(float deltaTime){
 
 }
 
-bool AreAllNPCsDeactivated(const std::vector<NPC>& npcs) { //are all zombies dead or robots or mibs
+bool AreAllNPCsDeactivated(const std::vector<NPC>& npcs) { //are all zombies dead. or robots or mibs
     return std::all_of(npcs.begin(), npcs.end(), [](const NPC& npc) {
         return !npc.isActive; // Return true if isActive is false
     });
@@ -285,6 +285,8 @@ void HandleGrenades(){
 
 void DrawElevator(Elevator& elevator, Texture2D elevatorTexture, Texture2D floorTexture, int frameWidth, int frameHeight, float deltaTime) {
     // Update animation only if the elevator is opening or closing
+
+    //FLoor numbers change depending on the scene. 
     if (gameState == PENTHOUSE) elevator.currentFloorFrame = 1;
     if (gameState == LAB) elevator.currentFloorFrame = 0;
     if (gameState == OFFICE) elevator.currentFloorFrame = 6;
@@ -443,6 +445,7 @@ void renderBoxes(){
 }
 
 void OutsideCarButtons(){
+    //very old code. 
     if (player.enter_car && globalState.buttonCemetery){ //press buttons cemetery
         globalState.move_car = true;
         globalState.show_carUI = false;
@@ -463,7 +466,7 @@ void OutsideCarButtons(){
 }
 
 void ApartmentLogic(){
-
+    //very old code. 
     if (globalState.buttonInternet && player.hasBadge && !globalState.showInternet){
         globalState.showInternet = true;
         globalState.NecroTech = true;
@@ -806,7 +809,7 @@ void StartZombieSpawn(int zombie_count, float max_delay){
     globalState.maxSpawnDelay = max_delay;
 
     // Initial spawn delay, at least 1 second between spawns
-    float minDelay = 1.0f; // <--- Difficulty setting 0.5 
+    float minDelay = 1.0f; //starting min delay, see other min delay in UpdateZombieSpawning()
     globalState.nextSpawnDelay = minDelay + ((float)rand() / (float)RAND_MAX) * (max_delay - minDelay);
     if (globalState.canGlitch){
         globalState.glitch = true;
@@ -853,7 +856,7 @@ void UpdateZombieSpawning(){
  
             // Reset the spawn timer and set a new random delay
             globalState.spawnTimer = 0.0f;
-            float minDelay = 0.1f;
+            float minDelay = 1.0f; //<-difficutly setting //at least 1 second delay. 
             float maxDelay = globalState.maxSpawnDelay; // Set by StartZombieSpawn()
             globalState.nextSpawnDelay = minDelay + ((float)rand() / (float)RAND_MAX) * (maxDelay - minDelay);
             
@@ -975,9 +978,6 @@ void Flocking(std::vector<NPC>& npcs) {
     for (size_t i = 0; i < npcs.size(); i++) {
         NPC& npcA = npcs[i];
 
-        // Check if NPC is active
-        //if (npcA.health > 0) npcA.isActive = true;
-
         // Check distances to all other NPCs in the same vector
         for (size_t j = 0; j < npcs.size(); j++) {
             if (j == i) continue; // Skip self-comparison
@@ -1015,7 +1015,6 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
     //Activate/DeActivate NPCs depending on the game state. 
     // Map game states to multiple NPC groups
 
-    
     std::map<GameState, std::vector<std::vector<NPC>*>> npcGroups = { //key = gameState, val = vector of vectors   
         { NECROTECH, { &robots } },
         { LOBBY, { &lobbyRobots, &lobbyNPCs, &lobbyMibs, &zombies } },  // Multiple NPC groups in LOBBY
@@ -1024,10 +1023,9 @@ void UpdateNPCActivity(GameState previousState, GameState newState) {
         { OUTSIDE, { &npcs, &mibs, &zombies } }, //sigular mib outside
         { SUBWAY, { &npcs } }, //same NPCs as outside, so when going from outside to subway they are switched off then back on. 
         { CEMETERY, { &zombies } }, //zombies in the cemetery, graveyard, and park are in the same vector, because they aren't created until they spawn in. 
-        { GRAVEYARD, { &zombies, &ghosts } },//we switch them all off when not in one of those 3 scenes. This means zombies will be retained for those scenes.
-        //so if you spawn zombies in the park(and dont kill them all), they will also be in the graveyard and cemetery. 
+        { GRAVEYARD, { &zombies, &ghosts } },
         { PARK, { &ParkNpcs, &zombies }},
-        { OFFICE, {&officeWorkers, &zombies}},
+        { OFFICE, {&officeWorkers, &zombies}}, //shouldn't we turn off frank? frank is in office workers. 
         {LOT, {&hobos}}, //dont forget about hobo
         {LAB, {&cyberZombies, &scientists, &zombies}},
         {ALIEN, {&aliens}},
@@ -1075,9 +1073,7 @@ void DrawItem(Vector2 itemPos, const std::string& itemType) {
         {"crowbar", resources.crowbarWorld}, 
         {"watch", resources.pocketWatchWorld},
         {"vest", resources.armorIcon},
-        {"raygun", resources.raygunPickup},
-        
-        
+        {"raygun", resources.raygunPickup}, 
     };
 
     static std::map<std::string, bool*> playerItemFlags = {
@@ -1087,11 +1083,10 @@ void DrawItem(Vector2 itemPos, const std::string& itemType) {
         {"watch", &player.hasWatch},
         {"vest", &player.hasArmor},
         {"raygun", &player.hasRaygun},
-  
- 
+
     };
 
-    static std::map<std::string, std::string> inventoryNames = {
+    static std::map<std::string, std::string> inventoryNames = { 
         {"mac10", "mac10"},
         {"shovel", "shovel"},
         {"crowbar", "crowbar"},
@@ -1120,7 +1115,7 @@ void DrawItem(Vector2 itemPos, const std::string& itemType) {
 
         if (!(*playerItemFlags[itemType])) {
             *playerItemFlags[itemType] = true; //hasShovel, hasCrowbar ect.. = true
-            AddItemToInventory(inventoryNames[itemType]);
+            AddItemToInventory(inventoryNames[itemType]); //can't we do AddItemToInventory(itemType) inventory names returns the same thing. 
             showInventory = true;
             //play sounds:
             if (itemType == "mac10") PlaySound(SoundManager::getInstance().GetSound("reload"));
@@ -1532,7 +1527,7 @@ void HandleLabTransition(){
 
     }else if (elevators[0].isOccupied && player.onElevator){
         gameState = PENTHOUSE;
-        globalState.can_spawn_mibs = true; //queue up some mibs. 
+        //globalState.can_spawn_mibs = true; //queue up some mibs. 
         player.onElevator = false;
         elevators[0].isOccupied = false;
         UpdateNPCActivity(LAB, PENTHOUSE);
@@ -1556,7 +1551,7 @@ void HandleLabTransition(){
 
 void HandleSubwayTransition(){
     //the car magically teleports back to the street if you take the car to the park and take the subway back. 
-
+    //the car also teleports to the park when you take the train there. 
     if (globalState.subwayExit && !globalState.subwayToPark && !globalState.gotoPark){ //your at outside subway so exit to outside
         gameState = OUTSIDE;
         player.position.x = 4579;
@@ -1635,7 +1630,7 @@ void HandleFadeIn() {
 
 void HandleFadeOut(PlayerCar& player_car) { 
     globalState.fadeAlpha += globalState.fadeSpeed;  // Fade out gradually
-    globalState.fading = true; //dont move player if fading
+    globalState.fading = true; //dont update player movement if fading
     grenades.clear(); //clear any remaining grenades when switching scenes. 
 
     if (globalState.fadeAlpha >= 1.0f) {
@@ -1790,12 +1785,10 @@ void UpdateZombieTarget(NPC& zombie, std::vector<NPC>& npcs) {
 
 void UpdateInventoryPosition(const Camera2D& camera) {
     // Static inventory position, relative to the camera offset
-    globalState.inventoryPositionX = camera.offset.x-80;  // Adjust the X position relative to the screen (e.g., 200 pixels left of the center)
-    if (gameState == APARTMENT){
-        globalState.inventoryPositionY = camera.offset.y + 228;
-    }else{
-        globalState.inventoryPositionY = camera.offset.y + 228;  // Adjust the Y position (e.g., 300 pixels below the center)
-    }
+    globalState.inventoryPositionX = camera.offset.x-80;  // Adjust the X position relative to the screen 
+
+    globalState.inventoryPositionY = camera.offset.y + 228;  // Adjust the Y position 
+    
     
 }
 
@@ -3420,7 +3413,7 @@ void RenderCemetery(){
     if (!player.enter_car && player.position.x < 1900 && !globalState.zombieWave3 && !globalState.firstHobo){ // walk to far left and zombies spawn again
         globalState.zombieWave3 = true; 
         globalState.canGlitch = true; //glitch runs again
-        StartZombieSpawn(10, 4);//shovel pickup zombies
+        StartZombieSpawn(10, 3);//shovel pickup zombies
         globalState.minDistToPlayer = 50;
         globalState.maxDistToPlayer = 200;
     }
@@ -3439,7 +3432,7 @@ void RenderCemetery(){
         //zombies that spawn when you exit car
         globalState.raiseZombies = false;
         if (globalState.hasCemeteryKey){
-            StartZombieSpawn(10, 2); //you should have the shotgun here so spawn more. 
+            StartZombieSpawn(10, 3); //you should have the shotgun here so spawn more. 
             globalState.minDistToPlayer = 50;
             globalState.maxDistToPlayer = 200;
         }else{
@@ -4387,6 +4380,12 @@ void RenderPenthouse()
     globalState.over_Ebutton = false;
     globalState.over_Ebutton2 = false;
     globalState.overSDconsole = false;
+
+    Vector2 pentPos = {1800, 648}; //move elevator 1 to the far left. same pos as lab. 
+    if (elevators[0].position != pentPos){
+        elevators[0].position = pentPos;
+    }
+
 
     if (globalState.playAlarm){
         if (!SoundManager::getInstance().IsSoundPlaying("alarm")){
@@ -5481,14 +5480,14 @@ void RenderOutside() {
         }
 
     }
-
+    //hobo comes outside to defend the city from zombies, he wields a shotgun with infinite ammo. 
     if (globalState.zombiesTriggered && globalState.outsideHobo){
         for (NPC& hobo : hobos){
             hobo.Update();
             hobo.Render();
                 
-            if (hobo.targetNPC == nullptr || !hobo.targetNPC->isActive) {
-                hobo.targetNPC = FindClosestNPC(hobo, zombies);
+            if (hobo.targetNPC == nullptr || !hobo.targetNPC->isActive) { //if you don't have a target or the target is dead. 
+                hobo.targetNPC = FindClosestNPC(hobo, zombies); //find a new target. 
             }
 
         }
@@ -5589,8 +5588,7 @@ void RenderOutside() {
 
 void spawnNPCs(){
     // Create NPCs and set there starting desitnations. //outside npcs start active
-    //this function is 300 lines long. consider breaking this up some how. Maybe break into scene specific NPCs, like spawnOutsideNPCs(), spawnLobbyNPCs(), ect.. 
-    // better yet make a factory function for instancing multiple NPCs. first need to refactor createNPC to take a NPCType instead of isZombie.  
+ 
     float speed = 50.0f; //normal NPC speed
 
     //spawn generic NPCs
@@ -6726,7 +6724,6 @@ void enemyBulletCollision(){
 int main() {
     InitWindow(screenWidth, screenHeight, "Adventure Game");
     //PUT NOTHING ABOVE THIS ^^ CAN CAUSE SEG FAULT
-    //SetWindowState(FLAG_WINDOW_RESIZABLE);
     InitAudioDevice();
     SoundManager& soundManager = SoundManager::getInstance();
     InitSounds(soundManager);
@@ -6742,7 +6739,7 @@ int main() {
     InitShaders(screenWidth, screenHeight); //refactored shader setup to shaderControl.cpp
     InitCamera(); //init global camera, declared in Globals.h
 
-    //init structs decleared in Globals.h
+    //init structs declared in Globals.h
     InitializePlayerCar();
     InitializeMagicDoor(Vector2 {2089, 700});
     InitializeMagicDoor(Vector2{2000, -747});
@@ -6759,10 +6756,6 @@ int main() {
 
     //All boxes
     InitBoxes();
-
- 
-
-
     spawnNPCs(); //Create all NPCs, except zombies which are created when needed. 
     
     setButtonColors(); //main menu button colors, sets globally for all rayGUI buttons
@@ -6772,26 +6765,22 @@ int main() {
     
     globalState.dboxPosition = player.position;
 
-    //GuiSetFont(RubicBold); // Set the loaded font as the default GUI font
-
-    
-
     PlayMusicStream(SoundManager::getInstance().GetMusic("NewNeon"));
-    
-    RenderTexture2D targetTexture = LoadRenderTexture(GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT); //render target. Draw to rendertexture2d first
-    RenderTexture2D vignetteTexture = LoadRenderTexture(GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT);
 
+    //render targets. Draw to rendertexture2d first
+    RenderTexture2D targetTexture = LoadRenderTexture(GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT); 
+    RenderTexture2D vignetteTexture = LoadRenderTexture(GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT);
     RenderTexture2D finalTexture = LoadRenderTexture(GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT);
     RenderTexture2D pauseTexture = LoadRenderTexture(screenWidth, screenHeight);
 
     Rectangle destRect = { 0, 0, (float)GetScreenWidth(), (float)GetScreenHeight() }; //
-    UpdateDrawRectangle(&destRect);
+    UpdateDrawRectangle(&destRect); //handle fullscreen
 
     PauseState currentPauseState = GAME_RUNNING;
-
-    //AddItemToInventory("crowbar", inventory, INVENTORY_SIZE); //TODO: find a place to give the player the crowbar. Should it just be the shovel?
+    UpdateNPCActivity(gameState, gameState); //Current starting scene's NPCs start active. 
 
     //std::cout << "C++ version: " << __cplusplus << std::endl;
+
     // Main game loop
     while (!WindowShouldClose() && !globalState.quitRequested) {
         PauseLogic(currentPauseState, pauseTexture, finalTexture);
@@ -6801,33 +6790,28 @@ int main() {
         mousePosition = clampMouseCursor(mousePosition); //stop mouse from going offscreen when in fullscreen. 
 
         // Update player position 
-        if (!player.enter_car && !player.onElevator && !player.enter_train && !globalState.fading && currentPauseState == GAME_RUNNING) player.UpdateMovement(); 
+        if (!player.enter_car && !player.onElevator && !player.enter_train && !globalState.fading && 
+            currentPauseState == GAME_RUNNING) player.UpdateMovement(); 
         
         UpdateInventoryPosition(camera);
-
-        
         SoundManager::getInstance().UpdateMusic("NewNeon");
         SoundManager::getInstance().UpdateMusic("subwayAmbience");
         SoundManager::getInstance().UpdateMusic("CarRun");
 
-        if (gameState != SUBWAY){//stop subway sounds outside subway
+        if (gameState != SUBWAY){//stop subway sounds outside subway, put this somewhere better. 
             SoundManager::getInstance().ManagerStopSound("TrainArriving");
             SoundManager::getInstance().ManagerStopSound("TrainLeaving");
             SoundManager::getInstance().StopMusic("subwayAmbience");
         }
-  
-        //HandleActiveNPC();
         
         UpdateBullets(); //also update/draw explosion particles
       
         //check each enemy group for bullet collisions
         enemyBulletCollision();
-
         crowbarAttackBoxes(boxes); //breakable boxes
-
         UpdatePickups();
-        fireballCheck();
-        raygunCheck();
+        fireballCheck(); //ground collision/lifetime
+        raygunCheck(); //explode with particles on bullet death. 
 
         CheckBulletPlayerCollisions(); //NPCs shoot player
         MonitorMouseClicks(); 

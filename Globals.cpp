@@ -5,6 +5,7 @@
 
 GlobalState globalState;
 
+
 PlayerCar player_car;
 Earth earth;
 MagicDoor magicDoor;

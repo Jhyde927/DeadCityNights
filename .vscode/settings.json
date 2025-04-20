@@ -85,7 +85,8 @@
 		"memory_resource": "cpp",
 		"string_view": "cpp",
 		"text_encoding": "cpp",
-		"cinttypes": "cpp"
+		"cinttypes": "cpp",
+		"*.m": "cpp"
 	}
 }
 

@@ -131,6 +131,7 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
 
         if (!attacking) SetAnimationState(IDLE);
 
+
         if (!talked && teller){
             talked = true;
             speech = "Fortune: $100";
@@ -158,27 +159,39 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
                 clickCount += 1;
                 switch (clickCount)
                 {
-                    case 1:
-                        speech = "Ah... a visitor.";
-                        break;
-                    case 2:
-                        speech = "You stand in the presence of progress\n\n of perfection!";
-                        break;
-                    case 3:
-                        speech = "My children, no\n\nmy masterpieces are nearly complete!";
-                        break;
-                    case 4:
-                        speech = "Flesh and steel\n\nmindless yet obedient.\n\nSoon you will see...";
-                        break;
+                    case 1:speech = "Ah... a visitor."; break; 
+                    case 2:speech = "You stand in the presence of progress\n\n of perfection!"; break;       
+                    case 3:speech = "My children, no\n\nmy masterpieces are nearly complete!"; break;              
+                    case 4: speech = "Flesh and steel\n\nmindless yet obedient.\n\nSoon you will see..."; break;
                     case 5:
                         speech = "Behold! \n\nMy cybernetically enhanced\n\nSuper soldier!";
                         trigger = true;
-                
                         break;
 
                 }
             }
            
+        }
+
+        //here
+
+    
+        if (!talked && frank && gameState == OUTSIDE){ //frank shows up again outside after you beat the boss. 
+            talked = true;
+            talkTimer = 3;
+            idleTime = 3;
+            speech = "It's You!";
+            if (interactions == 1){
+                clickCount += 1;
+                switch(clickCount){
+                    case 1: speech = "It's You!\n\nIt's me, Frank"; break;
+                    case 2: speech = "I made it out of the building\n\nJust in time."; break;
+                    case 3:
+                        speech = "I never liked that job anyway";
+                        interactions += 1;
+                        break;
+                }
+            }
         }
 
         if (!talked && frank && gameState == OFFICE){ //frank the office worker gives some plot
@@ -189,25 +202,11 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
                 clickCount += 1;
                 switch (clickCount)
                 {
-                case 1:
-                    speech = "Are they all dead?";
-                    break;
-
-                case 2:
-                    speech = "I just work here man!";
-                    break;
-                
-                case 3:
-                    speech = "The experiments with the undead\n\nThey went too far!";
-                    break;
-
-                case 4:
-                    speech = "It's the new CEO\n\nThey say he's a Necromancer";
-                    break;
-                case 5:
-                    speech = "Here is the code for the elevator\n\nThe name's frank by the way";
-                    break;
-
+                case 1: speech = "Are they all dead?"; break;
+                case 2:speech = "I just work here man!"; break;
+                case 3:speech = "The experiments with the undead\n\nThey went too far!"; break;
+                case 4:speech = "It's the new CEO\n\nThey say he's a Necromancer";break;
+                case 5: speech = "Here is the code for the elevator\n\nThe name's frank by the way";  break;
                 case 6:
                     speech = "Here, I found this box of ammo";
                     player.autoAmmo = 150;
@@ -235,18 +234,9 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
                 clickCount += 1;
                 switch (clickCount)
                 {
-                case 1:
-                    speech = "You Fool!";
-                    break;
-
-                case 2:
-                    speech = "You should have\n\nNever come here!";
-                    break;
-
-                case 3:
-                    speech = "DIE!!!";
-                    break;
-
+                case 1:speech = "You Fool!"; break;
+                case 2:speech = "You should have\n\nNever come here!";break;
+                case 3:speech = "DIE!!!"; break;
                 case 4:
                     speech = "";
                     agro = true;
@@ -313,23 +303,10 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
             if (interactions == 0){ 
                 clickCount += 1;
                 switch (clickCount){
-                    case 1:
-                        speech = "BOOOOO";
-                        break;
-
-                    case 2:
-                        speech = "My essence lingers bound by time\n\nunlock the door with altered mind.";
-                        break;
-
-                    case 3:
-                        speech = "In shadows deep where spirits roam\n\na relic waits to lead me home.";
-                        break;
-
-                    case 4:
-                        speech = "Six feet deep, my fate was spun \n\nBuried beside my smoking gun.";
-
-                        break;
-
+                    case 1:speech = "BOOOOO"; break;
+                    case 2:speech = "My essence lingers bound by time\n\nunlock the door with altered mind."; break;
+                    case 3: speech = "In shadows deep where spirits roam\n\na relic waits to lead me home.";  break;
+                    case 4:speech = "Six feet deep, my fate was spun \n\nBuried beside my smoking gun.";break;
                     case 5:
                         speech = "BOOOO";
                         clickCount = 0;
@@ -339,13 +316,8 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
             }if (interactions == 1 && player.hasWatch){
                 clickCount += 1;
                 switch(clickCount){
-                    case 1:
-                        speech = "The hands of fate now spin anew\n\nA relic lost returns with you.";
-                        break;
-                    case 2:
-                        speech = "By silver light and whispered spell\n\nYou break the curse—I rise, farewell!";
-                        break;
-                        
+                    case 1:speech = "The hands of fate now spin anew\n\nA relic lost returns with you.";break;
+                    case 2:speech = "By silver light and whispered spell\n\nYou break the curse—I rise, farewell!";break;
                     case 3:
                         interactions = 2;
                         //isActive = false; turned off in main. 
@@ -382,16 +354,15 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
             if (interactions == 0){
                 clickCount += 1;
                 switch (clickCount){
-                    case 1:
-                        speech = "TESTING";
-                        break;
-                    case 2:
-                        speech = "TESTING 2";
-                        break;
-
-                    case 3:
-                        speech = "AGRO";
-                        interactions = 1; //in renderPenthouse trigger agro and add &CEOs to enemies vector
+                    case 1:speech = "Tonight is the night\n\nMy friend";break;
+                    case 2:speech = "Everything is going\n\nAccording to plan";break;
+                    case 3:speech = "By morning the city will be mine!"; break;
+                    case 4:speech = "Then the World\n\nAll will by my loyal subjects"; break;
+                    case 5:speech = "Necrotech was just a front\n\nOut true purpose is nothing less than\n\nWORLD DOMINATION!!"; break;
+                    case 6:
+                        speech = "Don't get in my way"; 
+                        agro = true;
+                        interactions += 1;
                         break;
                 }
             }

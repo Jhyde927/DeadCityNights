@@ -50,7 +50,7 @@ const int screenHeight = 1024;
 
 
 
-GameState gameState = OUTSIDE; //start outside. on main street. 
+GameState gameState = OFFICE; //start outside. on main street. 
 
 TransitionState transitionState = NONE; //state for transitioning scenes. 
 
@@ -3462,7 +3462,7 @@ void RenderCemetery(){
             globalState.showTutorialText = false;
         }
     }
-    Vector2 shovelPos = {1870, 700};
+  
     if (globalState.showTutorialText){
         phrase = "Click on the shovel icon to dig";
         showDBOX();
@@ -3556,7 +3556,6 @@ void RenderCemetery(){
         DrawUFO();
     }
 
-    //DrawShovelPickup(mousePosition, camera);
 
     if (!player.hasShovel && !globalState.firstHobo){ //visit the hobo before shovel appears in cemetery
         DrawItem(Vector2 {1870, 700}, "shovel");
@@ -4483,8 +4482,21 @@ void RenderPenthouse()
         boss.Update();
         boss.Render();
 
-        if (boss.isDying){
+        if (boss.isDying && !globalState.bossDefeated){
             globalState.bossDefeated = true; //win condition
+
+            for (size_t i = 0; i < officeWorkers.size(); ++i) {
+                if (officeWorkers[i].frank) {
+                    // Move frank to npcs
+                    std::cout << "moving frank\n";
+                    npcs.push_back(std::move(officeWorkers[i]));
+            
+                    // Remove frank from officeWorkers
+                    officeWorkers.erase(officeWorkers.begin() + i);
+                    break; // Exit after moving
+                }
+            }
+            
         }
     }
     
@@ -4587,14 +4599,14 @@ void RenderLab(){
     }
 
     //fix before release. 
-    if (player.position.x > 1875 && player.position.x < 1895 && !globalState.lockElevtorLab){ //  LOCK ELEVATOR TO PENTHOUSE
+    if (player.position.x > 1875 && player.position.x < 1895){ // && !globalState.lockElevtorLab LOCK ELEVATOR TO PENTHOUSE
         globalState.over_Ebutton = true;
         phrase = "Call Elevator";
         globalState.show_dbox = true;
         globalState.dboxPosition = player.position;
     }
 
-    if (player.position.x < 1843 && player.position.x > 1823 && elevators[0].isOpen && !globalState.lockElevtorLab){ // 
+    if (player.position.x < 1843 && player.position.x > 1823){ //  && elevators[0].isOpen && !globalState.lockElevtorLab
         globalState.over_elevator = true;
         phrase = "Up to Enter";
         globalState.show_dbox = true;
@@ -4766,7 +4778,7 @@ void RenderOffice(){
     if (globalState.can_spawn_zombies){
         globalState.can_spawn_zombies = false;
         globalState.canGlitch = false;// dont glitch in office. it looks bad. 
-        StartZombieSpawn(15, 1);
+        StartZombieSpawn(15, 2); //might still be too fast. 
     }
 
     if (player.position.x < 2540 && player.position.x > 2520){ //first elevator button
@@ -5451,6 +5463,8 @@ void RenderOutside() {
         }
     
     }
+
+    
 
     for (NPC& zombie : zombies){
         if (zombie.scene != gameState) zombie.isActive = false;

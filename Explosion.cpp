@@ -46,7 +46,14 @@ void Explosion::Draw() const {
     if (!isActive) return;
     emitter.DrawParticles();
     if (spriteSheet) {
-        Rectangle srcRect = { currentFrame * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameHeight) };
+        //Rectangle srcRect = { currentFrame * frameWidth, 0, static_cast<float>(frameWidth), static_cast<float>(frameHeight) };
+        Rectangle srcRect = {
+            static_cast<float>(currentFrame) * static_cast<float>(frameWidth),
+            0.0f,
+            static_cast<float>(frameWidth),
+            static_cast<float>(frameHeight)
+        };
+        
         DrawTextureRec(*spriteSheet, srcRect, position, WHITE);
     }
 

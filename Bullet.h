@@ -36,7 +36,7 @@ struct Bullet {
     
 };
 
-const int MAX_BULLETS = 50;  // Max number of bullets // bullets are used for both the revolver and shotgun
+const int MAX_BULLETS = 100;  // Max number of bullets // bullets are used for both the revolver and shotgun
 //We have a pool of bullets that get actived when fired then deactivated after 2 seconds or on hit. 
 //MAX_BULLETS is max for all bullets in world. 
 

@@ -82,7 +82,7 @@ void FireBullet(Player& player, bool spread, float damage, bool laser, bool rayg
                 bullets[i].lifeTime = 3;
                 //change the size of bullets depending on damage, in check hit make sure your getting bullets[i].size
                 if (damage >= 100){
-                    bullets[i].size = Vector2 {10, 10}; // the hitbox is square, unlike the projectile
+                    bullets[i].size = Vector2 {10, 10}; // do we actualy use the size member var?..yes we do, the hitbox is based on size
                     bullets[i].health = 4; //kill up to 4 zombies in a row. 
                 } 
                 

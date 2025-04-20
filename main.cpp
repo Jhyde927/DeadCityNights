@@ -50,7 +50,7 @@ const int screenHeight = 1024;
 
 
 
-GameState gameState = OFFICE; //start outside. on main street. 
+GameState gameState = OUTSIDE; //start outside. on main street. 
 
 TransitionState transitionState = NONE; //state for transitioning scenes. 
 
@@ -4529,6 +4529,8 @@ void RenderPenthouse()
                 else if (ceo.interactions == 1){
                     ceo.interactions = 2;
                     ceo.agro = true;
+                    ceo.idleTime = 0;
+                    ceo.talkTimer = 0;
                     AddEnemyGroupOnce(enemies, &CEOs);
                 }
 
@@ -5442,6 +5444,10 @@ void RenderOutside() {
                     globalState.teller = true;
                 }
                 
+
+            }else if (npc.frank){
+                phrase = npc.speech;
+
 
             } else{
                 if (globalState.fortuneTimer <= 0 && !globalState.teller && !globalState.dealer){

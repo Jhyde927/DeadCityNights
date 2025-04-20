@@ -164,7 +164,7 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
                     case 3:speech = "My children, no\n\nmy masterpieces are nearly complete!"; break;              
                     case 4: speech = "Flesh and steel\n\nmindless yet obedient.\n\nSoon you will see..."; break;
                     case 5:
-                        speech = "Behold! \n\nMy cybernetically enhanced\n\nSuper soldier!";
+                        speech = "Behold! \n\nThe Cyber Zombie!!!";
                         trigger = true;
                         break;
 
@@ -173,22 +173,25 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
            
         }
 
-        //here
+
 
     
         if (!talked && frank && gameState == OUTSIDE){ //frank shows up again outside after you beat the boss. 
             talked = true;
             talkTimer = 3;
             idleTime = 3;
-            speech = "It's You!";
+      
             if (interactions == 1){
+              
                 clickCount += 1;
                 switch(clickCount){
-                    case 1: speech = "It's You!\n\nIt's me, Frank"; break;
+
+                    case 1: speech = "HEY!\n\nIt's me, Frank"; break;
                     case 2: speech = "I made it out of the building\n\nJust in time."; break;
                     case 3:
                         speech = "I never liked that job anyway";
                         interactions += 1;
+                        clickCount = 0;
                         break;
                 }
             }
@@ -216,7 +219,8 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
 
                 case 7:
                     speech = "";
-                    interactions += 1;
+                    interactions = 1;
+                    clickCount = 0; //reset click count dummy. 
                     idleTime = 0;
                     talkTimer = 0;
                     break;
@@ -379,12 +383,12 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
                 clickCount += 1;
                 switch (clickCount){
                     case 1:
-                        //SoundManager::getInstance().PlayRandomVoice();
+                       
                         SoundManager::getInstance().StartRandomVoices(1);
                         speech = "GaaHh, what do you want?";
                         break;
                     case 2:
-                        //SoundManager::getInstance().PlayRandomVoice();
+                        
                         SoundManager::getInstance().StartRandomVoices(2);
                         speech = "wait...\n\nyou're not like the others";
                         break;
@@ -558,7 +562,7 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
             }
         }
 
-        if (!talked && !hobo && !police && !teller and !robot){ //all other NPCs
+        if (!talked && !hobo && !police && !teller and !robot){ //all other NPCs say random phrase. 
             //SoundManager::getInstance().StartRandomVoices(.5); normal NPCs dont talk anymore until I find better audio clips
             talked = true;
             speech = GetRandomPhrase(); // NPC greets player

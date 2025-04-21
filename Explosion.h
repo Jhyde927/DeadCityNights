@@ -17,6 +17,8 @@ struct Explosion {
     float postAnimLifetime = 0.5f; // How long to stay alive after animation ends
     float remainingLife = 0.0f;    // Countdown timer
 
+    float radius = 32;
+
     Texture2D* spriteSheet = nullptr;
     int frameWidth = 64;
     int frameHeight = 64;

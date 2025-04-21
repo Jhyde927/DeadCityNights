@@ -1,4 +1,6 @@
 #include "Explosion.h"
+#include "NPC.h"
+#include "Globals.h"
 
 void Explosion::Start(Vector2 pos, Texture2D* tex) {
     position = pos;
@@ -12,6 +14,26 @@ void Explosion::Start(Vector2 pos, Texture2D* tex) {
     emitter.SetMaxParticles(50);
     emitter.SpawnExplosion(50, ORANGE);
     
+    for (NPC& zombie : zombies){
+        float hitboxWidth = 8.0f;
+        float hitboxHeight = 32.0f; 
+    
+        // Offset the hitbox so it's centered on the zombie's position
+        Rectangle npcHitbox = {
+            zombie.position.x + 32-4,   
+            zombie.position.y + 16,  
+            hitboxWidth,                    
+            hitboxHeight                   
+        };
+
+        if (CheckCollisionCircleRec(offset, radius, npcHitbox)){
+            zombie.TakeDamage(100);
+            std::cout << "explode zombie";
+
+        }
+
+
+    }
     
 }
 

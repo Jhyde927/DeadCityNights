@@ -48,7 +48,7 @@ std::string phrase = "A and D to move, hold shift to run"; //initial tutorial ph
 const int screenWidth = 1024; //screen is square for gameplay reasons, we don't want to reveal to much of the screen at one time. 
 const int screenHeight = 1024;
 
-GameState gameState = OUTSIDE; //start outside. on main street. 
+GameState gameState = PENTHOUSE; //start outside. on main street. 
 
 
 TransitionState transitionState = NONE; //state for transitioning scenes. 
@@ -2147,8 +2147,14 @@ void CheckLaserNPCCollisions(std::vector<NPC>& npcs){ //enemy bullets hits Pedes
         if (bullets[i].isActive && bullets[i].laser){ 
             for (NPC& npc : npcs){
                 if (npc.isActive && !npc.robot && npc.CheckHit(bullets[i].previousPosition, bullets[i].position, laserSize)) {
+                    bool wasFireball = bullets[i].isFireball;
                     bullets[i].isActive = false;
+
                     npc.TakeDamage(laserDamage);
+                    if (wasFireball){
+                        TriggerExplosion(npc.position, &resources.explosionSheet);
+                    }
+                    
                     break;
                 }
             }

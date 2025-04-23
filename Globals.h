@@ -163,7 +163,7 @@ struct GlobalState { //store random bools and timers that have accumulated over 
     bool abductionBeam = false;
     bool raiseParkZombies = false;
     bool show_dbox = true;
-    float fadeAlpha = 0.0f;  // Starts transparent
+    float fadeAlpha = 1.0f;  // Starts transparent
     float fadeSpeed = 0.02f; // Speed of fade 
     float ufoTimer = 0.0;
     float internetTimer = 0.0;
@@ -186,6 +186,8 @@ struct GlobalState { //store random bools and timers that have accumulated over 
     int selectedSlot = -1;
     int displayMoney = 100;
     bool canGlitch = true;
+    float startTimer = 0.0f;
+    bool startGame = false;
 
     //leftovers, refactor these, just define where they are used.
     Vector2 carKeysPos = {(1024/2) - 100, 655}; // remember positions need to based on screenwidth incase of resolution change. 
@@ -330,8 +332,9 @@ extern std::vector<Tank> Tanks;
 extern std::vector<Console> consoles;
 extern std::vector<Monitor> monitors;
 
+NPC* FindClosestNPC(NPC& zombie, std::vector<NPC>& targetedNPCs); //called by zombie targeting NPCs, or Hobo targeting zombies. 
+
 //init global objects
-NPC* FindClosestNPC(NPC& zombie, std::vector<NPC>& npcs); //called by zombie targeting NPCs, or Hobo targeting zombies. 
 void InitCamera();
 void InitializePlayerCar();
 void InitializeMagicDoor(Vector2 position);
@@ -346,5 +349,7 @@ void InitializeTrain();
 void InitPlatforms();
 void InitBoxes();
 void InitializeNPCGroups();
+void InitPenthouseObjects();
+void InitLabObjects();
 
 #endif // GLOBALS_H

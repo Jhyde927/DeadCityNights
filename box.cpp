@@ -1,7 +1,7 @@
 #include "box.h"
 
 Box::Box(Vector2 pos, Texture2D tex, GameState sceneType)
-    : position(pos), texture(tex), scene(sceneType) {}
+    : position(pos), texture(tex), scene(sceneType) {} //member initializer list
 
 void Box::Update(float deltaTime) {
     boxEmitter.UpdateParticles(deltaTime);
@@ -15,7 +15,7 @@ void Box::Update(float deltaTime) {
 }
 
 void Box::Draw() {
-    int currentFrame = maxFrames - health;
+    int currentFrame = maxFrames - health; //each hit advances the frame. 
     if (currentFrame >= maxFrames) currentFrame = maxFrames;
 
     Rectangle sourceRect = {
@@ -48,18 +48,12 @@ void Box::TakeDamage(int damage) {
 
             int number = rand() % 4;
             switch (number) {
-                case 0:
-                    SpawnPickup(center_pos, PickupType::REVOLVER_AMMO, resources.special38);
-                    break;
-                case 1:
-                    SpawnPickup(center_pos, PickupType::SHOTGUN_AMMO, resources.shellsPickup);
-                    break;
-                case 2:
-                    SpawnPickup(center_pos, PickupType::NINE_MM_AMMO, resources.autoPickup);
-                    break;
-                case 3:
-                    SpawnPickup(center_pos, PickupType::MONEY, resources.money);
-                    break;
+                case 0: SpawnPickup(center_pos, PickupType::REVOLVER_AMMO, resources.special38);    break;
+                case 1: SpawnPickup(center_pos, PickupType::SHOTGUN_AMMO, resources.shellsPickup);   break;
+                case 2: SpawnPickup(center_pos, PickupType::NINE_MM_AMMO, resources.autoPickup);     break;
+                case 3: SpawnPickup(center_pos, PickupType::MONEY, resources.money);                break;
+                   
+                  
             }
         }
     }

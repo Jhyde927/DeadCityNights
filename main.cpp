@@ -20,7 +20,7 @@
 #include <algorithm>
 #include "box.h"
 #include "Pickup.h"
-#include "Inventory.h"
+//#include "Inventory.h"
 #include "raygui.h"
 #include "Grenade.h"
 #include "Particle.h"
@@ -43,7 +43,7 @@ float deadZone = 0.2f;   // Ignore slight stick movements
 // Virtual cursor position (simulates the mouse with gamepad)
 Vector2 virtualCursor = { 512, 512 }; // Start at screen center
 
-std::string phrase = "A and D to move, hold shift to run"; //initial tutorial phrase, phrase is what we call a message visible to the player. 
+std::string phrase = "A and D to move, hold shift to run\n\nPress UP to interact"; //initial tutorial phrase, phrase is what we call a message visible to the player. 
 
 const int screenWidth = 1024; //screen is square for gameplay reasons, we don't want to reveal to much of the screen at one time. 
 const int screenHeight = 1024;
@@ -1628,7 +1628,7 @@ void HandleFadeIn() {
     }
 }
 
-void HandleFadeOut(PlayerCar& player_car) { 
+void HandleFadeOut() { 
     globalState.fadeAlpha += globalState.fadeSpeed;  // Fade out gradually
     globalState.fading = true; //dont update player movement if fading
     grenades.clear(); //clear any remaining grenades when switching scenes. 
@@ -1659,7 +1659,7 @@ void HandleTransition() {
     if (transitionState == FADE_IN) {
         HandleFadeIn();
     } else if (transitionState == FADE_OUT) {
-        HandleFadeOut(player_car);
+        HandleFadeOut();
         globalState.showBadge = false;//turn off big badge when leaving any area. 
         globalState.outsideHobo = false; //hobo goes back to lot if you leave the scene. 
     }
@@ -2124,12 +2124,10 @@ void CheckBulletPlayerCollisions() { //enemy bullet hits player
         if (bullets[i].isActive && bullets[i].laser){ //only lasers hurt player
             if (player.CheckHit(bullets[i].previousPosition, bullets[i].position, bulletSize)){
                 player.take_damage(bullets[i].damage);
-
-                bool wasFireball = bullets[i].isFireball;
             
                 bullets[i].isActive = false; // deactivate first
             
-                if (wasFireball) {
+                if (bullets[i].isFireball) {
                     TriggerExplosion(player.position, &resources.explosionSheet);
                 }
             }
@@ -2139,19 +2137,18 @@ void CheckBulletPlayerCollisions() { //enemy bullet hits player
     }
 }
 
-void CheckLaserNPCCollisions(std::vector<NPC>& npcs){ //enemy bullets hits Pedestrian or zombie
+void CheckLaserNPCCollisions(std::vector<NPC>& collidingNPCs){ //enemy bullets hits Pedestrian or zombie also fireballs hit zombies. 
     Vector2 laserSize = {5, 2};
     int laserDamage = 50; //lasers do more damage to NPCs
 
     for (int i = 0; i < MAX_BULLETS; i++){//check for laser non robot NPC collision, robots cant shoot other robots. mibs cant shoot other mibs. 
         if (bullets[i].isActive && bullets[i].laser){ 
-            for (NPC& npc : npcs){
+            for (NPC& npc : collidingNPCs){ //npcs was shadowing global npcs vector, changed to collidingNPCs, question is do lasers still collide with outside NPCs. 
                 if (npc.isActive && !npc.robot && npc.CheckHit(bullets[i].previousPosition, bullets[i].position, laserSize)) {
-                    bool wasFireball = bullets[i].isFireball;
                     bullets[i].isActive = false;
 
                     npc.TakeDamage(laserDamage);
-                    if (wasFireball){
+                    if (bullets[i].isFireball){
                         TriggerExplosion(npc.position, &resources.explosionSheet);
                     }
                     
@@ -2168,10 +2165,9 @@ void CheckLaserNPCCollisions(std::vector<NPC>& npcs){ //enemy bullets hits Pedes
 void CheckBulletNPCCollisions(std::vector<NPC>& npcs) { 
     //bullet/raygun
     for (int i = 0; i < MAX_BULLETS; i++) {
-        if (bullets[i].isActive && !bullets[i].laser) {  
-            
-           
-            //Raygun bullet has health. It tics down when intersecting enemy hitbox. 1 damage per enemy. so we can set how many bodies it will penetrate. 
+        if (bullets[i].isActive && !bullets[i].laser) {          
+            //Raygun bullet has health. It tics down when intersecting enemy hitbox. 
+            //1 damage per enemy. so we can set how many bodies it will penetrate. 
             for (NPC& npc : npcs) { 
                 if (npc.isActive && bullets[i].hitNPCs.find(&npc) == bullets[i].hitNPCs.end() && //hitNPC is empty and checkHit is true
                     npc.CheckHit(bullets[i].previousPosition, bullets[i].position, bullets[i].size)) { 
@@ -2228,7 +2224,7 @@ void DrawHUD(const Player& player) {
 }
 
 
-void MoveTraffic(GameResources resources){
+void MoveTraffic(){
     
     int car_start = 5500;
     globalState.car_pos.x -= 150 * GetFrameTime();
@@ -2338,19 +2334,10 @@ void DrawSubwayUI(){
         DrawText("   Park", ui_pos.x, ui_pos.y, fontSize, parkTint);
     }
 
-
-
-
-    // if (subwayToPark || carToPark){
-    //     DrawText("   Street", ui_pos.x, ui_pos.y, fontSize, parkTint);
-    // }else{
-    //     DrawText("   Park", ui_pos.x, ui_pos.y, fontSize, parkTint);
-    // }
-
 }
 
 void showFPS(){
-            //show FPS
+    //show FPS
     int fps = GetFPS();
     Vector2 fpos = {screenWidth/2 + 450, 930}; //bottom right
     DrawText(std::to_string(fps).c_str(), fpos.x, fpos.y, 25, WHITE);
@@ -2519,7 +2506,7 @@ void DrawTank(Tank& tank){
     }
 
 
-    if (globalState.explodeTanks){
+    if (globalState.explodeTanks){ //destroy the specimens, break all tanks. 
         globalState.explodeTanks = false;
         for (Tank& tank : Tanks){
             tank.explode = true;
@@ -2533,7 +2520,7 @@ void DrawTank(Tank& tank){
         tank.frameTimer -= tank.frameTime;           // Reset the timer
         tank.currentFrame++;                    // Move to the next frame
 
-        if (tank.currentFrame > numFrames && !tank.explode)              // Loop back to the first frame if necessary
+        if (tank.currentFrame > numFrames && !tank.explode)
         {
             tank.currentFrame = 0; 
         }
@@ -2563,19 +2550,19 @@ void DrawConsole(Console& console){
     float consoleFrame = 32.0;
     int numFrames = 3;
       // Update animation timer
-      console.frameTimer += GetFrameTime();
+    console.frameTimer += GetFrameTime();
 
-      // Check if it's time to move to the next frame
-      if (console.frameTimer >= console.frameTime)
-      {
-          console.frameTimer -= console.frameTime;           // Reset the timer
-          console.currentFrame++;                    // Move to the next frame
+    
+    if (console.frameTimer >= console.frameTime)
+    {
+        console.frameTimer -= console.frameTime;           
+        console.currentFrame++;                   
 
-          if (console.currentFrame > numFrames)              // Loop back to the first frame if necessary
-          {
-              console.currentFrame = 0; //stop at last frame when door is open. 
-          }
-      }
+        if (console.currentFrame > numFrames)      
+        {
+            console.currentFrame = 0; 
+        }
+    }
 
     Rectangle sourceRec = {static_cast<float>(console.currentFrame) * consoleFrame, 0, static_cast<float>(consoleFrame), static_cast<float>(consoleFrame)};
     Rectangle destRec = {console.position.x, console.position.y, 96.0f, 96.0f};
@@ -2589,20 +2576,20 @@ void DrawConsole(Console& console){
 void DrawMonitor(Monitor& monitor){
     float monitorFrame = 64.0;
     int numFrames = 2;
-      // Update animation timer
-      monitor.frameTimer += GetFrameTime();
+    // Update animation timer
+    monitor.frameTimer += GetFrameTime();
 
-      // Check if it's time to move to the next frame
-      if (monitor.frameTimer >= monitor.frameTime)
-      {
-          monitor.frameTimer -= monitor.frameTime;           // Reset the timer
-          monitor.currentFrame++;                    // Move to the next frame
+    // Check if it's time to move to the next frame
+    if (monitor.frameTimer >= monitor.frameTime)
+    {
+        monitor.frameTimer -= monitor.frameTime;           // Reset the timer
+        monitor.currentFrame++;                    // Move to the next frame
 
-          if (monitor.currentFrame > numFrames)              // Loop back to the first frame if necessary
-          {
-              monitor.currentFrame = 0; //stop at last frame when door is open. 
-          }
-      }
+        if (monitor.currentFrame > numFrames)              // Loop back to the first frame if necessary
+        {
+            monitor.currentFrame = 0; //stop at last frame when door is open. 
+        }
+    }
 
     Rectangle sourceRec = {static_cast<float>(monitor.currentFrame) * monitorFrame, 0, static_cast<float>(monitorFrame), static_cast<float>(monitorFrame)};
     Rectangle destRec = {monitor.position.x, monitor.position.y, 64.0f, 64.0f};
@@ -2612,36 +2599,36 @@ void DrawMonitor(Monitor& monitor){
 }
 
 void DrawMagicDoor(MagicDoor& magicDoor){
-        float doorFrame = 64.0;
-        Rectangle sourceDoorRec = {static_cast<float>(magicDoor.currentFrame) * doorFrame, 0, static_cast<float>(doorFrame), static_cast<float>(doorFrame)};
-        //BeginShaderMode(shaders.rainbowOutlineShader);
-        DrawTextureRec(resources.magicDoorSheet, sourceDoorRec, magicDoor.position, WHITE);
-        //EndShaderMode();
-         
-        if (player.position.x > magicDoor.position.x -10 && player.position.x < magicDoor.position.x +10){ //over magic door
-            if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
-                globalState.openMagicDoor = true;
-                transitionState = FADE_OUT;
-            }
+    float doorFrame = 64.0;
+    Rectangle sourceDoorRec = {static_cast<float>(magicDoor.currentFrame) * doorFrame, 0, static_cast<float>(doorFrame), static_cast<float>(doorFrame)};
+    //BeginShaderMode(shaders.rainbowOutlineShader);
+    DrawTextureRec(resources.magicDoorSheet, sourceDoorRec, magicDoor.position, WHITE);
+    //EndShaderMode();
+        
+    if (player.position.x > magicDoor.position.x -10 && player.position.x < magicDoor.position.x +10){ //over magic door
+        if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
+            globalState.openMagicDoor = true;
+            transitionState = FADE_OUT;
         }
-        if (globalState.openMagicDoor){
-            float deltaTime = GetFrameTime();
+    }
+    if (globalState.openMagicDoor){
+        float deltaTime = GetFrameTime();
 
-            // Update animation timer
-            magicDoor.frameTimer += deltaTime;
+        // Update animation timer
+        magicDoor.frameTimer += deltaTime;
 
-            // Check if it's time to move to the next frame
-            if (magicDoor.frameTimer >= magicDoor.DoorframeTime)
+        // Check if it's time to move to the next frame
+        if (magicDoor.frameTimer >= magicDoor.DoorframeTime)
+        {
+            magicDoor.frameTimer -= magicDoor.DoorframeTime;           // Reset the timer
+            magicDoor.currentFrame++;                    // Move to the next frame
+
+            if (magicDoor.currentFrame > 6)              // Loop back to the first frame if necessary
             {
-                magicDoor.frameTimer -= magicDoor.DoorframeTime;           // Reset the timer
-                magicDoor.currentFrame++;                    // Move to the next frame
-
-                if (magicDoor.currentFrame > 6)              // Loop back to the first frame if necessary
-                {
-                    magicDoor.currentFrame = 6; //stop at last frame when door is open. 
-                }
+                magicDoor.currentFrame = 6; //stop at last frame when door is open. 
             }
         }
+    }
 
 }
 
@@ -2715,10 +2702,10 @@ void DrawUFO(){
         player.outline = true;
         Rectangle sourceRec = { 0.0f, 0.0f, (float)resources.lightBar.width, (float)resources.lightBar.height };
         Rectangle destRec = { 
-            ufo.position.x+37, // x position on screen
-            ufo.position.y+96, // y position on screen
-            static_cast<float>(64), // width on screen
-            static_cast<float>(256)  // height on screen
+            ufo.position.x+37, 
+            ufo.position.y+96, 
+            64.0f, 
+            256.0f  
         };
         Vector2 origin = { 0.0f, 0.0f };
 
@@ -4077,6 +4064,15 @@ void RenderLot(){
          
         RenderInventory();  // Render the inventory 
     }
+
+    //draw healthbar 
+    if (showInventory){ 
+        Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
+        DrawHealthBar(resources,barPos, player.maxHealth, player.currentHealth, 128, 16);
+
+    }
+
+    if ((player.hasGun || player.hasShotgun || player.hasMac10) && !player.enter_car) DrawHUD(player);
 
     if (!globalState.usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
 }
@@ -5491,6 +5487,7 @@ void RenderOutside() {
         for (NPC& hobo : hobos){
             hobo.Update();
             hobo.Render();
+            hobo.isActive = true; 
                 
             if (hobo.targetNPC == nullptr || !hobo.targetNPC->isActive) { //if you don't have a target or the target is dead. 
                 hobo.targetNPC = FindClosestNPC(hobo, zombies); //find a new target. 
@@ -5517,7 +5514,7 @@ void RenderOutside() {
     DrawTextureRec(resources.carSheet, sourceRecCar, player_car.position, WHITE); //draw player_car
 
     
-    if (!globalState.triggerOutsideZombies){ //show hud when zombies are attacking.
+    if (globalState.triggerOutsideZombies){ //show hud when zombies are attacking.
         if ((player.hasGun || player.hasShotgun || player.hasMac10) && !player.enter_car) DrawHUD(player); 
     }
 
@@ -5541,7 +5538,7 @@ void RenderOutside() {
 
     renderBoxes();
     DrawPickups();
-    MoveTraffic(resources);//Draw Traffic
+    MoveTraffic();//Draw Traffic
     EndShaderMode(); ////////////////////////////SHADER OFF
 
     if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT)){
@@ -6342,10 +6339,10 @@ void ShowControls(){
     DrawRectangle(controlsRecPos2.x, controlsRecPos2.y, controlsRectSize.x, controlsRectSize.y-250, Fade(BLACK, 0.7f));
     DrawRectangle(controlsRectPos.x, controlsRectPos.y, controlsRectSize.x, controlsRectSize.y, Fade(BLACK, 0.7f)); // Semi-transparent background
 
-    DrawText("\nKeyboard:\n\n\nEsc - Menu\n\nD - Move Right\n\nA - Move Left\n\nShift - Run\n\nW - Interact\n\nS - Exit Car/Apartment\n\nSpace - Jump\n\nI - Open Inventory\n\nV - Melee\n\nRightClick - Aim\n\nLeftClick - Fire\n\nM - Mute Music\n\nMouseWheel - Zoom\n\n1,2,3 - Switch Weapons\n\n\n\nDebug Keys:\n\nK - Give Keys\n\nG - Give Guns\n\nH - Give Shovel\n\nP - Give Drugs\n\nL - Give Crowbar", 
+    DrawText("\nKeyboard:\n\n\nEsc - Menu\n\nD - Move Right\n\nA - Move Left\n\nShift - Run\n\nW - Interact\n\nS - Exit Car/Apartment\n\nSpace - Jump\n\nE - Dodge Roll\n\nV - Melee\n\nRightClick - Aim\n\nLeftClick - Fire\n\nM - Mute Music\n\nMouseWheel - Zoom\n\n1,2,3 - Switch Weapons\n\n\n\nDebug Keys:\n\nK - Give Keys\n\nG - Give Guns\n\nH - Give Shovel\n\nP - Give Drugs\n\nL - Give Crowbar", 
             controlsRectPos.x + 32, controlsRectPos.y, 20, WHITE); 
 
-    DrawText("\nGamepad:\n\n\nStart - Menu\n\nLeftStick - Move\n\nA - Interact\n\nB - Exit Car/Apartment\n\nY - Jump\n\nB - Melee\n\nSelect - Open Inventory\n\nLeftTrigger - Aim\n\nRightTrigger - Fire\n\nRightStick - Zoom\n\nBumpers - scroll Inven\n\nD-pad - Switch Weapons", 
+    DrawText("\nGamepad:\n\n\nStart - Menu\n\nLeftStick - Move\n\nA - Interact\n\nB - Exit Car/Apartment\n\nY - Jump\n\nB - Melee\n\nB - Dodge Roll\n\nLeftTrigger - Aim\n\nRightTrigger - Fire\n\nRightStick - Zoom\n\nBumpers - scroll Inven\n\nD-pad - Switch Weapons", 
         controlsRecPos2.x + 32, controlsRecPos2.y, 20, WHITE); 
 
 }
@@ -6484,8 +6481,12 @@ void PauseLogic(PauseState& currentPauseState, RenderTexture2D& pauseTexture, Re
 }
 
 void drawMenuButton(PauseState& currentPauseState, RenderTexture2D& pauseTexture, RenderTexture2D& finalTexture){
-    Vector2 buttonPos = {960, 960};
+    Vector2 buttonPos = {GetScreenWidth() - 64.0f, GetScreenHeight() - 64.0f};
     Rectangle buttonBounds = {buttonPos.x, buttonPos.y, 32, 32};
+
+    if (globalState.borderlessWindow && currentPauseState == GAME_PAUSED){
+        buttonBounds.x -= 420;
+    }
     //gamepad select menu button
     if (CheckCollisionPointRec(mousePosition, buttonBounds) && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
         TogglePause(currentPauseState, pauseTexture, finalTexture);
@@ -6495,6 +6496,8 @@ void drawMenuButton(PauseState& currentPauseState, RenderTexture2D& pauseTexture
         TogglePause(currentPauseState, pauseTexture, finalTexture);
 
     }
+
+
     DrawTexture(resources.menuButton, buttonBounds.x, buttonBounds.y, WHITE);
 }
 
@@ -6527,51 +6530,7 @@ Vector2 clampMouseCursor(Vector2& mousePosition) {
     return mousePosition;
 }
 
-void InitPenthouseObjects(){
-    //InitMonitor(Vector2 {1965, 668});
-    InitMonitor(Vector2 {2005, 668}, PENTHOUSE);
-    InitMonitor(Vector2 {2045, 668}, PENTHOUSE);
-    InitMonitor(Vector2 {2085, 668}, PENTHOUSE);
 
-    InitMonitor(Vector2 {2005, 628}, PENTHOUSE);
-    InitMonitor(Vector2 {2045, 628}, PENTHOUSE);
-    InitMonitor(Vector2 {2085, 628}, PENTHOUSE);
-
-    InitConsole(Vector2 {2013, 668}, PENTHOUSE);
-
-    InitMonitor(Vector2 {3081, 668}, PENTHOUSE);
-    InitMonitor(Vector2 {3120, 668}, PENTHOUSE);
-    InitMonitor(Vector2 {3160, 668}, PENTHOUSE);
-    InitConsole(Vector2 {3089, 668}, PENTHOUSE);
-}
-
-
-void InitLabObjects(){
-
-    for (int i = 0; i < 5; i++){
-        InitTank(Vector2 {2200.0f + i * 100, 668});
-    }
-
-    InitConsole(Vector2 {2700, 668}, LAB);
-
-    for (int i = 0; i < 4; i++){
-        InitTank(Vector2 {2800.0f + i * 100, 668});
-    }
-
-    for (int i = 0; i < 5; i++){
-        InitTank(Vector2 {3370.0f + i * 100, 668});
-    }
-
-    InitConsole(Vector2 {3900, 668}, LAB);
-
-    InitMonitor(Vector2 {2750, 668}, LAB);
-    InitMonitor(Vector2 {2126, 668},LAB);
-    InitMonitor(Vector2 {3900, 668},LAB);
-
-    for (int i = 0; i < 5; i++){
-        InitTank(Vector2 {4000.0f + i * 100, 668});
-    }
-}
 
 void InitSounds(SoundManager& soundManager){
     //We use our own custom sound manager. We have an array of sounds, and an array of musticTracks.
@@ -6705,7 +6664,7 @@ void enemyBulletCollision(){
 
     //robots and mibs shoot lasers. Need to check for laser collisions as well.
     CheckLaserNPCCollisions(lobbyNPCs); //robots can shoot regular NPCs if they happen to be in the way
-    CheckLaserNPCCollisions(zombies); //mibs can shoot zombies if they get in the way.
+    CheckLaserNPCCollisions(zombies); //mibs can shoot zombies if they get in the way. also fireball collision with zoms
 
     //enemy NPC groups are kept in the enemies vector, so we can iterate and check hits vs all enemies. 
     for (auto groupPtr : enemies){ //iterate all enemies and check for bullet hits. 
@@ -6783,6 +6742,7 @@ int main() {
     UpdateDrawRectangle(&destRect); //handle fullscreen
 
     PauseState currentPauseState = GAME_RUNNING;
+    transitionState = FADE_IN;  
     UpdateNPCActivity(gameState, gameState); //Current starting scene's NPCs start active. 
 
     //std::cout << "C++ version: " << __cplusplus << std::endl;
@@ -6793,7 +6753,8 @@ int main() {
         HandleGamepadMouseControl();
         mousePosition = GetMousePosition(); //update global mousePosition, declared in globals.h
 
-        mousePosition = clampMouseCursor(mousePosition); //stop mouse from going offscreen when in fullscreen. 
+        mousePosition = clampMouseCursor(mousePosition); //stop mouse from going offscreen when in fullscreen.
+
 
         // Update player position 
         if (!player.enter_car && !player.onElevator && !player.enter_train && !globalState.fading && 
@@ -6841,7 +6802,14 @@ int main() {
         totalTime += deltaTime; // used for UFO sine wave
         if (totalTime > 10000.0f) totalTime -= 10000.0f; //reset total time just in case. 
 
- 
+        if (!globalState.startGame){
+            if (globalState.fadeAlpha <= 0){
+                TogglePause(currentPauseState, pauseTexture, finalTexture);
+                globalState.startGame = true;
+            }
+
+        } 
+        
             
         UpdateShaders(deltaTime, globalState.borderlessWindow,  gameState);
         SoundManager::getInstance().UpdateRandomVoices(deltaTime); //////////////////Needed for hobo? 

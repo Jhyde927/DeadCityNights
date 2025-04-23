@@ -14,7 +14,8 @@ void Explosion::Start(Vector2 pos, Texture2D* tex) {
     emitter.SetMaxParticles(50);
     emitter.SpawnExplosion(50, ORANGE);
     
-    for (NPC& zombie : zombies){
+    //AOE damage on zombies. not the player though. 
+    for (NPC& zombie : zombies){ //maybe loop through all NPCs? so even pedestrians are damaged by fireballs. 
         float hitboxWidth = 8.0f;
         float hitboxHeight = 32.0f; 
     
@@ -28,13 +29,9 @@ void Explosion::Start(Vector2 pos, Texture2D* tex) {
 
         if (CheckCollisionCircleRec(offset, radius, npcHitbox)){
             zombie.TakeDamage(100);
-            std::cout << "explode zombie";
-
+            
         }
-
-
     }
-    
 }
 
 void Explosion::Update(float deltaTime) {

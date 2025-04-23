@@ -1,11 +1,8 @@
 #include "Globals.h"
 
-
-//define the instances of the structs
-
 GlobalState globalState;
 
-
+//define the instances of the structs
 PlayerCar player_car;
 Earth earth;
 MagicDoor magicDoor;
@@ -28,7 +25,7 @@ std::vector<Monitor> monitors;
 
 //NPC groups
 std::vector<NPC> npcs; //outside // subway
-std::vector<NPC> zombies; //cemetery/graveyard
+std::vector<NPC> zombies; //one global zombie vector for all zombies spawning in. 
 std::vector<NPC>hobos; //lot
 std::vector<NPC>ghosts; //graveyard friendly ghost
 std::vector<NPC>bats; //not used
@@ -36,7 +33,7 @@ std::vector<NPC>mibs; //outside
 std::vector<NPC>astralGhosts;
 std::vector<NPC>astralBats;
 std::vector<NPC>ParkNpcs;
-std::vector<NPC>robots; //necrotech
+std::vector<NPC>robots; //necrotech outside security. 
 std::vector<NPC>lobbyRobots;
 std::vector<NPC>lobbyNPCs;
 std::vector<NPC>lobbyMibs;
@@ -79,7 +76,7 @@ void InitializeNPCGroups() {
        &robots, &lobbyRobots, &astralBats, &astralGhosts, &Boss
     }; //omit mib on main street, and ceo. they are added to the vector later
 
-    //every NPC incase we need it. 
+    //every NPC, just iterate group in groups and pick the one you need.  
     allNPCGroups = {
         &npcs, &zombies, &hobos, &ghosts, &bats, &mibs, 
         &astralGhosts, &astralBats, &ParkNpcs, &robots, 
@@ -155,7 +152,7 @@ void InitEarth(){
 
 //lobby, office, lab, penthouse
 void InitElevator(Vector2 position){
-    //this is wrong. We are creating an elevator1 and 2 instnace when we don't have to. maybe? 
+   
     elevator.position = position;
     elevator.currentFrame = 0;
     elevator.frameTimer = 0.0;
@@ -290,13 +287,59 @@ void InitPlatforms() {
     platforms.emplace_back(1400.0f, -700.0f, 2000.0f, 20.0f, WHITE);
 }
 
-NPC* FindClosestNPC(NPC& zombie, std::vector<NPC>& npcs) {
+void InitPenthouseObjects(){
+    //InitMonitor(Vector2 {1965, 668});
+    InitMonitor(Vector2 {2005, 668}, PENTHOUSE);
+    InitMonitor(Vector2 {2045, 668}, PENTHOUSE);
+    InitMonitor(Vector2 {2085, 668}, PENTHOUSE);
+
+    InitMonitor(Vector2 {2005, 628}, PENTHOUSE);
+    InitMonitor(Vector2 {2045, 628}, PENTHOUSE);
+    InitMonitor(Vector2 {2085, 628}, PENTHOUSE);
+
+    InitConsole(Vector2 {2013, 668}, PENTHOUSE);
+
+    InitMonitor(Vector2 {3081, 668}, PENTHOUSE);
+    InitMonitor(Vector2 {3120, 668}, PENTHOUSE);
+    InitMonitor(Vector2 {3160, 668}, PENTHOUSE);
+    InitConsole(Vector2 {3089, 668}, PENTHOUSE);
+}
+
+
+void InitLabObjects(){
+
+    for (int i = 0; i < 5; i++){
+        InitTank(Vector2 {2200.0f + i * 100, 668});
+    }
+
+    InitConsole(Vector2 {2700, 668}, LAB);
+
+    for (int i = 0; i < 4; i++){
+        InitTank(Vector2 {2800.0f + i * 100, 668});
+    }
+
+    for (int i = 0; i < 5; i++){
+        InitTank(Vector2 {3370.0f + i * 100, 668});
+    }
+
+    InitConsole(Vector2 {3900, 668}, LAB);
+
+    InitMonitor(Vector2 {2750, 668}, LAB);
+    InitMonitor(Vector2 {2126, 668},LAB);
+    InitMonitor(Vector2 {3900, 668},LAB);
+
+    for (int i = 0; i < 5; i++){
+        InitTank(Vector2 {4000.0f + i * 100, 668});
+    }
+}
+
+NPC* FindClosestNPC(NPC& zombie, std::vector<NPC>& TargetedNPCs) {
     //find closest npc to zombie
     NPC* closestNPC = nullptr;
     float minDist = 500.0f; // Large initial distance //but not too large. 500 is max distance to give chase. otherwise we dont bother. 
     //prevents NPCs running off screen because a zombie targeting them 1000 pixels away. 
 
-    for (NPC& npc : npcs) {
+    for (NPC& npc : TargetedNPCs) {
         if (npc.isActive && zombie.isActive) { //make sure the zombie is also active
             float dist = fabs(zombie.position.x - npc.position.x);
 

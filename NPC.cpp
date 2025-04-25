@@ -354,7 +354,7 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
         if (CEO && !talked){
             talked = true;
             idleTime = 3;
-            talkTimer = 3;
+            talkTimer = 4;
             if (interactions == 0){
                 clickCount += 1;
                 switch (clickCount){
@@ -362,7 +362,7 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
                     case 2:speech = "Everything is going\n\nAccording to plan";break;
                     case 3:speech = "By morning the city will be mine!"; break;
                     case 4:speech = "Then the World\n\nAll will by my loyal subjects"; break;
-                    case 5:speech = "Necrotech was just a front\n\nOut true purpose is nothing less than\n\nWORLD DOMINATION!!"; break;
+                    case 5:speech = "Necrotech was just a front\n\nOur true purpose is nothing less than\n\nWORLD DOMINATION!!"; break;
                     case 6:
                         speech = "Don't get in my way"; 
                         agro = true;

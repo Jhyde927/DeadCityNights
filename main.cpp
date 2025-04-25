@@ -20,7 +20,6 @@
 #include <algorithm>
 #include "box.h"
 #include "Pickup.h"
-//#include "Inventory.h"
 #include "raygui.h"
 #include "Grenade.h"
 #include "Particle.h"
@@ -48,7 +47,7 @@ std::string phrase = "A and D to move, hold shift to run\n\nPress UP to interact
 const int screenWidth = 1024; //screen is square for gameplay reasons, we don't want to reveal to much of the screen at one time. 
 const int screenHeight = 1024;
 
-GameState gameState = PENTHOUSE; //start outside. on main street. 
+GameState gameState = OUTSIDE; //start outside. on main street. 
 
 
 TransitionState transitionState = NONE; //state for transitioning scenes. 
@@ -4602,14 +4601,14 @@ void RenderLab(){
     }
 
     //fix before release. 
-    if (player.position.x > 1875 && player.position.x < 1895){ // && !globalState.lockElevtorLab LOCK ELEVATOR TO PENTHOUSE
+    if (player.position.x > 1875 && player.position.x < 1895&& !globalState.lockElevtorLab){ //  LOCK ELEVATOR TO PENTHOUSE
         globalState.over_Ebutton = true;
         phrase = "Call Elevator";
         globalState.show_dbox = true;
         globalState.dboxPosition = player.position;
     }
 
-    if (player.position.x < 1843 && player.position.x > 1823){ //  && elevators[0].isOpen && !globalState.lockElevtorLab
+    if (player.position.x < 1843 && player.position.x > 1823 && elevators[0].isOpen && !globalState.lockElevtorLab){ //  
         globalState.over_elevator = true;
         phrase = "Up to Enter";
         globalState.show_dbox = true;
@@ -5345,7 +5344,7 @@ void RenderOutside() {
         globalState.badEnding = true;
         globalState.maxDistToPlayer = 400; //zombies spread way out. 
         globalState.minDistToPlayer = 20;
-        StartZombieSpawn(30, 4); //lots of them 
+        StartZombieSpawn(30, 2); //lots of them 
     }
     
     BeginMode2D(camera);  // Begin 2D mode with the camera, things drawn inside Mode2D have there own coordinates based on the camera. 
@@ -5487,7 +5486,7 @@ void RenderOutside() {
         for (NPC& hobo : hobos){
             hobo.Update();
             hobo.Render();
-            hobo.isActive = true; 
+            hobo.isActive = true; //hobos become active outside this one time. so hard code him active. 
                 
             if (hobo.targetNPC == nullptr || !hobo.targetNPC->isActive) { //if you don't have a target or the target is dead. 
                 hobo.targetNPC = FindClosestNPC(hobo, zombies); //find a new target. 
@@ -6804,7 +6803,7 @@ int main() {
 
         if (!globalState.startGame){
             if (globalState.fadeAlpha <= 0){
-                TogglePause(currentPauseState, pauseTexture, finalTexture);
+                //TogglePause(currentPauseState, pauseTexture, finalTexture); //fade in and pause
                 globalState.startGame = true;
             }
 

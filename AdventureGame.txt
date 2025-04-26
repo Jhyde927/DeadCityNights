@@ -1080,4 +1080,110 @@ NecroTech Interior:
 
 	trigger robots after zombies. or mibs. when all zombies die. 
 
+	we should give more armor after the lab fight? put some armor outside the elevator in penthouse. 
+
+	shortened subway wait time to 5 seconds from 10. 
+
 	subway gets abandoned when zombies invade main street? or another zombie/NPC killing spree in the subway. just don't draw NPCs if that one boolean is true. x test this. 
+
+	don't allow buying more than one drug at a time. to prevent inventory filling up. I think we already do this. You can hit p to get pills multiple times. In debug mode. 
+
+	lock the penthouse door until after lab fight. x until during the lab fight, you could escape to the penthouse.
+	this is commented out for the time being while we work on boss stuff.  
+
+	shooting boss while he is invincible should play a sound. x test this. sounds weird. 
+
+	CEO dialog needs doing. 
+
+	We need an ending. you kill the boss then what? It's an open world game. You go back to exploring the city. The hobo needs to say one last thing. 
+
+
+	Hobo:
+		We thought you were dead! You've been gone for a week. 
+
+		Well the world hasn't ended, so you must have accomplished your mission. 
+
+		A flying demon you say? Tanks of mutated zombie clones? A scientist gone mad with power? 
+
+		It sounds like you have had an adventure my friend. 
+
+		congrats! Thanks for Playing! 
+
+
+
+
+	dialog: We are saved! until the next company does the same thing. 
+
+	got rid of cheesy password hint the hobo gave and replaced it with the good ending. I need another thing the hobo can say if it's the bad ending because zombies invaded the city. so it should be if (interactions == 3 && bossDefeated && !spawnOutsideZombies)
+
+
+	Two endings:
+		The good ending is where you make it through all of necrotech without dying. zombies never invade main street.
+
+		The bad ending is where you die on the lobby through the penthouse, zombies invade the city. It's not game over, you can still beat the boss to get the bad ending. 
+
+
+	I died on the lobby. went back and 4 more robots spawned. This shouldn't happen. Also when I died a second time to the robots zombies showed up on main street again. This should not happen. x
+
+	on death we should give the player some ammo, so you still have a chance. x
+
+	was going to spawn mibs in boss fight but decided against it. What group of mibs would we use? lobby mibs or mibs. It might make the fight too difficult as well. 
+
+	last play test I ran out of ammo big time. I was even breaking boxes. Maybe we should give ammo at the end of astral realm. 
+	we give ammo if you die in necrotech. So you have ammo to deal with invading zombies. 
+
+	CEO still needs dialog. 
+
+	I thought shotgun spread was fucked because we added y movement to bullets. but I tested it and it works great. 
+
+	play tested all the way through no problems. That's a first. Usually playing through will give me an idea of what to work on, but when nothing goes wrong I'm out of ideas. take a break. It's in a state with an ending already. 
+
+	something needs to happen when the boss dies. Like a self destruct sequence. *
+
+	find music. 
+
+	if zombies invade, Hobo should be on the street with a shotgun. shooting zombies along side you. and he can die. x
+
+	The hobo needs to not be in the lot if he is on the street. He can't talk on the street, ensure we don't increment interactions when not in lot. 
+
+	the reload animation could be better. add offsets to the bullet spawn locations to simulate spread. or add spread logic to NPCFireBullet()
+
+	show inventory at all times. x
+
+	use old film shader instead of glitch. glitch is too glitchy, film shader gives it a horror vibe. Maybe even increase graininess. 
+
+	made particle explosion for raygun projectile, but it looks dumb without inertia. maybe spawnBlood the same way to make it look like it fizzles out.
+
+	something needs to happen when the boss dies. Like a self destruct sequence. *How could we accomplish this? the console in the penthouse...the player engages it? once necrotech explodes we can remove it from the car UI. maybe once the boss fight is done the elevator is locked so you go to the console and engage the self destruct sequence. then the elevator is open and you leave. zombies are in necroteche exterior upon leaving. robots are fighting zombies. 
+
+	put zombies in necrotech after boss fight. x
+
+	console dialog. x
+
+	Alarm sound in penthouse x
+
+	Alarm continues outside building. while fight is happening. x
+
+	we meet frank on the street after the boss fight. He has dialog and tells how he escaped the building just before it blew up. just append frank to npcs vector, he's bloody office worker, he could follow the player so you are sure to see him. x
+
+	something happens when you return to the astral realm a second time. something else is at the top. A different boss that also shoots fireballs. 
+
+	if you die in necrotech hobo is on street along with zombies, you then return to necrotech and beat the boss. is hobo dialog queued up right? Him being outside doesn't allow him to speak so it shouldn't touch dialog code. It's hard to test because you have to play the entire game for everything to be queued up correctly. 
+
+	when loading penthouse as first scene for testing purposes the elevators position doesn't get set. maybe set elevator1's position in renderPenthouse every frame. instead of setting in only on the transition. x
+
+	get a better reload sound. 
+
+	main menu button moves to the center of the screen on full screen. this will not stand. x still messed up. 
+
+	separate inventory for weapons. solves the inventory filling up issue. How would we do that? Another fixed array with the same rectangles. Where? at the top of main just like the inventory. instead of inventory[12], Guns[4] this can't be done tonight. Mull it over. 
+
+	we don't show healthbar in lot. x
+
+	we don't show HUD when zombies invade mainstreet. x
+
+	remove whisky, it just causes problems for not much reward. just make it so you can't buy it. 
+
+	went to park to subway back to street, when I left by car to the cemetery, I ended up in the park. gottopark needs to be set back to false, or one of those bools. x fixed. We may have repeating code for traveling by subway, it's a clusterfuck. 
+
+	I'm pretty sure it showed the shovel tutorial when I exited car in cemetery. x fixed and updated release

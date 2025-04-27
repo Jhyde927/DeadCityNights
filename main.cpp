@@ -33,6 +33,9 @@ bool showInventory = true;
 const int INVENTORY_SIZE = 12;  // Define the size of the inventory
 std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", "", "", "", "", ""}; //Inventory is a fixed array for no particular reason.
 
+const int WI_SIZE = 4;
+std::string weaponInventory[WI_SIZE] = {"", "", "", ""};
+
 
 const int GAME_SCREEN_WIDTH = 1024;
 const int GAME_SCREEN_HEIGHT = 1024;
@@ -72,6 +75,15 @@ void AddItemToInventory(const std::string& item) {
     for (int i = 0; i < INVENTORY_SIZE; i++) {
         if (inventory[i].empty()) {
             inventory[i] = item;  // Add the item to the first empty slot
+            break;
+        }
+    }
+}
+
+void AddWeaponToInventory(const std::string& weapon){
+    for (int i = 0; i < WI_SIZE; i++){
+        if (weaponInventory[i].empty()){
+            weaponInventory[i] = weapon;
             break;
         }
     }
@@ -533,7 +545,8 @@ void ApartmentLogic(){
         globalState.openDrawer = true;
         PlaySound(SoundManager::getInstance().GetSound("OpenDrawer"));
         if (!player.hasGun){
-            AddItemToInventory("Gun");
+            //AddItemToInventory("Gun");
+            AddWeaponToInventory("Gun");
             showInventory = true;
             player.hasGun = true;
             PlaySound(SoundManager::getInstance().GetSound("reload"));
@@ -1114,7 +1127,12 @@ void DrawItem(Vector2 itemPos, const std::string& itemType) {
 
         if (!(*playerItemFlags[itemType])) {
             *playerItemFlags[itemType] = true; //hasShovel, hasCrowbar ect.. = true
-            AddItemToInventory(inventoryNames[itemType]); //can't we do AddItemToInventory(itemType) inventory names returns the same thing. 
+            
+            if (inventoryNames[itemType] == "raygun"){ //raygun needs to be added to weapons inv not regular inventory.
+                AddWeaponToInventory("raygun"); 
+            }else{
+                AddItemToInventory(inventoryNames[itemType]); 
+            }
             showInventory = true;
             //play sounds:
             if (itemType == "mac10") PlaySound(SoundManager::getInstance().GetSound("reload"));
@@ -1575,6 +1593,7 @@ void HandleSubwayTransition(){
         globalState.subwayToPark = false;
         gameState = OUTSIDE;
         globalState.gotoPark = false;
+        globalState.carToPark = false;
         globalState.gotoStreet = false;
         player.position.x = 4500;
         UpdateNPCActivity(SUBWAY, OUTSIDE);
@@ -1586,6 +1605,8 @@ void HandleSubwayTransition(){
         UpdateNPCActivity(SUBWAY, OUTSIDE);
         globalState.gotoStreet = false;
         player.position.x = 4500;
+        globalState.gotoPark = false;
+        globalState.carToPark = false;
     }
 }
 
@@ -1694,7 +1715,8 @@ void Dig(){
         PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
         shovelTint = RED;
         if (!player.hasShotgun){
-            AddItemToInventory("shotgun");
+            AddWeaponToInventory("shotgun");
+            //AddItemToInventory("shotgun");
             player.hasShotgun = true;
             PlaySound(SoundManager::getInstance().GetSound("ShotgunReload"));
         }
@@ -1705,7 +1727,8 @@ void Dig(){
         PlaySound(SoundManager::getInstance().GetSound("ShovelDig"));
         shovelTint = RED;
         if (!player.hasMac10){
-            AddItemToInventory("mac10");
+            AddWeaponToInventory("mac10");
+            //AddItemToInventory("mac10");
             PlaySound(SoundManager::getInstance().GetSound("reload"));
             player.hasMac10 = true;
         }
@@ -1845,7 +1868,48 @@ void slotSelectionLogic(){
     }
 }
 
+void RenderWeaponInventory(){
+    const int slotWidth = resources.inventorySlot.width;
+    Color gunTint = WHITE;
+    Color shotgunTint = WHITE;
+    Color macTint = WHITE;
+    Color raygunTint = WHITE;
+    Color slotColor = WHITE;
 
+    int startX = (150 - (slotWidth * WI_SIZE/2));
+    int startY = 32;
+    // Draw each inventory slot 
+    for (int i = 0; i < WI_SIZE; i++) {
+        int x = startX + (i * (slotWidth + 10));  // Offset each slot horizontally
+        int y = startY;
+        // Draw the inventory slot texture
+        DrawTexture(resources.inventorySlot, x, y, slotColor);
+        Color customTint = {255, 50, 50, 255}; // light red
+        if (player.currentWeapon == SHOTGUN) shotgunTint = customTint;
+        if (player.currentWeapon == REVOLVER) gunTint = customTint;
+        if (player.currentWeapon == MAC10) macTint = customTint;
+        if (player.currentWeapon == RAYGUN) raygunTint = customTint;
+
+        if (!weaponInventory[i].empty()){
+
+            if (weaponInventory[i] == "Gun"){
+                DrawTexture(resources.Revolver, x, y, gunTint);
+
+            }
+            if (weaponInventory[i] == "shotgun"){
+                DrawTexture(resources.shotgunIcon, x, y, shotgunTint);
+            }
+
+            if (weaponInventory[i] == "mac10"){
+                DrawTexture(resources.Mac10, x, y, macTint);
+
+            }
+            if (weaponInventory[i] == "raygun"){
+                DrawTexture(resources.raygunIcon, x, y, raygunTint);
+            }
+        }   
+    }
+}
 void RenderInventory() {
     const int slotWidth = resources.inventorySlot.width;
     Color shovelTint = WHITE;
@@ -1889,7 +1953,7 @@ void RenderInventory() {
 
             }
 
-            if (inventory[i] == "raygun"){
+            if (inventory[i] == "raygun"){ //weapons are now kept in a seperate weaponsInventory, this is legacy code. delete it if you want. 
                 DrawTexture(resources.raygunIcon, x, y, raygunTint);
                 Rectangle raygunBounds = { 
                     static_cast<float>(x),      
@@ -3046,15 +3110,15 @@ void playerOutsideInteraction(){
         
     }
 
-    if (player.position.x > 1124 && player.position.x < 1144){
-        globalState.overLiquor = true;
-        if (!globalState.showLiquor && globalState.fortuneTimer <=0){
-            phrase = "Up to Enter";
-        }
-        //dont set phrase here, because it will override showing whiskey button. 
-        globalState.dboxPosition = player.position;
-        globalState.show_dbox = true;
-    }
+    // if (player.position.x > 1124 && player.position.x < 1144){ //removed whiskey
+    //     globalState.overLiquor = true;
+    //     if (!globalState.showLiquor && globalState.fortuneTimer <=0){
+    //         phrase = "Up to Enter";
+    //     }
+    //     //dont set phrase here, because it will override showing whiskey button. 
+    //     globalState.dboxPosition = player.position;
+    //     globalState.show_dbox = true;
+    // }
 
     
     if (player.position.x < 64 && !globalState.move_ufo && gameState == OUTSIDE){
@@ -3210,6 +3274,7 @@ void RenderSubway(){
 
     if (showInventory){
         RenderInventory();  // Render the inventory 
+        RenderWeaponInventory();
     }
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
         if (!globalState.usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
@@ -3360,7 +3425,9 @@ void RenderAstral(){
     
 
     if (showInventory){
-        RenderInventory();  // Render the inventory 
+        RenderInventory();  // Render the inventory
+        RenderWeaponInventory();
+        
     }
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
         if (!globalState.usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
@@ -3436,8 +3503,6 @@ void RenderCemetery(){
         }       
     }
 
-
-
     //tutorial text
     if (globalState.showTutorialText){
         phrase = "Right click to aim\n\nLeft click to fire"; //tutorial text
@@ -3447,8 +3512,9 @@ void RenderCemetery(){
             globalState.showTutorialText = false;
         }
     }
-  
-    if (globalState.showTutorialText){
+
+
+    if (globalState.showTutorialText && player.position.x < 1890 && player.position.x > 1850){
         phrase = "Click on the shovel icon to dig";
         showDBOX();
         globalState.tutorialTimer -= deltaTime;
@@ -3457,7 +3523,6 @@ void RenderCemetery(){
         }
 
     }
-
 
     //Cemetery Gate
     if (player.position.x > 3069 && player.position.x < 3089 && !globalState.hasCemeteryKey){
@@ -3572,6 +3637,7 @@ void RenderCemetery(){
 
     if (showInventory){
         RenderInventory();  // Render the inventory 
+        RenderWeaponInventory();
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
@@ -3820,6 +3886,7 @@ void RenderGraveyard(){
 
     if (showInventory){
         RenderInventory();  // Render the inventory 
+        RenderWeaponInventory();
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
@@ -3901,6 +3968,7 @@ void RenderApartment(){
 
     if (showInventory){
         RenderInventory();
+        RenderWeaponInventory();
         
     }
 
@@ -4062,6 +4130,7 @@ void RenderLot(){
     if (showInventory){
          
         RenderInventory();  // Render the inventory 
+        RenderWeaponInventory();
     }
 
     //draw healthbar 
@@ -4239,6 +4308,7 @@ void RenderPark(){
     if (showInventory){ // this could be done globally, there is never a time when we don't want to show inventory
          
         RenderInventory();  // Render the inventory 
+        RenderWeaponInventory();
     }
 
     if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT)){
@@ -4355,6 +4425,7 @@ void RenderUFOinterior(){
     if (showInventory){
             
         RenderInventory();  // Render the inventory 
+        RenderWeaponInventory();
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
@@ -4567,6 +4638,7 @@ void RenderPenthouse()
     if (showInventory){
          
         RenderInventory();  // Render the inventory 
+        RenderWeaponInventory();
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
@@ -4749,6 +4821,7 @@ void RenderLab(){
     if (showInventory){
          
         RenderInventory();  // Render the inventory 
+        RenderWeaponInventory();
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
@@ -4898,6 +4971,7 @@ void RenderOffice(){
     if (showInventory){
          
         RenderInventory();  // Render the inventory 
+        RenderWeaponInventory();
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
@@ -5115,6 +5189,7 @@ void RenderLobby(){
     if (showInventory){
          
         RenderInventory();  // Render the inventory 
+        RenderWeaponInventory();
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
@@ -5290,6 +5365,7 @@ void RenderNecroTech(){
     if (showInventory){
          
         RenderInventory();  // Render the inventory 
+        RenderWeaponInventory();
     }
 
     if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
@@ -5565,7 +5641,7 @@ void RenderOutside() {
    
     if (globalState.show_dbox && !player.enter_car){
 
-        if (globalState.over_lot || globalState.over_apartment || globalState.over_car || globalState.start || globalState.overLiquor || globalState.overSubway){
+        if (globalState.over_lot || globalState.over_apartment || globalState.over_car || globalState.start || globalState.overSubway){
             DrawDialogBox(camera, 0, 0, 20);
             
             
@@ -5582,6 +5658,7 @@ void RenderOutside() {
     if (showInventory){
          
         RenderInventory();  // Render the inventory 
+        RenderWeaponInventory();
     }
     //Draw cursor last so it's on top
     if (!globalState.usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
@@ -6047,23 +6124,27 @@ void debugKeys(){
 
     if (IsKeyPressed(KEY_G)){
         if (!player.hasGun){
-            AddItemToInventory("Gun");
+            //AddItemToInventory("Gun");
+            AddWeaponToInventory("Gun");
             player.hasGun = true;
             PlaySound(SoundManager::getInstance().GetSound("reload"));
 
         }
         if (!player.hasShotgun){
-            AddItemToInventory("shotgun");
+            AddWeaponToInventory("shotgun");
+            //AddItemToInventory("shotgun");
             player.hasShotgun = true;
         }
 
         if (!player.hasMac10){
-            AddItemToInventory("mac10");
+            AddWeaponToInventory("mac10");
+            //AddItemToInventory("mac10");
             player.hasMac10 = true;
         }
 
         if (!player.hasRaygun){
-            AddItemToInventory("raygun");
+            AddWeaponToInventory("raygun");
+           //AddItemToInventory("raygun");
             player.hasRaygun = true;
         }
 
@@ -6075,12 +6156,12 @@ void UptoEnter(){
     //enter places by pressing up 
     if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){ //xbox A
 
-        if (globalState.overLiquor && gameState == OUTSIDE){
-            globalState.show_dbox = true;
-            globalState.showLiquor = true;
+        // if (globalState.overLiquor && gameState == OUTSIDE){ //remove whiskey, just removed the ability to buy it. 
+        //     globalState.show_dbox = true;
+        //     globalState.showLiquor = true;
             
-            phrase = "Whiskey: $100";
-        }
+        //     phrase = "Whiskey: $100";
+        // }
 
         if (globalState.over_apartment && gameState == OUTSIDE){
             transitionState = FADE_OUT; //Transition to apartment
@@ -6687,7 +6768,7 @@ void enemyBulletCollision(){
 
 int main() {
     InitWindow(screenWidth, screenHeight, "Adventure Game");
-    //PUT NOTHING ABOVE THIS ^^ CAN CAUSE SEG FAULT
+    //PUT NOTHING ABOVE THIS ^^ 
     InitAudioDevice();
     SoundManager& soundManager = SoundManager::getInstance();
     InitSounds(soundManager);
@@ -6809,7 +6890,6 @@ int main() {
 
         } 
         
-            
         UpdateShaders(deltaTime, globalState.borderlessWindow,  gameState);
         SoundManager::getInstance().UpdateRandomVoices(deltaTime); //////////////////Needed for hobo? 
 

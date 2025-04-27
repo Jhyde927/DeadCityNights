@@ -1388,8 +1388,11 @@ void NPC::Render() {
     
     //DrawRectangleLines(position.x+24, position.y+16, hitboxWidth, hitboxHeight, RED); // debug show hitbox
     if (isBoss){
-        Vector2 newPos = {position.x, position.y - 16}; //offset boss sprite //hit box is still at ground level. 
-        DrawTextureRec(texture, sourceRec, newPos, tint);
+        Rectangle destRec = {position.x, position.y, 96.0f,96.0f}; //scale 1.5x
+        Vector2 origin = {48, 32}; //center by width/2 height/2
+        
+        //DrawTextureRec(texture, sourceRec, newPos, tint);
+        DrawTexturePro(texture, sourceRec, destRec, origin, 0.0, WHITE);
 
     }else{
         DrawTextureRec(texture, sourceRec, position, tint);
@@ -1405,7 +1408,7 @@ void NPC::SetAnimationState(AnimationState newState) {
         currentAnimation = newState;
         currentFrame = 0;  // Reset to the first frame of the new animation
         frameCounter = 0.0f;  // Reset the frame counter
-        //animation.SetAnimation(newState);
+       
     }
 }
 
@@ -1504,7 +1507,7 @@ void NPC::updateBoss(float deltaTime)
     {
         case BOSS_IDLE:
             //do nothing for 2 seconds
-
+            attacking = false;
             speed = 50;
             facingRight = (player.position.x > position.x);
             if (stateTimer > 2.0f)
@@ -1564,7 +1567,7 @@ void NPC::updateBoss(float deltaTime)
             break;
 
         case BOSS_FLYAWAY:
-
+            attacking = false;
             //fly away for 3 seconds. 
             speed = 100;
             if (fabs(playerDiff.x) > 10.0f) {
@@ -1574,7 +1577,7 @@ void NPC::updateBoss(float deltaTime)
             if (stateTimer > 3.0f)
             {
                 if (distanceTo <= 400){
-                    SetAnimationState(WALK);
+                    if (!attacking) SetAnimationState(WALK);
                     bossState = BOSS_FIREBALL;
                     stateTimer = 0.0f;
 
@@ -1588,6 +1591,7 @@ void NPC::updateBoss(float deltaTime)
             break;
 
         case BOSS_CHASE:
+            attacking = false;
             canTakeDamage = false; //shields up
             speed = 100;
             facingRight = (player.position.x > position.x);
@@ -1602,11 +1606,13 @@ void NPC::updateBoss(float deltaTime)
 
             speed = 0; // stationary while casting
             facingRight = (player.position.x > position.x);
-        
+            //SetAnimationState(ATTACKING);
             if (stateTimer > 0.5f && !hasAttacked) {
                 NPCfireBullet(*this, false, 25, true, true);
                 hasAttacked = true;
-                //SetAnimationState(ATTACK); // optional
+                attacking = true;
+                
+                SetAnimationState(ATTACKING); //doesn't work for mysterious reasons. from o.5 to 2 seconds it should play attacking but does not. 
             }
         
             if (stateTimer > 2.0f) {
@@ -1618,6 +1624,7 @@ void NPC::updateBoss(float deltaTime)
 
         case BOSS_DEATH:
             speed = 0;
+            attacking = false;
             
 
         
@@ -1635,15 +1642,13 @@ void NPC::HandleBoss(float deltaTime){
 
         float tolerance = 1.0f;
 
-        if (distanceToX < 5 && distanceToY < 5){
+        if (distanceToX < 5 && distanceToY < 5 && !attacking){
             attacking = true;
-            facingRight = true;
-            //SetAnimationState(ATTACKING);
+            //facingRight = true;
+            SetAnimationState(ATTACKING);
             if (player.hitTimer <= 0){
                 player.take_damage(10);
             }
-        }else{
-            attacking = false;
         }
     
         // X Movement

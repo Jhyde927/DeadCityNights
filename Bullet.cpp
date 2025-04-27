@@ -57,7 +57,7 @@ void ResetBullet(Bullet& bullet) {
 void FireBullet(Player& player, bool spread, float damage, bool laser, bool raygun) {
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (!bullets[i].isActive) {
-            bullets[i].isFireball = false;
+            bullets[i].isFireball = false;//set back to false incase it was previously a fireball
             bullets[i].position = Vector2{player.position.x + 32, player.position.y + 23};  // Adjust bullet position to match player
             bullets[i].direction = player.facingRight ? Vector2{1, 0} : Vector2{-1, 0};    // Set direction based on player facing
             bullets[i].damage = damage; //take different damage for different guns
@@ -111,7 +111,7 @@ void NPCfireBullet(NPC& npc, bool spread, float damage, bool laser, bool fireBal
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (!bullets[i].isActive) {
             bullets[i].position = Vector2{npc.position.x + 32, npc.position.y + 26};
-
+            if (npc.isBoss) bullets[i].position = Vector2{npc.position.x, npc.position.y + 26};
             bullets[i].damage = damage;
             bullets[i].speed = fireBall ? 300.0f : 1000.0f;
             bullets[i].lifeTime = fireBall ? 2.0f : 1.0f;
@@ -121,7 +121,6 @@ void NPCfireBullet(NPC& npc, bool spread, float damage, bool laser, bool fireBal
             bullets[i].size = fireBall ? Vector2{8, 8} : Vector2{1, 1};
             
             if (fireBall) {
-                
                 Vector2 target = player.position;
                 target.y += 32; // offset to aim lower
                 bullets[i].direction = Vector2Normalize(Vector2Subtract(target, bullets[i].position));

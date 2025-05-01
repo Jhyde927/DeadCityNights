@@ -110,7 +110,7 @@ void Grenade::Explode() {
 
             Rectangle hitBox = {scientist.position.x+24,scientist.position.y+16, 16, 24};
             if (CheckCollisionCircleRec(position, explosionRadius, hitBox)){
-                scientist.TakeDamage(100);
+                scientist.TakeDamage(100); //grenade kills civilians and zombies in 1 hit. 
             }
 
         }
@@ -177,7 +177,7 @@ void Grenade::Draw() {
             Rectangle sourceRect = { currentFrame * frameWidth, 0, frameWidth, frameHeight };
             Rectangle destRect = { position.x-32, position.y-32, frameWidth, frameHeight};
             DrawTexturePro(resources.explosionSheet, sourceRect, destRect, { 0, 0 }, 0.0f, WHITE);
-            if (showCircle){
+            if (showCircle){ //draw a red circle indicating explosion damage radius. 
                 showCircle = false;
                 showCircleTImer = .1;
                 
@@ -186,7 +186,7 @@ void Grenade::Draw() {
             if (showCircleTImer > 0){
                 showCircleTImer -= GetFrameTime();
                 //DrawCircle(position.x, position.y, explosionRadius, Fade(RED, 0.5f));
-                DrawCircleLines(position.x, position.y, explosionRadius, Fade(RED, 1.0f));
+                DrawCircleLines(position.x, position.y, explosionRadius, Fade(RED, 1.0f)); 
             }else{
                 showCircle = true;
             }

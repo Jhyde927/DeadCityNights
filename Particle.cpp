@@ -14,7 +14,7 @@ void Emitter::SetMaxParticles(int max) {
 }
 
 
-// **Blood spray effect** (limited number of particles)
+// **Blood spray effect** 
 void Emitter::SpawnBlood(int amount, Color color, bool facingRight) {
     float baseAngle = facingRight ? 0.0f : 180.0f; 
 
@@ -41,7 +41,7 @@ void Emitter::SpawnBlood(int amount, Color color, bool facingRight) {
     }
 }
 
-// **Explosion effect** (limited number of particles)
+// **Explosion effect** 
 void Emitter::SpawnExplosion(int amount, Color explosionColor) {
     for (int i = 0; i < amount; i++) {
         if (static_cast<int>(particles.size()) >= maxParticles) {

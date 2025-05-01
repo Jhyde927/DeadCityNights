@@ -21,13 +21,13 @@ public:
 
     Emitter(Vector2 pos);
     
-    void SpawnBlood(int amount, Color explosionColor, bool facingRight); // Blood spray in one direction, opposite of facingRight
+    void SpawnBlood(int amount, Color explosionColor, bool facingRight); // Blood spray in one direction, if facing right, spray left. 
     void SpawnExplosion(int amount, Color explosionColor); // Full circular explosion
 
     void UpdateParticles(float deltaTime);
     void DrawParticles() const;
     void SetMaxParticles(int max); 
-    //bool IsEmpty() const { return particles.empty(); }
+   
 
 
 private:

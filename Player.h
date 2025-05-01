@@ -123,9 +123,6 @@ public:
     // Constructor
     Player();
 
-    
-    //make what can be private private. 
-
     // public Methods
 
     void take_damage(int damage);

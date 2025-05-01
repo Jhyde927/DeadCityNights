@@ -785,8 +785,8 @@ void spawnBoss(Vector2 position){
 }
 
 void spawnZombie(Vector2 position){
-    //spawn a zombie at the dead NPC position
-    std::cout << "spawning zombie\n";
+    //spawn a single zombie at a specific position. 
+    
     int zombie_speed = 25;
     NPC zombie_npc = CreateNPC(resources.zombieSheet, position, zombie_speed, RISING, true, true);
     zombie_npc.SetDestination(2000, 3000);
@@ -813,6 +813,8 @@ void spawnZombie(Vector2 position){
 
 
 void StartZombieSpawn(int zombie_count, float max_delay){
+    //Start spawning zombies until zombie_count reaches 0, with a specified delay time between spawns. 
+    //spawning 10 zombies with 3 second delay will run for (1-3 seconds) * 10, so a max of 30 seconds. 
     globalState.spawning_zombies = true;
     globalState.remainingZombiesToSpawn = zombie_count;
     globalState.spawnTimer = 0.0f; // Reset timer

@@ -23,7 +23,7 @@ Besides the combat there are also NPCs to interact with. On main street of the g
 
 ## Update
 
-I've been working on the game for 9 months now. It is playable from start to finish. There are some things I may want to change around, but it's as good as I can get it. Unless I get some feedback that there is some glaring mistake, I'm gonna put it on hold. Until I decide what I want to do with it. 
+I've been working on the game for 9 months now. It is playable from start to finish. I'm going to take a break for a while and decide what I want to do with the game. Maybe some new idea will come to me and I'll have to added it to the game, but I'm allready thinking of what I want to make next. 
 
 This game has been a huge learning experience. I feel like I've leveled up my programming skills drastically. Using the C++ knowledge I gained from this, I can either do something 3d in raylib, or try to learn UE5. I know UE5 uses C++, but I would still have to learn the editor and that's harder than learning programming sometimes. Either way I want to make something in 3d.
 

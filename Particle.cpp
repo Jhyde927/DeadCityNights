@@ -67,28 +67,25 @@ void Emitter::SpawnExplosion(int amount, Color explosionColor) {
     }
 }
 
-// Update particles and remove expired ones
 void Emitter::UpdateParticles(float deltaTime) {
-    for (size_t i = 0; i < particles.size();) {
+    for (size_t i = 0; i < particles.size(); ) {
         particles[i].position.x += particles[i].velocity.x * deltaTime * 60;
         particles[i].position.y += particles[i].velocity.y * deltaTime * 60;
-        particles[i].velocity.y += .1 * deltaTime;//very low gravity seems to work best. 
-
+        particles[i].velocity.y += 1.0f * deltaTime; //possibly higher gravity would look better. 
         particles[i].lifetime -= deltaTime;
 
-        if (particles[i].lifetime <= 0) {
-            particles.erase(particles.begin() + i);
+        if (particles[i].position.y > 750 || particles[i].lifetime <= 0) { //if life time <= 0 or particle is below ground level, erase it. 
+            particles.erase(particles.begin() + i); // don't increment i
         } else {
-            i++;
+            i++; // safe to move to next
         }
-
     }
 }
+
 
 // Draw all particles
 void Emitter::DrawParticles() const {
     for (const auto& p : particles) {
-        //DrawPixel(p.position.x, p.position.y, p.color);
         DrawRectangle(p.position.x, p.position.y, 2, 2, p.color); //2x2 square for thicker pixelated blood
     
     }

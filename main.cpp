@@ -27,8 +27,6 @@
 
 //The law is one. 
 
-
-
 bool showInventory = true;
 const int INVENTORY_SIZE = 12;  // Define the size of the inventory
 std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", "", "", "", "", ""}; //Inventory is a fixed array for no particular reason.
@@ -45,13 +43,12 @@ const float deadZone = 0.2f;   // Ignore slight stick movements
 // Virtual cursor position (simulates the mouse with gamepad)
 Vector2 virtualCursor = { 512, 512 }; // Start at screen center
 
-std::string phrase = "A and D to move, hold shift to run\n\nPress UP to interact"; //initial tutorial phrase, phrase is what we call a message visible to the player. 
+std::string phrase = "A and D to move, hold shift to run\n\nPress W to interact"; //initial tutorial phrase, phrase is what we call a message visible to the player. 
 
 const int screenWidth = 1024; //screen is square for gameplay reasons, we don't want to reveal to much of the screen at one time. 
 const int screenHeight = 1024;
 
 GameState gameState = OUTSIDE; //start outside. on main street. 
-
 
 TransitionState transitionState = NONE; //state for transitioning scenes. 
 
@@ -59,10 +56,6 @@ TransitionState transitionState = NONE; //state for transitioning scenes.
 std::random_device rd;   // Seed for the random number engine
 std::mt19937 gen(rd());  // Mersenne Twister engine
 std::uniform_real_distribution<float> dis(0.0f, 4000.0f); // Uniform distribution between 0 and 4000 for NPC starting distribution outside.
-
-// #define MAX_EXPLOSIONS 20
-// extern Explosion explosions[MAX_EXPLOSIONS];
-
 
 void PrintVector2(const Vector2& vec) {
     std::cout << "(" << vec.x << ", " << vec.y << ")" << "\n";
@@ -251,11 +244,17 @@ void raygunCheck(){
 
 void UpdateExplosions(float deltaTime){
     //update fireball explosions. 
-    for (int i = 0; i < static_cast<int>(explosions.size()); i++) {
+
+    for (size_t i = 0; i < explosions.size(); i++){ //use size_t when comparing with length of vector. No need to static cast.
         explosions[i].Draw();
         explosions[i].Update(deltaTime);
 
     }
+    // for (int i = 0; i < static_cast<int>(explosions.size()); i++) {
+    //     explosions[i].Draw();
+    //     explosions[i].Update(deltaTime);
+
+    // }
 
     // Remove finished ones
     explosions.erase(std::remove_if(explosions.begin(), explosions.end(),
@@ -620,6 +619,10 @@ void MonitorMouseClicks(){
             }
         }else if (gameState == NECROTECH){
             //necrotech car button
+            if (globalState.buttonPark){
+                transitionState = FADE_OUT;
+                globalState.gotoPark = true;
+            }
             if (globalState.buttonCemetery){
                 transitionState = FADE_OUT;
             }
@@ -1236,6 +1239,13 @@ void HandleNecroTransition(){
         UpdateNPCActivity(NECROTECH,APARTMENT);
 
 
+    }else if (player.enter_car && globalState.gotoPark){
+        gameState = PARK;
+        UpdateNPCActivity(NECROTECH, PARK);
+        globalState.gotoPark = false;
+        player_car.position.x = 1875.0f;
+        player.position.x = player_car.position.x + 64;//center of car
+
     } else{ //leave by car back to street. 
         gameState = OUTSIDE;
         player_car.position.x = 1710;
@@ -1265,10 +1275,12 @@ void HandleOutsideTransition() {
         player.position.x = player_car.position.x;
         globalState.carToPark = true; //true?
         globalState.move_car = false;
+        globalState.gotoPark = false;
 
     }else if (globalState.gotoNecro && globalState.move_car){
         gameState = NECROTECH;
         globalState.move_car = false;
+        globalState.gotoNecro = false;
         player_car.position.x = 1623;
         player.position.x = player_car.position.x;
         UpdateNPCActivity(OUTSIDE, NECROTECH);
@@ -1487,6 +1499,7 @@ void HandleOfficeTransition(){
         globalState.remainingZombiesToSpawn = 0;
         globalState.glitch = false;
         globalState.triggerOutsideZombies = true;
+        globalState.globalAgro = true; //lobby mibs become agro on death in necrotech. 
 
         AddEnemyGroupOnce(enemies, &mibs); // add main street mib to enemies vector so he can agro. 
 
@@ -1515,6 +1528,7 @@ void HandleParkTransition(){
        
 
     }else if (globalState.gotoCemetery){
+        globalState.gotoPark = false;
         player_car.facingLeft = true;
         globalState.reverse_road = false;
         gameState = ROAD;
@@ -1523,7 +1537,8 @@ void HandleParkTransition(){
 
     } else{ //call fade out in park, leaving by car to outside. 
         gameState = OUTSIDE; //call fadeout in park
-        player.position.x = player_car.position.x-64; //center of car
+        //player.position.x = player_car.position.x; //center of car
+        player.position.x = 1735;
         globalState.gotoPark = false; //reset gotopark
         globalState.carToPark = false; //take the car back from the park and render it outside. 
         UpdateNPCActivity(PARK, OUTSIDE);
@@ -1559,6 +1574,7 @@ void HandlePenthouseTransition(){
         player.currentHealth = player.maxHealth;
         player.position.x = globalState.apartmentX;
         player.isDead = false;
+        globalState.globalAgro = true; //agro lobby mibs. on death in necrotech. 
         giveAmmo();
         gameCalendar.AdvanceDay();
         globalState.glitch = false;
@@ -1591,6 +1607,7 @@ void HandleLabTransition(){
         gameCalendar.AdvanceDay();
         giveAmmo(); //give some ammo on death in necrotech. 
         globalState.glitch = false;
+        globalState.globalAgro = true; //lobby mibs become agro. 
         globalState.remainingZombiesToSpawn = 0;
         globalState.triggerOutsideZombies = true; //if you die in the lab or office or lobby it triggers zombies to invade main street. 
 
@@ -1986,25 +2003,6 @@ void RenderInventory() {
 
             }
 
-            if (inventory[i] == "raygun"){ //weapons are now kept in a seperate weaponsInventory, this is legacy code. delete it if you want. 
-                DrawTexture(resources.raygunIcon, x, y, raygunTint);
-                Rectangle raygunBounds = { 
-                    static_cast<float>(x),      
-                    static_cast<float>(y),      
-                    static_cast<float>(64),  
-                    static_cast<float>(64)  
-                };
-
-                if ((CheckCollisionPointRec(mousePosition, raygunBounds) || globalState.selectedSlot == i)){
-                    if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){
-                        if (player.currentWeapon != RAYGUN){
-                            player.currentWeapon = RAYGUN;
-                        }
-                    }
-        
-                    
-                }
-            }
 
             if (inventory[i] == "crowbar"){
                 DrawTexture(resources.crowbarIcon, x, y, WHITE);
@@ -2062,62 +2060,6 @@ void RenderInventory() {
                 DrawTexture(resources.cemeteryKey, x, y, WHITE);
             }
 
-            if (inventory[i] == "Gun"){ //click on the gun icon to switch weapons
-                DrawTexture(resources.Revolver, x, y, gunTint);
-                Rectangle RevolverBounds = { 
-                    static_cast<float>(x),      
-                    static_cast<float>(y),      
-                    static_cast<float>(64),  
-                    static_cast<float>(64)  
-                };
-
-                if ((CheckCollisionPointRec(mousePosition, RevolverBounds) || globalState.selectedSlot == i)){
-                    if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){
-                        if (player.currentWeapon != REVOLVER){
-                            player.currentWeapon = REVOLVER;
-                        }
-                    }
-
-                }
-            }
-            if (inventory[i] == "shotgun"){
-                DrawTexture(resources.shotgunIcon, x, y, shotgunTint);
-                Rectangle ShotGunBounds = { 
-                    static_cast<float>(x),      
-                    static_cast<float>(y),      
-                    static_cast<float>(64),  
-                    static_cast<float>(64)  
-                };
-
-                if ((CheckCollisionPointRec(mousePosition, ShotGunBounds) || globalState.selectedSlot == i)){
-                    if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){
-                        if (player.currentWeapon != SHOTGUN){
-                            player.currentWeapon = SHOTGUN;
-                        }
-                    }
-
-                }
-
-            }
-
-            if (inventory[i] == "mac10"){
-                DrawTexture(resources.Mac10, x, y, macTint);
-                Rectangle MacBounds = { 
-                    static_cast<float>(x),      
-                    static_cast<float>(y),      
-                    static_cast<float>(64),  
-                    static_cast<float>(64)  
-                };
-
-                if ((CheckCollisionPointRec(mousePosition, MacBounds) || globalState.selectedSlot == i)){
-                    if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){
-                        if (player.currentWeapon != MAC10){
-                            player.currentWeapon = MAC10;
-                        }
-                    }
-
-                }
-            }
 
 
 
@@ -2265,7 +2207,7 @@ void CheckBulletNPCCollisions(std::vector<NPC>& npcs) {
             //Raygun bullet has health. It tics down when intersecting enemy hitbox. 
             //1 damage per enemy. so we can set how many bodies it will penetrate. 
             for (NPC& npc : npcs) { 
-                if (npc.isActive && bullets[i].hitNPCs.find(&npc) == bullets[i].hitNPCs.end() && //hitNPC is empty and checkHit is true
+                if (npc.isActive && !npc.isDying &&bullets[i].hitNPCs.find(&npc) == bullets[i].hitNPCs.end() && //hitNPC is empty and checkHit is true
                     npc.CheckHit(bullets[i].previousPosition, bullets[i].position, bullets[i].size)) { 
 
                     // Mark NPC as hit
@@ -2534,7 +2476,10 @@ void DrawCarUI(PlayerCar& player_car, Camera2D& camera){
         DrawText("    Street", ui_pos.x, ui_pos.y, 16, cemetery_tint);
         
     }else if (gameState == NECROTECH){
+        DrawText("    Park", ui_pos.x, ui_pos.y-17, 16, tavern_tint);
         DrawText("    Street", ui_pos.x, ui_pos.y, 16, cemetery_tint);
+       
+
     }
 
 }
@@ -6095,7 +6040,7 @@ void debugKeys(){
         if (!globalState.has_car_key || !globalState.hasCemeteryKey){
             AddItemToInventory("carKeys");
             AddItemToInventory("cemeteryKey");
-            AddItemToInventory("watch");
+            //AddItemToInventory("watch");
             player.hasWatch = true;
             globalState.has_car_key = true;
             globalState.hasCemeteryKey = true;
@@ -7065,7 +7010,7 @@ int main() {
             if (globalState.sharpen) BeginShaderMode(shaders.sharpenShader);
             //drunk shader is set inside render functions      
             if (globalState.applyShader) BeginShaderMode(shaders.glowShader);     //Apply various shaders before rendering to screen, only 1 at a time
-            if (globalState.glitch) BeginShaderMode(shaders.oldFilmShader);        //glitch will override any earlier active shaders. 
+            //if (globalState.glitch) BeginShaderMode(shaders.oldFilmShader);        //glitch will override any earlier active shaders. 
             if (globalState.film) BeginShaderMode(shaders.oldFilmShader);                                                      
             //BeginShaderMode(shaders.oldFilmShader);
             DrawTexturePro(

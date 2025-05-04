@@ -1029,10 +1029,18 @@ void NPC::HandleAnimationLogic(){
 
         }
 
-        // Loop back to the first frame if currentFrame exceeds numFrames
-        if (currentFrame >= numFrames) {
-            currentFrame = 0;
+        
+        if (currentAnimation == DEATH || currentAnimation == DEATH2){ //dont loop on death. 
+            if (currentFrame >= numFrames){
+                currentFrame = numFrames-1;
+            }
+        }else{
+            if (currentFrame >= numFrames) {// Loop back to the first frame if currentFrame exceeds numFrames
+                currentFrame = 0;
+            }
+
         }
+
     }
 
 }
@@ -1444,7 +1452,7 @@ void NPC::handleDeath(){
             SetAnimationState(DEATH2); //randomize deaths
         }
 
-        deathTimer = 0.85f;        // Set death animation duration // needs to be exact
+        deathTimer = 1.5f;//0.85f;        // Set death animation duration // needs to be exact
         destination = position; //zombie is at it's destination on death as to not play walk animation
     }
 

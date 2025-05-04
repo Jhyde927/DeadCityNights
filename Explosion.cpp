@@ -2,7 +2,9 @@
 #include "NPC.h"
 #include "Globals.h"
 
+//called when instanced. 
 void Explosion::Start(Vector2 pos, Texture2D* tex) {
+    
     position = pos;
     isActive = true;
     currentFrame = 0;

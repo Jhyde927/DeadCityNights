@@ -19,8 +19,6 @@ extern std::vector<Explosion> explosions;
 
 extern Emitter explosionEmitter;  
 
-
-
 extern std::vector<NPC> npcs; //outside // subway
 extern std::vector<NPC> zombies; //cemetery/graveyard
 extern std::vector<NPC>hobos; //lot
@@ -41,10 +39,10 @@ extern std::vector<NPC>aliens;
 extern std::vector<NPC>CEOs;
 extern std::vector<NPC>Boss;
 
-
+//enemy NPC groups. 
 extern std::vector<std::vector<NPC>*> enemies;
 
-// Extern declaration of the master NPC group list, unused.
+// Extern declaration of the master NPC group list
 extern std::vector<std::vector<NPC>*> allNPCGroups;
 
 struct GlobalState { //store random bools and timers that have accumulated over the months. just prefix everything with globalState is the price we pay for cleaner code. 
@@ -130,7 +128,7 @@ struct GlobalState { //store random bools and timers that have accumulated over 
     bool gotoStreet = false;
     bool gotoNecro = false;
     bool gotoCemetery = false;
-    bool debug = false; ///////////////////////////////////////DEBUG KEYS ON/OFF
+    bool debug = true; ///////////////////////////////////////DEBUG KEYS ON/OFF
     bool hasWorked = false;
     bool buttonSleep = false;
     bool hasSlept = false;
@@ -210,7 +208,6 @@ struct GlobalState { //store random bools and timers that have accumulated over 
 
 };
 
-
 struct Tank {
     Vector2 position;
     int currentFrame = 0;
@@ -289,7 +286,7 @@ struct UFO {
     float frameTimer;
 
     Vector2 basePosition;  //center of UFO
-    float bobAmplitudeX;   //ufo wobble around base position. 
+    float bobAmplitudeX;   //ufo wobbles around base position. 
     float bobAmplitudeY;   
     float bobSpeedX;       
     float bobSpeedY;       
@@ -325,7 +322,7 @@ extern Vector2 mousePosition; // Global mouse position, updated in main.
 extern float totalTime; // total elapsed time, used for sine waves
 
 extern std::vector<Platform> platforms;
-extern std::vector<Box> boxes; //boxes stays in main because undefined behavior do to inclusion hell. 
+extern std::vector<Box> boxes; 
 extern std::vector<MagicDoor> magicDoors;
 extern std::vector<Elevator> elevators;
 
@@ -339,7 +336,7 @@ NPC* FindClosestNPC(NPC& zombie, std::vector<NPC>& targetedNPCs); //called by zo
 void InitCamera();
 void InitializePlayerCar();
 void InitializeMagicDoor(Vector2 position);
-void initExplosion(Vector2 position);
+//void initExplosion(Vector2 position);
 void InitTank(Vector2 position);
 void InitConsole(Vector2 position, GameState scene);
 void InitMonitor(Vector2 position, GameState scene);

@@ -3,6 +3,7 @@
 
 #include <string>
 
+//we don't show the date anymore. couldn't find a way to work it in. keep it as a reference if I ever need to make a calendar. 
 class GameCalendar {
 public:
     GameCalendar();  // Constructor to initialize the date

@@ -28,20 +28,20 @@
 //The law is one. 
 
 
-//move inventory to globals.h ?
+
 bool showInventory = true;
 const int INVENTORY_SIZE = 12;  // Define the size of the inventory
 std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", "", "", "", "", ""}; //Inventory is a fixed array for no particular reason.
 
-const int WI_SIZE = 4;
+const int WI_SIZE = 4; //size of the weapons inventory. 
 std::string weaponInventory[WI_SIZE] = {"", "", "", ""};
 
 
 const int GAME_SCREEN_WIDTH = 1024;
 const int GAME_SCREEN_HEIGHT = 1024;
 
-float cursorSpeed = 900.0f; // Adjust speed of cursor movement
-float deadZone = 0.2f;   // Ignore slight stick movements
+const float cursorSpeed = 900.0f; // Adjust speed of cursor movement
+const float deadZone = 0.2f;   // Ignore slight stick movements
 // Virtual cursor position (simulates the mouse with gamepad)
 Vector2 virtualCursor = { 512, 512 }; // Start at screen center
 
@@ -122,12 +122,11 @@ std::string GetTellerPhrase() {
 }
 
 void TriggerExplosion(Vector2 pos, Texture2D* tex) {
+    //there is a vector called explosions, we iterate that and update any active explosions. This way we can have many explosions at the same time. 
     PlaySound(SoundManager::getInstance().GetSound("explosion"));
-    //PlayPositionalSound(SoundManager::getInstance().GetSound("explosion"), pos, player.position, 400);
     Explosion exp;
-    explosions.push_back(exp);
-    explosions[0].Start(pos, tex);
-    
+    exp.Start(pos, tex);
+    explosions.push_back(exp); // push the initialized explosion
 }
 
 
@@ -578,8 +577,6 @@ void MonitorMouseClicks(){
 
     //Player_car button logic + apartment button logic 
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
-
-   
         if (gameState == APARTMENT){
 
            ApartmentLogic();   
@@ -599,10 +596,23 @@ void MonitorMouseClicks(){
                 globalState.zombieWave3 = false;
 
             }
+
+            if (player.enter_car && globalState.buttonPark){ //hovering top button
+                transitionState = FADE_OUT;
+                globalState.gotoPark = true;
+                globalState.reverse_road = true;
+
+            }
         }else if (gameState == PARK){
             //park car buttons
             if (player.enter_car && globalState.buttonCemetery){ //street button in park clicked
                 transitionState = FADE_OUT;
+            }
+
+            if (player.enter_car && globalState.buttonPark){
+                transitionState = FADE_OUT;
+                globalState.gotoCemetery = true;
+                globalState.reverse_road = false;
             }
         }else if (gameState == SUBWAY){
             if (globalState.buttonPark){
@@ -1316,25 +1326,38 @@ void HandleRoadTransition() {
         player_car.position.x = 3000;
         UpdateNPCActivity(ROAD, CEMETERY);
     } else {
-        gameState = OUTSIDE;
-        UpdateNPCActivity(ROAD, OUTSIDE);
-        player_car.position.x = globalState.pc_start_pos.x;
-        player.position.x = 1738;
-        globalState.reverse_road = false;
-        globalState.leave_cemetery = false;
-        globalState.move_car = false;  // Prevent double fade-outs maybe
+        if (globalState.gotoPark){
+            globalState.gotoPark = false;
+            gameState = PARK;
+            UpdateNPCActivity(CEMETERY, PARK);
+            globalState.reverse_road = false;
+            player.position.x = player_car.position.x;
+
+        }else{
+            gameState = OUTSIDE;
+            UpdateNPCActivity(ROAD, OUTSIDE);
+            player_car.position.x = globalState.pc_start_pos.x;
+            player.position.x = 1738;
+            globalState.reverse_road = false;
+            globalState.leave_cemetery = false;
+            globalState.move_car = false;  // Prevent double fade-outs maybe
+
+        }
+
     }
 }
 
 void HandleCemeteryTransition() {
-    globalState.reverse_road = true;
+    //globalState.reverse_road = true;
     player_car.facingLeft = false;
     globalState.move_car = false;
 
     if (!player.isDead && player.enter_car) {
+        globalState.reverse_road = true;
         gameState = ROAD;
         player_car.position.x = 100;
         UpdateNPCActivity(CEMETERY, ROAD);
+        
     } else if (!player.enter_car && globalState.over_gate) {
         UpdateNPCActivity(CEMETERY, GRAVEYARD);
         gameState = GRAVEYARD;
@@ -1491,12 +1514,20 @@ void HandleParkTransition(){
         UpdateNPCActivity(PARK, SUBWAY);
        
 
+    }else if (globalState.gotoCemetery){
+        player_car.facingLeft = true;
+        globalState.reverse_road = false;
+        gameState = ROAD;
+        UpdateNPCActivity(PARK, CEMETERY);
+        globalState.gotoCemetery = false;
+
     } else{ //call fade out in park, leaving by car to outside. 
         gameState = OUTSIDE; //call fadeout in park
         player.position.x = player_car.position.x-64; //center of car
         globalState.gotoPark = false; //reset gotopark
         globalState.carToPark = false; //take the car back from the park and render it outside. 
         UpdateNPCActivity(PARK, OUTSIDE);
+        
 
     }
 
@@ -1612,7 +1643,7 @@ void HandleSubwayTransition(){
     }
 }
 
-void PerformStateTransition(PlayerCar& player_car) {
+void PerformStateTransition() {
     // If we are fading out, we are transitioning. Switch to the next area depending on the gameState.
     switch (gameState) {
         case OUTSIDE:     HandleOutsideTransition();              break;
@@ -1664,7 +1695,7 @@ void HandleFadeOut() {
             globalState.blackoutTimer = 0.0f;  // Reset blackout timer
 
             // Transition to the next state
-            PerformStateTransition(player_car);
+            PerformStateTransition();
 
             if (!globalState.gotoWork) {  // Don't fade in when at work; fade in later
                 transitionState = FADE_IN;  // Start fading back in
@@ -2467,7 +2498,7 @@ void DrawCarUI(PlayerCar& player_car, Camera2D& camera){
 
     if (CheckCollisionPointRec(mouseWorldPos, ParkBounds)){ //top Park
         tavern_tint = RED;
-        globalState.buttonPark = true;  
+        globalState.buttonPark = true;  // button park for cemetery from park?
     }else{
         globalState.buttonPark = false;
     }
@@ -2492,12 +2523,14 @@ void DrawCarUI(PlayerCar& player_car, Camera2D& camera){
 
         
 
-    }else if (gameState == CEMETERY){ //consider connecting things more, like park to work, or cemetery to park. 
-        
+    }else if (gameState == CEMETERY){ //consider connecting things more, like park to work, or cemetery to park.
+
+        DrawText("   Park", ui_pos.x, ui_pos.y-17, 16, tavern_tint); 
         DrawText("   Street", ui_pos.x, ui_pos.y, 16, cemetery_tint); 
        //DrawText("Work", ui_pos.x, ui_pos.y+17, 16, work_tint);
 
     }else if (gameState == PARK){
+        DrawText("    cemetery", ui_pos.x, ui_pos.y-17, 16, tavern_tint);
         DrawText("    Street", ui_pos.x, ui_pos.y, 16, cemetery_tint);
         
     }else if (gameState == NECROTECH){
@@ -5626,14 +5659,14 @@ void RenderOutside() {
         }
     }
 
-    if (player.isAiming) DrawHUD(player);
+   
 
     
     
     EndMode2D();  // End 2D mode 
     showBigBadge();
 
-    
+    DrawHUD(player);
     //draw healthbar 
     if (showInventory){ //dont show healthbar if full health on main street, show everywhere else though. 
         Vector2 barPos = {camera.offset.x - 32, camera.offset.y + 128};
@@ -5653,11 +5686,9 @@ void RenderOutside() {
         
     }
 
-
-
     //DrawText("Paper Street", screenWidth/2 - 128, 60, 50, WHITE);
     DrawMoney(); //draw money after EndMode2d()
-    if (showInventory){
+    if (showInventory){//show inventory is always true, if we need to turn it off later easily can. 
          
         RenderInventory();  // Render the inventory 
         RenderWeaponInventory();

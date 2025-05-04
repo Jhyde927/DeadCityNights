@@ -1470,7 +1470,7 @@ void NPC::handleDeath(){
         //play robot death sound
         //trigger = true; //summon more robots on death in lobby
         SoundManager::getInstance().PlayPositionalSound("explosion", position, player.position, 500);
-        bloodEmitter.SpawnExplosion(20, YELLOW);
+        bloodEmitter.SpawnExplosion(20, YELLOW); //use triggerExplosion instead?
         destination = position;
         deathTimer = .85f;
 
@@ -1479,7 +1479,7 @@ void NPC::handleDeath(){
         SoundManager::getInstance().PlayPositionalSound("zombieDeath", position, player.position, 500);
         riseTimer = 0;
         isDying = true;
-        SetAnimationState(DEATH);
+        SetAnimationState(DEATH); //trigger explosion on cyber zoms death?
         deathTimer = .85f;
         destination = position;
     }
@@ -1491,6 +1491,7 @@ void NPC::handleDeath(){
         SoundManager::getInstance().PlayPositionalSound("deathScream", position, player.position, 500); //death scream can be heard 500 pixels away
         deathTimer = 0.85f;        // Set death animation duration // needs to be exact
         destination = position; 
+        bloodEmitter.SpawnBlood(20, RED, facingRight); //pedestrians also should bleed. 
         
     }
 
@@ -1512,7 +1513,7 @@ void NPC::updateBoss(float deltaTime)
             facingRight = (player.position.x > position.x);
             if (stateTimer > 2.0f)
             {
-                SetAnimationState(WALK);//play walk for idle, so it still flaps it wings, if it's on the ground we could play true idle. 
+                if (!attacking) SetAnimationState(WALK);//play walk for idle, so it still flaps it wings, if it's on the ground we could play true idle. 
                 canTakeDamage = true;
                 if (distanceTo <= 250){ //if player is close charge, otherwise slowly walk toward player giving them a chance to attack. 
                     bossState = BOSS_CHARGE;
@@ -1626,8 +1627,6 @@ void NPC::updateBoss(float deltaTime)
             speed = 0;
             attacking = false;
             
-
-        
     }
 }
 
@@ -1689,7 +1688,7 @@ void NPC::HandleBoss(float deltaTime){
 // }
 
 void NPC::playZombieHit(int soundIndex)
-{
+{   //play random zombie grunt. 
     switch (soundIndex){ //zombie hits
         case 0:
             SoundManager::getInstance().PlayPositionalSound("zhit1", position, player.position, 500);

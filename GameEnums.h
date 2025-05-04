@@ -2,7 +2,7 @@
 #ifndef GAME_ENUMS_H
 #define GAME_ENUMS_H
 
-// Define GameState enum
+//Current scene we are rendering
 enum GameState {
     OUTSIDE,
     APARTMENT,

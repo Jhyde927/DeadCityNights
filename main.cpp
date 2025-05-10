@@ -48,7 +48,7 @@ std::string phrase = "A and D to move, hold shift to run\n\nPress W to interact"
 const int screenWidth = 1024; //screen is square for gameplay reasons, we don't want to reveal to much of the screen at one time. 
 const int screenHeight = 1024;
 
-GameState gameState = OUTSIDE; //start outside. on main street. 
+GameState gameState = OFFICE; //start outside. on main street. 
 
 TransitionState transitionState = NONE; //state for transitioning scenes. 
 
@@ -590,7 +590,7 @@ void MonitorMouseClicks(){
             //move_car = true;
                 transitionState = FADE_OUT;
                 //dont reset yet
-                globalState.raiseZombies = false; //reset zombie waves. So returning player will trigger them again. 
+                globalState.raiseZombies = false; //reset zombie waves. So returning player can trigger them again. 
                 globalState.zombieWave2 = false;
                 globalState.zombieWave3 = false;
 
@@ -1855,10 +1855,9 @@ void UpdateZombieTarget(NPC& zombie, std::vector<NPC>& npcs) {
 }
 
 
-void UpdateInventoryPosition(const Camera2D& camera) {
+void UpdateInventoryPosition() {
     // Static inventory position, relative to the camera offset
     globalState.inventoryPositionX = camera.offset.x-80;  // Adjust the X position relative to the screen 
-
     globalState.inventoryPositionY = camera.offset.y + 228;  // Adjust the Y position 
     
     
@@ -1941,6 +1940,7 @@ void RenderWeaponInventory(){
         if (player.currentWeapon == RAYGUN) raygunTint = customTint;
 
         if (!weaponInventory[i].empty()){
+        
 
             if (weaponInventory[i] == "Gun"){
                 DrawTexture(resources.Revolver, x, y, gunTint);
@@ -2201,12 +2201,13 @@ void CheckLaserNPCCollisions(std::vector<NPC>& collidingNPCs){ //enemy bullets h
 
 
 void CheckBulletNPCCollisions(std::vector<NPC>& npcs) { 
-    //bullet/raygun
+    //bullet/raygun hitting enemies. 
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (bullets[i].isActive && !bullets[i].laser) {          
             //Raygun bullet has health. It tics down when intersecting enemy hitbox. 
             //1 damage per enemy. so we can set how many bodies it will penetrate. 
             for (NPC& npc : npcs) { 
+                //NPC no longer absorbs bullets while dying. This makes the shotgun stronger because it can penetrate. 
                 if (npc.isActive && !npc.isDying &&bullets[i].hitNPCs.find(&npc) == bullets[i].hitNPCs.end() && //hitNPC is empty and checkHit is true
                     npc.CheckHit(bullets[i].previousPosition, bullets[i].position, bullets[i].size)) { 
 
@@ -2253,7 +2254,7 @@ void DrawHUD(const Player& player) {
         DrawText(TextFormat("Ammo: %d", player.mac10BulletCount), screenWidth/2 + ammoX, ammoY, 20, WHITE); 
         DrawText(TextFormat("Mac10: %d", player.autoAmmo), screenWidth/2 + ammoX, ammoY+20, 20, WHITE);
     }else if (player.currentWeapon == RAYGUN && player.hasRaygun){
-        
+        //wanted to draw an infinity symbol for ammo amount. Would have to draw actual icon, instead of using a font. 
         DrawText("Raygun", screenWidth/2 + ammoX, ammoY + 20, 20, WHITE);
 
 
@@ -2263,7 +2264,8 @@ void DrawHUD(const Player& player) {
 
 
 void MoveTraffic(){
-    
+    //car and truck drive opposite directions on a loop. Consider more traffic. taxi cab, limozine, van, ect..
+    //very old code, maybe car and truck should be a struct. We could have animated traffic. 
     int car_start = 5500;
     globalState.car_pos.x -= 150 * GetFrameTime();
     globalState.truck_pos.x += 150 * GetFrameTime();
@@ -2328,7 +2330,7 @@ void DrawApartmentUI(){
             DrawText("\n\nSEARCHING...\n\nNECRO-TECH", TextPos.x+12, TextPos.y-20, 20, WHITE);
         }else{
             DrawText("Adress: \n\n 123 Paper St", TextPos.x, TextPos.y, 20, WHITE);
-            //TODO Once you have the address of necrotech it shows up in the car's destinations menu
+            //Once you have the address of necrotech it shows up in the car's destinations menu
             
         }
         
@@ -2485,7 +2487,6 @@ void DrawCarUI(PlayerCar& player_car, Camera2D& camera){
 }
 
 
-
 void ClearAllNPCs() {
     for (std::vector<NPC>* group : allNPCGroups) {
         group->clear();  // Clears contents of each vector
@@ -2560,8 +2561,8 @@ void DrawTank(Tank& tank){
 
       // Check if it's time to move to the next frame
     if (tank.frameTimer >= tank.frameTime){
-        tank.frameTimer -= tank.frameTime;           // Reset the timer
-        tank.currentFrame++;                    // Move to the next frame
+        tank.frameTimer = 0; //set to 0 instead of subtracting frameTime, was causing tanks to save up frames when minimized. 
+        tank.currentFrame++;// Move to the next frame
 
         if (tank.currentFrame > numFrames && !tank.explode)
         {
@@ -2608,7 +2609,7 @@ void DrawConsole(Console& console){
     }
 
     Rectangle sourceRec = {static_cast<float>(console.currentFrame) * consoleFrame, 0, static_cast<float>(consoleFrame), static_cast<float>(consoleFrame)};
-    Rectangle destRec = {console.position.x, console.position.y, 96.0f, 96.0f};
+    Rectangle destRec = {console.position.x, console.position.y, 96.0f, 96.0f}; //resize
     Vector2 origin = {16, 16};
     //DrawTextureRec(resources.consoleSheet, sourceRec, console.position, WHITE);
     DrawTexturePro(resources.consoleSheet, sourceRec, destRec, origin, 0, WHITE);
@@ -2666,7 +2667,7 @@ void DrawMagicDoor(MagicDoor& magicDoor){
             magicDoor.frameTimer -= magicDoor.DoorframeTime;           // Reset the timer
             magicDoor.currentFrame++;                    // Move to the next frame
 
-            if (magicDoor.currentFrame > 6)              // Loop back to the first frame if necessary
+            if (magicDoor.currentFrame > 6) 
             {
                 magicDoor.currentFrame = 6; //stop at last frame when door is open. 
             }
@@ -2806,9 +2807,9 @@ void DrawEarth(Earth& earth, Camera2D& camera){
     };
 
     // Calculate parallax offset for the earth
-    float parallaxFactor = 0.99f; // Adjust this value between 0.0f and 1.0f
+    float parallaxFactor = 0.99f; // Adjust this value between 0.0f and 1.0f 
 
-    float parallaxOffset = (camera.target.x - earth.position.x) * parallaxFactor; //playerpos - earthpos = distance * .99
+    float parallaxOffset = (camera.target.x - earth.position.x) * parallaxFactor; //playerpos - earthpos = distance * .99, 
     
 
     Vector2 earthDrawPosition = {
@@ -2879,7 +2880,8 @@ void DrawHealthBar(GameResources resources, Vector2 position, int maxHealth, int
 }
 
 void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
-    
+    //this could be implemented saner. very old code. 
+ 
     int offset = -63; //default offsets for regular NPCs
     int screen_offsetX = 16;
     int screen_offsetY = -55;
@@ -2943,7 +2945,7 @@ void DrawDialogBox(Camera2D camera, int boxWidth, int boxHeight,int textSize){
     DrawRectangle(screen_pos.x, screen_pos.y + offset, boxWidth, boxHeight, Fade(BLACK, 0.3f));
     DrawText(phrase.c_str(), screen_pos.x+ screen_offsetX, screen_pos.y + screen_offsetY, textSize, tint); //Draw Phrase
     
-    if (globalState.dealer && player.money >= 100){
+    if (globalState.dealer && player.money >= 100){ //gamepad buy drugs instantly if you have the money by hitting A 
         if (IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
             if (globalState.can_sell_drugs){
                 globalState.can_sell_drugs = false;
@@ -3061,7 +3063,7 @@ void playerOutsideInteraction(){
 
     
 
-    //consider abstracting this into a seperate function. is_interacting, return true if any of these checks 
+   
     if (player.position.x > pc_min && player.position.x < pc_max && globalState.has_car_key && !player.enter_car){ //over_car with keys
         globalState.over_car = true;
         if (globalState.fortuneTimer <= 0) phrase = "PRESS UP TO ENTER"; //Don't interupt the fortune teller
@@ -3592,7 +3594,14 @@ void RenderCemetery(){
     }
 
     for (NPC& zombie : zombies){
-        if (zombie.scene != gameState) zombie.isActive = false;
+        if (zombie.scene != gameState) zombie.isActive = false; 
+
+        // we could do this for all NPCs globally 
+        //for (group in allnpcgroups)
+            //for (npc in group)
+                //npc.active = (npc.scene == gamestate);
+
+
         if (zombie.isActive && zombie.scene == gameState){ //cemetery zombies stay in the cemetery
             zombie.Update();
             zombie.Render();
@@ -6705,6 +6714,7 @@ void InitSounds(SoundManager& soundManager){
 }
 
 void DrawPlayTime(float totalTime) {
+    //Gameplay timer on pause menu. 
     int minutes = static_cast<int>(totalTime) / 60;
     int seconds = static_cast<int>(totalTime) % 60;
 
@@ -6818,7 +6828,7 @@ int main() {
         if (!player.enter_car && !player.onElevator && !player.enter_train && !globalState.fading && 
             currentPauseState == GAME_RUNNING) player.UpdateMovement(); 
         
-        UpdateInventoryPosition(camera);
+        UpdateInventoryPosition();
         SoundManager::getInstance().UpdateMusic("NewNeon");
         SoundManager::getInstance().UpdateMusic("subwayAmbience");
         SoundManager::getInstance().UpdateMusic("CarRun");

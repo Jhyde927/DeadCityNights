@@ -1032,7 +1032,8 @@ void NPC::HandleAnimationLogic(){
         
         if (currentAnimation == DEATH || currentAnimation == DEATH2){ //dont loop on death. 
             if (currentFrame >= numFrames){
-                currentFrame = numFrames-1;
+                currentFrame = numFrames-1; //stay on last frame of death animation. need to test this for every NPC, like robots and mibs. 
+                //only zombies dying time is set to 1.5 instead of .85 so the zombies body stays there for a moment while blood particles fall. 
             }
         }else{
             if (currentFrame >= numFrames) {// Loop back to the first frame if currentFrame exceeds numFrames
@@ -1063,7 +1064,7 @@ void NPC::ghostMoves(){
             position.y += direction.y * moveSpeed * deltaTime;
 
             // Set facing direction based on movement
-            if (fabs(direction.x) > 0.1f) { // Only update facing when moving significantly in X
+            if (fabs(direction.x) > 0.1f) { // Only update facing when moving significantly in X, do we do this for boss?
                 facingRight = (direction.x > 0);
             }
 
@@ -1687,13 +1688,6 @@ void NPC::HandleBoss(float deltaTime){
     }
 
 }
-
-            
-            
-            
-
-//     }
-// }
 
 void NPC::playZombieHit(int soundIndex)
 {   //play random zombie grunt. 

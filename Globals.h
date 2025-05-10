@@ -42,7 +42,7 @@ extern std::vector<NPC>Boss;
 //enemy NPC groups. 
 extern std::vector<std::vector<NPC>*> enemies;
 
-// Extern declaration of the master NPC group list
+//Every NPC group. Used for clearing pointers on exit. 
 extern std::vector<std::vector<NPC>*> allNPCGroups;
 
 struct GlobalState { //store random bools and timers that have accumulated over the months. just prefix everything with globalState is the price we pay for cleaner code. 
@@ -208,7 +208,7 @@ struct GlobalState { //store random bools and timers that have accumulated over 
 
 };
 
-struct Tank {
+struct Tank { //bubbling tanks filled with hideous zombie clones. 
     Vector2 position;
     int currentFrame = 0;
     float frameTimer = 0.0f;
@@ -218,7 +218,7 @@ struct Tank {
     bool canSpawn; //spawn a zombie on tank destruction. 
 };
 
-struct Console {
+struct Console { //interactable termincal
     Vector2 position;
     int currentFrame = 0;
     float frameTimer = 0.0f;
@@ -263,13 +263,13 @@ struct Earth {
 };
 
 struct Elevator {
-    Vector2 position;      // Position of the elevator
-    int currentFrame;      // Current frame for animation
-    float frameTimer;      // Timer for frame updates
-    float frameTime;       // Duration of each frame
-    bool isOpen;           // Tracks if the elevator is open
-    bool isOccupied;       // Tracks if the player is on the elevator
-    int totalFrames;       // Total number of animation frames
+    Vector2 position;    
+    int currentFrame;     
+    float frameTimer;   
+    float frameTime;       
+    bool isOpen;           
+    bool isOccupied;// Tracks if the player is on the elevator
+    int totalFrames;       
     int currentFloorFrame;
     float floorFrameTimer;
     float floorFrameTime;

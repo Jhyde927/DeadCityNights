@@ -325,7 +325,7 @@ void Player::HandleInput(float speed) { //this doesn't run if aiming.
     // ------------------------------
     float moveX = 0.0f; // Movement direction
     float leftStickX = 0.0f;
-
+    float deadzone = 0.5f; // Ignore slight stick movements, such a large dead zone makes walking difficult with controller. 
     if (isControllerConnected) {
         leftStickX = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_X);
     }
@@ -335,7 +335,7 @@ void Player::HandleInput(float speed) { //this doesn't run if aiming.
     if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) moveX = -1.0f;
 
     //Hold left click to walk toward cursor
-    if (!isAiming && moveX == 0.0f && fabs(leftStickX) <= 0.25f) { //stick is less then deadzone
+    if (!isAiming && moveX == 0.0f && fabs(leftStickX) <= deadzone) { 
         if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && !IsMouseButtonDown(MOUSE_RIGHT_BUTTON)) {
             Vector2 worldMouse = GetScreenToWorld2D(GetMousePosition(), camera);
             float diff = worldMouse.x - position.x;
@@ -348,7 +348,7 @@ void Player::HandleInput(float speed) { //this doesn't run if aiming.
     }
 
     // Controller movement (if above deadzone threshold)
-    float deadzone = 0.5f; // Ignore slight stick movements, such a large dead zone makes walking difficult with controller. 
+    
     if (fabs(leftStickX) > deadzone) {
         moveX = leftStickX;
     }

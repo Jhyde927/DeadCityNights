@@ -110,6 +110,7 @@ void FireBullet(Player& player, bool spread, float damage, bool laser, bool rayg
 void NPCfireBullet(NPC& npc, bool spread, float damage, bool laser, bool fireBall) { //robots shoot lasers
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (!bullets[i].isActive) {
+            bullets[i].raygun = false; //raygun bullets were being recycled, so hobo would shoot raygun projectiles. ensure it's false if NPC is firing.  
             bullets[i].position = Vector2{npc.position.x + 32, npc.position.y + 26};
             if (npc.isBoss) bullets[i].position = Vector2{npc.position.x, npc.position.y + 26};
             bullets[i].damage = damage;

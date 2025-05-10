@@ -788,8 +788,11 @@ void NPC::HandleHobo(){
         }     
 
     }
-    //shoot zombies and reload. 
+
+    //BAD ENDING: hobo fights zombies outside. 
     if (gameState == OUTSIDE) {
+        Vector2 hoboPos = {2410, 700};
+        position = hoboPos; //hobo can't move, so he stands right outside your door. 
 
         // 🔄 Retarget if dead
         if (!targetNPC || !targetNPC->isActive) {
@@ -841,7 +844,7 @@ void NPC::HandleHobo(){
                     if (shotsFired >= maxShotsBeforeReload) {
                         reloading = true;
                         reloadTimer = 1.5f; 
-                        SetAnimationState(RISING); //make run or death2 the reload animation.
+                        SetAnimationState(RISING); //Rising is reload for hobo sheet. 
                         
                     }
 

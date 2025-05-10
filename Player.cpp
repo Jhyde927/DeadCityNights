@@ -106,9 +106,6 @@ Player::Player() {
     chargeSoundPlayed = false;
     charging = false;
     maxChargeTime = 2.0;
-    
-    
-
 }
 
 void Player::take_damage(int damage) {
@@ -336,6 +333,19 @@ void Player::HandleInput(float speed) { //this doesn't run if aiming.
     // Keyboard movement
     if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) moveX = 1.0f;
     if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) moveX = -1.0f;
+
+    //Hold left click to walk toward cursor
+    if (!isAiming && moveX == 0.0f && fabs(leftStickX) <= 0.25f) { //stick is less then deadzone
+        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && !IsMouseButtonDown(MOUSE_RIGHT_BUTTON)) {
+            Vector2 worldMouse = GetScreenToWorld2D(GetMousePosition(), camera);
+            float diff = worldMouse.x - position.x;
+            isRunning = true;
+    
+            if (fabs(diff) > 5.0f) {
+                moveX = (diff > 0) ? 1.0f : -1.0f;
+            }
+        }
+    }
 
     // Controller movement (if above deadzone threshold)
     float deadzone = 0.5f; // Ignore slight stick movements, such a large dead zone makes walking difficult with controller. 

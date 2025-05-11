@@ -166,7 +166,7 @@ void Grenade::Draw() {
             float frameWidth = 64;
             float frameHeight = 64;
             Rectangle sourceRect = { currentFrame * frameWidth, 0, frameWidth, frameHeight };
-            Rectangle destRect = { position.x-16, position.y-16, 32, 32 };
+            Rectangle destRect = { position.x-16, position.y-16, 32, 32 }; //resize to 32x32
             DrawTexturePro(resources.grenadeSheet, sourceRect, destRect, { 0, 0 }, 0.0f, WHITE);
             //DrawRectangle(position.x-16, position.y-16, 16, 16, RED);
 
@@ -175,7 +175,7 @@ void Grenade::Draw() {
             float frameHeight = 64;
             exEmitter.DrawParticles();
             Rectangle sourceRect = { currentFrame * frameWidth, 0, frameWidth, frameHeight };
-            Rectangle destRect = { position.x-32, position.y-32, frameWidth, frameHeight};
+            Rectangle destRect = { position.x-32, position.y-32, frameWidth, frameHeight}; //full width
             DrawTexturePro(resources.explosionSheet, sourceRect, destRect, { 0, 0 }, 0.0f, WHITE);
             if (showCircle){ //draw a red circle indicating explosion damage radius. 
                 showCircle = false;
@@ -186,7 +186,7 @@ void Grenade::Draw() {
             if (showCircleTImer > 0){
                 showCircleTImer -= GetFrameTime();
                 //DrawCircle(position.x, position.y, explosionRadius, Fade(RED, 0.5f));
-                DrawCircleLines(position.x, position.y, explosionRadius, Fade(RED, 1.0f)); 
+                DrawCircleLines(position.x, position.y, explosionRadius, Fade(RED, 1.0f)); //debug show explosion radius. 
             }else{
                 showCircle = true;
             }

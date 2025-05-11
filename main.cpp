@@ -48,7 +48,7 @@ std::string phrase = "A and D to move, hold shift to run\n\nPress W to interact"
 const int screenWidth = 1024; //screen is square for gameplay reasons, we don't want to reveal to much of the screen at one time. 
 const int screenHeight = 1024;
 
-GameState gameState = OUTSIDE; //start outside. on main street. 
+GameState gameState = PENTHOUSE; //start outside. on main street. 
 
 TransitionState transitionState = NONE; //state for transitioning scenes. 
 
@@ -2101,10 +2101,12 @@ void RenderInventory() {
                     if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){
                         if (player.currentHealth < player.maxHealth && player.hasPills){
                             //inventory[i] = std::string("");  // erase pills from the string
-                            RemoveItemFromInventory("pills");
+                            
                             player.currentHealth = player.maxHealth;
                             player.hasPills = false;
                             PlaySound(SoundManager::getInstance().GetSound("Pills"));
+                            RemoveItemFromInventory("pills");
+                            break;
 
                         }
                     }
@@ -2146,6 +2148,7 @@ void RenderInventory() {
                         RemoveItemFromInventory("Drugs");
                         globalState.applyShader = true;
                         globalState.can_sell_drugs = true;
+                        break;
                     }
                 }
             }
@@ -2159,7 +2162,7 @@ void RenderInventory() {
 void CheckBulletPlayerCollisions() { //enemy bullet hits player
     Vector2 bulletSize = {5, 2};
     for (int i = 0; i < MAX_BULLETS; i++){
-        if (bullets[i].isActive && bullets[i].laser){ //only lasers hurt player
+        if (bullets[i].isActive && bullets[i].laser){ //only lasers hurt player, fireballs are lasers
             if (player.CheckHit(bullets[i].previousPosition, bullets[i].position, bulletSize)){
                 player.take_damage(bullets[i].damage);
             
@@ -5390,7 +5393,7 @@ void RenderNecroTech(){
 
 //Main Street
 void RenderOutside() {
-
+    player.outline = false; //outline was turning on, on death somehow, so assert that it's false when outside. 
     SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide or in vacant lot
     SoundManager::getInstance().PlayMusic("StreetSounds");
     PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.basePosition, player.position, 800);
@@ -5648,7 +5651,12 @@ void RenderOutside() {
         RenderWeaponInventory();
     }
     //Draw cursor last so it's on top
-    if (!globalState.usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
+    //if (!globalState.usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // render mouse cursor outside Mode2D. Do this last
+    if (player.hasGun){//DRAW RETICLE IF AIMING AND HAS GUN
+        if (!globalState.usingController || player.enter_car) DrawTexture(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? resources.reticle : resources.handCursor, mousePosition.x, mousePosition.y, WHITE); // if aiming draw reticle
+    }else{
+        if (!globalState.usingController || player.enter_car) DrawTexture(resources.handCursor, mousePosition.x, mousePosition.y, WHITE);
+    } //show cross hair outside. 
 }
 
 

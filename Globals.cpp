@@ -54,7 +54,7 @@ Emitter explosionEmitter;
 
 Camera2D camera = { 0 };
 float targetZoom = 1.0f; 
-float totalTime = 0.0f;
+float totalTime = 0.0f; //total elapsed time from starting game. Needed for sin waves
 Vector2 mousePosition = {0, 0}; 
 
 void InitCamera() {
@@ -179,7 +179,7 @@ void InitUFO(){
     ufo.frameTimer = 0.0;
     ufo.frameTime = 0.1;
 
-    ufo.basePosition = { -94.0, 0.0f }; //base position stays the same. When moving UFO move base position.
+    ufo.basePosition = { -94.0, 0.0f }; //base position stays the same. When moving UFO, move base position.
     ufo.position = ufo.basePosition;
 
     // Set motion parameters

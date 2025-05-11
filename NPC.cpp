@@ -16,6 +16,7 @@
 #include "GameEnums.h"
 #include "Globals.h"
 #include "Grenade.h"
+#include "Explosion.h"
 
 BossState bossState;
 
@@ -212,8 +213,9 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
                 case 5: speech = "Here is the code for the elevator\n\nThe name's frank by the way";  break;
                 case 6:
                     speech = "Here, I found this box of ammo";
-                    player.autoAmmo = 150;
-                    player.shells = 30;
+                    player.autoAmmo += 150;
+                    player.shells += 30;
+                    player.revolverAmmo += 30;
                     PlaySound(SoundManager::getInstance().GetSound("reload"));
                     break;
 
@@ -1127,6 +1129,21 @@ void NPC::Update() {
     if (!isActive) return;  // Skip update if the NPC is not active
     if (!isZombie && !robot) riseTimer = 0;
 
+    // Handle death logic
+    if (isDying) { //death animation plays wile isDying is true
+        attacking = false;
+        deathTimer -= GetFrameTime();
+        speech = ""; //dead men don't talk
+
+        if (deathTimer <= 0.0f) {
+            isActive = false;  // Set NPC as inactive after death animation
+            isDying = false; //set dying back to false once dead.
+            
+            
+            return;
+        }
+    }
+
     //animation.Update(GetFrameTime());
     float deltaTime = GetFrameTime();
     distanceToPlayer = abs(player.position.x - position.x);
@@ -1183,18 +1200,7 @@ void NPC::Update() {
         ghostAlpha = 1.0f;  // Reset once hitTimer expires
     }
 
-    // Handle death logic
-    if (isDying) { //death animation plays wile isDying is true
-        deathTimer -= GetFrameTime();
 
-        if (deathTimer <= 0.0f) {
-            isActive = false;  // Set NPC as inactive after death animation
-            isDying = false; //set dying back to false once dead.
-            
-            speech = ""; //dead men don't talk
-            return;
-        }
-    }
 
     HandleAnimationLogic();
 
@@ -1427,12 +1433,33 @@ void NPC::SetAnimationState(AnimationState newState) {
 void NPC::handleDeath(){
 
     if (isBoss){
-        isDying = true;
-        SetAnimationState(DEATH);
-        deathTimer = 0.85f;
-        destination = position;
         attacking = false;
+        isDying = true;
         bossState = BOSS_DEATH;
+        SetAnimationState(DEATH);
+        deathTimer = 2.0f;
+        destination = position;
+        //Boss explodes on death. Maybe do multiple explosions,
+        SoundManager::getInstance().PlayPositionalSound("explosion", position, player.position, 500);
+        for (int i = 0; i < 3; i++) {
+            Vector2 offset = {
+                position.x + (float)(GetRandomValue(-64, 64)), // random offset between -20 and +20
+                position.y + (float)(GetRandomValue(-20, 20))
+            };
+        
+            Explosion exp;
+            exp.Start(offset, &resources.explosionSheet);
+            explosions.push_back(exp);
+        
+           
+           
+        }
+        
+
+        
+
+
+
     }
 
     if (CEO){
@@ -1456,7 +1483,7 @@ void NPC::handleDeath(){
             SetAnimationState(DEATH2); //randomize deaths
         }
 
-        deathTimer = 1.5f;//0.85f;        // Set death animation duration // needs to be exact
+        deathTimer = 1.5f;//0.85f; made longer so dead body stays for a second.// Set death animation duration // 
         destination = position; //zombie is at it's destination on death as to not play walk animation
     }
 
@@ -1478,13 +1505,15 @@ void NPC::handleDeath(){
     if (robot){
         riseTimer = 0;
         isDying = true;
-        SetAnimationState(DEATH);
-        //play robot death sound
-        //trigger = true; //summon more robots on death in lobby
-        SoundManager::getInstance().PlayPositionalSound("explosion", position, player.position, 500);
-        bloodEmitter.SpawnExplosion(20, YELLOW); //use triggerExplosion instead?
         destination = position;
         deathTimer = .85f;
+        SetAnimationState(DEATH);
+
+        SoundManager::getInstance().PlayPositionalSound("explosion", position, player.position, 500);
+        bloodEmitter.SpawnExplosion(20, YELLOW); //use triggerExplosion instead? both?
+        Explosion exp;
+        exp.Start(position, &resources.explosionSheet);
+        explosions.push_back(exp); // push the initialized explosion
 
     }
     if (cyberZombie){
@@ -1494,6 +1523,14 @@ void NPC::handleDeath(){
         SetAnimationState(DEATH); //trigger explosion on cyber zoms death?
         deathTimer = .85f;
         destination = position;
+
+        //trigger explosion on death. 
+        PlaySound(SoundManager::getInstance().GetSound("explosion"));
+        Explosion exp;
+        exp.Start(position, &resources.explosionSheet);
+        explosions.push_back(exp); // push the initialized explosion
+        
+        
     }
 
     if (!robot && !cyberZombie && !isZombie && !ghost && !bat && !isBoss){ //NPC killed by zombie
@@ -1511,7 +1548,7 @@ void NPC::handleDeath(){
 
 void NPC::updateBoss(float deltaTime)
 {
-    if (!isBoss) return; // safety check
+    if (!isBoss || isDying) return; // safety check
     agro = true;
     stateTimer += deltaTime;
     float distanceTo = abs(player.position.x - position.x);
@@ -1645,7 +1682,7 @@ void NPC::updateBoss(float deltaTime)
 
 void NPC::HandleBoss(float deltaTime){
     //boss movement code
-    if (isBoss && agro) {
+    if (isBoss && agro && !isDying) {
 
         // Check if destination is reached
         float distanceToX = abs(player.position.x - position.x);

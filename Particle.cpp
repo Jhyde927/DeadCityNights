@@ -75,7 +75,7 @@ void Emitter::UpdateParticles(float deltaTime) {
         particles[i].lifetime -= deltaTime;
 
         if (particles[i].position.y > 750 || particles[i].lifetime <= 0) { //if life time <= 0 or particle is below ground level, erase it. 
-            particles.erase(particles.begin() + i); // don't increment i
+            particles.erase(particles.begin() + i); // don't increment i, I guess removing mid loop messes with the indexes
         } else {
             i++; // safe to move to next
         }

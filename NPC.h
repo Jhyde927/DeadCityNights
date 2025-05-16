@@ -132,7 +132,7 @@ public:
 
 private:
     void SetAnimationState(AnimationState newState); 
-    void HandleHobo();//WIP
+    void HandleHobo();
     void HandleCEO();
     void HandlePolice();
     void HandleZombie();

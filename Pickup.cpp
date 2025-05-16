@@ -23,7 +23,7 @@ void Pickup::Draw() {
 // Update pickup state
 void Pickup::Update(Player& player) { //why not include player and not pass it here. 
     float distance_to = abs(player.position.x - position.x);
-    if (!isCollected && distance_to < 10) {
+    if (!isCollected && distance_to < 5) {
         ApplyEffect(player);
         isCollected = true;
     }

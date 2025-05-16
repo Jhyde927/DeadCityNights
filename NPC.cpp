@@ -644,7 +644,7 @@ void NPC::HandleZombie(){
 
     if (targetNPC == nullptr && isZombie && !hasTarget && distToDest < 1){
         //SetDestination(1000, 4000);
-        idleTime = 1;
+        idleTime = 0.1;
         
     }
 
@@ -1439,27 +1439,18 @@ void NPC::handleDeath(){
         SetAnimationState(DEATH);
         deathTimer = 2.0f;
         destination = position;
-        //Boss explodes on death. Maybe do multiple explosions,
+        //Boss explodes on death. Maybe do multiple explosions, AOE from explosions don't hurt player. 
         SoundManager::getInstance().PlayPositionalSound("explosion", position, player.position, 500);
         for (int i = 0; i < 3; i++) {
             Vector2 offset = {
-                position.x + (float)(GetRandomValue(-64, 64)), // random offset between -20 and +20
-                position.y + (float)(GetRandomValue(-20, 20))
+                position.x + (float)(GetRandomValue(-32, 32)), 
+                position.y + (float)(GetRandomValue(-32, 32))
             };
         
             Explosion exp;
             exp.Start(offset, &resources.explosionSheet);
-            explosions.push_back(exp);
-        
-           
-           
+            explosions.push_back(exp);  
         }
-        
-
-        
-
-
-
     }
 
     if (CEO){
@@ -1475,7 +1466,7 @@ void NPC::handleDeath(){
         //positional sound on zombie death
         SoundManager::getInstance().PlayPositionalSound("zombieDeath", position, player.position, 500);
         riseTimer = 0; //if killed while still rising set the risetimer back to 0 as to not play rise animation
-        isDying = true;           // Start dying process
+        isDying = true;  // Start dying process
         bloodEmitter.SpawnExplosion(20, RED);
         if (rand() % 2 == 0){
             SetAnimationState(DEATH);  // Set to death animation
@@ -1484,7 +1475,7 @@ void NPC::handleDeath(){
         }
 
         deathTimer = 1.5f;//0.85f; made longer so dead body stays for a second.// Set death animation duration // 
-        destination = position; //zombie is at it's destination on death as to not play walk animation
+        destination = position; //zombie is at it's destination on death
     }
 
     if (ghost){
@@ -1538,7 +1529,8 @@ void NPC::handleDeath(){
         isDying = true;           // Start dying process   
         SetAnimationState(DEATH);  // Set to death animation
         SoundManager::getInstance().PlayPositionalSound("deathScream", position, player.position, 500); //death scream can be heard 500 pixels away
-        deathTimer = 0.85f;        // Set death animation duration // needs to be exact
+        deathTimer = 1.0f;        // Set death animation duration //doesn't need to be exact any more. it can be longer so particles can fall. 
+        //zombes should not target if the NPC is dying
         destination = position; 
         bloodEmitter.SpawnBlood(20, RED, facingRight); //pedestrians also should bleed. 
         
@@ -1796,7 +1788,7 @@ void NPC::ClickNPC(){
 bool NPC::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition, Vector2 bulletSize) { 
 // Check hit between bullet hitbox and NPC hitbox. 
 //         ______________ 
-//        |      32-4 x  |
+//        |      32-4 x  | 64x64 image with 8x32 sprite at the center
 //        |     _|_  16y |
 //        |     | 8|     |   
 //        |     |32|     | 64
@@ -1819,10 +1811,10 @@ bool NPC::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition
 
     
     Rectangle bulletRect = {
-        currentBulletPosition.x,  // Bullet's x position
-        currentBulletPosition.y,  // Bullet's y position
-        bulletSize.x,             // Bullet's width
-        bulletSize.y              // Bullet's height
+        currentBulletPosition.x, 
+        currentBulletPosition.y,  
+        bulletSize.x,             
+        bulletSize.y              
     };
 
     // Check if the current or previous bullet position is inside the hitbox (normal check)

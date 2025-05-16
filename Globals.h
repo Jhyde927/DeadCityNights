@@ -125,10 +125,11 @@ struct GlobalState { //store random bools and timers that have accumulated over 
     bool drawingSubwayUI = false;
     bool gotoWork = false;
     bool gotoPark = false;
+    bool atPark = false;
     bool gotoStreet = false;
     bool gotoNecro = false;
     bool gotoCemetery = false;
-    bool debug = false; ///////////////////////////////////////DEBUG KEYS ON/OFF
+    bool debug = true; ///////////////////////////////////////DEBUG KEYS ON/OFF
     bool hasWorked = false;
     bool buttonSleep = false;
     bool hasSlept = false;

@@ -48,7 +48,7 @@ std::string phrase = "A and D to move, hold shift to run\n\nPress W to interact"
 const int screenWidth = 1024; //screen is square for gameplay reasons, we don't want to reveal to much of the screen at one time. 
 const int screenHeight = 1024;
 
-GameState gameState = OFFICE; //start outside. on main street. 
+GameState gameState = OUTSIDE; //start outside. on main street. 
 
 TransitionState transitionState = NONE; //state for transitioning scenes. 
 
@@ -1276,6 +1276,7 @@ void HandleOutsideTransition() {
         globalState.carToPark = true; //true?
         globalState.move_car = false;
         globalState.gotoPark = false;
+        globalState.atPark = true;
 
     }else if (globalState.gotoNecro && globalState.move_car){
         gameState = NECROTECH;
@@ -1518,6 +1519,7 @@ void HandleParkTransition(){
         UpdateNPCActivity(PARK, APARTMENT);
         globalState.glitch = false;
         globalState.remainingZombiesToSpawn = 0;
+        globalState.atPark = false;
 
     }else if (globalState.overSubway){ //exit to subway
         gameState = SUBWAY;
@@ -1534,6 +1536,7 @@ void HandleParkTransition(){
         gameState = ROAD;
         UpdateNPCActivity(PARK, CEMETERY);
         globalState.gotoCemetery = false;
+        globalState.atPark = false;
 
     } else{ //call fade out in park, leaving by car to outside. 
         gameState = OUTSIDE; //call fadeout in park
@@ -1542,6 +1545,7 @@ void HandleParkTransition(){
         globalState.gotoPark = false; //reset gotopark
         globalState.carToPark = false; //take the car back from the park and render it outside. 
         UpdateNPCActivity(PARK, OUTSIDE);
+        globalState.atPark = false;
         
 
     }
@@ -1619,16 +1623,18 @@ void HandleLabTransition(){
 void HandleSubwayTransition(){
     //the car magically teleports back to the street if you take the car to the park and take the subway back. 
     //the car also teleports to the park when you take the train there. 
-    if (globalState.subwayExit && !globalState.subwayToPark && !globalState.gotoPark){ //your at outside subway so exit to outside
+    if (globalState.subwayExit && !globalState.subwayToPark && !globalState.atPark){ //your at outside subway so exit to outside
         gameState = OUTSIDE;
         player.position.x = 4579;
         UpdateNPCActivity(SUBWAY, OUTSIDE);
         globalState.gotoPark = false;
     }
 
-    if (globalState.subwayExit && (globalState.subwayToPark || globalState.gotoPark)){ //your at the parksubway so exit to park, either took the train or drove. 
+    if (globalState.subwayExit && (globalState.subwayToPark || globalState.atPark)){ //your at the park subway station, so exit back to park
         gameState = PARK;
         UpdateNPCActivity(SUBWAY, PARK);
+        globalState.atPark = false; 
+        player.position.x = 1900; //move player next to subway entrance.
     }
 
     if (player.enter_train && !globalState.subwayToPark && !globalState.carToPark){ //Riding train to park
@@ -1746,9 +1752,6 @@ void HandleTransition() {
         DrawFadeMask();
     }
 }
-
-
-
 
 void Dig(){
     Color shovelTint = WHITE;
@@ -1944,18 +1947,66 @@ void RenderWeaponInventory(){
 
             if (weaponInventory[i] == "Gun"){
                 DrawTexture(resources.Revolver, x, y, gunTint);
+                Rectangle gunBounds = { 
+                    static_cast<float>(x),      
+                    static_cast<float>(y),      
+                    static_cast<float>(64),  
+                    static_cast<float>(64)  
+                };
+
+                if ((CheckCollisionPointRec(mousePosition, gunBounds) || globalState.selectedSlot == i)){
+                    if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){\
+                        player.currentWeapon = REVOLVER;
+                    }
+                }
 
             }
             if (weaponInventory[i] == "shotgun"){
                 DrawTexture(resources.shotgunIcon, x, y, shotgunTint);
+                Rectangle shotgunBounds = { 
+                    static_cast<float>(x),      
+                    static_cast<float>(y),      
+                    static_cast<float>(64),  
+                    static_cast<float>(64)  
+                };
+
+                if ((CheckCollisionPointRec(mousePosition, shotgunBounds) || globalState.selectedSlot == i)){
+                    if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){\
+                        player.currentWeapon = SHOTGUN;
+                    }
+                }
             }
 
             if (weaponInventory[i] == "mac10"){
                 DrawTexture(resources.Mac10, x, y, macTint);
+                Rectangle macBounds = { 
+                    static_cast<float>(x),      
+                    static_cast<float>(y),      
+                    static_cast<float>(64),  
+                    static_cast<float>(64)  
+                };
+
+                if ((CheckCollisionPointRec(mousePosition, macBounds) || globalState.selectedSlot == i)){
+                    if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){\
+                        player.currentWeapon = MAC10;
+                    }
+                }
 
             }
             if (weaponInventory[i] == "raygun"){
                 DrawTexture(resources.raygunIcon, x, y, raygunTint);
+                Rectangle rayBounds = { 
+                    static_cast<float>(x),      
+                    static_cast<float>(y),      
+                    static_cast<float>(64),  
+                    static_cast<float>(64)  
+                };
+
+                if ((CheckCollisionPointRec(mousePosition, rayBounds) || globalState.selectedSlot == i)){
+                    if ((IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN))){\
+                        player.currentWeapon = RAYGUN;
+                    }
+                }
             }
         }   
     }

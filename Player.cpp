@@ -335,17 +335,17 @@ void Player::HandleInput(float speed) { //this doesn't run if aiming.
     if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) moveX = -1.0f;
 
     //Hold left click to walk toward cursor
-    if (!isAiming && moveX == 0.0f && fabs(leftStickX) <= deadzone) { 
-        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && !IsMouseButtonDown(MOUSE_RIGHT_BUTTON)) {
-            Vector2 worldMouse = GetScreenToWorld2D(GetMousePosition(), camera);
-            float diff = worldMouse.x - position.x;
-            isRunning = true;
+    // if (!isAiming && moveX == 0.0f && fabs(leftStickX) <= deadzone) { 
+    //     if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && !IsMouseButtonDown(MOUSE_RIGHT_BUTTON)) {
+    //         Vector2 worldMouse = GetScreenToWorld2D(GetMousePosition(), camera);
+    //         float diff = worldMouse.x - position.x;
+    //         isRunning = true;
     
-            if (fabs(diff) > 5.0f) {
-                moveX = (diff > 0) ? 1.0f : -1.0f;
-            }
-        }
-    }
+    //         if (fabs(diff) > 5.0f) {
+    //             moveX = (diff > 0) ? 1.0f : -1.0f;
+    //         }
+    //     }
+    // }
 
     // Controller movement (if above deadzone threshold)
     

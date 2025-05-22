@@ -158,8 +158,6 @@ void Grenade::Explode() {
 void Grenade::Draw() {
     if (isActive){
         
-
-        
         if (!exploded) {
             facingRight = (velocity.x > 0);
             
@@ -180,9 +178,8 @@ void Grenade::Draw() {
             if (showCircle){ //draw a red circle indicating explosion damage radius. 
                 showCircle = false;
                 showCircleTImer = .1;
-                
-                
             }
+            
             if (showCircleTImer > 0){
                 showCircleTImer -= GetFrameTime();
                 //DrawCircle(position.x, position.y, explosionRadius, Fade(RED, 0.5f));

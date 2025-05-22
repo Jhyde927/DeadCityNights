@@ -250,11 +250,6 @@ void UpdateExplosions(float deltaTime){
         explosions[i].Update(deltaTime);
 
     }
-    // for (int i = 0; i < static_cast<int>(explosions.size()); i++) {
-    //     explosions[i].Draw();
-    //     explosions[i].Update(deltaTime);
-
-    // }
 
     // Remove finished ones
     explosions.erase(std::remove_if(explosions.begin(), explosions.end(),
@@ -1805,11 +1800,6 @@ void Dig(){
 }
 
 
-
-
-
-
-
 Vector2 Lerp(Vector2 start, Vector2 end, float t) {
     return Vector2{
         start.x + t * (end.x - start.x),
@@ -1943,8 +1933,6 @@ void RenderWeaponInventory(){
         if (player.currentWeapon == RAYGUN) raygunTint = customTint;
 
         if (!weaponInventory[i].empty()){
-        
-
             if (weaponInventory[i] == "Gun"){
                 DrawTexture(resources.Revolver, x, y, gunTint);
                 Rectangle gunBounds = { 
@@ -4975,6 +4963,12 @@ void RenderOffice(){
             globalState.show_dbox = true;
             globalState.dboxPosition = office_npc.position;
 
+            if (office_npc.frank){
+                if (office_npc.interactions == 1){
+                    globalState.lockElevator2 = false; //talk to frank to unlock the elevator. 
+                }
+            }
+
             
         }
 
@@ -5032,7 +5026,7 @@ void RenderOffice(){
 
     if (!globalState.spawning_zombies && globalState.spawn_frank && AreAllNPCsDeactivated(zombies)){ //all spawned zombies are dead , spawn frank 
         globalState.spawn_frank = false;
-        globalState.lockElevator2 = false;
+        //globalState.lockElevator2 = false; // I thought you needed to talk to frank before the elevator unlocked, 
         spawnFrank(player.position + Vector2 {100, 0}); //spawn to the right of player, like he emerges from hiding. 
 
     }
@@ -5356,6 +5350,9 @@ void RenderNecroTech(){
         if (robot.isActive){
             robot.Update();
             robot.Render();
+            if (globalState.bossDefeated){ //robot is angry when leaving necrotech
+                robot.agro = true;
+            }
             if (!robot.agro) robot.ClickNPC(); //dont talk to angry robots. 
             if (robot.interacting){
                 phrase = robot.speech;
@@ -5447,7 +5444,8 @@ void RenderOutside() {
     player.outline = false; //outline was turning on, on death somehow, so assert that it's false when outside. 
     SoundManager::getInstance().UpdateMusic("StreetSounds"); //only update street sounds when oustide or in vacant lot
     SoundManager::getInstance().PlayMusic("StreetSounds");
-    PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.basePosition, player.position, 800);
+    //once you have cemetery key UFO moves to cemetery. so don't play the sound outside. 
+    if (!globalState.hasCemeteryKey) PlayPositionalSound(SoundManager::getInstance().GetSound("energyHum"), ufo.basePosition, player.position, 800);
     SoundManager::getInstance().UpdatePositionalSounds(player.position);//call this wherever zombies spawn to update positional audio
     playerOutsideInteraction();
 
@@ -5514,11 +5512,12 @@ void RenderOutside() {
     if (player.position.x > ufo.position.x && player.position.x < ufo.position.x + 64){
         if (ufo.position.y > 395){ //if the UFO is low enough, and the player is under, show beam.
             globalState.abductionBeam = true;
-        } //we dont do this any more. i thought. 
+        } //we dont do this any more.
         
     }
 
     if (globalState.move_car){
+        player_car.carSpeed = 100;
         player_car.position.x -= player_car.carSpeed * GetFrameTime();
     }else{
         player_car.position = Vector2{1710, 668};

@@ -217,14 +217,12 @@ void NPC::HandleNPCInteraction(){ //Click or KEY_UP on NPC
                     player.shells += 30;
                     player.revolverAmmo += 30;
                     PlaySound(SoundManager::getInstance().GetSound("reload"));
-                    break;
-
-                case 7:
-                    speech = "";
-                    interactions = 1;
+                    //speech = "Here, I found this box of ammo";
+                    
                     clickCount = 0; //reset click count dummy. 
                     idleTime = 0;
                     talkTimer = 0;
+                    interactions = 1; //end of switch, queue up next interaction outside.
                     break;
                     
                 }

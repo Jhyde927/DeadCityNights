@@ -1184,6 +1184,101 @@ NecroTech Interior:
 
 	remove whisky, it just causes problems for not much reward. just make it so you can't buy it. 
 
-	went to park to subway back to street, when I left by car to the cemetery, I ended up in the park. gottopark needs to be set back to false, or one of those bools. x fixed. We may have repeating code for traveling by subway, it's a clusterfuck. 
+	went to park to subway back to street, when I left by car to the cemetery, I ended up in the park. gottopark needs to be set back to false, or one of those bools. x fixed. We may have repeating code for traveling by subway, it's a clusterfuck.
+	semi fixed when I connected cemetery to park, fixed a lot of errors. still a clusterfuck.  
 
 	I'm pretty sure it showed the shovel tutorial when I exited car in cemetery. x fixed and updated release
+
+	make a new NPC. What kind of NPC? an enemy? A boss of the astral realm. Maybe Death is the boss of astral. A grim reaper who has a fireball like attack. so we can reuse fireball code for a different looking projectile. The sprite would need to fit into 64x64, unless we could use drawtexturepro to stretch it to a larger size. Maybe try this with the demon first. 
+
+	Tried it with boss demon. works great just to scale the sprite when drawing. hit boxes are still small. but that's ok. I scaled the demon by 1.5. so 96x96 with origin set to 48, 32. moving the sprite down by 16 pixels so he hovers just above the ground. Try to make it play the attack animation when he throws fireball. and spawn the fireball exactly at this hand. 
+	Can't be done. attacking must be getting set to false some where or the animation is being set to walk. 
+
+	I was going to make another NPC. Another person on the street? A story character of some kind. An old lady that lost her cat. she could be hunched over with a cane. and a funny walk animation as she shuffles along. Then do we make a cat NPC? Maybe the cat can be in one of like 3 different places. or maybe it's just in the subway. To give a reason for the subway. Where the vest is now in the subway is a cat NPC that patrols around. and you then pick it up and it goes into your inventory? maybe it's an item. 
+
+	make a second inventory just for weapons. This would free up more room in the inventory proper. weaponInventory[4].
+	Where would we put it? top left? you can keep the functionality you have now. Just implement it separately and remove functionality once the new way is done. Where to start. Create a c style array called weaponInventory at the top of main. 
+	weaponInventorySize = 4; 
+
+	for (int i = 0; i < inventorysize; i++){
+		if (weaponInventory[i] == "Shotgun"){
+			draw shotgun icon. 
+		}
+	}
+
+	void addWeapon(type){
+		weaponInventory[i] = type
+	}
+
+	Added weapons inventory. Makes room for another item, but what. 
+
+	58 total npcs. 
+
+	connect park to cemetery x
+
+	connect cemetery to park x
+
+	lobby should go agro when you die in necrotech. 
+
+	test hobo on mainstreet again record it, it might look better now that we have proper blood. 
+
+	Make controller support for selecting menu buttons. Not just virtual cursor, make it hit up and down to scroll through menu buttons. would need: currentSelectedButton, buttons array? Look at inventory navigation and see how we do it there. 
+
+	currentButton = 0             switch(currentButton)
+									case 0: highlight button0 break;
+									case 1: highlight button1 break;
+	0 play 
+	1 controls
+	2 fullscreen
+	3 quit
+
+	seems like a very big job, have to handle manual highlighting, and timers and such for menu navigation with stick. How many people are going to play it with a controller besides you?
+
+	Hobo should move toward player and stop at a distance when outside. Only if he doesn't have a target. not doable.  
+
+	raygun bullets were getting recycled and we still drawing raygun projectiles.
+
+	outline shaders comes on after dying in the office some how. -not sure how this happens, does it happen when debug keys are off? we would need to play the whole game again. and remember to die on the office. We could hard code outline to be false if outside. Any reason not to do this? Do it then
+
+	The only feedback I have gotten was from my little brother. No one cares. You can stop now. 
+
+	when frank give you ammo, i think it sets the amount of shotgun bullets to 30 not adds 30. x
+
+	boss death timer should be 1.5 second like zombie. maybe longer.  x set to 2.0 seconds. maybe it should stay. 
+
+	having pills next to drugs in the inventory and take the pills the drugs also get taken, and hasdrugs doenn't get set back to zero. x just needed to break after removing from inventory. I think. Test this. 
+
+	we dont show crosshair on main street. Now we do x
+
+	cyber zombies explode on death. Looks sick. x Robots also explode on death, along with a yellow particle explosion. 
+
+	Boss should explode? He's full of fireballs so why not. Seemed like there were 4 explosions and one was underneath the ground. It was only for a second so I could have been tripping. 
+
+	why is player blood white?
+
+	friendly ghost should make a noise when he disappears.
+
+	fixed subway exit to park. I think. It's still a clusterfuck. 
+
+	Where would be a better place to find the mac10? Outside necrotech. means you must do the graveyard with just a shotgun. that's fine. Where does it come from? an NPC gives it to you? digging it up in the graveyard makes more sense. I would need to make another area just for it. another place you could drive to. or take the subway to. hospital? instead of waking up at your apartment when you die you wake up at the hospital, and you find the mac10 there? 
+
+	you wake up in the hospital on the second floor and need to take an elevator down to the street? is the hospital on main street? replace the liquor store with the hospital. You can enter it from the beginning of the game and find pills there.
+
+	clicking the weapons inventory icon will switch to that weapon. x
+
+	Put the game on steam.
+
+	frank has an empty dialog box above his head after you talk to him. Frank now says "..." instead of nothing. So there isn't a empty dialog box anymore. 
+
+	can still hear the UFO when outside after it appears in cemetery. x
+
+	The speed of the car is variable. it shoudn't be, maybe x
+
+	NPCs could react to gunfire. next time you talk to them, they could say wow that was crazy or something. 
+
+	leaving necro tech the robot should be hostile. x
+
+	franks dialog didn't switch to the new interaction x it's still fucky. but now you need to see all of franks dialog before the elevator unlocks ensuring you get ammo, and see dialog. 
+
+
+

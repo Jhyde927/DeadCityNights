@@ -13,9 +13,9 @@ struct ActiveSound { //for positional audio
     float maxDistance;
 };
 
-class SoundManager {
+class SoundManager { //singleton
 public:
-    static SoundManager& getInstance() {
+    static SoundManager& getInstance() { 
         static SoundManager instance;
         return instance;
     }
@@ -129,7 +129,8 @@ public:
         voicePlaying = true;
     }
 
-    void StartRandomVoices(float duration) { // start playing a randomized series of clips
+    void StartRandomVoices(float duration) { // start playing a randomized series of clips, used for hobo speaking randomized gibberish ,we have like 
+        //6 different clips of a gibberish. We play a series of random clips back to back for a certain duration depending on how long the dialog text is. 
         if (voices.empty()) return;
 
         voiceTimer = duration;

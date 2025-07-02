@@ -1,7 +1,4 @@
-// GameResources.h
-
-#ifndef GAMERESOURCES_H
-#define GAMERESOURCES_H
+#pragma once
 
 #include <raylib.h>  // Include Raylib to use Texture2D and Font types
 
@@ -136,12 +133,11 @@ struct GameResources {
     Texture2D demonSheet;
     Texture2D fireballSheet;
     Texture2D energyBallSheet;
-    
 
     Font defaultFont;
 
 
-        // Load all game resources
+    // Load all game resources
     void Load();
 
     // Unload all game resources
@@ -150,6 +146,3 @@ struct GameResources {
 };
 
 extern GameResources resources;  // Declare external global instance
-
-
-#endif // GAMERESOURCES_H

@@ -1,6 +1,5 @@
 // GameEnums.h
-#ifndef GAME_ENUMS_H
-#define GAME_ENUMS_H
+#pragma once
 
 //Current scene we are rendering
 enum GameState {
@@ -8,8 +7,8 @@ enum GameState {
     APARTMENT,
     ROAD,
     CEMETERY,
-    WORK, 
-    LOT, 
+    WORK,
+    LOT,
     GRAVEYARD,
     ASTRAL,
     PARK,
@@ -35,7 +34,6 @@ enum TransitionState {
     NONE,
     FADE_IN,
     FADE_OUT,
-    
 };
 
 enum PauseState {
@@ -45,5 +43,3 @@ enum PauseState {
 
 extern GameState gameState;  // Declare global gameState
 //extern PauseState currentPauseState;
-
-#endif // GAME_ENUMS_H

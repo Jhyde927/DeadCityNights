@@ -1,6 +1,5 @@
 // NPC.h
-#ifndef NPC_H
-#define NPC_H
+#pragma once
 
 #include <raylib.h>
 #include "Player.h"
@@ -14,7 +13,7 @@ class Player;  // Forward declaration of Player
 enum AnimationState {
     IDLE,
     WALK,
-    RUN, 
+    RUN,
     DEATH,
     ATTACKING,
     RISING,
@@ -26,9 +25,8 @@ enum BossState {
     BOSS_CHARGE,
     BOSS_FLYAWAY,
     BOSS_CHASE,
-    BOSS_FIREBALL, 
+    BOSS_FIREBALL,
     BOSS_DEATH,
-   
 };
 
 
@@ -36,7 +34,7 @@ enum BossState {
 class NPC {
 public:
     Vector2 position;
-    AnimationState currentAnimation;   
+    AnimationState currentAnimation;
     Texture2D texture;
 
     int currentFrame;
@@ -48,7 +46,7 @@ public:
     float idleTime;
     bool isZombie;
     bool isBoss; //WIP
-    
+
     bool isDying;      // Flag to check if NPC is in dying state
     float deathTimer;  // Timer for death animation
     float riseTimer;
@@ -115,11 +113,11 @@ public:
     // Add an emitter for each NPC
     Emitter bloodEmitter;
 
-    NPC* targetNPC; //zombie's target NPC, a null_ptr that's set to a pointer to a NPC inside a vector 
-    
+    NPC* targetNPC; //zombie's target NPC, a null_ptr that's set to a pointer to a NPC inside a vector
+
     //Constructor
     NPC(Texture2D npcTexture, Vector2 startPos, float npcSpeed, AnimationState initialAnimation, bool isActive, bool zombie);
-    
+
     //public
     void Update();
     void Render();
@@ -131,7 +129,7 @@ public:
 
 
 private:
-    void SetAnimationState(AnimationState newState); 
+    void SetAnimationState(AnimationState newState);
     void HandleHobo();
     void HandleCEO();
     void HandlePolice();
@@ -145,8 +143,6 @@ private:
     void ghostMoves();
     void playZombieHit(int soundIndex);
     void handleDeath();
-    void HandleBoss(float deltaTime); 
+    void HandleBoss(float deltaTime);
     void updateBoss(float deltaTime);
 };
-
-#endif

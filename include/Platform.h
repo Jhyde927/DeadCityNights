@@ -1,7 +1,6 @@
 // Platform.h
 
-#ifndef PLATFORM_H
-#define PLATFORM_H
+#pragma once
 
 #include "raylib.h"
 
@@ -11,9 +10,7 @@ public:
     Color color;     // The color of the platform
 
     Platform(float x, float y, float width, float height, Color color);
-    
+
     void DrawPlatformTexture(Texture2D& texture, Rectangle& platformRect);
     void Draw() const;
 };
-
-#endif  // PLATFORM_H

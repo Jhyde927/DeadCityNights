@@ -52,7 +52,7 @@ std::vector<std::vector<NPC>*> allNPCGroups;
 
 Emitter explosionEmitter;  
 
-Camera2D camera = { 0 };
+Camera2D camera = {};
 float targetZoom = 1.0f; 
 float totalTime = 0.0f; //total elapsed time from starting game. Needed for sin waves
 Vector2 mousePosition = {0, 0}; 
@@ -96,8 +96,6 @@ void InitTank(Vector2 position){
     tank.explode = false;
     tank.canSpawn = true;
     Tanks.push_back(tank);
-
-
 }
 
 //consoles in lab and penthouse
@@ -213,12 +211,11 @@ void InitializeTrain() {
 
 //destructible boxes.
 void InitBoxes(){
-    // boxes are stored in one big vector "boxes", and assigned to a specific scene on initiation. 
-    //renderBoxes() called from render fucntions then renders the appropriate boxes for each scene. 
+    // boxes are stored in one big vector "boxes", and assigned to a specific scene on initiation.
+    //renderBoxes() called from render fucntions then renders the appropriate boxes for each scene.
     Texture2D boxSheet = resources.boxSheet;
 
     //LOT
-    
     boxes.emplace_back(Vector2 {2938, 724},boxSheet, LOT);
     boxes.emplace_back(Vector2 {2988, 724}, boxSheet, LOT);
     boxes.emplace_back(Vector2 {2988+50, 724}, boxSheet, LOT);
@@ -256,15 +253,13 @@ void InitBoxes(){
     //OFFICE
     boxes.emplace_back(Vector2 {1210, 724}, boxSheet, OFFICE);
     boxes.emplace_back(Vector2 {1260, 724}, boxSheet, OFFICE);
-
-
 }
 
 //astral platforms
 void InitPlatforms() {
     //initialize platforms before drawing them in astral
     //emplace_back: Constructs the Platform object directly in the vector without creating a temporary object.
-    
+
     platforms.emplace_back(2300.0f, 675.0f, 200.0f, 20.0f, WHITE);
     platforms.emplace_back(2500.0f, 600.0f, 150.0f, 20.0f, WHITE);
     platforms.emplace_back(2800.0f, 550.0f, 250.0f, 20.0f, WHITE);
@@ -336,8 +331,8 @@ void InitLabObjects(){
 NPC* FindClosestNPC(NPC& zombie, std::vector<NPC>& TargetedNPCs) {
     //find closest npc to zombie
     NPC* closestNPC = nullptr;
-    float minDist = 500.0f; // Large initial distance //but not too large. 500 is max distance to give chase. otherwise we dont bother. 
-    //prevents NPCs running off screen because a zombie targeting them 1000 pixels away. 
+    float minDist = 500.0f; // Large initial distance //but not too large. 500 is max distance to give chase. otherwise we dont bother.
+    //prevents NPCs running off screen because a zombie targeting them 1000 pixels away.
 
     for (NPC& npc : TargetedNPCs) {
         if (npc.isActive && zombie.isActive) { //make sure the zombie is also active

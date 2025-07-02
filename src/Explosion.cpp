@@ -2,9 +2,8 @@
 #include "NPC.h"
 #include "Globals.h"
 
-//called when instanced. 
+//called when instanced.
 void Explosion::Start(Vector2 pos, Texture2D* tex) {
-    
     position = pos;
     isActive = true;
     currentFrame = 0;
@@ -15,23 +14,21 @@ void Explosion::Start(Vector2 pos, Texture2D* tex) {
     emitter = Emitter(offset);
     emitter.SetMaxParticles(50);
     emitter.SpawnExplosion(50, ORANGE);
-    
-    //AOE damage on zombies. not the player though. 
-    for (NPC& zombie : zombies){ //maybe loop through all NPCs? so even pedestrians are damaged by fireballs. 
+    //AOE damage on zombies. not the player though.
+    for (NPC& zombie : zombies){ //maybe loop through all NPCs? so even pedestrians are damaged by fireballs.
         float hitboxWidth = 8.0f;
-        float hitboxHeight = 32.0f; 
-    
+        float hitboxHeight = 32.0f;
+
         // Offset the hitbox so it's centered on the zombie's position
         Rectangle npcHitbox = {
-            zombie.position.x + 32-4,   
-            zombie.position.y + 16,  
-            hitboxWidth,                    
-            hitboxHeight                   
+            zombie.position.x + 32-4,
+            zombie.position.y + 16,
+            hitboxWidth,
+            hitboxHeight
         };
 
         if (CheckCollisionCircleRec(offset, radius, npcHitbox)){
             zombie.TakeDamage(100);
-            
         }
     }
 }
@@ -57,10 +54,7 @@ void Explosion::Update(float deltaTime) {
                 currentFrame++;
             }
         }
-        
     }
-
-   
 }
 
 void Explosion::Draw() const {
@@ -74,9 +68,6 @@ void Explosion::Draw() const {
             static_cast<float>(frameWidth),
             static_cast<float>(frameHeight)
         };
-        
         DrawTextureRec(*spriteSheet, srcRect, position, WHITE);
     }
-
-   
 }

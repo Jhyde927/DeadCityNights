@@ -1,5 +1,4 @@
-#ifndef GRENADE_H
-#define GRENADE_H
+#pragma once
 
 #include <vector>
 #include "raylib.h"
@@ -14,10 +13,10 @@ public:
     float lifetime = 2.0f;  // Time before explosion
     float explosionRadius = 40.0f; // Area of effect
     float gravity = 500.0f; // Simulated gravity effect
-    float frameTimer = 0.0f; 
+    float frameTimer = 0.0f;
     int currentFrame = 0;
     float frameSpeed = 0.1f; // Time per frame
-    int maxFrames = 4; // Assuming 4 frames 
+    int maxFrames = 4; // Assuming 4 frames
     float explosionTimer = 0.0f; // Grenade stays alive for 300ms after exploding
     bool isActive = true;
     bool facingRight = true;
@@ -37,5 +36,3 @@ private:
 
 // Global grenade vector for tracking all grenades
 extern std::vector<Grenade> grenades;
-
-#endif // GRENADE_H

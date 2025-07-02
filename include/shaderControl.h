@@ -1,6 +1,5 @@
 // shaderControl.h
-#ifndef SHADERCONTROL_H
-#define SHADERCONTROL_H
+#pragma once
 
 #include "raylib.h"
 #include "GameEnums.h"
@@ -23,7 +22,7 @@ struct ShaderResources {
     Shader redVignetteShader;
     Shader highlightShader;
     Shader sharpenShader;
-    
+
     int timeLoc;
     int glowThresholdLoc;
     int glowIntensityLoc;
@@ -31,7 +30,6 @@ struct ShaderResources {
     int vignetteColorLoc;
     int radiusLoc;
 
-    
     float totalTime;
 };
 
@@ -45,5 +43,3 @@ void UnloadShaders();
 void UpdateShaders(float deltaTime, bool fullscreen, GameState& gameState);
 
 extern ShaderResources shaders;
-
-#endif // SHADERCONTROL_H

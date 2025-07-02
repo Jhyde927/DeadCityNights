@@ -13,7 +13,7 @@
 #include "GameCalendar.h"
 #include "Platform.h"
 #include <string>
-#include <cstdlib>  
+#include <cstdlib>
 #include <ctime>
 #include "shaderControl.h"
 #include <random>
@@ -25,15 +25,14 @@
 #include "Particle.h"
 #include "Explosion.h"
 
-//The law is one. 
+//The law is one.
 
 bool showInventory = true;
 const int INVENTORY_SIZE = 12;  // Define the size of the inventory
-std::string inventory[INVENTORY_SIZE] = {"", "", "", "", "", "", "", "", "", "", "", ""}; //Inventory is a fixed array for no particular reason.
+std::string inventory[INVENTORY_SIZE] = {};
 
-const int WI_SIZE = 4; //size of the weapons inventory. 
-std::string weaponInventory[WI_SIZE] = {"", "", "", ""};
-
+const int WI_SIZE = 4; //size of the weapons inventory.
+std::string weaponInventory[WI_SIZE] = {};
 
 const int GAME_SCREEN_WIDTH = 1024;
 const int GAME_SCREEN_HEIGHT = 1024;
@@ -43,14 +42,14 @@ const float deadZone = 0.2f;   // Ignore slight stick movements
 // Virtual cursor position (simulates the mouse with gamepad)
 Vector2 virtualCursor = { 512, 512 }; // Start at screen center
 
-std::string phrase = "A and D to move, hold shift to run\n\nPress W to interact"; //initial tutorial phrase, phrase is what we call a message visible to the player. 
+static std::string phrase = "A and D to move, hold shift to run\n\nPress W to interact"; //initial tutorial phrase, phrase is what we call a message visible to the player.
 
-const int screenWidth = 1024; //screen is square for gameplay reasons, we don't want to reveal to much of the screen at one time. 
+const int screenWidth = 1024; //screen is square for gameplay reasons, we don't want to reveal to much of the screen at one time.
 const int screenHeight = 1024;
 
-GameState gameState = OUTSIDE; //start outside. on main street. 
+GameState gameState = OUTSIDE; //start outside. on main street.
 
-TransitionState transitionState = NONE; //state for transitioning scenes. 
+TransitionState transitionState = NONE; //state for transitioning scenes.
 
 // Initialize random number generator
 std::random_device rd;   // Seed for the random number engine
@@ -63,7 +62,7 @@ void PrintVector2(const Vector2& vec) {
 
 // Function to add an item to the first available slot in the inventory
 void AddItemToInventory(const std::string& item) {
-    //what happens if inventory is full and we add to it? nothing? the item is lost. 
+    //what happens if inventory is full and we add to it? nothing? the item is lost.
 
     for (int i = 0; i < INVENTORY_SIZE; i++) {
         if (inventory[i].empty()) {
@@ -204,14 +203,12 @@ void fireballCheck(){
 
             }
 
-            if (bullets[i].position.y > 750){ //fireball hits the ground, explode. 
+            if (bullets[i].position.y > 750){ //fireball hits the ground, explode.
                 if (bullets[i].isActive){
                     Vector2 offset {-32, -32}; //center the explosion
                     TriggerExplosion(bullets[i].position + offset, &resources.explosionSheet);
                     bullets[i].isActive = false;
-                
                 }
-            
             }
         }
     }
@@ -396,27 +393,23 @@ void crowbarAttack(std::vector<NPC>& enemies){
     //DrawRectangleLines(attackHitbox.x, attackHitbox.y, attackHitbox.width, attackHitbox.height, RED);
 
     for (NPC& enemy : enemies){
-        
         if (enemy.isActive){          
             float hitboxWidth = 16.0f;   
             float hitboxHeight = 32.0f;  //Tall rectange to cover the sprite. 
-            
             Rectangle npcHitbox = { 
                 enemy.position.x+24,      // Center horizontally
                 enemy.position.y+16,      //Center vertically
-                hitboxWidth,  
-                hitboxHeight                    
+                hitboxWidth,
+                hitboxHeight
             };
             //debug draw hitbox
             //DrawRectangleLines(npcHitbox.x, npcHitbox.y, npcHitbox.width, npcHitbox.height, RED); 
 
             if (CheckCollisionRecs(attackHitbox, npcHitbox) && player.currentFrame == 2){ 
-                
                 if (enemy.hitTimer <= 0 && globalState.canPlaySound){
                     globalState.canPlaySound = false;
                     globalState.playSoundTimer = .2;
                     PlaySound(SoundManager::getInstance().GetSound("crowbarAttack"));
-                    
                 }
                 enemy.TakeDamage(10); //2 hits to kill a zombie
                 return; //does this help?
@@ -429,13 +422,10 @@ void crowbarAttack(std::vector<NPC>& enemies){
 
 void showBigBadge(){
     //show the badge in the middle of the screen until you click the badge again. 
-    
     if (globalState.showBadge){
         DrawTexture(resources.BigBadge, 512, 512, WHITE);
 
-    } 
-
-
+    }
 }
 
 void renderBoxes(){
@@ -448,132 +438,121 @@ void renderBoxes(){
     }
 }
 
-void OutsideCarButtons(){
-    //very old code. 
-    if (player.enter_car && globalState.buttonCemetery){ //press buttons cemetery
+void OutsideCarButtons() {
+    if (!player.enter_car) return;
+
+    if (globalState.buttonCemetery) {
         globalState.move_car = true;
         globalState.show_carUI = false;
-    }else if (player.enter_car && globalState.buttonWork){//button press work
+    }
+    else if (globalState.buttonWork) {
+        globalState.move_car = true;
         globalState.gotoWork = true;
-        globalState.move_car = true;
         globalState.hasWorked = true;
-    }else if (player.enter_car && globalState.buttonPark){ //button press Park
-        globalState.gotoPark = true;
-        
+    }
+    else if (globalState.buttonPark) {
         globalState.move_car = true;
-        
-    }else if (player.enter_car && globalState.buttonNecro){ //button press NecroTech
+        globalState.gotoPark = true;
+    }
+    else if (globalState.buttonNecro) {
         globalState.move_car = true;
         globalState.gotoNecro = true;
     }
-
 }
 
-void ApartmentLogic(){
-    //very old code. 
-    if (globalState.buttonInternet && player.hasBadge && !globalState.showInternet){
+void ApartmentLogic() {
+    // Internet button logic
+    if (globalState.buttonInternet && player.hasBadge && !globalState.showInternet) {
         globalState.showInternet = true;
         globalState.NecroTech = true;
         globalState.internetTimer = 5.0f;
         player.necroTechSearched = true;
-    }else{
+    } else {
         globalState.showInternet = false;
     }
 
-    if (globalState.buttonSleep && !globalState.hasSlept){ ////Go to sleep
-        gameCalendar.AdvanceDay(); 
+    // Sleep logic
+    if (globalState.buttonSleep && !globalState.hasSlept) {
+        gameCalendar.AdvanceDay();
         globalState.buttonSleep = false;
         globalState.hasWorked = false;
         globalState.hasSlept = true;
         globalState.buyFortune = false;
-        globalState.canGiveFortune = true; //fortune teller is reset 
-        globalState.drunk = false;  //Effects ware off when you sleep
+        globalState.canGiveFortune = true;
+        globalState.drunk = false;
         globalState.applyShader = false;
         globalState.over_apartment = false;
         globalState.glitch = false;
-        transitionState = FADE_OUT; //fades out to street for now.
-        player.currentHealth = player.maxHealth; //recover hitpoints after sleeping. 
-        for (NPC& npc : npcs){
-            if (npc.police){
-                npc.agro = false; // loose the cops after sleeping. 
-                
-            }
-        } 
+        transitionState = FADE_OUT;
+        player.currentHealth = player.maxHealth;
+
+        for (NPC& npc : npcs) {
+            if (npc.police) npc.agro = false;
+        }
     }
-    Vector2 computerPos = {screenWidth/2 - 10, 587};
-    //Draw a rectangle over interactive objects and check for mouse collision with said rectangle. 
-    // Car key Rectangle 
-    Rectangle textureBounds = {
-        globalState.carKeysPos.x,      // X position
-        globalState.carKeysPos.y,      // Y position
-        static_cast<float>(64),  // Width of the texture
-        static_cast<float>(64)  // Height of the texture
+
+    // Interactive objects' rectangles
+    const Vector2 computerPos = { screenWidth / 2.f - 10.f, 587.f };
+
+    Rectangle textureBounds{
+        globalState.carKeysPos.x,
+        globalState.carKeysPos.y,
+        64.f, 64.f
+    };
+    Rectangle drawerBounds{
+        globalState.drawerPos.x,
+        globalState.drawerPos.y,
+        128.f, 64.f
+    };
+    Rectangle computerBounds{
+        computerPos.x,
+        computerPos.y,
+        64.f, 64.f
     };
 
-                    
-    // drawer rec
-    Rectangle drawerBounds = {
-        globalState.drawerPos.x,      // X position
-        globalState.drawerPos.y,      // Y position
-        static_cast<float>(128),  // Width of the texture
-        static_cast<float>(64)  // Height of the texture
-    };
-    // computer rec
-    Rectangle ComputerBounds = {
-        computerPos.x,      // X position
-        computerPos.y,      // Y position
-        static_cast<float>(64),  // Width of the texture
-        static_cast<float>(64)  // Height of the texture
-    };
-
-    // Check if the mouse is over the texture
-    if (CheckCollisionPointRec(mousePosition, textureBounds)&& !globalState.has_car_key) {
+    // Car key pickup
+    if (CheckCollisionPointRec(mousePosition, textureBounds) && !globalState.has_car_key) {
         showInventory = true;
         AddItemToInventory("carKeys");
         globalState.has_car_key = true;
         PlaySound(SoundManager::getInstance().GetSound("Keys"));
     }
 
-    if (CheckCollisionPointRec(mousePosition, drawerBounds)&& !globalState.openDrawer){
-        globalState.openDrawer = true;
-        PlaySound(SoundManager::getInstance().GetSound("OpenDrawer"));
-        if (!player.hasGun){
-            //AddItemToInventory("Gun");
-            AddWeaponToInventory("Gun");
-            showInventory = true;
-            player.hasGun = true;
-            PlaySound(SoundManager::getInstance().GetSound("reload"));
-            if (globalState.firstHobo == false){ 
-                globalState.raiseZombies = true; //only raise zombies if the player has the gun and first hobo = false
+    // Drawer open/close & gun pickup
+    if (CheckCollisionPointRec(mousePosition, drawerBounds)) {
+        if (!globalState.openDrawer) {
+            globalState.openDrawer = true;
+            PlaySound(SoundManager::getInstance().GetSound("OpenDrawer"));
+            if (!player.hasGun) {
+                AddWeaponToInventory("Gun");
+                showInventory = true;
+                player.hasGun = true;
+                PlaySound(SoundManager::getInstance().GetSound("reload"));
+                if (!globalState.firstHobo) {
+                    globalState.raiseZombies = true;
+                }
             }
-
+        } else {
+            globalState.openDrawer = false;
+            PlaySound(SoundManager::getInstance().GetSound("CloseDrawer"));
         }
-        
-
-    }else if (CheckCollisionPointRec(mousePosition, drawerBounds) && globalState.openDrawer){
-        globalState.openDrawer = false;
-        PlaySound(SoundManager::getInstance().GetSound("CloseDrawer"));
     }
 
-    if (CheckCollisionPointRec(mousePosition, ComputerBounds) && !globalState.showAPUI){
+    // Computer UI toggle
+    if (CheckCollisionPointRec(mousePosition, computerBounds)) {
         globalState.showAPUI = true;
-    }else{
-        if (!globalState.showInternet){
-            globalState.showAPUI = false;
-        }
-        
+    } else if (!globalState.showInternet) {
+        globalState.showAPUI = false;
     }
-
 }
-
 
 void MonitorMouseClicks(){
 
-    //Player_car button logic + apartment button logic 
+    //Player_car button logic + apartment button logic
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)){
         if (gameState == APARTMENT){
 
-           ApartmentLogic();   
+           ApartmentLogic();
 
         }else if (gameState == OUTSIDE){
 
@@ -585,7 +564,7 @@ void MonitorMouseClicks(){
             //move_car = true;
                 transitionState = FADE_OUT;
                 //dont reset yet
-                globalState.raiseZombies = false; //reset zombie waves. So returning player can trigger them again. 
+                globalState.raiseZombies = false; //reset zombie waves. So returning player can trigger them again.
                 globalState.zombieWave2 = false;
                 globalState.zombieWave3 = false;
 
@@ -637,7 +616,6 @@ void HandleKeyboardAiming(){ //and gamepad
     if (IsGamepadAvailable(0)) {
         leftStickX = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_X);
     }
-    
     if (player.isAiming && (IsKeyDown(KEY_F) || IsGamepadButtonDown(0, GAMEPAD_BUTTON_LEFT_TRIGGER_2))) {
         // Handle keyboard-only aiming (e.g., using arrow keys or player movement keys)
         if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT) || leftStickX > deadZone) {
@@ -646,14 +624,10 @@ void HandleKeyboardAiming(){ //and gamepad
         if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT) || leftStickX < -deadZone) {
             player.facingRight = false;
         }
-    }else if (player.isAiming && (!IsKeyDown(KEY_F) && !IsGamepadButtonDown(0, GAMEPAD_BUTTON_LEFT_TRIGGER_2))) {// If the player is aiming with keyboard, allow mouse control to set the facing direction
+    } else if (player.isAiming && (!IsKeyDown(KEY_F) && !IsGamepadButtonDown(0, GAMEPAD_BUTTON_LEFT_TRIGGER_2))) {// If the player is aiming with keyboard, allow mouse control to set the facing direction
         // Set facing direction based on world mouse position
-        
         player.facingRight = WorldMousePosition.x > player.position.x; 
         //facing right is true if mousepos.x > playerPos.x and not holding f and trigger
-        
-        
-
     }
 }
 
@@ -696,7 +670,7 @@ void DrawMoney(){
     std::string smoney = "$ " + std::to_string(globalState.displayMoney);
 
     DrawText(smoney.c_str(), screenWidth/2+400, 25, 30, WHITE);
-    //Animate money ticking up or down. 
+    //Animate money ticking up or down.
     if (globalState.displayMoney < player.money){
         globalState.displayMoney++;
     }else if (globalState.displayMoney > player.money){
@@ -734,7 +708,7 @@ void spawnRobot(Vector2 position){
     robot_npc.health = 300;
     robot_npc.agro = true; //robots spawn angry
     robot_npc.SetDestination(player.position.x, player.position.x + 100);
-    
+
     if (gameState == LOBBY){
         lobbyRobots.push_back(robot_npc);
     }
@@ -793,8 +767,7 @@ void spawnBoss(Vector2 position){
 }
 
 void spawnZombie(Vector2 position){
-    //spawn a single zombie at a specific position. 
-    
+    //spawn a single zombie at a specific position.
     int zombie_speed = 25;
     NPC zombie_npc = CreateNPC(resources.zombieSheet, position, zombie_speed, RISING, true, true);
     zombie_npc.SetDestination(2000, 3000);
@@ -802,11 +775,10 @@ void spawnZombie(Vector2 position){
     zombies.push_back(zombie_npc);
 
     int soundIndex = rand() % 3; //zombie moans while rising.
-    switch (soundIndex){  
+    switch (soundIndex) {
         case 0:
             PlaySound(SoundManager::getInstance().GetSound("moan1"));
             break;
-        
         case 1:
             PlaySound(SoundManager::getInstance().GetSound("moan2"));
             break;
@@ -815,8 +787,6 @@ void spawnZombie(Vector2 position){
             PlaySound(SoundManager::getInstance().GetSound("moan3"));
             break;
     }
-    
-    
 }
 
 
@@ -2373,10 +2343,8 @@ void DrawApartmentUI(){
         }else{
             DrawText("Adress: \n\n 123 Paper St", TextPos.x, TextPos.y, 20, WHITE);
             //Once you have the address of necrotech it shows up in the car's destinations menu
-            
         }
-        
-    }else{
+    } else{
         DrawText("     Sleep", TextPos.x, TextPos.y, 20, tint);
         DrawText("    Internet", TextPos.x, TextPos.y + 21, 20, Itint);
     }
@@ -2394,10 +2362,10 @@ void DrawSubwayUI(){
 
 
     Rectangle parkBounds = { //cemetery / street
-        ui_pos.x,    
-        ui_pos.y,      
-        static_cast<float>(96),  
-        static_cast<float>(16)  
+        ui_pos.x,
+        ui_pos.y,
+        static_cast<float>(96),
+        static_cast<float>(16)
     };
 
 
@@ -2405,14 +2373,14 @@ void DrawSubwayUI(){
     if (CheckCollisionPointRec(mouseWorldPos, parkBounds)){ //middle //cemetery/street
         parkTint = RED;
         globalState.buttonPark = true;
-    }else{
+    } else{
         globalState.buttonPark = false;
     }
 
     if (globalState.gotoStreet){
         DrawText("   Street", ui_pos.x, ui_pos.y, fontSize, parkTint);
 
-    }else{
+    } else{
         DrawText("   Park", ui_pos.x, ui_pos.y, fontSize, parkTint);
     }
 
@@ -2426,7 +2394,7 @@ void showFPS(){
 }
 
 
-//Destinations Menu for car. Click on where you want to travel. 
+//Destinations Menu for car. Click on where you want to travel.
 void DrawCarUI(PlayerCar& player_car, Camera2D& camera){
     Vector2 mouseWorldPos = GetScreenToWorld2D(mousePosition, camera);
     Vector2 ui_pos = player_car.position;
@@ -2507,23 +2475,18 @@ void DrawCarUI(PlayerCar& player_car, Camera2D& camera){
         if (globalState.NecroTech) DrawText("  NecroTech", ui_pos.x, ui_pos.y+32, 16, necro_tint); 
 
 
-        
-
-    }else if (gameState == CEMETERY){ //consider connecting things more, like park to work, or cemetery to park.
+    } else if (gameState == CEMETERY){ //consider connecting things more, like park to work, or cemetery to park.
 
         DrawText("   Park", ui_pos.x, ui_pos.y-17, 16, tavern_tint); 
         DrawText("   Street", ui_pos.x, ui_pos.y, 16, cemetery_tint); 
        //DrawText("Work", ui_pos.x, ui_pos.y+17, 16, work_tint);
 
-    }else if (gameState == PARK){
+    } else if (gameState == PARK){
         DrawText("    cemetery", ui_pos.x, ui_pos.y-17, 16, tavern_tint);
         DrawText("    Street", ui_pos.x, ui_pos.y, 16, cemetery_tint);
-        
-    }else if (gameState == NECROTECH){
+    } else if (gameState == NECROTECH){
         DrawText("    Park", ui_pos.x, ui_pos.y-17, 16, tavern_tint);
         DrawText("    Street", ui_pos.x, ui_pos.y, 16, cemetery_tint);
-       
-
     }
 
 }
@@ -2537,7 +2500,6 @@ void ClearAllNPCs() {
 
 
 void HandleGamepadMouseControl() {
-    
     static Vector2 lastMousePos = GetMousePosition(); // Store last known mouse position
     virtualCursor = lastMousePos;
     // Detect mouse movement
@@ -2548,7 +2510,6 @@ void HandleGamepadMouseControl() {
     lastMousePos = currentMousePos;
 
     if (IsGamepadAvailable(0)) {
-        
         float leftStickX = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_X);
         float leftStickY = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_Y);
 
@@ -6472,7 +6433,7 @@ void ShowControls(){
 
 }
 
-void MainMenu(PauseState& currentPauseState, Rectangle& destRect){ //draw buttons and cursor
+void MainMenu(PauseState& currentPauseState, [[maybe_unused]] Rectangle& destRect){ //draw buttons and cursor
     // Draw semi-transparent background overlay
         if (globalState.menuOpen) {
             
@@ -6772,12 +6733,12 @@ void InitSounds(SoundManager& soundManager){
 }
 
 void DrawPlayTime(float totalTime) {
-    //Gameplay timer on pause menu. 
     int minutes = static_cast<int>(totalTime) / 60;
     int seconds = static_cast<int>(totalTime) % 60;
 
-    char timerText[10];
-    sprintf(timerText, "%02d:%02d", minutes, seconds);
+    char timerText[16];// increase buffer size
+    snprintf(timerText, sizeof(timerText), "%02d:%02d", minutes, seconds);
+
     DrawText(timerText, 10, 10, 20, WHITE);
 }
 
@@ -6885,7 +6846,6 @@ int main() {
         // Update player position 
         if (!player.enter_car && !player.onElevator && !player.enter_train && !globalState.fading && 
             currentPauseState == GAME_RUNNING) player.UpdateMovement(); 
-        
         UpdateInventoryPosition();
         SoundManager::getInstance().UpdateMusic("NewNeon");
         SoundManager::getInstance().UpdateMusic("subwayAmbience");
@@ -6896,9 +6856,8 @@ int main() {
             SoundManager::getInstance().ManagerStopSound("TrainLeaving");
             SoundManager::getInstance().StopMusic("subwayAmbience");
         }
-        
         UpdateBullets(); //also update/draw explosion particles
-      
+
         //check each enemy group for bullet collisions
         enemyBulletCollision();
         crowbarAttackBoxes(boxes); //breakable boxes

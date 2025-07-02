@@ -7,7 +7,7 @@
 #include "GameEnums.h"
 #include "SoundManager.h"
 #include <vector>
-#include "platform.h"
+#include "Platform.h"
 #include "shaderControl.h"
 #include "Globals.h"
 #include "Platform.h"
@@ -247,7 +247,7 @@ void Player::DrawChargeBar(Vector2 offset) {
     
 }
 
-void Player::UpdateCharge(float deltaTime, bool charging) {
+void Player::UpdateCharge([[maybe_unused]] float deltaTime, bool charging) {
     if (charging) {
         //chargeTimer += deltaTime;
         if (chargeTimer > maxChargeTime) chargeTimer = maxChargeTime;
@@ -313,7 +313,7 @@ bool Player::CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosit
     return false;  // Return false if no hit occurred
 }
 
-void Player::HandleInput(float speed) { //this doesn't run if aiming. 
+void Player::HandleInput([[maybe_unused]] float speed) { //this doesn't run if aiming. 
     if (abduction) return; // Can't move while being abducted by aliens.
     // Detect if a gamepad is connected
     bool isControllerConnected = IsGamepadAvailable(0);

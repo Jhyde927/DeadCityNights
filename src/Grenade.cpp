@@ -21,7 +21,6 @@ bool canSpawnSmoke = true;
 Grenade::Grenade(Vector2 pos, Vector2 vel) {
     position = pos;
     velocity = vel;
-    
 }
 
 // Update grenade movement and explosion timer
@@ -29,7 +28,7 @@ void Grenade::Update(float deltaTime) {
     if (isActive){
         exEmitter.UpdateParticles(GetFrameTime());
 
-            // Update animation timer for both grenade and explosion. 
+        // Update animation timer for both grenade and explosion.
 
         maxFrames = exploded ? 7 : 4; //maxframes = 7 if exploded else 4
         frameTimer += deltaTime;
@@ -42,10 +41,9 @@ void Grenade::Update(float deltaTime) {
             if (currentFrame >= maxFrames && exploded){
                 currentFrame = maxFrames-1; //stay on last frame
             }
-
         }
 
-        if (exploded && explosionTimer > 0){ //survive for a few moments before deActivating. 
+        if (exploded && explosionTimer > 0){ //survive for a few moments before deActivating.
             explosionTimer -= GetFrameTime();
         }else if (exploded && explosionTimer <= 0){
             isActive = false;
@@ -59,9 +57,9 @@ void Grenade::Update(float deltaTime) {
             position.y += velocity.y * deltaTime;
 
             // Check for ground collision (basic floor detection)
-            if (position.y >= 750.0f) { 
+            if (position.y >= 750.0f) {
                 position.y = 750.0f; // Keep it on ground level
-            
+
                 if (!hasBounced) {
                     velocity.y *= -0.5f; // Bounce effect (lose velocity)
                     velocity.x *= 0.5f;  // Reduce horizontal speed
@@ -71,8 +69,6 @@ void Grenade::Update(float deltaTime) {
                 }
             }
 
-
-
             // Countdown to explosion
             lifetime -= deltaTime;
             if (lifetime <= 0.0f) {
@@ -80,9 +76,9 @@ void Grenade::Update(float deltaTime) {
             }
 
             Rectangle grenadeHitbox = { position.x-16, position.y-16, 16, 16 }; // Small hitbox
-            Rectangle playerHitbox = { player.position.x, player.position.y, player.size.x, player.size.y }; 
+            Rectangle playerHitbox = { player.position.x, player.position.y, player.size.x, player.size.y };
 
-            if (CheckCollisionRecs(grenadeHitbox, playerHitbox)) {  
+            if (CheckCollisionRecs(grenadeHitbox, playerHitbox)) {
                 //Explode(); // Immediate explosion explode on hit
             }
         }
@@ -94,10 +90,10 @@ void Grenade::Explode() {
     if (!exploded && isActive) {
         exploded = true;
         explosionTimer = 0.9;
-        
+
         exEmitter.position = position;
         exEmitter.SpawnExplosion(50, YELLOW);
-        
+
         PlaySound(SoundManager::getInstance().GetSound("explosion"));
         //Vector2 centerPos = {player.position.x + 32, player.position.y + 32}; //center the hit circle on player
         Rectangle hitBox = {player.position.x+24,player.position.y+16, 16, 24};
@@ -106,16 +102,15 @@ void Grenade::Explode() {
         }
 
         //lab scientists
-        for (NPC& scientist : scientists){
+        for (NPC& scientist : scientists) {
 
             Rectangle hitBox = {scientist.position.x+24,scientist.position.y+16, 16, 24};
             if (CheckCollisionCircleRec(position, explosionRadius, hitBox)){
-                scientist.TakeDamage(100); //grenade kills civilians and zombies in 1 hit. 
+                scientist.TakeDamage(100); //grenade kills civilians and zombies in 1 hit.
             }
-
         }
 
-        for (NPC& zombie : zombies){
+        for (NPC& zombie : zombies) {
             Rectangle hitBox = {zombie.position.x+24,zombie.position.y+16, 16, 24};
             if (CheckCollisionCircleRec(position, explosionRadius, hitBox)){
                 zombie.TakeDamage(100);
@@ -123,7 +118,7 @@ void Grenade::Explode() {
 
         }
 
-        for (NPC& czom : cyberZombies){ //damage self
+        for (NPC& czom : cyberZombies) { //damage self
             Rectangle hitBox = {czom.position.x+24,czom.position.y+16, 16, 24};
             if (CheckCollisionCircleRec(position, explosionRadius, hitBox)){
                 czom.TakeDamage(100);
@@ -144,11 +139,8 @@ void Grenade::Explode() {
             Rectangle hitBox = {tank.position.x+24,tank.position.y+32, 24, 64};
             if (CheckCollisionCircleRec(position, explosionRadius, hitBox)){
                 tank.health -= 1;
-                
             }
         }
-
-        
     }
 }
 
@@ -157,10 +149,9 @@ void Grenade::Explode() {
 // Draw the grenade
 void Grenade::Draw() {
     if (isActive){
-        
         if (!exploded) {
             facingRight = (velocity.x > 0);
-            
+
             float frameWidth = 64;
             float frameHeight = 64;
             Rectangle sourceRect = { currentFrame * frameWidth, 0, frameWidth, frameHeight };
@@ -175,23 +166,18 @@ void Grenade::Draw() {
             Rectangle sourceRect = { currentFrame * frameWidth, 0, frameWidth, frameHeight };
             Rectangle destRect = { position.x-32, position.y-32, frameWidth, frameHeight}; //full width
             DrawTexturePro(resources.explosionSheet, sourceRect, destRect, { 0, 0 }, 0.0f, WHITE);
-            if (showCircle){ //draw a red circle indicating explosion damage radius. 
+            if (showCircle){ //draw a red circle indicating explosion damage radius.
                 showCircle = false;
                 showCircleTImer = .1;
             }
-            
+
             if (showCircleTImer > 0){
                 showCircleTImer -= GetFrameTime();
                 //DrawCircle(position.x, position.y, explosionRadius, Fade(RED, 0.5f));
-                DrawCircleLines(position.x, position.y, explosionRadius, Fade(RED, 1.0f)); //debug show explosion radius. 
-            }else{
+                DrawCircleLines(position.x, position.y, explosionRadius, Fade(RED, 1.0f)); //debug show explosion radius.
+            }else {
                 showCircle = true;
             }
-            
-            
         }
-
     }
-
 }
-

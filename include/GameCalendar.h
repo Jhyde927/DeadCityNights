@@ -1,5 +1,4 @@
-#ifndef GAMECALENDAR_H
-#define GAMECALENDAR_H
+#pragma once
 
 #include <string>
 
@@ -22,5 +21,3 @@ private:
 };
 
 extern GameCalendar gameCalendar;
-
-#endif // GAMECALENDAR_H

@@ -1,5 +1,4 @@
-#ifndef BOX_H
-#define BOX_H
+#pragma once
 
 #include "GameResources.h"
 #include <raylib.h>
@@ -32,5 +31,3 @@ public:
     void Draw();
     void TakeDamage(int damage);
 };
-
-#endif

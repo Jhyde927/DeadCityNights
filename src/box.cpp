@@ -15,11 +15,11 @@ void Box::Update(float deltaTime) {
 }
 
 void Box::Draw() {
-    int currentFrame = maxFrames - health; //each hit advances the frame. 
+    int currentFrame = maxFrames - health; //each hit advances the frame.
     if (currentFrame >= maxFrames) currentFrame = maxFrames;
 
     Rectangle sourceRect = {
-        (float)(currentFrame * frameWidth), 0, 
+        (float)(currentFrame * frameWidth), 0,
         (float)frameWidth, (float)frameHeight
     };
     Rectangle destRect = { position.x, position.y, 24, 24 };
@@ -40,7 +40,7 @@ void Box::TakeDamage(int damage) {
         boxEmitter.position = position + Vector2{8, 8};
         boxEmitter.SpawnExplosion(10, BROWN);
         PlaySound(SoundManager::getInstance().GetSound("woodBreak"));
-        
+
         Vector2 center_pos = {position.x - 8, position.y};
 
         if (health <= 0) {
@@ -52,8 +52,6 @@ void Box::TakeDamage(int damage) {
                 case 1: SpawnPickup(center_pos, PickupType::SHOTGUN_AMMO, resources.shellsPickup);   break;
                 case 2: SpawnPickup(center_pos, PickupType::NINE_MM_AMMO, resources.autoPickup);     break;
                 case 3: SpawnPickup(center_pos, PickupType::MONEY, resources.money);                break;
-                   
-                  
             }
         }
     }

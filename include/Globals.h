@@ -1,9 +1,8 @@
-#ifndef GLOBALS_H
-#define GLOBALS_H
+#pragma once
 
 #include <raylib.h>
 #include "GameEnums.h"
-#include "platform.h"
+#include "Platform.h"
 #include <vector>
 #include "NPC.h"
 #include "box.h"
@@ -17,7 +16,7 @@ extern float targetZoom;
 
 extern std::vector<Explosion> explosions;
 
-extern Emitter explosionEmitter;  
+extern Emitter explosionEmitter;
 
 extern std::vector<NPC> npcs; //outside // subway
 extern std::vector<NPC> zombies; //cemetery/graveyard
@@ -39,13 +38,13 @@ extern std::vector<NPC>aliens;
 extern std::vector<NPC>CEOs;
 extern std::vector<NPC>Boss;
 
-//enemy NPC groups. 
+//enemy NPC groups.
 extern std::vector<std::vector<NPC>*> enemies;
 
-//Every NPC group. Used for clearing pointers on exit. 
+//Every NPC group. Used for clearing pointers on exit.
 extern std::vector<std::vector<NPC>*> allNPCGroups;
 
-struct GlobalState { //store random bools and timers that have accumulated over the months. just prefix everything with globalState is the price we pay for cleaner code. 
+struct GlobalState { //store random bools and timers that have accumulated over the months. just prefix everything with globalState is the price we pay for cleaner code.
     float apartmentX = 2256;
     int vacantLotX = 2753;
     int vacantExitX = 2762;
@@ -287,12 +286,12 @@ struct UFO {
     float frameTimer;
 
     Vector2 basePosition;  //center of UFO
-    float bobAmplitudeX;   //ufo wobbles around base position. 
-    float bobAmplitudeY;   
-    float bobSpeedX;       
-    float bobSpeedY;       
-    float bobOffsetX;      
-    float bobOffsetY;      
+    float bobAmplitudeX;   //ufo wobbles around base position.
+    float bobAmplitudeY;
+    float bobSpeedX;
+    float bobSpeedY;
+    float bobOffsetX;
+    float bobOffsetY;
 };
 
 struct Train {
@@ -305,7 +304,7 @@ struct Train {
     float deceleration;
     float stopDuration;
     float postLoopWaitDuration;
-    float postLoopWaitTimer;     
+    float postLoopWaitTimer;
     float stopTimer;
     float slowDownStartX;
     TrainState state;
@@ -323,7 +322,7 @@ extern Vector2 mousePosition; // Global mouse position, updated in main.
 extern float totalTime; // total elapsed time, used for sine waves
 
 extern std::vector<Platform> platforms;
-extern std::vector<Box> boxes; 
+extern std::vector<Box> boxes;
 extern std::vector<MagicDoor> magicDoors;
 extern std::vector<Elevator> elevators;
 
@@ -331,7 +330,7 @@ extern std::vector<Tank> Tanks;
 extern std::vector<Console> consoles;
 extern std::vector<Monitor> monitors;
 
-NPC* FindClosestNPC(NPC& zombie, std::vector<NPC>& targetedNPCs); //called by zombie targeting NPCs, or Hobo targeting zombies. 
+NPC* FindClosestNPC(NPC& zombie, std::vector<NPC>& targetedNPCs); //called by zombie targeting NPCs, or Hobo targeting zombies.
 
 //init global objects
 void InitCamera();
@@ -342,7 +341,7 @@ void InitTank(Vector2 position);
 void InitConsole(Vector2 position, GameState scene);
 void InitMonitor(Vector2 position, GameState scene);
 void InitEarth();
-void InitElevator(Vector2 position); 
+void InitElevator(Vector2 position);
 void InitUFO();
 void InitializeTrain();
 void InitPlatforms();
@@ -350,5 +349,3 @@ void InitBoxes();
 void InitializeNPCGroups();
 void InitPenthouseObjects();
 void InitLabObjects();
-
-#endif // GLOBALS_H

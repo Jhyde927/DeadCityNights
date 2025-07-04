@@ -1,5 +1,4 @@
-#ifndef PICKUP_H
-#define PICKUP_H
+#pragma once
 
 #include <raylib.h>
 #include <vector>
@@ -42,5 +41,3 @@ extern std::vector<Pickup> pickups;
 void SpawnPickup(Vector2 position, PickupType type, Texture2D texture);
 void UpdatePickups();
 void DrawPickups();
-
-#endif // PICKUP_H

@@ -1,5 +1,4 @@
-#ifndef EXPLOSION_H
-#define EXPLOSION_H
+#pragma once
 
 #include "Particle.h"
 #include <raylib.h>
@@ -14,7 +13,7 @@ struct Explosion {
     float frameTimer = 0.0f;
     bool isActive = false;
 
-    float postAnimLifetime = 0.5f; // How long to stay alive after animation ends, to let particles do there thing. 
+    float postAnimLifetime = 0.5f; // How long to stay alive after animation ends, to let particles do there thing.
     float remainingLife = 0.0f;    // Countdown timer
 
     float radius = 32;
@@ -27,5 +26,3 @@ struct Explosion {
     void Update(float deltaTime);
     void Draw() const;
 };
-
-#endif

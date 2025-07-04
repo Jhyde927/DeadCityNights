@@ -1,10 +1,9 @@
-#ifndef PLAYER_H
-#define PLAYER_H
+#pragma once
 
 #include <raylib.h>
 #include "GameResources.h"
 #include "GameEnums.h"
-#include "platform.h"
+#include "Platform.h"
 #include <vector>
 #include "shaderControl.h"
 #include "Particle.h"
@@ -18,7 +17,7 @@ enum WeaponType {
 };
 
 class Player {
-public:  
+public:
     // Player attributes
     Vector2 position;
     Vector2 velocity;
@@ -131,7 +130,6 @@ public:
     bool CheckIfOnPlatform();
     bool CheckHit(Vector2 previousBulletPosition, Vector2 currentBulletPosition, Vector2 bulletSize);
 
- 
 private:
     void HandleInput(float speed);
     void DrawChargeBar(Vector2 offset);
@@ -141,9 +139,6 @@ private:
     void updateAnimations();
     void shootLogic();
     void Reload();
-    
 };
 
 extern Player player; // Declare the player globally
-
-#endif  // PLAYER_H

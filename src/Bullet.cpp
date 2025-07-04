@@ -12,11 +12,7 @@
 #include "SoundManager.h"
 #include "Explosion.h"
 
-
 Bullet bullets[MAX_BULLETS];  // Define the global bullets array
-
-
-
 
 Vector2 RotateTowards(Vector2 current, Vector2 target, float maxAngle) {
     float angle = atan2f(target.y, target.x) - atan2f(current.y, current.x);
@@ -68,7 +64,7 @@ void FireBullet(Player& player, bool spread, float damage, bool laser, bool rayg
             bullets[i].laser = laser;
             bullets[i].raygun = raygun;
             bullets[i].health = 1; //default health
-            bullets[i].size = Vector2 {1, 1}; //default bullet size. 
+            bullets[i].size = Vector2 {1, 1}; //default bullet size.
             player.bulletCount--;  // Decrease player's bullet count
 
             if (spread){ //shotgun spread
@@ -83,24 +79,22 @@ void FireBullet(Player& player, bool spread, float damage, bool laser, bool rayg
                 //change the size of bullets depending on damage, in check hit make sure your getting bullets[i].size
                 if (damage >= 100){
                     bullets[i].size = Vector2 {10, 10}; // do we actualy use the size member var?..yes we do, the hitbox is based on size
-                    bullets[i].health = 4; //kill up to 4 zombies in a row. 
-                } 
-                
+                    bullets[i].health = 4; //kill up to 4 zombies in a row.
+                }
+
                 if (damage == 50){
                     bullets[i].size = Vector2 {5, 5}; // needs more testing, make it OP?
                     bullets[i].health = 4;
-                } 
+                }
                 if (damage == 30){
                     bullets[i].size = Vector2 {3, 3};
                     bullets[i].health = 3;
-                } 
+                }
                 if (damage == 10){
                     bullets[i].size = Vector2 {1, 1};
                     bullets[i].health = 1;
-                } 
-
-
-            } 
+                }
+            }
 
             break;  // Use the first available (inactive) bullet
         }
@@ -110,7 +104,7 @@ void FireBullet(Player& player, bool spread, float damage, bool laser, bool rayg
 void NPCfireBullet(NPC& npc, bool spread, float damage, bool laser, bool fireBall) { //robots shoot lasers
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (!bullets[i].isActive) {
-            bullets[i].raygun = false; //raygun bullets were being recycled, so hobo would shoot raygun projectiles. ensure it's false if NPC is firing.  
+            bullets[i].raygun = false; //raygun bullets were being recycled, so hobo would shoot raygun projectiles. ensure it's false if NPC is firing.
             bullets[i].position = Vector2{npc.position.x + 32, npc.position.y + 26};
             if (npc.isBoss) bullets[i].position = Vector2{npc.position.x, npc.position.y + 26};
             bullets[i].damage = damage;
@@ -120,7 +114,7 @@ void NPCfireBullet(NPC& npc, bool spread, float damage, bool laser, bool fireBal
             bullets[i].laser = laser;
             bullets[i].isFireball = fireBall;
             bullets[i].size = fireBall ? Vector2{8, 8} : Vector2{1, 1};
-            
+
             if (fireBall) {
                 Vector2 target = player.position;
                 target.y += 32; // offset to aim lower
@@ -134,7 +128,6 @@ void NPCfireBullet(NPC& npc, bool spread, float damage, bool laser, bool fireBal
             }
 
             break; //use first inactive bullet
-            
         }
     }
 }
@@ -145,27 +138,27 @@ void UpdateBullets() {
 
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (bullets[i].isActive) {
-            bullets[i].previousPosition = bullets[i].position; //save the bullets previous position for better hit detection. 
+            bullets[i].previousPosition = bullets[i].position; //save the bullets previous position for better hit detection.
             // Update bullet position based on direction and speed
-            bullets[i].position.x += bullets[i].direction.x * bullets[i].speed * GetFrameTime();     
-            if (bullets[i].isFireball) bullets[i].position.y += bullets[i].direction.y * bullets[i].speed * GetFrameTime(); //y axis for fireballs. 
+            bullets[i].position.x += bullets[i].direction.x * bullets[i].speed * GetFrameTime();
+            if (bullets[i].isFireball) bullets[i].position.y += bullets[i].direction.y * bullets[i].speed * GetFrameTime(); //y axis for fireballs.
             bullets[i].lifeTime -= GetFrameTime();  // Reduce bullet's lifetime
 
             if (bullets[i].isFireball) {
                 Vector2 target = player.position;
                 target.y += 32;
                 Vector2 desiredDir = Vector2Normalize(Vector2Subtract(target, bullets[i].position));
-            
+
                 float maxTurn = 0.01f; // Radians per frame (~2.8°)
                 bullets[i].direction = RotateTowards(bullets[i].direction, desiredDir, maxTurn);
-            
+
                 //update fireball animation, drawn in drawBullets
-                bullets[i].frameTimer += GetFrameTime(); 
-            
+                bullets[i].frameTimer += GetFrameTime();
+
                 if (bullets[i].frameTimer >= bullets[i].frameTime) {
                     bullets[i].frameTimer = 0.0f;
                     bullets[i].currentFrame++;
-            
+
                     if (bullets[i].currentFrame >= bullets[i].maxFrames) {
                         bullets[i].currentFrame = 0;
                     }
@@ -226,22 +219,21 @@ void DrawBullets() {
             if (bullets[i].laser && !bullets[i].isFireball){
                 DrawRectangleV(bullets[i].position, Vector2 {5, 2}, RED); // Draw laser as a wide rectangle
 
-            }else if (bullets[i].isFireball && bullets[i].laser){ //fireball is also a laser for collision purposes. 
+            } else if (bullets[i].isFireball && bullets[i].laser){ //fireball is also a laser for collision purposes.
                 //DrawCircleV(bullets[i].position, 8, RED);
                 float frameWidth = 64;
                 float frameHeight = 64;
-               
+
                 Rectangle sourceRect = { bullets[i].currentFrame * frameWidth, 0, frameWidth, frameHeight };
                 Rectangle destRect = { bullets[i].position.x-16, bullets[i].position.y-16, 32, 32};
                 DrawTexturePro(resources.fireballSheet, sourceRect, destRect, { 0, 0 }, 0.0f, WHITE);
 
             } else if (bullets[i].raygun) {
                 DrawRaygunProjectile(bullets[i], resources.energyBallSheet, GetFrameTime());
-            
-            }else{
-                DrawCircleV(bullets[i].position, 1, WHITE); //default bullet, 
+
+            } else{
+                DrawCircleV(bullets[i].position, 1, WHITE); //default bullet,
             }
         }
     }
 }
-

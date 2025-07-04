@@ -1,5 +1,4 @@
-#ifndef SOUNDMANAGER_H
-#define SOUNDMANAGER_H
+#pragma once
 
 #include <map>
 #include <string>
@@ -15,7 +14,7 @@ struct ActiveSound { //for positional audio
 
 class SoundManager { //singleton
 public:
-    static SoundManager& getInstance() { 
+    static SoundManager& getInstance() {
         static SoundManager instance;
         return instance;
     }
@@ -43,7 +42,7 @@ public:
 
     // Load a sound and store it in the manager
     void LoadSound(const std::string& name, const std::string& filePath) {
-        if (sounds.find(name) == sounds.end()) {//key doesn't exist in the map, so add it. 
+        if (sounds.find(name) == sounds.end()) {//key doesn't exist in the map, so add it.
             Sound sound = ::LoadSound(filePath.c_str());  // Load the sound
             sounds[name] = sound;  // Store in the map
         }
@@ -83,7 +82,7 @@ public:
 
         // Generate a random index
         int randomIndex = rand() % voices.size();
-        
+
         // Iterate through the map to get the voice at the random index
         auto it = voices.begin();
         std::advance(it, randomIndex);
@@ -105,7 +104,7 @@ public:
 
     void PlayRandomAlienVoice(){
         if (alienVoices.empty()) return;
-        
+
         int randomIndex = rand() % alienVoices.size();
         auto it = alienVoices.begin();
         std::advance(it, randomIndex);
@@ -113,24 +112,23 @@ public:
         ::PlaySound(it->second);
     }
 
-    void PlayNextVoice() { //play a randomized series of clips. 
+    void PlayNextVoice() { //play a randomized series of clips.
         if (voices.empty()) return;
 
         // Select a random voice
         int randomIndex = rand() % voices.size();
         auto it = voices.begin(); //asign the first sound.
-    
 
-        std::advance(it, randomIndex); //advance to random index 
-        
+        std::advance(it, randomIndex); //advance to random index
+
         // Set current voice and play it
-        currentVoice = it->second; 
+        currentVoice = it->second;
         ::PlaySound(currentVoice);
         voicePlaying = true;
     }
 
-    void StartRandomVoices(float duration) { // start playing a randomized series of clips, used for hobo speaking randomized gibberish ,we have like 
-        //6 different clips of a gibberish. We play a series of random clips back to back for a certain duration depending on how long the dialog text is. 
+    void StartRandomVoices(float duration) { // start playing a randomized series of clips, used for hobo speaking randomized gibberish ,we have like
+        //6 different clips of a gibberish. We play a series of random clips back to back for a certain duration depending on how long the dialog text is.
         if (voices.empty()) return;
 
         voiceTimer = duration;
@@ -147,11 +145,9 @@ public:
 
         // Check if the current voice is finished
         if (voicePlaying && !::IsSoundPlaying(currentVoice)) { //check every frame until current voice ended, play next voice
-            voicePlaying = false; //stop playing before playing next voice. 
+            voicePlaying = false; //stop playing before playing next voice.
             PlayNextVoice(); // Play the next random voice
         }
-
-        
     }
 
 
@@ -211,7 +207,6 @@ public:
         return false;  // Music track not found or not playing
     }
 
-    
     void PauseMusic(const std::string& name) {
         if (musicTracks.find(name) != musicTracks.end()) {
             ::PauseMusicStream(musicTracks[name]);
@@ -282,10 +277,10 @@ public:
             UnloadMusicStream(pair.second);
         }
         musicTracks.clear();
-        
+
         //unload voices
         for (auto& pair : voices){
-            if (pair.second.frameCount >0){
+            if (pair.second.frameCount > 0){
                 UnloadSound(pair.second);
             }
         }
@@ -316,7 +311,7 @@ private:
     float voiceTimer = 0.0f;   // Timer for the voice-playing sequence
 
     std::vector<ActiveSound> activeSounds;
-    std::map<std::string, Sound> sounds; //array of sounds 
+    std::map<std::string, Sound> sounds; //array of sounds
     std::map<std::string, Music> musicTracks;  // array of music tracks
     std::map<std::string, Sound> voices; //array of voices
     std::map<std::string, Sound> robotVoices; //array of robot noises
@@ -331,5 +326,3 @@ private:
     SoundManager(const SoundManager&) = delete;
     SoundManager& operator=(const SoundManager&) = delete;
 };
-
-#endif // SOUNDMANAGER_H

@@ -27,7 +27,7 @@ void Box::Draw() {
 
     DrawTexturePro(texture, sourceRect, destRect, origin, 0.0f, WHITE);
 
-    if (!destroyed){
+    if (!destroyed) {
         boxEmitter.DrawParticles();
     }
 }
